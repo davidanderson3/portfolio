@@ -8,6 +8,12 @@ const cancelFormBtn = document.getElementById('cancelFormBtn');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const userEmail = document.getElementById('userEmail');
+const PLACEHOLDERS = {
+  decisionText: "Describe the decision...",
+  dependsOn: "Does this hinge on another decision?",
+  prerequisites: "What else needs to happen first? (One per line or comma separated)"
+};
+
 
 let justRevisited = null;
 let currentUser = null;
@@ -33,22 +39,6 @@ auth.onAuthStateChanged(user => {
     renderDecisions();
   }
 });
-
-
-
-loginBtn.onclick = async () => {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    const result = await auth.signInWithPopup(provider);
-    currentUser = result.user;
-    userEmail.textContent = currentUser.email;
-    loginBtn.style.display = 'none';
-    logoutBtn.style.display = 'inline-block';
-    await renderDecisions();
-  } catch (err) {
-    console.error('Login failed:', err);
-  }
-};
 
 logoutBtn.onclick = async () => {
   await auth.signOut();
@@ -208,21 +198,36 @@ async function renderDecisions() {
     const content = document.createElement('div');
     content.className = 'decision-content';
 
-    content.innerHTML = `
-      <div class="row">
-        <div class="label">Depends on:</div>
-        <div><input class="field" data-field="dependsOn" data-index="${index}" value="${dec.dependsOn || ''}" /></div>
-      </div>
-      <div class="row">
-        <div class="label">Prerequisites:</div>
-        <div><textarea class="field" data-field="prerequisites" data-index="${index}" rows="3">${Array.isArray(dec.prerequisites) ? dec.prerequisites.join('\n') : dec.prerequisites || ''}</textarea></div>
-      </div>
-      <div class="row">
-        <div class="label">Deadline:</div>
-        <div><input type="date" class="field" data-field="deadline" data-index="${index}" value="${dec.deadline || ''}" /></div>
-      </div>
-      <button class="remove-btn" onclick="removeDecisionByText('${dec.text}'); event.stopPropagation();">Remove</button>
-    `;
+content.innerHTML = `
+  <div class="row">
+    <div class="label">Depends on:</div>
+    <div>
+      <input class="field" data-field="dependsOn" data-index="${index}" 
+             value="${dec.dependsOn || ''}" 
+             placeholder="${PLACEHOLDERS.dependsOn}" />
+    </div>
+  </div>
+  <div class="row">
+    <div class="label">Prerequisites:</div>
+    <div>
+      <textarea class="field" data-field="prerequisites" data-index="${index}" rows="3"
+        placeholder="${PLACEHOLDERS.prerequisites}">${
+          Array.isArray(dec.prerequisites)
+            ? dec.prerequisites.join('\n')
+            : dec.prerequisites || ''
+        }</textarea>
+    </div>
+  </div>
+  <div class="row">
+    <div class="label">Deadline:</div>
+    <div>
+      <input type="date" class="field" data-field="deadline" data-index="${index}" 
+             value="${dec.deadline || ''}" />
+    </div>
+  </div>
+  ...
+`;
+
 
     wrapper.appendChild(row);
     wrapper.appendChild(content);
@@ -292,9 +297,12 @@ decisionForm.addEventListener('submit', async function (e) {
     await saveDecisions(decisions);
     alert(`Now enter details for the dependency: "${dependsOn}"`);
 
-    document.getElementById('decisionText').value = dependsOn;
+    document.getElementById('decisionText').value = dependsOn || '';
+    document.getElementById('decisionText').placeholder = 'Describe the decision...';
     document.getElementById('dependsOn').value = '';
+    document.getElementById('dependsOn').placeholder = 'Does this hinge on another decision?';
     document.getElementById('prerequisites').value = '';
+    document.getElementById('prerequisites').placeholder = 'What else needs to happen first? (One per line or comma separated)';
     document.getElementById('deadline').value = '';
   } else {
     await saveDecisions(decisions);
@@ -316,4 +324,10 @@ cancelFormBtn.onclick = () => {
   decisionForm.reset();
 };
 
-window.addEventListener('load', renderDecisions);
+window.addEventListener('load', () => {
+  document.getElementById('decisionText').placeholder = PLACEHOLDERS.decisionText;
+  document.getElementById('dependsOn').placeholder = PLACEHOLDERS.dependsOn;
+  document.getElementById('prerequisites').placeholder = PLACEHOLDERS.prerequisites;
+
+  renderDecisions();
+});

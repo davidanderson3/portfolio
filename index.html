@@ -2,81 +2,81 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <title>Decision Tracker</title>
-    <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <title>Decision Tracker</title>
+  <link rel="stylesheet" href="style.css" />
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 
-<script>
+  <script>
     // Firebase config
-  const firebaseConfig = {
-  apiKey: "AIzaSyCpcviq2fjNRJSLENqqpBrVPk0EHLU2PR8",
-  authDomain: "decision-maker-4e1d3.firebaseapp.com",
-  projectId: "decision-maker-4e1d3",
-  storageBucket: "decision-maker-4e1d3.firebasestorage.app",
-  messagingSenderId: "727689864651",
-  appId: "1:727689864651:web:0100c3894790b8c188c24e",
-  measurementId: "G-7EJVQN0WT3"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpcviq2fjNRJSLENqqpBrVPk0EHLU2PR8",
+      authDomain: "decision-maker-4e1d3.firebaseapp.com",
+      projectId: "decision-maker-4e1d3",
+      storageBucket: "decision-maker-4e1d3.firebasestorage.app",
+      messagingSenderId: "727689864651",
+      appId: "1:727689864651:web:0100c3894790b8c188c24e",
+      measurementId: "G-7EJVQN0WT3"
+    };
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-</script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  </script>
 
 </head>
 
 <body>
-    <div class="navbar">
-  <div class="navbar-left">
-    Decision Tracker
+  <div class="navbar">
+    <div class="navbar-left">
+      Decision Tracker
+    </div>
+    <div class="navbar-right">
+      <span id="userEmail" class="user-email"></span>
+      <button id="loginBtn">Sign In</button>
+      <button id="logoutBtn" style="display:none;">Sign Out</button>
+    </div>
   </div>
-  <div class="navbar-right">
-    <span id="userEmail" class="user-email"></span>
-    <button id="loginBtn">Sign In</button>
-    <button id="logoutBtn" style="display:none;">Sign Out</button>
+
+  <h1>My Decisions</h1>
+
+
+  <button id="showFormBtn">+ Add Decision</button>
+
+  <div id="formContainer" style="display: none;">
+    <form id="decisionForm">
+      <input type="text" id="decisionText" placeholder="" required />
+      <input type="text" id="dependsOn" placeholder="" />
+      <textarea id="prerequisites" placeholder="" rows="3"></textarea>
+
+      <input type="date" id="deadline" />
+      <button type="submit">Save Decision</button>
+      <button type="button" id="cancelFormBtn">Cancel</button>
+    </form>
   </div>
-</div>
 
-    <h1>My Decisions</h1>
+  <hr />
 
-
-    <button id="showFormBtn">+ Add Decision</button>
-
-    <div id="formContainer" style="display: none;">
-        <form id="decisionForm">
-            <input type="text" id="decisionText" placeholder="Describe the decision..." required />
-            <input type="text" id="dependsOn" placeholder="Does this hinge on another decision?" />
-            <textarea id="prerequisites"
-                placeholder="What else needs to happen first? (One per line or comma separated)" rows="3"></textarea>
-            <input type="date" id="deadline" />
-            <button type="submit">Save Decision</button>
-            <button type="button" id="cancelFormBtn">Cancel</button>
-        </form>
+  <div class="decision-container">
+    <div class="decision-row decision-header">
+      <div class="check-column">✔</div>
+      <div class="title-column">Decision</div>
+      <div class="due-column">Due</div>
+      <div class="arrow-column"></div>
     </div>
 
-    <hr />
+    <div id="decisionList"></div>
+    <hr style="margin: 40px 0;" />
+    <h2>Completed Decisions</h2>
+    <div id="completedList" class="decision-container"></div>
 
-    <div class="decision-container">
-        <div class="decision-row decision-header">
-            <div class="check-column">✔</div>
-            <div class="title-column">Decision</div>
-            <div class="due-column">Due</div>
-            <div class="arrow-column"></div>
-        </div>
+  </div>
 
-        <div id="decisionList"></div>
-        <hr style="margin: 40px 0;" />
-        <h2>Completed Decisions</h2>
-        <div id="completedList" class="decision-container"></div>
-
-    </div>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 
 </html>
