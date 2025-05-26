@@ -19,11 +19,10 @@ let justRevisited = null;
 let currentUser = null;
 
 
-// Auth
 loginBtn.onclick = async () => {
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
-    const result = await auth.signInWithPopup(provider);
+    const result = await auth.signInWithPopup(provider, undefined, firebase.auth.browserPopupRedirectResolver);
     currentUser = result.user;
     userEmail.textContent = currentUser.email;
     await renderDecisions();
@@ -31,6 +30,7 @@ loginBtn.onclick = async () => {
     console.error('Login failed:', err);
   }
 };
+
 
 auth.onAuthStateChanged(user => {
   if (user) {
