@@ -51,8 +51,7 @@
     <form id="decisionForm">
       <input type="text" id="decisionText" placeholder="" required />
       <input type="text" id="dependsOn" placeholder="" />
-      <textarea id="prerequisites" placeholder="" rows="3"></textarea>
-
+      <textarea id="tasks" placeholder="Tasks required for this decision" rows="3"></textarea>
       <input type="date" id="deadline" />
       <button type="submit">Save Decision</button>
       <button type="button" id="cancelFormBtn">Cancel</button>
@@ -61,20 +60,21 @@
 
   <hr />
 
-  <div class="decision-container">
-    <div class="decision-row decision-header">
-      <div class="check-column">✔</div>
-      <div class="title-column">Decision</div>
-      <div class="due-column">Due</div>
-      <div class="arrow-column"></div>
-    </div>
-
-    <div id="decisionList"></div>
+<div class="main-layout">
+  <div class="column left">
+    <h2>Decisions</h2>
+    <div id="decisionList" class="decision-container"></div>
     <hr style="margin: 40px 0;" />
     <h2>Completed Decisions</h2>
     <div id="completedList" class="decision-container"></div>
-
   </div>
+
+  <div class="column right">
+    <h2>Tasks</h2>
+    <div id="taskList" class="decision-container"></div>
+  </div>
+</div>
+
 
   <script src="script.js"></script>
 </body>

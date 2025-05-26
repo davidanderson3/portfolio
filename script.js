@@ -1,4 +1,3 @@
-const STORAGE_KEY = 'decisionListData';
 const decisionForm = document.getElementById('decisionForm');
 const decisionList = document.getElementById('decisionList');
 const completedList = document.getElementById('completedList');
@@ -8,17 +7,17 @@ const cancelFormBtn = document.getElementById('cancelFormBtn');
 const loginBtn = document.getElementById('loginBtn');
 const logoutBtn = document.getElementById('logoutBtn');
 const userEmail = document.getElementById('userEmail');
-const PLACEHOLDERS = {
-  decisionText: "Describe the decision...",
-  dependsOn: "Does this hinge on another decision?",
-  prerequisites: "What else needs to happen first? (One per line or comma separated)"
-};
-
 
 let justRevisited = null;
 let currentUser = null;
 
+const PLACEHOLDERS = {
+  decisionText: "Describe the decision...",
+  dependsOn: "Does this depend on another decision?",
+  tasks: "Tasks required for this decision"
+};
 
+// Auth
 loginBtn.onclick = async () => {
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
@@ -29,25 +28,6 @@ loginBtn.onclick = async () => {
   } catch (err) {
     console.error('Login failed:', err);
   }
-};
-
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    userEmail.textContent = user.email;
-    renderDecisions();
-  }
-});
-
-logoutBtn.onclick = async () => {
-  await auth.signOut();
-  currentUser = null;
-  userEmail.textContent = '';
-  loginBtn.style.display = 'inline-block';
-  logoutBtn.style.display = 'none';
-  decisionList.innerHTML = '';
-  completedList.innerHTML = '';
 };
 
 auth.onAuthStateChanged(user => {
@@ -65,6 +45,15 @@ auth.onAuthStateChanged(user => {
   }
 });
 
+logoutBtn.onclick = async () => {
+  await auth.signOut();
+  currentUser = null;
+  userEmail.textContent = '';
+  loginBtn.style.display = 'inline-block';
+  logoutBtn.style.display = 'none';
+  decisionList.innerHTML = '';
+  completedList.innerHTML = '';
+};
 
 async function loadDecisions() {
   if (!currentUser) return [];
@@ -110,6 +99,46 @@ function removeDecisionByText(text) {
   });
 }
 
+function topologicalSort(items) {
+  const graph = new Map();
+  const inDegree = new Map();
+
+  items.forEach(item => {
+    graph.set(item.text, []);
+    inDegree.set(item.text, 0);
+  });
+
+  items.forEach(item => {
+    const allDeps = [
+      ...(Array.isArray(item.tasks) ? item.tasks : []),
+      ...(item.dependsOn ? [item.dependsOn] : [])
+    ];
+    allDeps.forEach(dep => {
+      if (graph.has(dep)) {
+        graph.get(dep).push(item.text);
+        inDegree.set(item.text, (inDegree.get(item.text) || 0) + 1);
+      }
+    });
+  });
+
+  const queue = [];
+  inDegree.forEach((deg, key) => {
+    if (deg === 0) queue.push(key);
+  });
+
+  const ordered = [];
+  while (queue.length > 0) {
+    const current = queue.shift();
+    ordered.push(current);
+    (graph.get(current) || []).forEach(neighbor => {
+      inDegree.set(neighbor, inDegree.get(neighbor) - 1);
+      if (inDegree.get(neighbor) === 0) queue.push(neighbor);
+    });
+  }
+
+  return ordered.map(text => items.find(i => i.text === text)).filter(Boolean);
+}
+
 async function renderDecisions() {
   const all = await loadDecisions();
   const seen = new Set();
@@ -119,35 +148,14 @@ async function renderDecisions() {
     return true;
   });
 
-  const sorted = unique.sort((a, b) => {
-    if (!a.deadline) return 1;
-    if (!b.deadline) return -1;
-    return new Date(a.deadline) - new Date(b.deadline);
-  });
-
+  const ordered = topologicalSort(unique);
   decisionList.innerHTML = '';
   completedList.innerHTML = '';
 
-  sorted.forEach((dec, index) => {
-    if (dec.completed) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'completed-decision';
-      wrapper.innerHTML = `
-        <div class="title">${dec.text}</div>
-        <hr>
-        <div class="row"><span class="label">Resolution:</span><span>${dec.resolution}</span></div>
-        <hr>
-        <div class="row"><span class="label">Date Decided:</span><span>${dec.dateCompleted || '—'}</span></div>
-        <div class="button-row">
-          <button class="remove-btn" onclick="removeDecisionByText('${dec.text}')">Delete</button>
-          <button class="revisit-btn" onclick="revisitDecision('${dec.text}')">Revisit</button>
-        </div>`;
-      completedList.appendChild(wrapper);
-      return;
-    }
-
+  ordered.forEach((dec, index) => {
     const wrapper = document.createElement('div');
-    wrapper.className = 'decision';
+    wrapper.className = dec.completed ? 'completed-decision' : 'decision';
+
     if (dec.text === justRevisited) {
       wrapper.classList.add('highlight');
       setTimeout(() => {
@@ -197,37 +205,48 @@ async function renderDecisions() {
 
     const content = document.createElement('div');
     content.className = 'decision-content';
+    content.innerHTML = `
+      <div class="row">
+        <div class="label">Depends on:</div>
+        <div>
+          <input class="field" data-field="dependsOn" data-index="${index}" 
+                 value="${dec.dependsOn || ''}" 
+                 placeholder="${PLACEHOLDERS.dependsOn}" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">Tasks required:</div>
+        <div>
+          <textarea class="field" data-field="tasks" data-index="${index}" rows="3"
+            placeholder="${PLACEHOLDERS.tasks}">${Array.isArray(dec.tasks)
+      ? dec.tasks.join('\n')
+      : dec.tasks || ''
+    }</textarea>
+        </div>
+      </div>
+      <div class="row">
+        <div class="label">Deadline:</div>
+        <div>
+          <input type="date" class="field" data-field="deadline" data-index="${index}" 
+                 value="${dec.deadline || ''}" />
+        </div>
+      </div>
+    `;
 
-content.innerHTML = `
-  <div class="row">
-    <div class="label">Depends on:</div>
-    <div>
-      <input class="field" data-field="dependsOn" data-index="${index}" 
-             value="${dec.dependsOn || ''}" 
-             placeholder="${PLACEHOLDERS.dependsOn}" />
-    </div>
-  </div>
-  <div class="row">
-    <div class="label">Prerequisites:</div>
-    <div>
-      <textarea class="field" data-field="prerequisites" data-index="${index}" rows="3"
-        placeholder="${PLACEHOLDERS.prerequisites}">${
-          Array.isArray(dec.prerequisites)
-            ? dec.prerequisites.join('\n')
-            : dec.prerequisites || ''
-        }</textarea>
-    </div>
-  </div>
-  <div class="row">
-    <div class="label">Deadline:</div>
-    <div>
-      <input type="date" class="field" data-field="deadline" data-index="${index}" 
-             value="${dec.deadline || ''}" />
-    </div>
-  </div>
-  ...
-`;
+    if (dec.dependsOn) {
+      const dep = document.createElement('div');
+      dep.className = 'link-line right-aligned';
+      dep.innerHTML = `🔗 Depends on: <strong>${dec.dependsOn}</strong>`;
+      wrapper.appendChild(dep);
+    }
 
+    if (Array.isArray(dec.tasks) && dec.tasks.length > 0) {
+      const taskList = dec.tasks.map(p => `<li>${p}</li>`).join('');
+      const taskBlock = document.createElement('div');
+      taskBlock.className = 'link-line';
+      taskBlock.innerHTML = `🛠️ Tasks:<ul>${taskList}</ul>`;
+      wrapper.appendChild(taskBlock);
+    }
 
     wrapper.appendChild(row);
     wrapper.appendChild(content);
@@ -238,7 +257,7 @@ content.innerHTML = `
         const idx = parseInt(input.dataset.index);
         const decisions = await loadDecisions();
 
-        if (field === 'prerequisites') {
+        if (field === 'tasks') {
           decisions[idx][field] = input.value
             .split(/\n|,/)
             .map(x => x.trim())
@@ -252,7 +271,7 @@ content.innerHTML = `
       });
     });
 
-    decisionList.appendChild(wrapper);
+    (dec.completed ? completedList : decisionList).appendChild(wrapper);
   });
 }
 
@@ -261,8 +280,8 @@ decisionForm.addEventListener('submit', async function (e) {
 
   const decisionText = document.getElementById('decisionText').value.trim();
   const dependsOn = document.getElementById('dependsOn').value.trim();
-  const prerequisitesRaw = document.getElementById('prerequisites').value.trim();
-  const prerequisites = prerequisitesRaw
+  const tasksRaw = document.getElementById('tasks').value.trim();
+  const tasks = tasksRaw
     .split(/\n|,/)
     .map(s => s.trim())
     .filter(Boolean);
@@ -276,18 +295,33 @@ decisionForm.addEventListener('submit', async function (e) {
   decisions.push({
     text: decisionText,
     dependsOn,
-    prerequisites,
+    tasks,
     deadline,
     completed: false,
     resolution: '',
     dateCompleted: ''
   });
 
+  tasks.forEach(taskText => {
+    const alreadyExists = decisions.some(d => d.text === taskText);
+    if (!alreadyExists) {
+      decisions.push({
+        text: taskText,
+        dependsOn: '',
+        tasks: [],
+        deadline: '',
+        completed: false,
+        resolution: '',
+        dateCompleted: ''
+      });
+    }
+  });
+
   if (isNewDependency) {
     decisions.push({
       text: dependsOn,
       dependsOn: '',
-      prerequisites: '',
+      tasks: [],
       deadline: '',
       completed: false,
       resolution: '',
@@ -298,11 +332,8 @@ decisionForm.addEventListener('submit', async function (e) {
     alert(`Now enter details for the dependency: "${dependsOn}"`);
 
     document.getElementById('decisionText').value = dependsOn || '';
-    document.getElementById('decisionText').placeholder = 'Describe the decision...';
     document.getElementById('dependsOn').value = '';
-    document.getElementById('dependsOn').placeholder = 'Does this hinge on another decision?';
-    document.getElementById('prerequisites').value = '';
-    document.getElementById('prerequisites').placeholder = 'What else needs to happen first? (One per line or comma separated)';
+    document.getElementById('tasks').value = '';
     document.getElementById('deadline').value = '';
   } else {
     await saveDecisions(decisions);
@@ -327,7 +358,6 @@ cancelFormBtn.onclick = () => {
 window.addEventListener('load', () => {
   document.getElementById('decisionText').placeholder = PLACEHOLDERS.decisionText;
   document.getElementById('dependsOn').placeholder = PLACEHOLDERS.dependsOn;
-  document.getElementById('prerequisites').placeholder = PLACEHOLDERS.prerequisites;
-
+  document.getElementById('tasks').placeholder = PLACEHOLDERS.tasks;
   renderDecisions();
 });
