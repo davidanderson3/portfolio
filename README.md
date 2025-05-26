@@ -1,6 +1,6 @@
 🧠 Decision Maker
 
-A clean, modern app for capturing important decisions, their dependencies, and resolutions.
+An app for tracking important decisions, their dependencies, and resolutions.
 
 👉 **Live App:** [https://davidanderson3.github.io/decision-maker/](https://davidanderson3.github.io/decision-maker/)
 
