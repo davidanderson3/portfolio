@@ -109,10 +109,7 @@ function topologicalSort(items) {
   });
 
   items.forEach(item => {
-    const allDeps = [
-      ...(Array.isArray(item.tasks) ? item.tasks : []),
-      ...(item.dependsOn ? [item.dependsOn] : [])
-    ];
+    const allDeps = Array.isArray(item.tasks) ? item.tasks : [];
     allDeps.forEach(dep => {
       if (graph.has(dep)) {
         graph.get(dep).push(item.text);
@@ -207,14 +204,6 @@ async function renderDecisions() {
     content.className = 'decision-content';
     content.innerHTML = `
       <div class="row">
-        <div class="label">Depends on:</div>
-        <div>
-          <input class="field" data-field="dependsOn" data-index="${index}" 
-                 value="${dec.dependsOn || ''}" 
-                 placeholder="${PLACEHOLDERS.dependsOn}" />
-        </div>
-      </div>
-      <div class="row">
         <div class="label">Tasks required:</div>
         <div>
           <textarea class="field" data-field="tasks" data-index="${index}" rows="3"
@@ -233,17 +222,10 @@ async function renderDecisions() {
       </div>
     `;
 
-    if (dec.dependsOn) {
-      const dep = document.createElement('div');
-      dep.className = 'link-line right-aligned';
-      dep.innerHTML = `🔗 Depends on: <strong>${dec.dependsOn}</strong>`;
-      wrapper.appendChild(dep);
-    }
-
     if (Array.isArray(dec.tasks) && dec.tasks.length > 0) {
       const taskList = dec.tasks.map(p => `<li>${p}</li>`).join('');
       const taskBlock = document.createElement('div');
-      taskBlock.className = 'link-line';
+      taskBlock.className = 'link-line task-block-right';
       taskBlock.innerHTML = `🛠️ Tasks:<ul>${taskList}</ul>`;
       wrapper.appendChild(taskBlock);
     }
@@ -279,22 +261,29 @@ decisionForm.addEventListener('submit', async function (e) {
   e.preventDefault();
 
   const decisionText = document.getElementById('decisionText').value.trim();
-  const dependsOn = document.getElementById('dependsOn').value.trim();
+  const dependsOnText = document.getElementById('dependsOn').value.trim();
   const tasksRaw = document.getElementById('tasks').value.trim();
-  const tasks = tasksRaw
+  const deadline = document.getElementById('deadline').value;
+
+  let tasks = tasksRaw
     .split(/\n|,/)
     .map(s => s.trim())
     .filter(Boolean);
-  const deadline = document.getElementById('deadline').value;
+
+  if (dependsOnText) {
+    const aliasTask = `Decide: ${dependsOnText}`;
+    if (!tasks.includes(aliasTask)) {
+      tasks.push(aliasTask);
+    }
+  }
 
   if (!decisionText) return;
 
   const decisions = await loadDecisions();
-  const isNewDependency = dependsOn && !decisions.find(d => d.text === dependsOn);
 
+  // Save main decision
   decisions.push({
     text: decisionText,
-    dependsOn,
     tasks,
     deadline,
     completed: false,
@@ -302,12 +291,12 @@ decisionForm.addEventListener('submit', async function (e) {
     dateCompleted: ''
   });
 
+  // Auto-create missing tasks
   tasks.forEach(taskText => {
-    const alreadyExists = decisions.some(d => d.text === taskText);
-    if (!alreadyExists) {
+    const exists = decisions.some(d => d.text === taskText);
+    if (!exists) {
       decisions.push({
         text: taskText,
-        dependsOn: '',
         tasks: [],
         deadline: '',
         completed: false,
@@ -317,31 +306,11 @@ decisionForm.addEventListener('submit', async function (e) {
     }
   });
 
-  if (isNewDependency) {
-    decisions.push({
-      text: dependsOn,
-      dependsOn: '',
-      tasks: [],
-      deadline: '',
-      completed: false,
-      resolution: '',
-      dateCompleted: ''
-    });
-
-    await saveDecisions(decisions);
-    alert(`Now enter details for the dependency: "${dependsOn}"`);
-
-    document.getElementById('decisionText').value = dependsOn || '';
-    document.getElementById('dependsOn').value = '';
-    document.getElementById('tasks').value = '';
-    document.getElementById('deadline').value = '';
-  } else {
-    await saveDecisions(decisions);
-    decisionForm.reset();
-    formContainer.style.display = 'none';
-    showFormBtn.style.display = 'inline-block';
-    renderDecisions();
-  }
+  await saveDecisions(decisions);
+  decisionForm.reset();
+  formContainer.style.display = 'none';
+  showFormBtn.style.display = 'inline-block';
+  renderDecisions();
 });
 
 showFormBtn.onclick = () => {

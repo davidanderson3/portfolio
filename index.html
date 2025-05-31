@@ -47,16 +47,20 @@
 
   <button id="showFormBtn">+ Add Decision</button>
 
-  <div id="formContainer" style="display: none;">
-    <form id="decisionForm">
-      <input type="text" id="decisionText" placeholder="" required />
-      <input type="text" id="dependsOn" placeholder="" />
-      <textarea id="tasks" placeholder="Tasks required for this decision" rows="3"></textarea>
-      <input type="date" id="deadline" />
-      <button type="submit">Save Decision</button>
-      <button type="button" id="cancelFormBtn">Cancel</button>
-    </form>
-  </div>
+<div id="formContainer" style="display: none;">
+  <form id="decisionForm">
+    <input type="text" id="decisionText" placeholder="Describe the decision..." required />
+
+    <input type="text" id="dependsOn" placeholder="Does this depend on another decision? (optional)" />
+
+    <textarea id="tasks" placeholder="Tasks required for this decision" rows="3"></textarea>
+
+    <input type="date" id="deadline" />
+    <button type="submit">Save Decision</button>
+    <button type="button" id="cancelFormBtn">Cancel</button>
+  </form>
+</div>
+
 
   <hr />
 
