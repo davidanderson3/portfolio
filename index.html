@@ -42,42 +42,28 @@
     </div>
   </div>
 
-  <h1>My Decisions</h1>
-
-
-  <button id="showFormBtn">+ Add Decision</button>
-
-<div id="formContainer" style="display: none;">
-  <form id="decisionForm">
-    <input type="text" id="decisionText" placeholder="Describe the decision..." required />
-
-    <input type="text" id="dependsOn" placeholder="Does this depend on another decision? (optional)" />
-
-    <textarea id="tasks" placeholder="Tasks required for this decision" rows="3"></textarea>
-
-    <input type="date" id="deadline" />
-    <button type="submit">Save Decision</button>
-    <button type="button" id="cancelFormBtn">Cancel</button>
-  </form>
+<button id="addGoalBtn">+ Add Goal</button>
+<div id="goalWizard" style="display: none;">
+  <div id="wizardStep"></div>
+  <button id="wizardNextBtn">Next</button>
+  <button id="wizardBackBtn" style="display: none;">Back</button>
+  <button id="wizardCancelBtn">Cancel</button>
 </div>
+
 
 
   <hr />
 
 <div class="main-layout">
   <div class="column left">
-    <h2>Decisions</h2>
-    <div id="decisionList" class="decision-container"></div>
+    <h2>Goals</h2>
+    <div id="goalList" class="decision-container"></div>
     <hr style="margin: 40px 0;" />
-    <h2>Completed Decisions</h2>
+    <h2>Completed</h2>
     <div id="completedList" class="decision-container"></div>
   </div>
-
-  <div class="column right">
-    <h2>Tasks</h2>
-    <div id="taskList" class="decision-container"></div>
-  </div>
 </div>
+
 
 
   <script src="script.js"></script>

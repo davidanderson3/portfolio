@@ -124,6 +124,20 @@ button:hover {
   color: #e96f1f;
 }
 
+.inline-add-form button,
+.decision-row button,
+.decision-content button {
+  min-width: 70px;
+  padding: 6px 16px;
+  box-sizing: border-box;
+}
+
+.save-btn, .edit-btn {
+  min-width: 70px;
+  padding: 6px 16px;
+  box-sizing: border-box;
+}
+
 /* ------------------------------
    Layout and Lists
 ------------------------------ */
@@ -134,13 +148,14 @@ button:hover {
 
 .decision-row {
   display: grid;
-  grid-template-columns: 30px 1fr auto 24px;
+  grid-template-columns: 30px 1fr auto 80px 24px;
   align-items: center;
   padding: 16px;
   border-top: 1px solid #eee;
   background-color: #fffdf9;
   border-radius: 6px;
 }
+
 
 .decision-header {
   font-weight: bold;
@@ -263,43 +278,7 @@ button:hover {
 }
 
 .decision-content .row {
-  display: block;
-  margin-top: 18px;
-  margin-bottom: 0;
-}
-
-.decision-content .label {
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 500;
-  color: #ff7f27;
-  padding-right: 0;
-}
-
-.decision-content textarea.field,
-.decision-content input.field[type="date"] {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 1em;
-  background: #fff;
-  margin-bottom: 0;
-}
-
-.decision-content textarea.field {
-  min-height: 60px;
-  resize: vertical;
-}
-
-.decision-content input.field[type="date"] {
-  min-width: 180px;
-}
-
-/* Optional: Add a little space between the two fields */
-.decision-content .row + .row {
-  margin-top: 22px;
+  margin-top: 14px;
 }
 
 @keyframes flash {
@@ -333,24 +312,67 @@ button:hover {
   padding-right: 8px;
 }
 
-.task-block-right {
-  text-align: right;
+.indent-0 { margin-left: 0; }
+.indent-1 { margin-left: 20px; }
+.indent-2 { margin-left: 40px; }
+.indent-3 { margin-left: 60px; }
+/* Add more if needed */
+
+#goalFormContainer {
+  background: #eafff0;
+  padding: 20px;
+  border: 1px solid #a5f0c1;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 6px rgba(0, 255, 127, 0.1);
 }
 
-.link-line.task-block-right {
-  text-align: right;
-  margin-left: 0;
-  padding-left: 0;
-  padding-right: 12px;
+.inline-add-form input[type="text"] {
+  min-width: 120px;
+}
+.inline-add-form input[type="date"] {
+  min-width: 110px;
+}
+.inline-add-form button {
+  padding: 2px 10px;
 }
 
-.link-line.task-block-right ul {
-  text-align: right;
-  padding-left: 0;
-  display: inline-block;
+.inline-add-form {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-top: 10px;
+  width: 100%;
 }
 
-.link-line.task-block-right li {
-  text-align: right;
-  list-style-position: inside;
+.inline-add-form .button-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+.edit-column {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.completed-decision-inline {
+  background-color: #f0f9f0;
+  border-left: 4px solid #2ecc71;
+  font-weight: bold;
+}
+.completed-decision-inline .title-column {
+  color: #2c5c2c;
+}
+
+.remove-btn {
+  background: #ff4d4d;
+}
+
+.remove-btn:hover {
+  background: #d73737;
 }
