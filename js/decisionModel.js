@@ -7,18 +7,20 @@ export function generateId() {
 
 export async function loadDecisions() {
   const currentUser = getCurrentUser();
-  if (!currentUser) return [];
+  if (!currentUser) {
+    console.warn('🚫 No current user set — skipping loadDecisions');
+    return [];
+  }
+
   const snap = await db.collection('decisions').doc(currentUser.uid).get();
   const data = snap.data();
-  return Array.isArray(data?.items) ? data.items : [];
+  return data && Array.isArray(data.items) ? data.items : [];  // ✅ fixed
 }
 
 export async function saveDecisions(items) {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
-  await db.collection('decisions').doc(currentUser.uid).set({
-    items
-  }, { merge: true });
+  await db.collection('decisions').doc(currentUser.uid).set({ items }, { merge: true });
 }
 
 export async function saveGoalOrder(order) {
