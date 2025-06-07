@@ -3,6 +3,8 @@ import { initAuth } from './auth.js';
 import { initWizard } from './wizard.js';
 import { renderGoalsAndSubitems } from './render.js';
 
+export let currentUser = null;
+
 window.addEventListener('DOMContentLoaded', () => {
   const uiRefs = {
     loginBtn: document.getElementById('loginBtn'),
@@ -17,6 +19,7 @@ window.addEventListener('DOMContentLoaded', () => {
   };
 
   initAuth(uiRefs, (user) => {
+    currentUser = user;
     if (user) {
       renderGoalsAndSubitems();
     } else {

@@ -5,13 +5,20 @@ html, body {
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #fffaf5;
+  background-color: #f8f5f0;
+  background-image: 
+    url('https://www.transparenttextures.com/patterns/french-stucco.png');
+  background-repeat: repeat;
+  background-size: 600px 600px;
   color: #333;
   width: 100%;
   min-height: 100vh;
   box-sizing: border-box;
 }
 
+
+
+/* Subtle background pattern on main container */
 .main-layout {
   display: flex;
   justify-content: center;
@@ -20,7 +27,10 @@ html, body {
   margin: 40px auto;
   padding: 0 20px;
   box-sizing: border-box;
-
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(2px);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(150, 150, 150, 0.05);
 }
 
 .goals-column {
@@ -33,37 +43,46 @@ html, body {
   min-width: 240px;
 }
 
-
 /* ------------------------------
    Navbar
 ------------------------------ */
 .navbar {
-  background-color: #ffb347;
-  color: #fff;
+  background: linear-gradient(to right, #d7e8d0, #c9e3dd);
+  background-image: 
+    url('https://www.transparenttextures.com/patterns/brush-metal.png'); /* Subtle strokes */
+  color: #2f3e40;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 14px 24px;
-  font-size: 1.2em;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  font-size: 1.8em;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  background-blend-mode: overlay;
+}
+
+.navbar-left {
+  font-weight: bold;
 }
 
 .navbar-right button {
   margin-left: 10px;
-  background-color: white;
-  color: #ff7f27;
-  border: 1px solid #ffb347;
+  background-color: rgba(255, 255, 255, 0.85);
+  color: #3c5c50;
+  border: 1px solid #a4cbb5;
   padding: 6px 12px;
   border-radius: 6px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .navbar-right button:hover {
-  background-color: #fff1e0;
-  border-color: #ff7f27;
+  background-color: #dbeee3;
+  border-color: #8bb89f;
 }
+
+
 
 /* ------------------------------
    Content Containers
@@ -76,24 +95,24 @@ html, body {
 }
 
 #formContainer, #goalFormContainer {
-  background: #fff5ea;
+  background: #eef3ea;
   padding: 20px;
-  border: 1px solid #ffd3a4;
+  border: 1px solid #d0decf;
   border-radius: 10px;
   margin-bottom: 30px;
-  box-shadow: 0 2px 6px rgba(255, 127, 39, 0.1);
+  box-shadow: 0 2px 6px rgba(122, 166, 140, 0.1);
 }
 
 #goalFormContainer {
-  background: #eafff0;
-  border: 1px solid #a5f0c1;
+  background: #e8f5f5;
+  border: 1px solid #c2dbdb;
 }
 
 /* ------------------------------
    Headings and Inputs
 ------------------------------ */
 h1 {
-  color: #ff7f27;
+  color: #7aa68c;
   margin-top: 30px;
 }
 
@@ -103,9 +122,10 @@ textarea {
   padding: 12px;
   margin: 8px 0;
   box-sizing: border-box;
-  border: 1px solid #ccc;
+  border: 1px solid #c4d3c8;
   border-radius: 6px;
   font-size: 1em;
+  background-color: #f8fdfa;
 }
 
 input::placeholder,
@@ -117,7 +137,7 @@ textarea::placeholder {
    Buttons
 ------------------------------ */
 button {
-  background-color: #ff7f27;
+  background-color: #7aa68c;
   color: white;
   border: none;
   padding: 10px 16px;
@@ -129,21 +149,21 @@ button {
 }
 
 button:hover {
-  background-color: #e96f1f;
+  background-color: #638b76;
 }
 
 .remove-btn {
-  background: #ff4d4d;
+  background: #c96e6e;
 }
 
 .remove-btn:hover {
-  background: #d73737;
+  background: #a75151;
 }
 
 .revisit-btn {
   background-color: white;
-  color: #ff7f27;
-  border: 2px solid #ff7f27;
+  color: #7aa68c;
+  border: 2px solid #7aa68c;
   padding: 8px 14px;
   border-radius: 6px;
   font-weight: 600;
@@ -151,8 +171,8 @@ button:hover {
 }
 
 .revisit-btn:hover {
-  background-color: #ffece0;
-  color: #e96f1f;
+  background-color: #effaf0;
+  color: #587c63;
 }
 
 /* ------------------------------
@@ -165,18 +185,17 @@ button:hover {
 
 .decision-row {
   display: flex;
-  flex-wrap: nowrap; /* prevent wrapping */
+  flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-top: 1px solid #eee;
-  background-color: #fffdf9;
+  border-top: 1px solid #dde4dd;
+  background-color: #fbfdfc;
   border-radius: 6px;
   width: 100%;
   box-sizing: border-box;
-  overflow-x: auto;  /* allow horizontal scrolling if needed */
+  overflow-x: auto;
 }
-
 
 .left-group {
   display: flex;
@@ -189,9 +208,8 @@ button:hover {
   flex: 1 1 auto;
   padding: 0 12px;
   word-break: break-word;
-  min-width: 0; /* this is crucial for overflow inside flexbox */
+  min-width: 0;
 }
-
 
 .right-group {
   display: flex;
@@ -202,7 +220,6 @@ button:hover {
   max-width: 260px;
   flex-shrink: 0;
 }
-
 
 .button-row {
   display: flex;
@@ -218,6 +235,9 @@ button:hover {
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* Other rules remain unchanged below... */
+
 
 .save-btn,
 .edit-btn {
@@ -316,6 +336,13 @@ button:hover {
   color: #2c5c2c;
 }
 
+.edit-btn {
+  padding: 6px 12px;
+  min-width: 70px;
+  text-align: center;
+}
+
+
 /* ------------------------------
    Utilities and Details
 ------------------------------ */
@@ -395,12 +422,23 @@ button:hover {
 }
 
 .goal-card {
+  position: relative; /* NEW: Ensure dropdown is positioned relative to this */
   margin-bottom: 14px;
   border-left: 4px solid #999;
   background: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  overflow: visible; /* 🔥 This is crucial */
+  z-index: 1;
 }
+
+.main-layout,
+.decision-container {
+  overflow: visible !important; /* 🔥 override hidden if set */
+  position: relative;
+}
+
+
 
 .goal-children {
   padding-left: 32px;
@@ -432,3 +470,4 @@ button:hover {
 .decision.highlight {
   animation: flash 2s ease-out;
 }
+

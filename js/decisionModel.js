@@ -10,13 +10,15 @@ export async function loadDecisions() {
   if (!currentUser) return [];
   const snap = await db.collection('decisions').doc(currentUser.uid).get();
   const data = snap.data();
-  return Array.isArray(data?.list) ? data.list : [];
+  return Array.isArray(data?.items) ? data.items : [];
 }
 
-export async function saveDecisions(decisions) {
+export async function saveDecisions(items) {
   const currentUser = getCurrentUser();
-  if (!currentUser || !Array.isArray(decisions)) return;
-  await db.collection('decisions').doc(currentUser.uid).set({ list: decisions });
+  if (!currentUser) return;
+  await db.collection('decisions').doc(currentUser.uid).set({
+    items
+  }, { merge: true });
 }
 
 export async function saveGoalOrder(order) {
