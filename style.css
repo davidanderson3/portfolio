@@ -471,12 +471,23 @@ button:hover {
   animation: flash 2s ease-out;
 }
 
-/* --- Mobile-Friendly Layout Enhancements --- */
+/* Mobile Fixes for Goal Layout */
 @media (max-width: 768px) {
-  .decision-row {
+  .main-layout {
     flex-direction: column;
+    padding: 0 12px;
+  }
+
+  .goals-column,
+  .right-column {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .decision-row {
+    flex-direction: column !important;
     align-items: flex-start !important;
-    padding: 10px !important;
+    padding: 12px 12px !important;
   }
 
   .left-group,
@@ -486,56 +497,61 @@ button:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin: 4px 0;
   }
 
   .middle-group {
+    flex-direction: column;
+    align-items: flex-start;
     font-size: 1em;
-    word-break: break-word;
   }
 
   .right-group {
+    flex-direction: row;
     flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 6px;
+    gap: 8px;
+    justify-content: flex-start;
   }
 
-  .due-column,
   .button-row {
-    font-size: 0.9em;
-    margin-left: 0;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .inline-add-form {
     flex-direction: column;
     align-items: stretch;
+    gap: 6px;
+    padding-left: 0 !important;
   }
 
-  .inline-add-form input {
-    width: 100% !important;
-    margin-bottom: 8px;
-  }
-
+  .inline-add-form input,
   .inline-add-form button {
     width: 100% !important;
   }
 
   .completed-decision-inline .middle-group {
     grid-template-columns: 1fr !important;
-    row-gap: 4px;
-  }
-
-  .completed-decision-inline .right-group {
-    flex-direction: row;
-    justify-content: space-between;
-    width: 100%;
   }
 
   .goal-card {
     margin-bottom: 16px;
   }
 
-  #goalList, #completedList, #hiddenList {
-    padding: 0 8px;
+  .navbar {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .navbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  h1 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
   }
 }
