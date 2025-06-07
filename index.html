@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <title>Decision Maker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 
   <!-- Firebase SDKs -->
@@ -12,7 +12,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBbet_bmwm8h8G5CqvmzrdAnc3AO-0IKa8",
       authDomain: "decision-maker-4e1d3.firebaseapp.com",
@@ -27,14 +26,11 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
   </script>
-
 </head>
 
 <body>
   <div class="navbar">
-    <div class="navbar-left">
-      Decision Maker
-    </div>
+    <div class="navbar-left">Decision Maker</div>
     <div class="navbar-right">
       <span id="userEmail" class="user-email"></span>
       <button id="loginBtn">Sign In</button>
@@ -42,31 +38,36 @@
     </div>
   </div>
 
-<button id="addGoalBtn">+ Add Goal</button>
-<div id="goalWizard" style="display: none;">
-  <div id="wizardStep"></div>
-  <button id="wizardNextBtn">Next</button>
-  <button id="wizardBackBtn" style="display: none;">Back</button>
-  <button id="wizardCancelBtn">Cancel</button>
-</div>
+  <div id="appContainer">
+    <div class="wizard-panel">
+      <button id="addGoalBtn">+ Add Goal</button>
+      <div id="goalWizard" style="display: none;">
+        <div id="wizardStep"></div>
+        <div class="button-row">
+          <button id="wizardBackBtn" style="display: none;">Back</button>
+          <button id="wizardCancelBtn">Cancel</button>
+          <button id="wizardNextBtn">Next</button>
+        </div>
+      </div>
+    </div>
 
-
-
-  <hr />
-
-<div class="main-layout">
-  <div class="column left">
+<section class="main-layout">
+  <div class="goals-column">
     <h2>Goals</h2>
     <div id="goalList" class="decision-container"></div>
+
     <hr style="margin: 40px 0;" />
+
     <h2>Completed</h2>
     <div id="completedList" class="decision-container"></div>
   </div>
-</div>
+  <div class="right-column">
+    <!-- Optional sidebar or notes -->
+  </div>
+</section>
 
+  </div>
 
-
-  <script src="script.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
-
 </html>

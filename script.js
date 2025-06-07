@@ -63,7 +63,10 @@ nextBtn.onclick = () => {
     wizardState.goalText = document.getElementById('goalTextInput').value.trim();
     if (!wizardState.goalText) return alert("Goal cannot be empty.");
   } else if (wizardState.step === 1) {
-    wizardState.importance = parseInt(document.getElementById('importanceInput').value);
+    const selected = document.querySelector('input[name="importance"]:checked');
+    if (!selected) return alert("Please select an importance value.");
+    wizardState.importance = parseInt(selected.value);
+
   } else if (wizardState.step === 2) {
     const rawInput = document.getElementById('deadlineInput').value.trim();
     const parsed = parseNaturalDate(rawInput);
@@ -222,7 +225,9 @@ async function saveGoalWizard() {
         });
         return taskId;
       });
+
     }
+
   });
 
   // Add additional tasks
@@ -247,6 +252,12 @@ async function saveGoalWizard() {
   wizardContainer.style.display = 'none';
   addGoalBtn.style.display = 'inline-block';
   renderGoalsAndSubitems();
+  const newGoalIds = newItems.filter(i => i.type === 'goal').map(g => g.id);
+  const currentGoalOrder = (await db.collection('decisions').doc(currentUser.uid).get()).data()?.goalOrder || [];
+  const newGoalOrder = [...currentGoalOrder, ...newGoalIds];
+
+  await db.collection('decisions').doc(currentUser.uid).set({ goalOrder: newGoalOrder }, { merge: true });
+
 }
 
 
@@ -339,29 +350,83 @@ function topologicalSort(items) {
   return ordered;
 }
 
-async function renderGoalsAndSubitems() {
-  const all = await loadDecisions();
-  const sorted = topologicalSort(all);
+function attachGoalEditButton(goal, row) {
+  const actionCell = document.createElement('div');
+  actionCell.className = 'edit-column';
 
-  goalList.innerHTML = '';
-  completedList.innerHTML = '';
+  const editBtn = document.createElement('button');
+  editBtn.textContent = 'Edit';
+  editBtn.className = 'edit-btn';
+  actionCell.appendChild(editBtn);
+  row.appendChild(actionCell);
 
-function renderItem(item, indentLevel = 0) {
-  const wrapper = document.createElement('div');
+  let isEditing = false;
 
-  if (item.completed && item.type === 'decision') {
-    wrapper.className = 'decision completed-decision-inline';
-  } else if (item.completed) {
-    wrapper.className = 'completed-decision';
-  } else {
-    wrapper.className = 'decision';
-  }
+  editBtn.onclick = async () => {
+    if (!isEditing) {
+      isEditing = true;
+      editBtn.textContent = 'Save';
 
-  wrapper.classList.add(`indent-${indentLevel}`);
+      const textCell = row.querySelector('.title-column');
+      const dueCell = row.querySelector('.due-column');
 
+      const textInput = document.createElement('input');
+      textInput.type = 'text';
+      textInput.value = goal.text;
+      textInput.style.width = '100%';
+
+      const deadlineInput = document.createElement('input');
+      deadlineInput.type = 'date';
+      deadlineInput.value = goal.deadline || '';
+      deadlineInput.style.width = '140px';
+
+      const importanceLabel = document.createElement('label');
+      importanceLabel.textContent = 'Importance:';
+      importanceLabel.style.marginLeft = '8px';
+
+      const importanceRadios = document.createElement('div');
+      importanceRadios.style.display = 'flex';
+      importanceRadios.style.flexDirection = 'row';
+      importanceRadios.style.gap = '12px';
+      importanceRadios.style.marginLeft = '8px';
+      importanceRadios.innerHTML = [...Array(10)].map((_, i) => `
+        <label style="display:inline-flex; align-items:center;">
+          <input type="radio" name="importanceEdit${goal.id}" value="${i + 1}" ${goal.importance == (i + 1) ? 'checked' : ''} />
+          <span style="margin-left:6px;">${i + 1}</span>
+        </label>
+      `).join('');
+
+      textCell.innerHTML = '';
+      textCell.appendChild(textInput);
+      textCell.appendChild(importanceLabel);
+      textCell.appendChild(importanceRadios);
+
+      dueCell.innerHTML = '';
+      dueCell.appendChild(deadlineInput);
+    } else {
+      const text = row.querySelector('.title-column input').value.trim();
+      const deadlineRaw = row.querySelector('.due-column input').value.trim();
+      const parsedDeadline = parseNaturalDate(deadlineRaw) || deadlineRaw;
+      const importance = parseInt(row.querySelector('input[type="radio"][name="importanceEdit' + goal.id + '"]:checked').value);
+
+      const updated = await loadDecisions();
+      const idx = updated.findIndex(d => d.id === goal.id);
+      if (idx !== -1) {
+        updated[idx].text = text;
+        updated[idx].deadline = parsedDeadline;
+        updated[idx].importance = importance;
+        await saveDecisions(updated);
+      }
+
+      isEditing = false;
+      renderGoalsAndSubitems();
+    }
+  };
+}
+
+function createItemRow(item) {
   const row = document.createElement('div');
   row.className = 'decision-row';
-
   const dueText = formatDaysUntil(item.deadline);
 
   if (item.completed && item.type === 'decision') {
@@ -383,190 +448,216 @@ function renderItem(item, indentLevel = 0) {
       <div class="due-column">${dueText}</div>
       <div class="arrow-column">▶</div>
     `;
-  }
 
-  const checkbox = row.querySelector('input[type="checkbox"]');
-  if (!item.completed) {
-    checkbox.onchange = async () => {
-      const resolution = prompt(`Mark complete: ${item.text}`);
-      if (!resolution) {
-        checkbox.checked = false;
-        return;
-      }
-      item.completed = true;
-      item.resolution = resolution;
-      item.dateCompleted = new Date().toISOString().split('T')[0];
-      const updated = await loadDecisions();
-      const idx = updated.findIndex(d => d.id === item.id);
-      updated[idx] = item;
-      await saveDecisions(updated);
-      renderGoalsAndSubitems();
-    };
-  }
-
-  if (item.type === 'goal') {
-    const actionCell = document.createElement('div');
-    actionCell.className = 'edit-column';
-
-    const editBtn = document.createElement('button');
-    editBtn.textContent = 'Edit';
-    editBtn.className = 'edit-btn';
-    actionCell.appendChild(editBtn);
-    row.appendChild(actionCell);
-
-    let isEditing = false;
-
-    editBtn.onclick = async () => {
-      if (!isEditing) {
-        isEditing = true;
-        editBtn.textContent = 'Save';
-
-        const textCell = row.querySelector('.title-column');
-        const dueCell = row.querySelector('.due-column');
-
-        const textInput = document.createElement('input');
-        textInput.type = 'text';
-        textInput.value = item.text;
-        textInput.style.width = '100%';
-
-        const deadlineInput = document.createElement('input');
-        deadlineInput.type = 'date';
-        deadlineInput.value = item.deadline || '';
-        deadlineInput.style.width = '140px';
-
-        const importanceLabel = document.createElement('label');
-        importanceLabel.textContent = 'Importance:';
-        importanceLabel.style.marginLeft = '8px';
-
-        const importanceRadios = document.createElement('div');
-        importanceRadios.style.display = 'flex';
-        importanceRadios.style.flexDirection = 'row';
-        importanceRadios.style.gap = '12px';
-        importanceRadios.style.marginLeft = '8px';
-        importanceRadios.innerHTML = [...Array(10)].map((_, i) => `
-          <label style="display:inline-flex; align-items:center;">
-            <input type="radio" name="importanceEdit${item.id}" value="${i + 1}" ${item.importance == (i + 1) ? 'checked' : ''} />
-            <span style="margin-left:6px;">${i + 1}</span>
-          </label>
-        `).join('');
-
-        textCell.innerHTML = '';
-        textCell.appendChild(textInput);
-        textCell.appendChild(importanceLabel);
-        textCell.appendChild(importanceRadios);
-
-        dueCell.innerHTML = '';
-        dueCell.appendChild(deadlineInput);
-
-        const depContainer = document.createElement('div');
-        depContainer.style.marginTop = '12px';
-
-        // Show current decisions and tasks
-        const children = (await loadDecisions()).filter(i => i.parentGoalId === item.id);
-        const decisions = children.filter(i => i.type === 'decision');
-        const tasks = children.filter(i => i.type === 'task');
-
-        const decisionList = document.createElement('ul');
-        decisionList.style.margin = '8px 0';
-        decisionList.innerHTML = decisions.map(d => `<li>${d.text}</li>`).join('');
-        depContainer.appendChild(document.createTextNode('Decisions:'));
-        depContainer.appendChild(decisionList);
-
-        const taskList = document.createElement('ul');
-        taskList.style.margin = '8px 0';
-        taskList.innerHTML = tasks.map(t => `<li>${t.text}</li>`).join('');
-        depContainer.appendChild(document.createTextNode('Tasks:'));
-        depContainer.appendChild(taskList);
-
-        // Add buttons
-        const addDecisionBtn = document.createElement('button');
-        addDecisionBtn.textContent = 'Add decision';
-        addDecisionBtn.style.marginRight = '10px';
-
-        const addTaskBtn = document.createElement('button');
-        addTaskBtn.textContent = 'Add task';
-
-        depContainer.appendChild(addDecisionBtn);
-        depContainer.appendChild(addTaskBtn);
-
-        textCell.appendChild(depContainer);
-
-        addDecisionBtn.onclick = async () => {
-          const newText = prompt('Enter new decision:');
-          if (newText && newText.trim()) {
-            const updated = await loadDecisions();
-            updated.push({
-              id: generateId(),
-              type: 'decision',
-              text: newText.trim(),
-              parentGoalId: item.id,
-              dependencies: [],
-              completed: false,
-              resolution: '',
-              dateCompleted: ''
-            });
-            await saveDecisions(updated);
-            renderGoalsAndSubitems();
-          }
-        };
-
-        addTaskBtn.onclick = async () => {
-          const newText = prompt('Enter new task:');
-          if (newText && newText.trim()) {
-            const updated = await loadDecisions();
-            updated.push({
-              id: generateId(),
-              type: 'task',
-              text: newText.trim(),
-              parentGoalId: item.id,
-              dependencies: [],
-              completed: false,
-              resolution: '',
-              dateCompleted: ''
-            });
-            await saveDecisions(updated);
-            renderGoalsAndSubitems();
-          }
-        };
-      } else {
-        // Save changes
-        const text = row.querySelector('input[type="text"]').value.trim();
-        const deadlineRaw = row.querySelector('.due-column input').value.trim();
-        const parsedDeadline = parseNaturalDate(deadlineRaw) || deadlineRaw;
-        const importance = parseInt(row.querySelector('input[type="radio"][name="importanceEdit' + item.id + '"]:checked').value);
-
+    const checkbox = row.querySelector('input[type="checkbox"]');
+    if (!item.completed) {
+      checkbox.onchange = async () => {
+        const resolution = prompt(`Mark complete: ${item.text}`);
+        if (!resolution) {
+          checkbox.checked = false;
+          return;
+        }
+        item.completed = true;
+        item.resolution = resolution;
+        item.dateCompleted = new Date().toISOString().split('T')[0];
         const updated = await loadDecisions();
         const idx = updated.findIndex(d => d.id === item.id);
-        if (idx !== -1) {
-          updated[idx].text = text;
-          updated[idx].deadline = parsedDeadline;
-          updated[idx].importance = importance;
-          await saveDecisions(updated);
-        }
-
-        isEditing = false;
+        updated[idx] = item;
+        await saveDecisions(updated);
         renderGoalsAndSubitems();
-      }
-    };
+      };
+    }
   }
 
-  wrapper.appendChild(row);
+  return row;
+}
 
-  // Always show all items (even completed)
-  goalList.appendChild(wrapper);
+function attachItemEditButton(item, row) {
+  const actionCell = document.createElement('div');
+  actionCell.className = 'edit-column';
 
-  // Recursively render child items
-  all
-    .filter(child => child.parentGoalId === item.id)
-    .forEach(child => renderItem(child, indentLevel + 1));
+  const editBtn = document.createElement('button');
+  editBtn.textContent = 'Edit';
+  editBtn.className = 'edit-btn';
+  actionCell.appendChild(editBtn);
+  row.appendChild(actionCell);
+
+  let isEditing = false;
+
+  editBtn.onclick = async () => {
+    if (!isEditing) {
+      isEditing = true;
+      editBtn.textContent = 'Save';
+
+      const textCell = row.querySelector('.title-column');
+      const dueCell = row.querySelector('.due-column');
+
+      const textInput = document.createElement('input');
+      textInput.type = 'text';
+      textInput.value = item.text;
+      textInput.style.width = '100%';
+
+      textCell.innerHTML = '';
+      textCell.appendChild(textInput);
+
+      const deadlineInput = document.createElement('input');
+      deadlineInput.type = 'date';
+      deadlineInput.value = item.deadline || '';
+      deadlineInput.style.width = '120px';
+
+      dueCell.innerHTML = '';
+      dueCell.appendChild(deadlineInput);
+    } else {
+      const text = row.querySelector('.title-column input').value.trim();
+      const deadline = row.querySelector('.due-column input').value.trim();
+
+      const updated = await loadDecisions();
+      const idx = updated.findIndex(d => d.id === item.id);
+      if (idx !== -1) {
+        updated[idx].text = text;
+        updated[idx].deadline = deadline;
+        await saveDecisions(updated);
+      }
+
+      isEditing = false;
+      renderGoalsAndSubitems();
+    }
+  };
+}
+
+function attachTaskDeleteButton(item, row) {
+  const deleteBtn = document.createElement('button');
+  deleteBtn.textContent = 'Delete';
+  deleteBtn.className = 'remove-btn';
+  deleteBtn.style.marginLeft = '8px';
+  deleteBtn.style.padding = '4px 10px';
+
+  deleteBtn.onclick = async () => {
+    if (!confirm(`Delete task: "${item.text}"?`)) return;
+    const updated = await loadDecisions();
+    const filtered = updated.filter(d => d.id !== item.id);
+    await saveDecisions(filtered);
+    renderGoalsAndSubitems();
+  };
+
+  const arrowCell = row.querySelector('.arrow-column');
+  if (arrowCell) {
+    arrowCell.innerHTML = '';
+    arrowCell.appendChild(deleteBtn);
+  }
 }
 
 
-  // Render only root-level goals
-  sorted
-    .filter(i => i.type === 'goal')
-    .forEach(goal => renderItem(goal, 0));
+async function saveGoalOrder(order) {
+  if (!currentUser || !Array.isArray(order)) return;
+  await db.collection('decisions').doc(currentUser.uid).set({ goalOrder: order }, { merge: true });
 }
+
+
+async function renderGoalsAndSubitems() {
+  if (!currentUser) {
+    console.warn("renderGoalsAndSubitems called before user login.");
+    return;
+  }
+
+  goalList.innerHTML = '';
+  completedList.innerHTML = '';
+  const all = await loadDecisions();
+  const snap = await db.collection('decisions').doc(currentUser.uid).get();
+  const goals = all.filter(i => i.type === 'goal');
+  const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
+
+  const snapData = snap.data() || {};
+  const goalOrder = Array.isArray(snapData.goalOrder) && snapData.goalOrder.length > 0
+    ? snapData.goalOrder
+    : goals.map(g => g.id);  // fallback: use current order
+
+  const sortedGoals = goalOrder.map(id => goalMap[id]).filter(Boolean);
+
+
+  let dragSrcEl = null;
+
+  sortedGoals.forEach(goal => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'decision goal-card';
+    wrapper.setAttribute('draggable', 'true');
+    wrapper.dataset.goalId = goal.id;
+
+    const row = document.createElement('div');
+    row.className = 'decision-row';
+
+    const toggleBtn = document.createElement('span');
+    toggleBtn.className = 'toggle-triangle';
+    toggleBtn.textContent = '▶';
+    toggleBtn.style.cursor = 'pointer';
+
+    const childrenContainer = document.createElement('div');
+    childrenContainer.style.display = 'none';
+    childrenContainer.className = 'goal-children';
+
+    toggleBtn.onclick = () => {
+      const isVisible = childrenContainer.style.display === 'block';
+      toggleBtn.textContent = isVisible ? '▶' : '▼';
+      childrenContainer.style.display = isVisible ? 'none' : 'block';
+    };
+
+    const dueText = formatDaysUntil(goal.deadline);
+
+    row.innerHTML = `
+      <div class="check-column">${toggleBtn.outerHTML}</div>
+      <div class="title-column">${goal.text}</div>
+      <div class="due-column">${dueText}</div>
+      <div class="arrow-column">⬍</div>
+    `;
+
+    attachGoalEditButton(goal, row);
+    wrapper.appendChild(row);
+    wrapper.appendChild(childrenContainer);
+    goalList.appendChild(wrapper);
+
+    renderChildrenInline(goal, all, childrenContainer);
+
+
+
+    wrapper.addEventListener('dragstart', e => {
+      dragSrcEl = wrapper;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', wrapper.dataset.goalId);  // 🔥 required for drag to work
+    });
+
+
+    wrapper.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      wrapper.classList.add('goal-drop-indicator');
+    });
+
+
+
+    wrapper.addEventListener('dragleave', () => {
+      wrapper.classList.remove('goal-drop-indicator');
+    });
+
+    wrapper.addEventListener('drop', e => {
+      e.preventDefault();
+      wrapper.classList.remove('goal-drop-indicator');
+      if (dragSrcEl && dragSrcEl !== wrapper) {
+        goalList.insertBefore(dragSrcEl, wrapper);
+        updateGoalOrderInFirebase();
+      }
+    });
+
+
+  });
+
+  function updateGoalOrderInFirebase() {
+    const newOrder = [...goalList.children]
+      .map(div => div.dataset.goalId)
+      .filter(Boolean);
+    saveGoalOrder(newOrder);
+  }
+}
+
 
 
 // --- Auth ---
@@ -582,13 +673,42 @@ loginBtn.onclick = async () => {
   }
 };
 
+function createItemWrapper(item, indentLevel = 0) {
+  const wrapper = document.createElement('div');
+  if (item.completed && item.type === 'decision') {
+    wrapper.className = 'decision completed-decision-inline';
+  } else if (item.completed) {
+    wrapper.className = 'completed-decision';
+  } else {
+    wrapper.className = 'decision';
+  }
+  wrapper.classList.add(`indent-${indentLevel}`);
+  return wrapper;
+}
+
+
+function renderChildrenInline(goal, all, container) {
+  const children = all.filter(i => i.parentGoalId === goal.id);
+  children.forEach(item => {
+    const wrapper = createItemWrapper(item, 1);
+    const row = createItemRow(item);
+
+    if (item.type === 'task') attachTaskDeleteButton(item, row);
+    if (item.type === 'decision' || item.type === 'task') attachItemEditButton(item, row);
+
+    wrapper.appendChild(row);
+    container.appendChild(wrapper);
+  });
+}
+
+
 auth.onAuthStateChanged(user => {
   if (user) {
     currentUser = user;
     userEmail.textContent = user.email;
     loginBtn.style.display = 'none';
     logoutBtn.style.display = 'inline-block';
-    renderGoalsAndSubitems();
+    renderGoalsAndSubitems();  // ✅ safe here
   } else {
     currentUser = null;
     userEmail.textContent = '';
@@ -596,6 +716,7 @@ auth.onAuthStateChanged(user => {
     logoutBtn.style.display = 'none';
   }
 });
+
 
 function startGoalEdit(goalId) {
   loadDecisions().then(items => {
@@ -637,7 +758,6 @@ logoutBtn.onclick = async () => {
 };
 
 window.addEventListener('load', () => {
-  renderGoalsAndSubitems();
 });
 
 // Helper to create and handle the inline form
@@ -687,6 +807,4 @@ function showInlineForm(type) {
   cancelBtn.onclick = () => form.remove();
 }
 
-addDecisionBtn.onclick = () => showInlineForm('decision');
-addTaskBtn.onclick = () => showInlineForm('task');
 

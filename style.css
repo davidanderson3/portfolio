@@ -1,27 +1,50 @@
 /* ------------------------------
    Global Layout
 ------------------------------ */
-body {
+html, body {
+  margin: 0;
+  padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  max-width: 900px;
-  margin: 40px auto;
   background-color: #fffaf5;
   color: #333;
-  padding: 20px;
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
+
+.main-layout {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  max-width: 1440px;
+  margin: 40px auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+
+}
+
+.goals-column {
+  width: 75%;
+  max-width: 1080px;
+}
+
+.right-column {
+  flex-grow: 1;
+  min-width: 240px;
+}
+
 
 /* ------------------------------
    Navbar
 ------------------------------ */
 .navbar {
-  background-color: #ffb347; /* light orange */
+  background-color: #ffb347;
   color: #fff;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 14px 24px;
   font-size: 1.2em;
-  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -43,14 +66,16 @@ body {
 }
 
 /* ------------------------------
-   Headings and Form
+   Content Containers
 ------------------------------ */
-h1 {
-  color: #ff7f27;
-  margin-top: 30px;
+#appContainer {
+  padding: 24px;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-#formContainer {
+#formContainer, #goalFormContainer {
   background: #fff5ea;
   padding: 20px;
   border: 1px solid #ffd3a4;
@@ -59,12 +84,18 @@ h1 {
   box-shadow: 0 2px 6px rgba(255, 127, 39, 0.1);
 }
 
-#formContainer input,
-#formContainer textarea {
-  width: 100%;
-  margin-bottom: 12px;
+#goalFormContainer {
+  background: #eafff0;
+  border: 1px solid #a5f0c1;
 }
 
+/* ------------------------------
+   Headings and Inputs
+------------------------------ */
+h1 {
+  color: #ff7f27;
+  margin-top: 30px;
+}
 
 input,
 textarea {
@@ -124,22 +155,8 @@ button:hover {
   color: #e96f1f;
 }
 
-.inline-add-form button,
-.decision-row button,
-.decision-content button {
-  min-width: 70px;
-  padding: 6px 16px;
-  box-sizing: border-box;
-}
-
-.save-btn, .edit-btn {
-  min-width: 70px;
-  padding: 6px 16px;
-  box-sizing: border-box;
-}
-
 /* ------------------------------
-   Layout and Lists
+   Layout and Rows
 ------------------------------ */
 .decision-container {
   display: flex;
@@ -147,22 +164,65 @@ button:hover {
 }
 
 .decision-row {
-  display: grid;
-  grid-template-columns: 30px 1fr auto 80px 24px;
+  display: flex;
+  flex-wrap: nowrap; /* prevent wrapping */
+  justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: 12px 16px;
   border-top: 1px solid #eee;
   background-color: #fffdf9;
   border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;  /* allow horizontal scrolling if needed */
 }
 
 
-.decision-header {
-  font-weight: bold;
-  font-size: 0.9em;
-  background: #ffe8ca;
-  color: #333;
-  border-radius: 6px;
+.left-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 60px;
+}
+
+.middle-group {
+  flex: 1 1 auto;
+  padding: 0 12px;
+  word-break: break-word;
+  min-width: 0; /* this is crucial for overflow inside flexbox */
+}
+
+
+.right-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 200px;
+  max-width: 260px;
+  flex-shrink: 0;
+}
+
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.edit-column {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.save-btn,
+.edit-btn {
+  padding: 6px 12px;
+  margin-left: 10px;
 }
 
 .check-column input {
@@ -171,9 +231,9 @@ button:hover {
 }
 
 .title-column {
-  padding-left: 8px;
   font-weight: 500;
   font-size: 1.05em;
+  padding-left: 8px;
 }
 
 .due-column {
@@ -216,7 +276,7 @@ button:hover {
 }
 
 /* ------------------------------
-   Completed Decision Card
+   Completed Styles
 ------------------------------ */
 .completed-decision {
   background: #e8fff1;
@@ -246,14 +306,18 @@ button:hover {
   font-size: 0.95em;
 }
 
-.completed-decision .button-row {
-  margin-top: 12px;
-  display: flex;
-  gap: 10px;
+.completed-decision-inline {
+  background-color: #f0f9f0;
+  border-left: 4px solid #2ecc71;
+  font-weight: bold;
+}
+
+.completed-decision-inline .title-column {
+  color: #2c5c2c;
 }
 
 /* ------------------------------
-   Utility
+   Utilities and Details
 ------------------------------ */
 .row {
   display: grid;
@@ -273,23 +337,6 @@ button:hover {
   white-space: nowrap;
 }
 
-.decision.highlight {
-  animation: flash 2s ease-out;
-}
-
-.decision-content .row {
-  margin-top: 14px;
-}
-
-@keyframes flash {
-  0% {
-    background-color: #fff8b3;
-  }
-
-  100% {
-    background-color: transparent;
-  }
-}
 .link-line {
   margin-left: 22px;
   padding: 6px 0 0 12px;
@@ -312,31 +359,6 @@ button:hover {
   padding-right: 8px;
 }
 
-.indent-0 { margin-left: 0; }
-.indent-1 { margin-left: 20px; }
-.indent-2 { margin-left: 40px; }
-.indent-3 { margin-left: 60px; }
-/* Add more if needed */
-
-#goalFormContainer {
-  background: #eafff0;
-  padding: 20px;
-  border: 1px solid #a5f0c1;
-  border-radius: 10px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 6px rgba(0, 255, 127, 0.1);
-}
-
-.inline-add-form input[type="text"] {
-  min-width: 120px;
-}
-.inline-add-form input[type="date"] {
-  min-width: 110px;
-}
-.inline-add-form button {
-  padding: 2px 10px;
-}
-
 .inline-add-form {
   display: flex;
   gap: 8px;
@@ -344,6 +366,18 @@ button:hover {
   align-items: flex-end;
   margin-top: 10px;
   width: 100%;
+}
+
+.inline-add-form input[type="text"] {
+  min-width: 120px;
+}
+
+.inline-add-form input[type="date"] {
+  min-width: 110px;
+}
+
+.inline-add-form button {
+  padding: 2px 10px;
 }
 
 .inline-add-form .button-row {
@@ -354,25 +388,47 @@ button:hover {
   width: 100%;
 }
 
-.edit-column {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+.toggle-triangle {
+  font-size: 1.2em;
+  display: inline-block;
+  width: 20px;
 }
 
-.completed-decision-inline {
-  background-color: #f0f9f0;
-  border-left: 4px solid #2ecc71;
-  font-weight: bold;
-}
-.completed-decision-inline .title-column {
-  color: #2c5c2c;
-}
-
-.remove-btn {
-  background: #ff4d4d;
+.goal-card {
+  margin-bottom: 14px;
+  border-left: 4px solid #999;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-.remove-btn:hover {
-  background: #d73737;
+.goal-children {
+  padding-left: 32px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.goal-drop-indicator {
+  outline: 2px dashed #ffb347;
+}
+
+.dragging {
+  opacity: 0.5;
+}
+
+.indent-0 { margin-left: 0; }
+.indent-1 { margin-left: 20px; }
+.indent-2 { margin-left: 40px; }
+.indent-3 { margin-left: 60px; }
+
+/* ------------------------------
+   Animation
+------------------------------ */
+@keyframes flash {
+  0% { background-color: #fff8b3; }
+  100% { background-color: transparent; }
+}
+
+.decision.highlight {
+  animation: flash 2s ease-out;
 }
