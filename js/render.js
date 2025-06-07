@@ -36,7 +36,7 @@ export async function renderGoalsAndSubitems() {
 
     const now = Date.now();
 
-    goals.forEach(goal => {
+    sortedGoals.forEach(goal => {
         const hideUntil = goal.hiddenUntil ? new Date(goal.hiddenUntil).getTime() : 0;
 
         const wrapper = document.createElement('div');
@@ -80,18 +80,23 @@ export async function renderGoalsAndSubitems() {
 }
 
 
-function createGoalRow(goal) {
+function createGoalRow(goal, options = {}) {
+
     const row = document.createElement('div');
     row.className = 'decision-row';
 
     const left = document.createElement('div');
     left.className = 'left-group';
 
-    const toggle = document.createElement('span');
-    toggle.className = 'toggle-triangle';
-    toggle.textContent = '▶';
-    toggle.style.cursor = 'pointer';
-    toggle.style.marginRight = '6px';
+const toggle = document.createElement('span');
+toggle.className = 'toggle-triangle';
+toggle.style.marginRight = '6px';
+
+if (!options.hideArrow) {
+  toggle.textContent = '▶';
+  toggle.style.cursor = 'pointer';
+}
+
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -131,14 +136,13 @@ function createGoalRow(goal) {
 
     const due = document.createElement('div');
     due.className = 'due-column';
-    due.textContent = goal.completed
-        ? goal.dateCompleted
-        : formatDaysUntil(goal.deadline);
+    due.textContent = goal.completed ? goal.dateCompleted : '';
 
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
 
-    attachGoalEditButton(goal, buttonWrap);
+    attachEditButtons(goal, buttonWrap);
+
 
     right.appendChild(due);
     right.appendChild(buttonWrap);
@@ -147,69 +151,152 @@ function createGoalRow(goal) {
     row.appendChild(middle);
     row.appendChild(right);
 
-    toggle.onclick = () => {
-        const wrapper = row.closest('.goal-card');
-        const container = wrapper?.querySelector('.goal-children');
-        const isVisible = container?.style.display === 'block';
-        toggle.textContent = isVisible ? '▶' : '▼';
-        if (container) container.style.display = isVisible ? 'none' : 'block';
-    };
+if (!options.hideArrow) {
+  toggle.onclick = () => {
+    const wrapper = row.closest('.goal-card');
+    const container = wrapper?.querySelector('.goal-children');
+    const isVisible = container?.style.display === 'block';
+    toggle.textContent = isVisible ? '▶' : '▼';
+    if (container) container.style.display = isVisible ? 'none' : 'block';
+  };
+}
+
 
     return row;
 }
 
 function renderChildren(goal, all, container) {
   const children = all.filter(i => i.parentGoalId === goal.id);
+  const now = Date.now();
+const activeTasks = children.filter(c => {
+  const hideUntil = c.hiddenUntil ? new Date(c.hiddenUntil).getTime() : 0;
+  return !c.completed && (!hideUntil || now >= hideUntil);
+});
 
-  children.forEach(child => {
+  const completedTasks = children.filter(c => c.completed);
+
+  container.innerHTML = ''; // Clear previous
+
+  // ACTIVE TASKS
+  activeTasks.forEach(task => {
     const wrapper = document.createElement('div');
-    wrapper.className = `decision indent-1 ${child.completed ? 'completed-decision-inline' : ''}`;
+    wrapper.className = 'decision indent-1';
+    wrapper.setAttribute('draggable', 'false');
+
+    const row = createGoalRow(task, { hideArrow: true });
+    row.style.background = '#f6fefe';
+    row.style.borderLeft = '4px solid #8cd1cc';
+    wrapper.appendChild(row);
+
+    container.appendChild(wrapper);
+  });
+
+  // ADD TASK
+  const addRow = document.createElement('div');
+  addRow.className = 'inline-add-form';
+  addRow.style.display = 'flex';
+  addRow.style.alignItems = 'center';
+  addRow.style.gap = '8px';
+  addRow.style.margin = '6px 0 10px';
+  addRow.style.paddingLeft = '28px'; // align with indent-1
+
+  const inputText = document.createElement('input');
+  inputText.placeholder = 'New task...';
+  inputText.style.width = '500px';
+  inputText.style.fontSize = '0.95em';
+  inputText.style.padding = '6px 10px';
+  inputText.style.height = '32px';
+  inputText.style.border = '1px solid #ccc';
+  inputText.style.borderRadius = '6px';
+
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '+';
+  addBtn.title = 'Add task';
+  addBtn.style.height = '32px';
+  addBtn.style.lineHeight = '32px';
+  addBtn.style.padding = '0 12px';
+  addBtn.style.margin = '0 0px 1px';
+  addBtn.style.fontSize = '1em';
+  addBtn.style.borderRadius = '6px';
+  addBtn.style.display = 'inline-flex';
+  addBtn.style.alignItems = 'center';
+  addBtn.style.justifyContent = 'center';
+
+  addBtn.onclick = async () => {
+    const text = inputText.value.trim();
+    if (!text) return alert('Please enter task text.');
+
+    const newTask = {
+      id: generateId(),
+      text,
+      completed: false,
+      dateCompleted: '',
+      resolution: '',
+      parentGoalId: goal.id,
+      type: 'task'
+    };
+
+    const updated = await loadDecisions();
+    updated.push(newTask);
+    await saveDecisions(updated);
+    inputText.value = '';
+    renderChildren(goal, updated, container);
+  };
+
+  addRow.appendChild(inputText);
+  addRow.appendChild(addBtn);
+  container.appendChild(addRow);
+
+  // COMPLETED TASKS
+  completedTasks.forEach(task => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'decision indent-1 completed-decision-inline';
     wrapper.setAttribute('draggable', 'false');
 
     const row = document.createElement('div');
     row.className = 'decision-row';
+    row.style.padding = '4px 8px';
+    row.style.fontSize = '0.85em';
+    row.style.alignItems = 'center';
 
-    // LEFT: checkbox (readonly if completed)
     const left = document.createElement('div');
-    left.className = 'left-group';
-
+    left.className = 'check-column';
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
-    checkbox.checked = child.completed;
-    checkbox.disabled = child.completed;
+    checkbox.checked = true;
+    checkbox.disabled = true;
     left.appendChild(checkbox);
 
-    // MIDDLE: text
     const middle = document.createElement('div');
     middle.className = 'middle-group';
-    middle.textContent = child.text;
+    middle.style.display = 'grid';
+    middle.style.gridTemplateColumns = 'minmax(200px, 1fr) minmax(180px, auto)';
+    middle.style.columnGap = '16px';
 
-    // RIGHT: due or completed date + buttons
+    const taskText = document.createElement('div');
+    taskText.textContent = task.text;
+    taskText.className = 'title-column';
+
+    const resolution = document.createElement('div');
+    resolution.textContent = task.resolution ? `→ ${task.resolution}` : '';
+    resolution.style.fontStyle = 'italic';
+    resolution.style.color = '#666';
+    resolution.style.fontSize = '0.85em';
+
+    middle.appendChild(taskText);
+    middle.appendChild(resolution);
+
     const right = document.createElement('div');
     right.className = 'right-group';
+    right.style.gap = '4px';
 
     const due = document.createElement('div');
     due.className = 'due-column';
-    due.textContent = child.completed
-      ? child.dateCompleted
-      : formatDaysUntil(child.deadline);
+    due.textContent = task.dateCompleted || '';
 
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
-
-    if (!child.completed) {
-      attachItemEditButton(child, row);
-    }
-
-    attachTaskDeleteButton(child, row);
-
-    // Add resolution for completed tasks
-    if (child.completed && child.resolution) {
-      const resolutionNote = document.createElement('div');
-      resolutionNote.className = 'right-aligned';
-      resolutionNote.textContent = `Result: ${child.resolution}`;
-      row.appendChild(resolutionNote);
-    }
+    attachTaskDeleteButton(task, row);
 
     right.appendChild(due);
     right.appendChild(buttonWrap);
@@ -217,32 +304,9 @@ function renderChildren(goal, all, container) {
     row.appendChild(left);
     row.appendChild(middle);
     row.appendChild(right);
-
     wrapper.appendChild(row);
+
     container.appendChild(wrapper);
-
-    // Completion logic (if not already done)
-    if (!child.completed) {
-      checkbox.onchange = async () => {
-        const resolution = prompt(`Mark complete: ${child.text}`);
-        if (!resolution) {
-          checkbox.checked = false;
-          return;
-        }
-        child.completed = true;
-        child.resolution = resolution;
-        child.dateCompleted = new Date().toISOString().split('T')[0];
-
-        const updated = await loadDecisions();
-        const idx = updated.findIndex(d => d.id === child.id);
-        if (idx !== -1) {
-          updated[idx] = child;
-          await saveDecisions(updated);
-        }
-
-        renderGoalsAndSubitems();
-      };
-    }
   });
 }
 
@@ -251,20 +315,19 @@ function renderChildren(goal, all, container) {
 function createItemRow(item) {
     const row = document.createElement('div');
     row.className = 'decision-row';
-    const dueText = formatDaysUntil(item.deadline);
+    const dueText = item.dateCompleted || '';
+
 
     row.innerHTML = item.completed
         ? `
       <div class="check-column"><input type="checkbox" checked disabled /></div>
       <div class="title-column"><strong>${item.type}:</strong> ${item.text}</div>
       <div class="due-column">${item.dateCompleted || ''}</div>
-      <div class="arrow-column">✔</div>
     `
         : `
       <div class="check-column"><input type="checkbox" /></div>
       <div class="title-column">${item.text}</div>
       <div class="due-column">${dueText}</div>
-      <div class="arrow-column">▶</div>
     `;
 
     const checkbox = row.querySelector('input[type="checkbox"]');
@@ -290,7 +353,7 @@ function createItemRow(item) {
     return row;
 }
 
-function attachGoalEditButton(goal, buttonWrap) {
+function attachEditButtons(item, buttonWrap) {
     const editBtn = document.createElement('button');
     editBtn.textContent = 'Edit';
     editBtn.className = 'edit-btn';
@@ -310,12 +373,12 @@ function attachGoalEditButton(goal, buttonWrap) {
             editBtn.textContent = 'Save';
 
             const textInput = document.createElement('input');
-            textInput.value = goal.text;
+            textInput.value = item.text;
             textInput.style.width = '100%';
 
             const deadlineInput = document.createElement('input');
             deadlineInput.type = 'date';
-            deadlineInput.value = goal.deadline || '';
+            deadlineInput.value = item.deadline || '';
             deadlineInput.style.width = '140px';
 
             middle.innerHTML = '';
@@ -328,7 +391,7 @@ function attachGoalEditButton(goal, buttonWrap) {
             const deadline = due.querySelector('input')?.value.trim();
 
             const updated = await loadDecisions();
-            const idx = updated.findIndex(d => d.id === goal.id);
+            const idx = updated.findIndex(d => d.id === item.id);
             if (idx !== -1) {
                 updated[idx].text = text;
                 updated[idx].deadline = deadline;
@@ -364,18 +427,17 @@ function attachGoalEditButton(goal, buttonWrap) {
     ];
 
     options.forEach(opt => {
-        const item = document.createElement('div');
-        item.textContent = opt.label;
-        item.style.padding = '6px 12px';
-        item.style.cursor = 'pointer';
-        item.onmouseover = () => item.style.background = '#f0f0f0';
-        item.onmouseout = () => item.style.background = '#fff';
+        const optionDiv = document.createElement('div');
+        optionDiv.textContent = opt.label;
+        optionDiv.style.padding = '6px 12px';
+        optionDiv.style.cursor = 'pointer';
+        optionDiv.onmouseover = () => optionDiv.style.background = '#f0f0f0';
+        optionDiv.onmouseout = () => optionDiv.style.background = '#fff';
 
-        item.onclick = async () => {
+        optionDiv.onclick = async () => {
             const expiration = Date.now() + opt.ms;
-
             const updated = await loadDecisions();
-            const idx = updated.findIndex(d => d.id === goal.id);
+            const idx = updated.findIndex(d => d.id === item.id);
             if (idx !== -1) {
                 updated[idx].hiddenUntil = new Date(expiration).toISOString();
                 await saveDecisions(updated);
@@ -391,8 +453,7 @@ function attachGoalEditButton(goal, buttonWrap) {
             }
         };
 
-
-        dropdown.appendChild(item);
+        dropdown.appendChild(optionDiv);
     });
 
     hideBtn.onclick = (e) => {
@@ -418,9 +479,9 @@ function attachGoalEditButton(goal, buttonWrap) {
     buttonWrap.appendChild(deleteBtn);
 
     deleteBtn.onclick = async () => {
-        if (!confirm(`Delete "${goal.text}"?`)) return;
+        if (!confirm(`Delete "${item.text}"?`)) return;
         const updated = await loadDecisions();
-        const filtered = updated.filter(d => d.id !== goal.id);
+        const filtered = updated.filter(d => d.id !== item.id);
         await saveDecisions(filtered);
 
         const card = deleteBtn.closest('.goal-card');
@@ -431,6 +492,7 @@ function attachGoalEditButton(goal, buttonWrap) {
         }
     };
 }
+
 
 function attachItemEditButton(item, row) {
     const cell = document.createElement('div');
@@ -496,12 +558,6 @@ function attachTaskDeleteButton(item, row) {
         await saveDecisions(filtered);
         renderGoalsAndSubitems();
     };
-
-    const arrowCell = row.querySelector('.arrow-column');
-    if (arrowCell) {
-        arrowCell.innerHTML = '';
-        arrowCell.appendChild(deleteBtn);
-    }
 }
 
 function enableDragAndDrop(wrapper) {

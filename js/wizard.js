@@ -1,8 +1,9 @@
-// js/wizard.js
 import { parseNaturalDate } from './helpers.js';
 import { generateId, loadDecisions, saveDecisions, saveGoalOrder } from './decisionModel.js';
 import { renderGoalsAndSubitems } from './render.js';
 import { getCurrentUser } from './auth.js';
+
+const db = firebase.firestore();
 
 export const wizardState = {
   step: 0,
@@ -41,14 +42,29 @@ export function initWizard(uiRefs) {
     renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
   };
 
-  uiRefs.nextBtn.onclick = async () => {
+uiRefs.nextBtn.onclick = async () => {
+  const nextBtn = uiRefs.nextBtn;
+  nextBtn.disabled = true;
+
+  try {
     if (wizardState.step === 0) {
-      wizardState.goalText = document.getElementById('goalTextInput').value.trim();
-      if (!wizardState.goalText) return alert("Goal cannot be empty.");
+      const input = document.getElementById('goalTextInput');
+      if (!input) {
+        renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
+        return;
+      }
+      wizardState.goalText = input.value.trim();
+      if (!wizardState.goalText) {
+        alert("Goal cannot be empty.");
+        return;
+      }
     } else if (wizardState.step === 1) {
-      wizardState.deadline = document.getElementById('deadlineInput').value.trim();
-    } else {
-      wizardState.subtasks = document.getElementById('taskList').value
+      const textarea = document.getElementById('taskList');
+      if (!textarea) {
+        renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
+        return;
+      }
+      wizardState.subtasks = textarea.value
         .split('\n').map(t => t.trim()).filter(Boolean);
       await saveGoalWizard();
       return;
@@ -56,7 +72,11 @@ export function initWizard(uiRefs) {
 
     wizardState.step++;
     renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
-  };
+  } finally {
+    nextBtn.disabled = false;
+  }
+};
+
 }
 
 function renderWizardStep(container, backBtn) {
@@ -68,11 +88,6 @@ function renderWizardStep(container, backBtn) {
       <label for="goalTextInput"><strong>Goal:</strong></label>
       <input id="goalTextInput" value="${wizardState.goalText}" style="margin-left:8px; width: 80%;" />
     `;
-  } else if (wizardState.step === 1) {
-    container.innerHTML = `
-      <label for="deadlineInput">Deadline (optional):</label>
-      <input type="date" id="deadlineInput" value="${wizardState.deadline}" style="margin-left:8px;" />
-    `;
   } else {
     container.innerHTML = `
       <label>Subtasks (optional):</label>
@@ -83,8 +98,6 @@ function renderWizardStep(container, backBtn) {
 
 async function saveGoalWizard() {
   const all = await loadDecisions();
-  const user = getCurrentUser();
-  if (!user) return;
 
   const isEdit = !!wizardState.editingGoalId;
   const goalId = isEdit ? wizardState.editingGoalId : generateId();
@@ -93,7 +106,6 @@ async function saveGoalWizard() {
     id: goalId,
     type: 'goal',
     text: wizardState.goalText,
-    deadline: wizardState.deadline,
     completed: false,
     resolution: '',
     dateCompleted: '',
@@ -108,7 +120,6 @@ async function saveGoalWizard() {
       id: generateId(),
       type: 'task',
       text: taskText,
-      deadline: '',
       completed: false,
       resolution: '',
       dateCompleted: '',
@@ -123,11 +134,9 @@ async function saveGoalWizard() {
 
   await saveDecisions([...updatedItems, ...newItems]);
 
-  const snap = await db.collection('decisions').doc(user.uid).get();
+  const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
   const currentGoalOrder = snap.data()?.goalOrder || [];
-  const newGoalOrder = isEdit
-    ? currentGoalOrder
-    : [...currentGoalOrder, goalId];
+  const newGoalOrder = isEdit ? currentGoalOrder : [...currentGoalOrder, goalId];
   await saveGoalOrder(newGoalOrder);
 
   wizardState.editingGoalId = null;
