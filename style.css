@@ -471,3 +471,71 @@ button:hover {
   animation: flash 2s ease-out;
 }
 
+/* --- Mobile-Friendly Layout Enhancements --- */
+@media (max-width: 768px) {
+  .decision-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    padding: 10px !important;
+  }
+
+  .left-group,
+  .middle-group,
+  .right-group {
+    width: 100% !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .middle-group {
+    font-size: 1em;
+    word-break: break-word;
+  }
+
+  .right-group {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .due-column,
+  .button-row {
+    font-size: 0.9em;
+    margin-left: 0;
+  }
+
+  .inline-add-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .inline-add-form input {
+    width: 100% !important;
+    margin-bottom: 8px;
+  }
+
+  .inline-add-form button {
+    width: 100% !important;
+  }
+
+  .completed-decision-inline .middle-group {
+    grid-template-columns: 1fr !important;
+    row-gap: 4px;
+  }
+
+  .completed-decision-inline .right-group {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .goal-card {
+    margin-bottom: 16px;
+  }
+
+  #goalList, #completedList, #hiddenList {
+    padding: 0 8px;
+  }
+}
