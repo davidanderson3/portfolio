@@ -143,13 +143,16 @@ function renderWizardStep(wizardStep, backBtn) {
 
 async function saveGoalWizard() {
   const all = await loadDecisions();
+
   const isEdit = !!wizardState.editingGoalId;
   const goalId = isEdit ? wizardState.editingGoalId : generateId();
-  const newList = isEdit
+
+  // Filter out the goal and its children if editing
+  let newList = isEdit
     ? all.filter(item => item.id !== goalId && item.parentGoalId !== goalId)
     : all;
 
-  const newItems = [{
+  const newGoal = {
     id: goalId,
     type: 'goal',
     text: wizardState.goalText,
@@ -159,44 +162,86 @@ async function saveGoalWizard() {
     parentGoalId: null,
     completed: false,
     resolution: '',
-    dateCompleted: ''
-  }];
+    dateCompleted: '',
+    hiddenUntil: null
+  };
 
+  const newItems = [newGoal];
   const decisionIdMap = {};
-  wizardState.decisions.forEach(text => {
+
+  // Add decisions
+  wizardState.decisions.forEach(decText => {
     const id = generateId();
-    decisionIdMap[text] = id;
+    decisionIdMap[decText] = id;
+
     newItems.push({
-      id, type: 'decision', text, parentGoalId: goalId,
-      dependencies: [], completed: false, resolution: '', dateCompleted: ''
+      id,
+      type: 'decision',
+      text: decText,
+      parentGoalId: goalId,
+      dependencies: [],
+      completed: false,
+      resolution: '',
+      dateCompleted: '',
+      hiddenUntil: null
     });
   });
 
+  // Resolve dependencies and auto-create tasks if needed
   newItems.forEach(item => {
     if (item.type === 'decision') {
       const deps = wizardState.decisionDependencies[item.text] || [];
       item.dependencies = deps.map(depText => {
+        // Resolve decision dependency
         if (decisionIdMap[depText]) return decisionIdMap[depText];
-        const id = generateId();
+
+        // Create a task if not already mapped
+        const taskId = generateId();
         newItems.push({
-          id, type: 'task', text: depText, parentGoalId: goalId,
-          dependencies: [], completed: false, resolution: '', dateCompleted: ''
+          id: taskId,
+          type: 'task',
+          text: depText,
+          parentGoalId: goalId,
+          dependencies: [],
+          completed: false,
+          resolution: '',
+          dateCompleted: '',
+          hiddenUntil: null
         });
-        return id;
+        return taskId;
       });
     }
   });
 
-  wizardState.additionalTasks.forEach(text => {
+  // Add additional tasks
+  wizardState.additionalTasks.forEach(taskText => {
+    const id = generateId();
     newItems.push({
-      id: generateId(), type: 'task', text, parentGoalId: goalId,
-      dependencies: [], completed: false, resolution: '', dateCompleted: ''
+      id,
+      type: 'task',
+      text: taskText,
+      parentGoalId: goalId,
+      dependencies: [],
+      completed: false,
+      resolution: '',
+      dateCompleted: '',
+      hiddenUntil: null
     });
   });
 
+  // Save to Firebase
   await saveDecisions([...newList, ...newItems]);
+
+  // Update goal order
+  const newGoalIds = newItems.filter(i => i.type === 'goal').map(g => g.id);
+  const currentGoalOrder = (await db.collection('decisions').doc(currentUser.uid).get()).data()?.goalOrder || [];
+  const newGoalOrder = [...currentGoalOrder, ...newGoalIds];
+  await db.collection('decisions').doc(currentUser.uid).set({ goalOrder: newGoalOrder }, { merge: true });
+
+  // Reset and refresh
   wizardState.editingGoalId = null;
-  document.getElementById('goalWizard').style.display = 'none';
-  document.getElementById('addGoalBtn').style.display = 'inline-block';
+  wizardContainer.style.display = 'none';
+  addGoalBtn.style.display = 'inline-block';
   renderGoalsAndSubitems();
 }
+

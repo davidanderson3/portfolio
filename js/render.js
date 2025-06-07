@@ -10,7 +10,6 @@ export async function renderGoalsAndSubitems() {
   completedList.innerHTML = '';
 
   const all = await loadDecisions();
-
   const goals = all.filter(i => i.type === 'goal');
   const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
 
@@ -21,18 +20,18 @@ export async function renderGoalsAndSubitems() {
 
   const sortedGoals = goalOrder.map(id => goalMap[id]).filter(Boolean);
 
-  // Load hidden goal expiration map from localStorage
   const now = Date.now();
   const hiddenRaw = localStorage.getItem('hiddenGoals');
-console.log('loaded hiddenGoals from localStorage:', hiddenRaw);
-const hiddenMap = hiddenRaw ? JSON.parse(hiddenRaw) : {};
-
+  const localHiddenMap = hiddenRaw ? JSON.parse(hiddenRaw) : {};
 
   sortedGoals.forEach(goal => {
-    const hideUntil = hiddenMap[goal.id];
+    const localHideUntil = localHiddenMap[goal.id];
+    const remoteHideUntil = goal.hiddenUntil ? new Date(goal.hiddenUntil).getTime() : 0;
+    const hideUntil = Math.max(localHideUntil || 0, remoteHideUntil);
+
     if (hideUntil && now < hideUntil) {
       console.log(`Goal "${goal.text}" hidden until ${new Date(hideUntil).toLocaleTimeString()}`);
-      return; // Skip rendering
+      return; // skip rendering
     }
 
     const wrapper = document.createElement('div');
@@ -41,20 +40,6 @@ const hiddenMap = hiddenRaw ? JSON.parse(hiddenRaw) : {};
     wrapper.dataset.goalId = goal.id;
 
     const row = createGoalRow(goal);
-
-    // Add "Hide 4h" button
-    const hideBtn = document.createElement('button');
-    hideBtn.textContent = 'Hide 4h';
-    hideBtn.className = 'hide-btn';
-    hideBtn.onclick = () => {
-      const expiration = Date.now() + 4 * 60 * 60 * 1000;
-      hiddenMap[goal.id] = expiration;
-      localStorage.setItem('hiddenGoals', JSON.stringify(hiddenMap));
-      renderGoalsAndSubitems(); // Re-render
-    };
-    const arrowCell = row.querySelector('.arrow-column');
-    if (arrowCell) arrowCell.appendChild(hideBtn);
-
     const childrenContainer = document.createElement('div');
     childrenContainer.className = 'goal-children';
     childrenContainer.style.display = 'none';
@@ -74,7 +59,6 @@ const hiddenMap = hiddenRaw ? JSON.parse(hiddenRaw) : {};
     enableDragAndDrop(wrapper);
   });
 }
-
 
 
 
@@ -173,20 +157,24 @@ function attachGoalHideButton(goal, row) {
   hideBtn.className = 'edit-btn';
   hideBtn.style.marginLeft = '8px';
 
-  hideBtn.onclick = () => {
-    // Retrieve current hidden goals map from localStorage
-    const hiddenRaw = localStorage.getItem('hiddenGoals');
-    const hiddenMap = hiddenRaw ? JSON.parse(hiddenRaw) : {};
-
-    // Set hide expiration 4 hours from now
+  hideBtn.onclick = async () => {
     const expiration = Date.now() + 4 * 60 * 60 * 1000;
-    hiddenMap[goal.id] = expiration;
 
-    // Save to localStorage
-    localStorage.setItem('hiddenGoals', JSON.stringify(hiddenMap));
-    console.log('Saved hiddenGoals:', hiddenMap);
+    // Update localStorage
+    const hiddenRaw = localStorage.getItem('hiddenGoals');
+    const localHiddenMap = hiddenRaw ? JSON.parse(hiddenRaw) : {};
+    localHiddenMap[goal.id] = expiration;
+    localStorage.setItem('hiddenGoals', JSON.stringify(localHiddenMap));
 
-    // Re-render to apply hidden state
+    // Update Firestore
+    const updated = await loadDecisions();
+    const idx = updated.findIndex(d => d.id === goal.id);
+    if (idx !== -1) {
+      updated[idx].hiddenUntil = new Date(expiration).toISOString();
+      await saveDecisions(updated);
+    }
+
+    console.log(`Goal "${goal.text}" hidden until ${new Date(expiration).toLocaleTimeString()}`);
     renderGoalsAndSubitems();
   };
 
@@ -195,9 +183,6 @@ function attachGoalHideButton(goal, row) {
   cell.appendChild(hideBtn);
   if (!row.contains(cell)) row.appendChild(cell);
 }
-
-
-
 
 function renderChildren(goal, all, container) {
   const children = all.filter(i => i.parentGoalId === goal.id);
