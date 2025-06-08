@@ -1,12 +1,7 @@
-🧠 Decision Maker
+#Goal Oriented
 
-An app for tracking important decisions, their dependencies, and resolutions.
+An app for tracking goals and tasks. 
 
 👉 **Live App:** [https://davidanderson3.github.io/decision-maker/](https://davidanderson3.github.io/decision-maker/)
 
-## ✨ Features
-
-- ✅ Add and edit decisions with deadlines and prerequisites  
-- 📌 Mark decisions complete with a resolution and revisit later  
-- 🔐 Google Sign-In to save your data  
 
