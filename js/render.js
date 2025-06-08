@@ -77,241 +77,292 @@ function enableTaskDrag(wrapper, task, goal, all, container) {
 }
 
 export async function renderGoalsAndSubitems() {
-  goalList.innerHTML = '';
-  completedList.innerHTML = '';
-  const renderedGoalIds = new Set();
-  const all = await loadDecisions();
-  console.log('🔍 Total items loaded:', all.length);
+    goalList.innerHTML = '';
+    completedList.innerHTML = '';
+    const renderedGoalIds = new Set();
+    const all = await loadDecisions();
+    console.log('🔍 Total items loaded:', all.length);
 
-  const goals = all.filter(i => i.type === 'goal' && i.id && i.parentGoalId == null);
-  const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
+    const goals = all.filter(i => i.type === 'goal' && i.id && i.parentGoalId == null);
+    const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
 
-  const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
-  const goalOrder = Array.isArray(snap.data()?.goalOrder)
-    ? snap.data().goalOrder
-    : goals.map(g => g.id);
+    const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
+    const goalOrder = Array.isArray(snap.data()?.goalOrder)
+        ? snap.data().goalOrder
+        : goals.map(g => g.id);
 
-  const sortedGoals = [
-    ...goalOrder.map(id => goalMap[id]).filter(Boolean),
-    ...goals.filter(g => !goalOrder.includes(g.id))
-  ];
+    const sortedGoals = [
+        ...goalOrder.map(id => goalMap[id]).filter(Boolean),
+        ...goals.filter(g => !goalOrder.includes(g.id))
+    ];
 
-  const now = Date.now();
+    const now = Date.now();
 
-  // 🔽 Hidden Goals Section
-  let hiddenSection = document.getElementById('hiddenList');
-  if (!hiddenSection) {
-    hiddenSection = document.createElement('div');
-    hiddenSection.id = 'hiddenList';
-    hiddenSection.innerHTML = `
+    // 🔽 Hidden Goals Section
+    let hiddenSection = document.getElementById('hiddenList');
+    if (!hiddenSection) {
+        hiddenSection = document.createElement('div');
+        hiddenSection.id = 'hiddenList';
+        hiddenSection.innerHTML = `
       <h2 style="margin-top: 32px;">
         <span id="toggleHidden" style="cursor: pointer;">▶</span> Hidden Goals
       </h2>
       <div id="hiddenContent" style="display: none;"></div>
     `;
-    goalList.parentNode.insertBefore(hiddenSection, goalList.nextSibling);
-  }
-
-  const hiddenContent = hiddenSection.querySelector('#hiddenContent');
-  const toggleHidden = hiddenSection.querySelector('#toggleHidden');
-  toggleHidden.onclick = () => {
-    const isOpen = hiddenContent.style.display === 'block';
-    toggleHidden.textContent = isOpen ? '▶' : '▼';
-    hiddenContent.style.display = isOpen ? 'none' : 'block';
-  };
-
-  // 🔽 Completed Goals Section (collapsed and sorted by most recent)
-  let completedSection = document.getElementById('completedSection');
-  if (!completedSection) {
-    completedSection = document.createElement('div');
-    completedSection.id = 'completedSection';
-
-    const completedHeader = document.createElement('h2');
-    const toggle = document.createElement('span');
-    toggle.textContent = '▶'; // collapsed by default
-    toggle.style.cursor = 'pointer';
-
-    let completedContent = document.createElement('div');
-    completedContent.id = 'completedContent';
-    completedContent.style.display = 'none';
-    completedContent.appendChild(completedList);
-
-    toggle.onclick = () => {
-      const isOpen = completedContent.style.display === 'block';
-      toggle.textContent = isOpen ? '▶' : '▼';
-      completedContent.style.display = isOpen ? 'none' : 'block';
-    };
-
-    completedHeader.appendChild(toggle);
-    completedHeader.append(' Completed');
-    completedSection.appendChild(completedHeader);
-    completedSection.appendChild(completedContent);
-
-    goalList.parentNode.appendChild(completedSection);
-  }
-
-  // Split and sort goals
-  const completedGoals = sortedGoals
-    .filter(g => g.completed && g.dateCompleted)
-    .sort((a, b) => new Date(b.dateCompleted) - new Date(a.dateCompleted));
-
-  const hiddenAndActiveGoals = sortedGoals.filter(g => !g.completed);
-
-  // Sort hidden goals newest first
-  hiddenAndActiveGoals.sort((a, b) => {
-    const aTime = a.hiddenUntil ? new Date(a.hiddenUntil).getTime() : 0;
-    const bTime = b.hiddenUntil ? new Date(b.hiddenUntil).getTime() : 0;
-    return bTime - aTime;
-  });
-
-  const finalList = [...completedGoals, ...hiddenAndActiveGoals];
-
-  finalList.forEach(goal => {
-    if (renderedGoalIds.has(goal.id)) return;
-
-    let hideUntil = 0;
-    if (goal.hiddenUntil) {
-      try {
-        hideUntil = typeof goal.hiddenUntil === 'string'
-          ? new Date(goal.hiddenUntil).getTime()
-          : goal.hiddenUntil;
-        if (isNaN(hideUntil)) hideUntil = 0;
-      } catch {
-        hideUntil = 0;
-      }
+        goalList.parentNode.insertBefore(hiddenSection, goalList.nextSibling);
     }
 
-    const isCompleted = !!goal.completed;
-    const isHidden = hideUntil && now < hideUntil;
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'decision goal-card';
-    wrapper.setAttribute('draggable', 'true');
-    wrapper.dataset.goalId = goal.id;
-
-    const row = createGoalRow(goal);
-    const toggleBtn = row.querySelector('.toggle-triangle');
-
-    const childrenContainer = document.createElement('div');
-    childrenContainer.className = 'goal-children';
-
-    const isOpen = openGoalIds.has(goal.id);
-    childrenContainer.style.display = isOpen ? 'block' : 'none';
-    toggleBtn.textContent = isOpen ? '▼' : '▶';
-    wrapper.setAttribute('draggable', isOpen ? 'false' : 'true');
-
-    toggleBtn.onclick = () => {
-      const isVisible = childrenContainer.style.display === 'block';
-      toggleBtn.textContent = isVisible ? '▶' : '▼';
-      childrenContainer.style.display = isVisible ? 'none' : 'block';
-      wrapper.setAttribute('draggable', isVisible ? 'true' : 'false');
-      if (!isVisible) openGoalIds.add(goal.id);
-      else openGoalIds.delete(goal.id);
+    const hiddenContent = hiddenSection.querySelector('#hiddenContent');
+    const toggleHidden = hiddenSection.querySelector('#toggleHidden');
+    toggleHidden.onclick = () => {
+        const isOpen = hiddenContent.style.display === 'block';
+        toggleHidden.textContent = isOpen ? '▶' : '▼';
+        hiddenContent.style.display = isOpen ? 'none' : 'block';
     };
 
-    wrapper.appendChild(row);
-    wrapper.appendChild(childrenContainer);
-    renderChildren(goal, all, childrenContainer);
-    enableDragAndDrop(wrapper, 'goal');
+    // 🔽 Completed Goals Section (collapsed and sorted by most recent)
+    let completedSection = document.getElementById('completedSection');
+    if (!completedSection) {
+        completedSection = document.createElement('div');
+        completedSection.id = 'completedSection';
 
-    if (isCompleted) {
-      if (goal.resolution?.trim()) {
-        const resolutionRow = document.createElement('div');
-        resolutionRow.className = 'link-line';
-        resolutionRow.textContent = `✔️ ${goal.resolution}`;
-        wrapper.appendChild(resolutionRow);
-      }
+        const completedHeader = document.createElement('h2');
+        const toggle = document.createElement('span');
+        toggle.textContent = '▶'; // collapsed by default
+        toggle.style.cursor = 'pointer';
 
-      completedList.appendChild(wrapper);
-      renderedGoalIds.add(goal.id);
-    } else if (isHidden) {
-      const label = document.createElement('div');
-      label.className = 'right-aligned';
-      label.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
+        let completedContent = document.createElement('div');
+        completedContent.id = 'completedContent';
+        completedContent.style.display = 'none';
+        completedContent.appendChild(completedList);
 
-      const unhideBtn = document.createElement('button');
-      unhideBtn.type = 'button';
-      unhideBtn.textContent = 'Unhide';
-      unhideBtn.className = 'revisit-btn';
-      unhideBtn.style.marginLeft = '10px';
-      unhideBtn.onclick = async () => {
-        const updated = await loadDecisions();
-        const idx = updated.findIndex(d => d.id === goal.id);
-        if (idx !== -1) {
-          updated[idx].hiddenUntil = null;
-          await saveDecisions(updated);
-          renderGoalsAndSubitems();
+        toggle.onclick = () => {
+            const isOpen = completedContent.style.display === 'block';
+            toggle.textContent = isOpen ? '▶' : '▼';
+            completedContent.style.display = isOpen ? 'none' : 'block';
+        };
+
+        completedHeader.appendChild(toggle);
+        completedHeader.append(' Completed');
+        completedSection.appendChild(completedHeader);
+        completedSection.appendChild(completedContent);
+
+        goalList.parentNode.appendChild(completedSection);
+    }
+
+    // Split and sort goals
+    const completedGoals = sortedGoals
+        .filter(g => g.completed && g.dateCompleted)
+        .sort((a, b) => new Date(b.dateCompleted) - new Date(a.dateCompleted));
+
+    const hiddenAndActiveGoals = sortedGoals.filter(g => !g.completed);
+
+    // Sort hidden goals newest first
+    hiddenAndActiveGoals.sort((a, b) => {
+        const aTime = a.hiddenUntil ? new Date(a.hiddenUntil).getTime() : 0;
+        const bTime = b.hiddenUntil ? new Date(b.hiddenUntil).getTime() : 0;
+        return bTime - aTime;
+    });
+
+    const finalList = [...completedGoals, ...hiddenAndActiveGoals];
+
+    finalList.forEach(goal => {
+        if (renderedGoalIds.has(goal.id)) return;
+
+        let hideUntil = 0;
+        if (goal.hiddenUntil) {
+            try {
+                hideUntil = typeof goal.hiddenUntil === 'string'
+                    ? new Date(goal.hiddenUntil).getTime()
+                    : goal.hiddenUntil;
+                if (isNaN(hideUntil)) hideUntil = 0;
+            } catch {
+                hideUntil = 0;
+            }
         }
-      };
 
-      label.appendChild(unhideBtn);
-      wrapper.appendChild(label);
-      hiddenContent.appendChild(wrapper);
-      renderedGoalIds.add(goal.id);
-    } else {
-      goalList.appendChild(wrapper);
-      renderedGoalIds.add(goal.id);
-    }
-  });
+        const isCompleted = !!goal.completed;
+        const isHidden = hideUntil && now < hideUntil;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'decision goal-card';
+        wrapper.setAttribute('draggable', 'true');
+        wrapper.dataset.goalId = goal.id;
+
+        const row = createGoalRow(goal);
+        const toggleBtn = row.querySelector('.toggle-triangle');
+
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'goal-children';
+
+        const isOpen = openGoalIds.has(goal.id);
+        childrenContainer.style.display = isOpen ? 'block' : 'none';
+        toggleBtn.textContent = isOpen ? '▼' : '▶';
+        wrapper.setAttribute('draggable', isOpen ? 'false' : 'true');
+
+        toggleBtn.onclick = () => {
+            const isVisible = childrenContainer.style.display === 'block';
+            toggleBtn.textContent = isVisible ? '▶' : '▼';
+            childrenContainer.style.display = isVisible ? 'none' : 'block';
+            wrapper.setAttribute('draggable', isVisible ? 'true' : 'false');
+            if (!isVisible) openGoalIds.add(goal.id);
+            else openGoalIds.delete(goal.id);
+        };
+
+        wrapper.appendChild(row);
+        wrapper.appendChild(childrenContainer);
+        renderChildren(goal, all, childrenContainer);
+        enableDragAndDrop(wrapper, 'goal');
+
+        if (isCompleted) {
+            if (goal.resolution?.trim()) {
+                const resolutionRow = document.createElement('div');
+                resolutionRow.className = 'link-line';
+                resolutionRow.textContent = `✔️ ${goal.resolution}`;
+                wrapper.appendChild(resolutionRow);
+            }
+
+            completedList.appendChild(wrapper);
+            renderedGoalIds.add(goal.id);
+        } else if (isHidden) {
+            const label = document.createElement('div');
+            label.className = 'right-aligned';
+            label.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
+
+            const unhideBtn = document.createElement('button');
+            unhideBtn.type = 'button';
+            unhideBtn.textContent = 'Unhide';
+            unhideBtn.className = 'revisit-btn';
+            unhideBtn.style.marginLeft = '10px';
+            unhideBtn.onclick = async () => {
+                const updated = await loadDecisions();
+                const idx = updated.findIndex(d => d.id === goal.id);
+                if (idx !== -1) {
+                    updated[idx].hiddenUntil = null;
+                    await saveDecisions(updated);
+                    renderGoalsAndSubitems();
+                }
+            };
+
+            label.appendChild(unhideBtn);
+            wrapper.appendChild(label);
+            hiddenContent.appendChild(wrapper);
+            renderedGoalIds.add(goal.id);
+        } else {
+            goalList.appendChild(wrapper);
+            renderedGoalIds.add(goal.id);
+        }
+    });
 }
 
 
 function attachEditButtons(item, buttonWrap) {
+    // ✏️ Edit icon button
     const editBtn = document.createElement('button');
     editBtn.type = 'button';
-    editBtn.textContent = 'Edit';
-    editBtn.className = 'edit-btn';
+    editBtn.innerHTML = '✏️';
+    editBtn.title = 'Edit';
+    editBtn.style.background = 'none';
+    editBtn.style.border = 'none';
+    editBtn.style.cursor = 'pointer';
+    editBtn.style.fontSize = '1.2em';
     buttonWrap.appendChild(editBtn);
 
+    // 🕒 Hide select (only for incomplete items)
     if (!item.completed) {
-        const hideSelect = document.createElement('select');
-        hideSelect.className = 'edit-btn';
+        const clockBtn = document.createElement('button');
+        clockBtn.innerHTML = '🕒';
+        clockBtn.title = 'Temporarily hide';
+        clockBtn.style.background = 'none';
+        clockBtn.style.border = 'none';
+        clockBtn.style.cursor = 'pointer';
+        clockBtn.style.fontSize = '1.2em';
+        clockBtn.style.position = 'relative';
+        buttonWrap.appendChild(clockBtn);
+
+        const menu = document.createElement('div');
+        menu.style.position = 'absolute';
+        menu.style.background = '#fff';
+        menu.style.border = '1px solid #ccc';
+        menu.style.borderRadius = '6px';
+        menu.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
+        menu.style.padding = '6px 0';
+        menu.style.fontSize = '0.9em';
+        menu.style.display = 'none';
+        menu.style.zIndex = '9999';
+        menu.style.minWidth = '120px';
+        menu.style.boxSizing = 'border-box';
+
 
         const options = [
-            { label: 'Hide', value: '' },
-            { label: '1 hour', value: '1' },
-            { label: '4 hours', value: '4' },
-            { label: 'Tomorrow', value: '24' },
-            { label: '1 week', value: '168' }
+            { label: '1 hour', value: 1 },
+            { label: '2 hour', value: 2 },
+            { label: '4 hours', value: 4 },
+            { label: '8 hours', value: 8 },
+            { label: '1 day', value: 24 },
+            { label: '4 days', value: 96 },
+            { label: '1 week', value: 168 },
+            { label: '1 month', value: 720 }
         ];
 
         options.forEach(opt => {
-            const option = document.createElement('option');
-            option.textContent = opt.label;
-            option.value = opt.value;
-            hideSelect.appendChild(option);
+            const btn = document.createElement('button');
+            btn.textContent = opt.label;
+            btn.style.display = 'block';
+            btn.style.width = '100%';
+            btn.style.padding = '4px 12px';
+            btn.style.border = 'none';
+            btn.style.background = 'none';
+            btn.style.textAlign = 'left';
+            btn.style.cursor = 'pointer';
+            btn.style.color = '#333';
+            btn.style.background = 'white';
+
+            btn.onmouseover = () => btn.style.background = '#f0f0f0';
+            btn.onmouseout = () => btn.style.background = 'none';
+
+            btn.onclick = async () => {
+                const updated = await loadDecisions();
+                const idx = updated.findIndex(d => d.id === item.id);
+                if (idx !== -1) {
+                    updated[idx].hiddenUntil = new Date(Date.now() + opt.value * 60 * 60 * 1000).toISOString();
+                    await saveDecisions(updated);
+                    renderGoalsAndSubitems();
+                }
+            };
+
+            menu.appendChild(btn);
         });
 
-        hideSelect.onchange = async () => {
-            const hours = parseInt(hideSelect.value);
-            if (!hours) return;
+        document.body.appendChild(menu);
 
-            const updated = await loadDecisions();
-            const idx = updated.findIndex(d => d.id === item.id);
-            if (idx !== -1) {
-                updated[idx].hiddenUntil = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
-                await saveDecisions(updated);
-
-                if (item.type === 'task') {
-                    const goal = updated.find(d => d.id === item.parentGoalId);
-                    const container = document.querySelector(`.goal-card[data-goal-id="${goal?.id}"] .goal-children`);
-                    if (goal && container) {
-                        renderChildren(goal, updated, container);
-                        return;
-                    }
-                }
-
-                renderGoalsAndSubitems();
-            }
+        clockBtn.onclick = e => {
+            e.stopPropagation();
+            const rect = clockBtn.getBoundingClientRect();
+            menu.style.top = `${rect.bottom + window.scrollY}px`;
+            menu.style.left = `${rect.left + window.scrollX}px`;
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         };
 
-        buttonWrap.appendChild(hideSelect);
+        // Dismiss on outside click
+        document.addEventListener('click', e => {
+            if (!menu.contains(e.target) && e.target !== clockBtn) {
+                menu.style.display = 'none';
+            }
+        });
     }
 
+
+
+    // ❌ Delete icon button
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.className = 'remove-btn';
+    deleteBtn.innerHTML = '❌';
+    deleteBtn.title = 'Delete';
+    deleteBtn.style.background = 'none';
+    deleteBtn.style.border = 'none';
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.style.fontSize = '1.2em';
     buttonWrap.appendChild(deleteBtn);
 
     [editBtn, deleteBtn].forEach(btn => {
@@ -338,7 +389,7 @@ function attachEditButtons(item, buttonWrap) {
 
         if (!editing) {
             editing = true;
-            editBtn.textContent = 'Save';
+            editBtn.innerHTML = '💾';
 
             const textInput = document.createElement('input');
             textInput.value = item.text;
@@ -371,6 +422,8 @@ function attachEditButtons(item, buttonWrap) {
         }
     };
 }
+
+
 
 function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');

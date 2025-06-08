@@ -583,28 +583,6 @@ button:hover {
   background-color: #f0fcfc;
 }
 
-select.edit-btn {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-color: #7aa68c;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 10px;
-  font-size: 1em;
-  text-align: center;
-  min-width: 70px;
-  height: 36px;
-}
-
-select.edit-btn:hover {
-  background-color: #638b76;
-}
-
 .button-row button,
 .button-row select.edit-btn {
   padding: 4px 10px;
@@ -617,6 +595,25 @@ select.edit-btn:hover {
   display: inline-block;
 }
 
+select.edit-btn {
+  appearance: none;
+  background-color: #7aa68c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1em;
+  text-align: center;
+  min-width: 70px;
+  height: 36px;
+}
+select.edit-btn:hover {
+  background-color: #638b76;
+}
+
+
 .button-row {
   display: flex;
   gap: 6px;
@@ -625,18 +622,7 @@ select.edit-btn:hover {
   align-items: center;
 }
 
-select.edit-btn {
-  appearance: none;
-  background-color: #7aa68c;
-  color: white;
-  border: none;
-  min-width: 60px;
-  text-align: center;
-}
 
-select.edit-btn:hover {
-  background-color: #638b76;
-}
 
 #dailyTasksList .daily-task {
   display: flex;
