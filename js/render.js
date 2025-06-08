@@ -120,7 +120,7 @@ export async function renderGoalsAndSubitems() {
     hiddenContent.style.display = isOpen ? 'none' : 'block';
   };
 
-  // 🔽 Completed Goals Section (self-contained)
+  // 🔽 Completed Goals Section (collapsed and sorted by most recent)
   let completedSection = document.getElementById('completedSection');
   if (!completedSection) {
     completedSection = document.createElement('div');
@@ -128,12 +128,12 @@ export async function renderGoalsAndSubitems() {
 
     const completedHeader = document.createElement('h2');
     const toggle = document.createElement('span');
-    toggle.textContent = '▼';
+    toggle.textContent = '▶'; // collapsed by default
     toggle.style.cursor = 'pointer';
 
     let completedContent = document.createElement('div');
     completedContent.id = 'completedContent';
-    completedContent.style.display = 'block';
+    completedContent.style.display = 'none';
     completedContent.appendChild(completedList);
 
     toggle.onclick = () => {
@@ -150,16 +150,23 @@ export async function renderGoalsAndSubitems() {
     goalList.parentNode.appendChild(completedSection);
   }
 
-  const nowSortedGoals = [...sortedGoals];
+  // Split and sort goals
+  const completedGoals = sortedGoals
+    .filter(g => g.completed && g.dateCompleted)
+    .sort((a, b) => new Date(b.dateCompleted) - new Date(a.dateCompleted));
 
-  // Sort hidden goals by most recently hidden
-  nowSortedGoals.sort((a, b) => {
+  const hiddenAndActiveGoals = sortedGoals.filter(g => !g.completed);
+
+  // Sort hidden goals newest first
+  hiddenAndActiveGoals.sort((a, b) => {
     const aTime = a.hiddenUntil ? new Date(a.hiddenUntil).getTime() : 0;
     const bTime = b.hiddenUntil ? new Date(b.hiddenUntil).getTime() : 0;
-    return bTime - aTime; // newest first
+    return bTime - aTime;
   });
 
-  nowSortedGoals.forEach(goal => {
+  const finalList = [...completedGoals, ...hiddenAndActiveGoals];
+
+  finalList.forEach(goal => {
     if (renderedGoalIds.has(goal.id)) return;
 
     let hideUntil = 0;
@@ -208,6 +215,13 @@ export async function renderGoalsAndSubitems() {
     enableDragAndDrop(wrapper, 'goal');
 
     if (isCompleted) {
+      if (goal.resolution?.trim()) {
+        const resolutionRow = document.createElement('div');
+        resolutionRow.className = 'link-line';
+        resolutionRow.textContent = `✔️ ${goal.resolution}`;
+        wrapper.appendChild(resolutionRow);
+      }
+
       completedList.appendChild(wrapper);
       renderedGoalIds.add(goal.id);
     } else if (isHidden) {
