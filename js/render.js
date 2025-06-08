@@ -1,33 +1,11 @@
-import { loadDecisions, saveDecisions, saveGoalOrder, generateId } from './decisionModel.js';
+import { loadDecisions, saveDecisions, saveGoalOrder, generateId } from './helpers.js';
 import { formatDaysUntil } from './helpers.js';
 
-document.addEventListener('submit', e => {
-  e.preventDefault();
-  console.warn('🔥 Caught rogue submit');
-}, true);
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
-    const isText = e.target.type === 'text' || e.target.type === 'search';
-    if (isInput && isText) {
-      e.preventDefault();
-      console.warn('⛔️ Blocked Enter key default');
-    }
-  }
-}, true);
-
 const openGoalIds = new Set();
-
-
-
-
 const addBtn = document.createElement('button');
-addBtn.type = 'button'; // ← Add this
-
+addBtn.type = 'button'; 
 const goalList = document.getElementById('goalList');
 const completedList = document.getElementById('completedList');
-
 let dragSrcEl = null;
 let draggedId = null;
 
@@ -40,11 +18,9 @@ let draggedId = null;
     });
 });
 
-
 // Prevent all default drag/drop behavior globally
 document.addEventListener('dragover', e => e.preventDefault());
 document.addEventListener('drop', e => e.preventDefault());
-
 
 function enableTaskDrag(wrapper, task, goal, all, container) {
     wrapper.addEventListener('dragstart', e => {
@@ -99,8 +75,6 @@ function enableTaskDrag(wrapper, task, goal, all, container) {
         renderGoalsAndSubitems();
     });
 }
-console.log('✅ Running renderGoalsAndSubitems');
-
 
 export async function renderGoalsAndSubitems() {
   goalList.innerHTML = '';
@@ -240,7 +214,6 @@ export async function renderGoalsAndSubitems() {
   });
 }
 
-
 function attachEditButtons(item, buttonWrap) {
   const editBtn = document.createElement('button');
   editBtn.type = 'button';
@@ -357,9 +330,6 @@ function attachEditButtons(item, buttonWrap) {
   };
 }
 
-
-
-
 function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');
     row.className = 'decision-row';
@@ -436,6 +406,7 @@ function createGoalRow(goal, options = {}) {
 
     return row;
 }
+
 function renderChildren(goal, all, container) {
     const children = all.filter(i => i.parentGoalId === goal.id);
     const now = Date.now();
@@ -606,7 +577,6 @@ function renderChildren(goal, all, container) {
     });
 }
 
-
 function attachTaskDeleteButton(item, row) {
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button'; // 🔥 Prevents form submission
@@ -629,6 +599,7 @@ function attachTaskDeleteButton(item, row) {
 
     row.querySelector('.right-group .button-row')?.appendChild(deleteBtn);
 }
+
 function enableDragAndDrop(wrapper, type = 'goal') {
     const goalList = document.getElementById('goalList');
 
@@ -693,7 +664,6 @@ function enableDragAndDrop(wrapper, type = 'goal') {
         wrapper.classList.remove('dragging');
     });
 }
-
 
 function enableTaskReorder(wrapper, goalId) {
     const container = wrapper.parentElement;
@@ -815,6 +785,7 @@ function enableTaskDragAndDrop(wrapper, taskList, goalId) {
         wrapper.classList.remove('dragging');
     });
 }
+
 
 
 
