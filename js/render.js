@@ -77,148 +77,168 @@ function enableTaskDrag(wrapper, task, goal, all, container) {
 }
 
 export async function renderGoalsAndSubitems() {
-    goalList.innerHTML = '';
-    completedList.innerHTML = '';
-    const renderedGoalIds = new Set();
+  goalList.innerHTML = '';
+  completedList.innerHTML = '';
+  const renderedGoalIds = new Set();
+  const all = await loadDecisions();
+  console.log('🔍 Total items loaded:', all.length);
 
-    const all = await loadDecisions();
-    console.log('🔍 Total items loaded:', all.length);
+  const goals = all.filter(i => i.type === 'goal' && i.id && i.parentGoalId == null);
+  const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
 
-    const goals = all.filter(i => i.type === 'goal' && i.id);
-    const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
+  const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
+  const goalOrder = Array.isArray(snap.data()?.goalOrder)
+    ? snap.data().goalOrder
+    : goals.map(g => g.id);
 
-    const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
-    const goalOrder = Array.isArray(snap.data()?.goalOrder)
-        ? snap.data().goalOrder
-        : goals.map(g => g.id);
+  const sortedGoals = [
+    ...goalOrder.map(id => goalMap[id]).filter(Boolean),
+    ...goals.filter(g => !goalOrder.includes(g.id))
+  ];
 
-    const sortedGoals = [
-        ...goalOrder.map(id => goalMap[id]).filter(Boolean),
-        ...goals.filter(g => !goalOrder.includes(g.id))
-    ];
+  const now = Date.now();
 
-    const now = Date.now();
-
-    // 🔽 Hidden section setup (collapsed by default)
-    let hiddenSection = document.getElementById('hiddenList');
-    if (!hiddenSection) {
-        hiddenSection = document.createElement('div');
-        hiddenSection.id = 'hiddenList';
-        hiddenSection.innerHTML = `
+  // 🔽 Hidden Goals Section
+  let hiddenSection = document.getElementById('hiddenList');
+  if (!hiddenSection) {
+    hiddenSection = document.createElement('div');
+    hiddenSection.id = 'hiddenList';
+    hiddenSection.innerHTML = `
       <h2 style="margin-top: 32px;">
         <span id="toggleHidden" style="cursor: pointer;">▶</span> Hidden Goals
       </h2>
       <div id="hiddenContent" style="display: none;"></div>
     `;
-        goalList.parentNode.insertBefore(hiddenSection, completedList);
-    }
+    goalList.parentNode.insertBefore(hiddenSection, goalList.nextSibling);
+  }
 
-    const hiddenContent = hiddenSection.querySelector('#hiddenContent');
-    const toggleHidden = hiddenSection.querySelector('#toggleHidden');
-    toggleHidden.onclick = () => {
-        const isOpen = hiddenContent.style.display === 'block';
-        toggleHidden.textContent = isOpen ? '▶' : '▼';
-        hiddenContent.style.display = isOpen ? 'none' : 'block';
+  const hiddenContent = hiddenSection.querySelector('#hiddenContent');
+  const toggleHidden = hiddenSection.querySelector('#toggleHidden');
+  toggleHidden.onclick = () => {
+    const isOpen = hiddenContent.style.display === 'block';
+    toggleHidden.textContent = isOpen ? '▶' : '▼';
+    hiddenContent.style.display = isOpen ? 'none' : 'block';
+  };
+
+  // 🔽 Completed Goals Section (self-contained)
+  let completedSection = document.getElementById('completedSection');
+  if (!completedSection) {
+    completedSection = document.createElement('div');
+    completedSection.id = 'completedSection';
+
+    const completedHeader = document.createElement('h2');
+    const toggle = document.createElement('span');
+    toggle.textContent = '▼';
+    toggle.style.cursor = 'pointer';
+
+    let completedContent = document.createElement('div');
+    completedContent.id = 'completedContent';
+    completedContent.style.display = 'block';
+    completedContent.appendChild(completedList);
+
+    toggle.onclick = () => {
+      const isOpen = completedContent.style.display === 'block';
+      toggle.textContent = isOpen ? '▶' : '▼';
+      completedContent.style.display = isOpen ? 'none' : 'block';
     };
 
-    // 🔽 Completed section setup (collapsed by default)
-    const toggleCompleted = document.createElement('span');
-    toggleCompleted.textContent = '▶';
-    toggleCompleted.style.cursor = 'pointer';
+    completedHeader.appendChild(toggle);
+    completedHeader.append(' Completed');
+    completedSection.appendChild(completedHeader);
+    completedSection.appendChild(completedContent);
 
-    const completedHeading = completedList.previousElementSibling;
-    if (completedHeading && completedHeading.tagName === 'H2') {
-        completedHeading.prepend(toggleCompleted);
+    goalList.parentNode.appendChild(completedSection);
+  }
+
+  const nowSortedGoals = [...sortedGoals];
+
+  // Sort hidden goals by most recently hidden
+  nowSortedGoals.sort((a, b) => {
+    const aTime = a.hiddenUntil ? new Date(a.hiddenUntil).getTime() : 0;
+    const bTime = b.hiddenUntil ? new Date(b.hiddenUntil).getTime() : 0;
+    return bTime - aTime; // newest first
+  });
+
+  nowSortedGoals.forEach(goal => {
+    if (renderedGoalIds.has(goal.id)) return;
+
+    let hideUntil = 0;
+    if (goal.hiddenUntil) {
+      try {
+        hideUntil = typeof goal.hiddenUntil === 'string'
+          ? new Date(goal.hiddenUntil).getTime()
+          : goal.hiddenUntil;
+        if (isNaN(hideUntil)) hideUntil = 0;
+      } catch {
+        hideUntil = 0;
+      }
     }
 
-    completedList.style.display = 'none';
-    toggleCompleted.onclick = () => {
-        const isOpen = completedList.style.display === 'block';
-        toggleCompleted.textContent = isOpen ? '▶' : '▼';
-        completedList.style.display = isOpen ? 'none' : 'block';
+    const isCompleted = !!goal.completed;
+    const isHidden = hideUntil && now < hideUntil;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'decision goal-card';
+    wrapper.setAttribute('draggable', 'true');
+    wrapper.dataset.goalId = goal.id;
+
+    const row = createGoalRow(goal);
+    const toggleBtn = row.querySelector('.toggle-triangle');
+
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'goal-children';
+
+    const isOpen = openGoalIds.has(goal.id);
+    childrenContainer.style.display = isOpen ? 'block' : 'none';
+    toggleBtn.textContent = isOpen ? '▼' : '▶';
+    wrapper.setAttribute('draggable', isOpen ? 'false' : 'true');
+
+    toggleBtn.onclick = () => {
+      const isVisible = childrenContainer.style.display === 'block';
+      toggleBtn.textContent = isVisible ? '▶' : '▼';
+      childrenContainer.style.display = isVisible ? 'none' : 'block';
+      wrapper.setAttribute('draggable', isVisible ? 'true' : 'false');
+      if (!isVisible) openGoalIds.add(goal.id);
+      else openGoalIds.delete(goal.id);
     };
 
-    sortedGoals.forEach(goal => {
-        if (renderedGoalIds.has(goal.id)) return;
-        renderedGoalIds.add(goal.id); // ✅ Immediately mark as rendered
+    wrapper.appendChild(row);
+    wrapper.appendChild(childrenContainer);
+    renderChildren(goal, all, childrenContainer);
+    enableDragAndDrop(wrapper, 'goal');
 
-        let hideUntil = 0;
+    if (isCompleted) {
+      completedList.appendChild(wrapper);
+      renderedGoalIds.add(goal.id);
+    } else if (isHidden) {
+      const label = document.createElement('div');
+      label.className = 'right-aligned';
+      label.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
 
-        if (goal.hiddenUntil) {
-            try {
-                hideUntil = typeof goal.hiddenUntil === 'string'
-                    ? new Date(goal.hiddenUntil).getTime()
-                    : goal.hiddenUntil;
-                if (isNaN(hideUntil)) hideUntil = 0;
-            } catch {
-                hideUntil = 0;
-            }
+      const unhideBtn = document.createElement('button');
+      unhideBtn.type = 'button';
+      unhideBtn.textContent = 'Unhide';
+      unhideBtn.className = 'revisit-btn';
+      unhideBtn.style.marginLeft = '10px';
+      unhideBtn.onclick = async () => {
+        const updated = await loadDecisions();
+        const idx = updated.findIndex(d => d.id === goal.id);
+        if (idx !== -1) {
+          updated[idx].hiddenUntil = null;
+          await saveDecisions(updated);
+          renderGoalsAndSubitems();
         }
+      };
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'decision goal-card';
-        wrapper.setAttribute('draggable', 'true');
-        wrapper.dataset.goalId = goal.id;
-
-        const row = createGoalRow(goal);
-        const toggleBtn = row.querySelector('.toggle-triangle');
-
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'goal-children';
-
-        const isOpen = openGoalIds.has(goal.id);
-        childrenContainer.style.display = isOpen ? 'block' : 'none';
-        toggleBtn.textContent = isOpen ? '▼' : '▶';
-        wrapper.setAttribute('draggable', isOpen ? 'false' : 'true');
-
-        toggleBtn.onclick = () => {
-            const isVisible = childrenContainer.style.display === 'block';
-            toggleBtn.textContent = isVisible ? '▶' : '▼';
-            childrenContainer.style.display = isVisible ? 'none' : 'block';
-            wrapper.setAttribute('draggable', isVisible ? 'true' : 'false');
-            if (!isVisible) openGoalIds.add(goal.id);
-            else openGoalIds.delete(goal.id);
-        };
-
-        wrapper.appendChild(row);
-        wrapper.appendChild(childrenContainer);
-        renderChildren(goal, all, childrenContainer);
-        enableDragAndDrop(wrapper, 'goal');
-
-        const isCompleted = !!goal.completed;
-        const isHidden = hideUntil && now < hideUntil;
-
-        if (isCompleted) {
-            completedList.appendChild(wrapper);
-        } else if (isHidden) {
-            const label = document.createElement('div');
-            label.className = 'right-aligned';
-            label.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
-
-            const unhideBtn = document.createElement('button');
-            unhideBtn.type = 'button';
-            unhideBtn.textContent = 'Unhide';
-            unhideBtn.className = 'revisit-btn';
-            unhideBtn.style.marginLeft = '10px';
-            unhideBtn.onclick = async () => {
-                const updated = await loadDecisions();
-                const idx = updated.findIndex(d => d.id === goal.id);
-                if (idx !== -1) {
-                    updated[idx].hiddenUntil = null;
-                    await saveDecisions(updated);
-                    renderGoalsAndSubitems();
-                }
-            };
-
-            label.appendChild(unhideBtn);
-            wrapper.appendChild(label);
-            hiddenContent.appendChild(wrapper);
-        } else {
-            goalList.appendChild(wrapper);
-        }
-
-        renderedGoalIds.add(goal.id); // ✅ Mark as rendered
-    });
+      label.appendChild(unhideBtn);
+      wrapper.appendChild(label);
+      hiddenContent.appendChild(wrapper);
+      renderedGoalIds.add(goal.id);
+    } else {
+      goalList.appendChild(wrapper);
+      renderedGoalIds.add(goal.id);
+    }
+  });
 }
 
 
