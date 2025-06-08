@@ -1,31 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Goal Oriented</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBbet_bmwm8h8G5CqvmzrdAnc3AO-0IKa8",
-      authDomain: "decision-maker-4e1d3.firebaseapp.com",
-      projectId: "decision-maker-4e1d3",
-      storageBucket: "decision-maker-4e1d3.firebasestorage.app",
-      messagingSenderId: "727689864651",
-      appId: "1:727689864651:web:0100c3894790b8c188c24e",
-      measurementId: "G-7EJVQN0WT3"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-  </script>
 </head>
 
 <body>
@@ -33,43 +13,56 @@
     <div class="navbar-left">Goal Oriented</div>
     <div class="navbar-right">
       <span id="userEmail" class="user-email"></span>
-<button type="button" id="loginBtn">Sign In</button>
-<button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
+      <button type="button" id="loginBtn">Sign In</button>
+      <button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
 
     </div>
   </div>
 
   <div id="appContainer">
+    <div id="dailyLogModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <h3>How are you doing today?</h3>
+    <p>Rate from 1 (worst) to 10 (best):</p>
+    <div id="dailyLogRating" class="rating-options">
+      <!-- Radio buttons will be inserted here -->
+    </div>
+    <textarea id="dailyLogText" placeholder="What would make it better?" rows="3"></textarea>
+    <div class="modal-actions">
+      <button id="dailyLogSubmit">Submit</button>
+    </div>
+  </div>
+</div>
+
     <div class="wizard-panel">
       <button id="addGoalBtn">+ Add Goal</button>
       <div id="goalWizard" style="display: none;">
         <div id="wizardStep"></div>
         <div class="button-row">
-<div class="button-row">
-  <button type="button" id="wizardBackBtn" style="display: none;">Back</button>
-  <button type="button" id="wizardCancelBtn">Cancel</button>
-  <button type="button" id="wizardNextBtn">Next</button>
-</div>
-
+          <div class="button-row">
+            <button type="button" id="wizardBackBtn" style="display: none;">Back</button>
+            <button type="button" id="wizardCancelBtn">Cancel</button>
+            <button type="button" id="wizardNextBtn">Next</button>
+          </div>
         </div>
       </div>
     </div>
 
-<section class="main-layout">
-  <div class="goals-column">
-    <h2>Goals</h2>
-    <div id="goalList" class="decision-container"></div>
+    <section class="main-layout">
+      <div class="goals-column">
+        <h2>Goals</h2>
+        <div id="goalList" class="decision-container"></div>
 
-    <hr style="margin: 40px 0;" />
+        <hr style="margin: 40px 0;" />
 
-    <h2>Completed</h2>
-    <div id="completedList" class="decision-container"></div>
-  </div>
-  <div class="right-column">
-      <h2>Daily Tasks</h2>
-  <div id="dailyTasksList" class="decision-container"></div>
-  </div>
-</section>
+        <h2>Completed</h2>
+        <div id="completedList" class="decision-container"></div>
+      </div>
+      <div class="right-column">
+        <h2>Daily Tasks</h2>
+        <div id="dailyTasksList" class="decision-container"></div>
+      </div>
+    </section>
 
   </div>
 
@@ -78,4 +71,5 @@
 
   <script type="module" src="js/main.js"></script>
 </body>
+
 </html>

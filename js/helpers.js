@@ -1,4 +1,4 @@
-import { getCurrentUser } from './auth.js';
+import { getCurrentUser, db } from './auth.js';
 
 export function generateId() {
   return '_' + Math.random().toString(36).substr(2, 9);

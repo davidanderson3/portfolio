@@ -1,5 +1,5 @@
-import { loadDecisions, saveDecisions, saveGoalOrder, generateId } from './helpers.js';
-import { formatDaysUntil } from './helpers.js';
+import { loadDecisions, saveDecisions, saveGoalOrder, generateId, formatDaysUntil } from './helpers.js';
+import { db } from './auth.js';
 
 const openGoalIds = new Set();
 const addBtn = document.createElement('button');

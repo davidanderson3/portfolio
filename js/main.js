@@ -2,7 +2,9 @@
 import { initAuth } from './auth.js';
 import { initWizard } from './wizard.js';
 import { renderGoalsAndSubitems } from './render.js';
-import { renderDailyTasks } from './daily.js'; 
+import { renderDailyTasks } from './daily.js';
+import { db } from './auth.js';
+import { showDailyLogPrompt } from './dailyLog.js';
 
 export let currentUser = null;
 
@@ -22,8 +24,9 @@ window.addEventListener('DOMContentLoaded', () => {
   initAuth(uiRefs, (user) => {
     currentUser = user;
     if (user) {
-      renderGoalsAndSubitems();
-      renderDailyTasks(); 
+      renderGoalsAndSubitems(user, db);
+      showDailyLogPrompt(user, db);
+      renderDailyTasks(user, db); // ✅ Pass user and db here
     } else {
       document.getElementById('goalList').innerHTML = '';
       document.getElementById('completedList').innerHTML = '';
