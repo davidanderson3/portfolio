@@ -83,7 +83,7 @@ export async function renderDailyTasks() {
   const row = document.createElement('div');
   row.className = 'daily-task';
   row.style.display = 'grid';
-  row.style.gridTemplateColumns = '24px 1fr 32px';
+  row.style.gridTemplateColumns = '24px 1fr auto';
   row.style.alignItems = 'center';
   row.style.columnGap = '10px';
   row.style.padding = '6px 12px';
@@ -113,6 +113,12 @@ export async function renderDailyTasks() {
     text.style.color = '#777';
   }
 
+  // Button container
+  const buttonWrap = document.createElement('div');
+  buttonWrap.style.display = 'flex';
+  buttonWrap.style.gap = '8px';
+  buttonWrap.style.justifyContent = 'flex-end';
+
   // Skip button
   const skipBtn = document.createElement('button');
   skipBtn.innerHTML = '⏭️';
@@ -134,6 +140,25 @@ export async function renderDailyTasks() {
     renderDailyTasks();
   };
 
+  // Delete button
+  const deleteBtn = document.createElement('button');
+  deleteBtn.innerHTML = '❌';
+  deleteBtn.title = 'Delete task';
+  deleteBtn.style.background = 'none';
+  deleteBtn.style.border = 'none';
+  deleteBtn.style.cursor = 'pointer';
+  deleteBtn.style.fontSize = '1.1em';
+  deleteBtn.style.padding = '0';
+  deleteBtn.style.color = '#c44';
+  deleteBtn.style.lineHeight = '1';
+
+  deleteBtn.onclick = async () => {
+    if (!confirm(`Delete task: "${task.text.replace(/^\[Daily\]\s*/, '')}"?`)) return;
+    const updated = all.filter(t => t.id !== task.id);
+    await saveDecisions(updated);
+    renderDailyTasks();
+  };
+
   // Checkbox handler
   checkbox.onchange = () => {
     const updatedDismissed = JSON.parse(localStorage.getItem('dismissedDailyTasks') || '{}');
@@ -150,11 +175,15 @@ export async function renderDailyTasks() {
     renderDailyTasks();
   };
 
+  buttonWrap.appendChild(skipBtn);
+  buttonWrap.appendChild(deleteBtn);
+
   row.appendChild(checkbox);
   row.appendChild(text);
-  row.appendChild(skipBtn);
+  row.appendChild(buttonWrap);
   container.appendChild(row);
 });
+
 
 
 }

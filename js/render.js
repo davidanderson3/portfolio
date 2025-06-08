@@ -3,7 +3,7 @@ import { formatDaysUntil } from './helpers.js';
 
 const openGoalIds = new Set();
 const addBtn = document.createElement('button');
-addBtn.type = 'button'; 
+addBtn.type = 'button';
 const goalList = document.getElementById('goalList');
 const completedList = document.getElementById('completedList');
 let dragSrcEl = null;
@@ -77,257 +77,265 @@ function enableTaskDrag(wrapper, task, goal, all, container) {
 }
 
 export async function renderGoalsAndSubitems() {
-  goalList.innerHTML = '';
-  completedList.innerHTML = '';
+    goalList.innerHTML = '';
+    completedList.innerHTML = '';
+    const renderedGoalIds = new Set();
 
-  const all = await loadDecisions();
-  console.log('🔍 Total items loaded:', all.length);
+    const all = await loadDecisions();
+    console.log('🔍 Total items loaded:', all.length);
 
-  const goals = all.filter(i => i.type === 'goal' && i.id);
-  const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
+    const goals = all.filter(i => i.type === 'goal' && i.id);
+    const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
 
-  const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
-  const goalOrder = Array.isArray(snap.data()?.goalOrder)
-    ? snap.data().goalOrder
-    : goals.map(g => g.id);
+    const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
+    const goalOrder = Array.isArray(snap.data()?.goalOrder)
+        ? snap.data().goalOrder
+        : goals.map(g => g.id);
 
-  const sortedGoals = [
-    ...goalOrder.map(id => goalMap[id]).filter(Boolean),
-    ...goals.filter(g => !goalOrder.includes(g.id))
-  ];
+    const sortedGoals = [
+        ...goalOrder.map(id => goalMap[id]).filter(Boolean),
+        ...goals.filter(g => !goalOrder.includes(g.id))
+    ];
 
-  const now = Date.now();
+    const now = Date.now();
 
-  // 🔽 Hidden section setup (collapsed by default)
-  let hiddenSection = document.getElementById('hiddenList');
-  if (!hiddenSection) {
-    hiddenSection = document.createElement('div');
-    hiddenSection.id = 'hiddenList';
-    hiddenSection.innerHTML = `
+    // 🔽 Hidden section setup (collapsed by default)
+    let hiddenSection = document.getElementById('hiddenList');
+    if (!hiddenSection) {
+        hiddenSection = document.createElement('div');
+        hiddenSection.id = 'hiddenList';
+        hiddenSection.innerHTML = `
       <h2 style="margin-top: 32px;">
         <span id="toggleHidden" style="cursor: pointer;">▶</span> Hidden Goals
       </h2>
       <div id="hiddenContent" style="display: none;"></div>
     `;
-    goalList.parentNode.insertBefore(hiddenSection, completedList);
-  }
-
-  const hiddenContent = hiddenSection.querySelector('#hiddenContent');
-  const toggleHidden = hiddenSection.querySelector('#toggleHidden');
-  toggleHidden.onclick = () => {
-    const isOpen = hiddenContent.style.display === 'block';
-    toggleHidden.textContent = isOpen ? '▶' : '▼';
-    hiddenContent.style.display = isOpen ? 'none' : 'block';
-  };
-
-  // 🔽 Completed section setup (collapsed by default)
-  const toggleCompleted = document.createElement('span');
-  toggleCompleted.textContent = '▶';
-  toggleCompleted.style.cursor = 'pointer';
-
-  const completedHeading = completedList.previousElementSibling;
-  if (completedHeading && completedHeading.tagName === 'H2') {
-    completedHeading.prepend(toggleCompleted);
-  }
-
-  completedList.style.display = 'none';
-  toggleCompleted.onclick = () => {
-    const isOpen = completedList.style.display === 'block';
-    toggleCompleted.textContent = isOpen ? '▶' : '▼';
-    completedList.style.display = isOpen ? 'none' : 'block';
-  };
-
-  sortedGoals.forEach(goal => {
-    let hideUntil = 0;
-    if (goal.hiddenUntil) {
-      try {
-        hideUntil = typeof goal.hiddenUntil === 'string'
-          ? new Date(goal.hiddenUntil).getTime()
-          : goal.hiddenUntil;
-        if (isNaN(hideUntil)) hideUntil = 0;
-      } catch {
-        hideUntil = 0;
-      }
+        goalList.parentNode.insertBefore(hiddenSection, completedList);
     }
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'decision goal-card';
-    wrapper.setAttribute('draggable', 'true');
-    wrapper.dataset.goalId = goal.id;
-
-    const row = createGoalRow(goal);
-    const toggleBtn = row.querySelector('.toggle-triangle');
-
-    const childrenContainer = document.createElement('div');
-    childrenContainer.className = 'goal-children';
-
-    const isOpen = openGoalIds.has(goal.id);
-    childrenContainer.style.display = isOpen ? 'block' : 'none';
-    toggleBtn.textContent = isOpen ? '▼' : '▶';
-    wrapper.setAttribute('draggable', isOpen ? 'false' : 'true');
-
-    toggleBtn.onclick = () => {
-      const isVisible = childrenContainer.style.display === 'block';
-      toggleBtn.textContent = isVisible ? '▶' : '▼';
-      childrenContainer.style.display = isVisible ? 'none' : 'block';
-      wrapper.setAttribute('draggable', isVisible ? 'true' : 'false');
-      if (!isVisible) openGoalIds.add(goal.id);
-      else openGoalIds.delete(goal.id);
+    const hiddenContent = hiddenSection.querySelector('#hiddenContent');
+    const toggleHidden = hiddenSection.querySelector('#toggleHidden');
+    toggleHidden.onclick = () => {
+        const isOpen = hiddenContent.style.display === 'block';
+        toggleHidden.textContent = isOpen ? '▶' : '▼';
+        hiddenContent.style.display = isOpen ? 'none' : 'block';
     };
 
-    wrapper.appendChild(row);
-    wrapper.appendChild(childrenContainer);
-    renderChildren(goal, all, childrenContainer);
-    enableDragAndDrop(wrapper, 'goal');
+    // 🔽 Completed section setup (collapsed by default)
+    const toggleCompleted = document.createElement('span');
+    toggleCompleted.textContent = '▶';
+    toggleCompleted.style.cursor = 'pointer';
 
-    const isCompleted = !!goal.completed;
-    const isHidden = hideUntil && now < hideUntil;
-
-    if (isCompleted) {
-      completedList.appendChild(wrapper);
-    } else if (isHidden) {
-      const label = document.createElement('div');
-      label.className = 'right-aligned';
-      label.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
-
-      const unhideBtn = document.createElement('button');
-      unhideBtn.type = 'button';
-      unhideBtn.textContent = 'Unhide';
-      unhideBtn.className = 'revisit-btn';
-      unhideBtn.style.marginLeft = '10px';
-      unhideBtn.onclick = async () => {
-        const updated = await loadDecisions();
-        const idx = updated.findIndex(d => d.id === goal.id);
-        if (idx !== -1) {
-          updated[idx].hiddenUntil = null;
-          await saveDecisions(updated);
-          renderGoalsAndSubitems();
-        }
-      };
-
-      label.appendChild(unhideBtn);
-      wrapper.appendChild(label);
-      hiddenContent.appendChild(wrapper);
-    } else {
-      goalList.appendChild(wrapper);
+    const completedHeading = completedList.previousElementSibling;
+    if (completedHeading && completedHeading.tagName === 'H2') {
+        completedHeading.prepend(toggleCompleted);
     }
-  });
+
+    completedList.style.display = 'none';
+    toggleCompleted.onclick = () => {
+        const isOpen = completedList.style.display === 'block';
+        toggleCompleted.textContent = isOpen ? '▶' : '▼';
+        completedList.style.display = isOpen ? 'none' : 'block';
+    };
+
+    sortedGoals.forEach(goal => {
+        if (renderedGoalIds.has(goal.id)) return;
+        renderedGoalIds.add(goal.id); // ✅ Immediately mark as rendered
+
+        let hideUntil = 0;
+
+        if (goal.hiddenUntil) {
+            try {
+                hideUntil = typeof goal.hiddenUntil === 'string'
+                    ? new Date(goal.hiddenUntil).getTime()
+                    : goal.hiddenUntil;
+                if (isNaN(hideUntil)) hideUntil = 0;
+            } catch {
+                hideUntil = 0;
+            }
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'decision goal-card';
+        wrapper.setAttribute('draggable', 'true');
+        wrapper.dataset.goalId = goal.id;
+
+        const row = createGoalRow(goal);
+        const toggleBtn = row.querySelector('.toggle-triangle');
+
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'goal-children';
+
+        const isOpen = openGoalIds.has(goal.id);
+        childrenContainer.style.display = isOpen ? 'block' : 'none';
+        toggleBtn.textContent = isOpen ? '▼' : '▶';
+        wrapper.setAttribute('draggable', isOpen ? 'false' : 'true');
+
+        toggleBtn.onclick = () => {
+            const isVisible = childrenContainer.style.display === 'block';
+            toggleBtn.textContent = isVisible ? '▶' : '▼';
+            childrenContainer.style.display = isVisible ? 'none' : 'block';
+            wrapper.setAttribute('draggable', isVisible ? 'true' : 'false');
+            if (!isVisible) openGoalIds.add(goal.id);
+            else openGoalIds.delete(goal.id);
+        };
+
+        wrapper.appendChild(row);
+        wrapper.appendChild(childrenContainer);
+        renderChildren(goal, all, childrenContainer);
+        enableDragAndDrop(wrapper, 'goal');
+
+        const isCompleted = !!goal.completed;
+        const isHidden = hideUntil && now < hideUntil;
+
+        if (isCompleted) {
+            completedList.appendChild(wrapper);
+        } else if (isHidden) {
+            const label = document.createElement('div');
+            label.className = 'right-aligned';
+            label.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
+
+            const unhideBtn = document.createElement('button');
+            unhideBtn.type = 'button';
+            unhideBtn.textContent = 'Unhide';
+            unhideBtn.className = 'revisit-btn';
+            unhideBtn.style.marginLeft = '10px';
+            unhideBtn.onclick = async () => {
+                const updated = await loadDecisions();
+                const idx = updated.findIndex(d => d.id === goal.id);
+                if (idx !== -1) {
+                    updated[idx].hiddenUntil = null;
+                    await saveDecisions(updated);
+                    renderGoalsAndSubitems();
+                }
+            };
+
+            label.appendChild(unhideBtn);
+            wrapper.appendChild(label);
+            hiddenContent.appendChild(wrapper);
+        } else {
+            goalList.appendChild(wrapper);
+        }
+
+        renderedGoalIds.add(goal.id); // ✅ Mark as rendered
+    });
 }
 
+
 function attachEditButtons(item, buttonWrap) {
-  const editBtn = document.createElement('button');
-  editBtn.type = 'button';
-  editBtn.textContent = 'Edit';
-  editBtn.className = 'edit-btn';
-  buttonWrap.appendChild(editBtn);
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.textContent = 'Edit';
+    editBtn.className = 'edit-btn';
+    buttonWrap.appendChild(editBtn);
 
-  if (!item.completed) {
-    const hideSelect = document.createElement('select');
-    hideSelect.className = 'edit-btn';
+    if (!item.completed) {
+        const hideSelect = document.createElement('select');
+        hideSelect.className = 'edit-btn';
 
-    const options = [
-      { label: 'Hide', value: '' },
-      { label: '1 hour', value: '1' },
-      { label: '4 hours', value: '4' },
-      { label: 'Tomorrow', value: '24' },
-      { label: '1 week', value: '168' }
-    ];
+        const options = [
+            { label: 'Hide', value: '' },
+            { label: '1 hour', value: '1' },
+            { label: '4 hours', value: '4' },
+            { label: 'Tomorrow', value: '24' },
+            { label: '1 week', value: '168' }
+        ];
 
-    options.forEach(opt => {
-      const option = document.createElement('option');
-      option.textContent = opt.label;
-      option.value = opt.value;
-      hideSelect.appendChild(option);
+        options.forEach(opt => {
+            const option = document.createElement('option');
+            option.textContent = opt.label;
+            option.value = opt.value;
+            hideSelect.appendChild(option);
+        });
+
+        hideSelect.onchange = async () => {
+            const hours = parseInt(hideSelect.value);
+            if (!hours) return;
+
+            const updated = await loadDecisions();
+            const idx = updated.findIndex(d => d.id === item.id);
+            if (idx !== -1) {
+                updated[idx].hiddenUntil = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+                await saveDecisions(updated);
+
+                if (item.type === 'task') {
+                    const goal = updated.find(d => d.id === item.parentGoalId);
+                    const container = document.querySelector(`.goal-card[data-goal-id="${goal?.id}"] .goal-children`);
+                    if (goal && container) {
+                        renderChildren(goal, updated, container);
+                        return;
+                    }
+                }
+
+                renderGoalsAndSubitems();
+            }
+        };
+
+        buttonWrap.appendChild(hideSelect);
+    }
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.className = 'remove-btn';
+    buttonWrap.appendChild(deleteBtn);
+
+    [editBtn, deleteBtn].forEach(btn => {
+        btn.addEventListener('mousedown', e => e.stopPropagation());
+        btn.addEventListener('click', e => e.stopPropagation());
     });
 
-    hideSelect.onchange = async () => {
-      const hours = parseInt(hideSelect.value);
-      if (!hours) return;
-
-      const updated = await loadDecisions();
-      const idx = updated.findIndex(d => d.id === item.id);
-      if (idx !== -1) {
-        updated[idx].hiddenUntil = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
-        await saveDecisions(updated);
-
-        if (item.type === 'task') {
-          const goal = updated.find(d => d.id === item.parentGoalId);
-          const container = document.querySelector(`.goal-card[data-goal-id="${goal?.id}"] .goal-children`);
-          if (goal && container) {
-            renderChildren(goal, updated, container);
-            return;
-          }
-        }
-
+    deleteBtn.onclick = async () => {
+        if (!confirm(`Delete goal: "${item.text}"?`)) return;
+        const updated = await loadDecisions();
+        const filtered = updated.filter(d => d.id !== item.id && d.parentGoalId !== item.id);
+        await saveDecisions(filtered);
         renderGoalsAndSubitems();
-      }
     };
 
-    buttonWrap.appendChild(hideSelect);
-  }
+    let editing = false;
 
-  const deleteBtn = document.createElement('button');
-  deleteBtn.type = 'button';
-  deleteBtn.textContent = 'Delete';
-  deleteBtn.className = 'remove-btn';
-  buttonWrap.appendChild(deleteBtn);
+    editBtn.onclick = async () => {
+        const row = editBtn.closest('.decision-row');
+        const middle = row?.querySelector('.middle-group');
+        const due = row?.querySelector('.due-column');
 
-  [editBtn, deleteBtn].forEach(btn => {
-    btn.addEventListener('mousedown', e => e.stopPropagation());
-    btn.addEventListener('click', e => e.stopPropagation());
-  });
+        if (!middle || !due) return;
 
-  deleteBtn.onclick = async () => {
-    if (!confirm(`Delete goal: "${item.text}"?`)) return;
-    const updated = await loadDecisions();
-    const filtered = updated.filter(d => d.id !== item.id && d.parentGoalId !== item.id);
-    await saveDecisions(filtered);
-    renderGoalsAndSubitems();
-  };
+        if (!editing) {
+            editing = true;
+            editBtn.textContent = 'Save';
 
-  let editing = false;
+            const textInput = document.createElement('input');
+            textInput.value = item.text;
+            textInput.style.width = '100%';
 
-  editBtn.onclick = async () => {
-    const row = editBtn.closest('.decision-row');
-    const middle = row?.querySelector('.middle-group');
-    const due = row?.querySelector('.due-column');
+            const deadlineInput = document.createElement('input');
+            deadlineInput.type = 'date';
+            deadlineInput.value = item.deadline || '';
+            deadlineInput.style.width = '140px';
 
-    if (!middle || !due) return;
+            middle.innerHTML = '';
+            middle.appendChild(textInput);
 
-    if (!editing) {
-      editing = true;
-      editBtn.textContent = 'Save';
+            due.innerHTML = '';
+            due.appendChild(deadlineInput);
+        } else {
+            const text = middle.querySelector('input')?.value.trim();
+            const deadline = due.querySelector('input')?.value.trim();
 
-      const textInput = document.createElement('input');
-      textInput.value = item.text;
-      textInput.style.width = '100%';
+            const updated = await loadDecisions();
+            const idx = updated.findIndex(d => d.id === item.id);
+            if (idx !== -1) {
+                updated[idx].text = text;
+                updated[idx].deadline = deadline;
+                await saveDecisions(updated);
+            }
 
-      const deadlineInput = document.createElement('input');
-      deadlineInput.type = 'date';
-      deadlineInput.value = item.deadline || '';
-      deadlineInput.style.width = '140px';
-
-      middle.innerHTML = '';
-      middle.appendChild(textInput);
-
-      due.innerHTML = '';
-      due.appendChild(deadlineInput);
-    } else {
-      const text = middle.querySelector('input')?.value.trim();
-      const deadline = due.querySelector('input')?.value.trim();
-
-      const updated = await loadDecisions();
-      const idx = updated.findIndex(d => d.id === item.id);
-      if (idx !== -1) {
-        updated[idx].text = text;
-        updated[idx].deadline = deadline;
-        await saveDecisions(updated);
-      }
-
-      editing = false;
-      renderGoalsAndSubitems();
-    }
-  };
+            editing = false;
+            renderGoalsAndSubitems();
+        }
+    };
 }
 
 function createGoalRow(goal, options = {}) {
