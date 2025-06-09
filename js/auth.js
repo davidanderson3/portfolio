@@ -29,9 +29,9 @@ export function initAuth({ loginBtn, logoutBtn, userEmail }, onLogin) {
   };
 
   loginBtn.onclick = async () => {
-    const provider = new auth.GoogleAuthProvider();
+    const provider = new firebase.auth.GoogleAuthProvider(); // ✅ FIXED
     try {
-      const result = await auth.signInWithPopup(provider, undefined, auth.browserPopupRedirectResolver);
+      const result = await firebase.auth().signInWithPopup(provider); // ✅ call firebase.auth()
       currentUser = result.user;
       safeSet(userEmail, 'textContent', currentUser.email);
       onLogin(currentUser);
@@ -39,6 +39,8 @@ export function initAuth({ loginBtn, logoutBtn, userEmail }, onLogin) {
       console.error('Login failed:', err);
     }
   };
+
+
 
   logoutBtn.onclick = async () => {
     await auth.signOut();
