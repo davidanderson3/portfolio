@@ -159,11 +159,13 @@ export async function renderGoalsAndSubitems() {
     const hiddenAndActiveGoals = sortedGoals.filter(g => !g.completed);
 
     // Sort hidden goals newest first
+    // Sort hidden goals oldest first
     hiddenAndActiveGoals.sort((a, b) => {
         const aTime = a.hiddenUntil ? new Date(a.hiddenUntil).getTime() : 0;
         const bTime = b.hiddenUntil ? new Date(b.hiddenUntil).getTime() : 0;
-        return bTime - aTime;
+        return aTime - bTime;
     });
+
 
     const finalList = [...completedGoals, ...hiddenAndActiveGoals];
 
