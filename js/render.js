@@ -328,9 +328,11 @@ function attachEditButtons(item, buttonWrap) {
                 if (idx !== -1) {
                     updated[idx].hiddenUntil = new Date(Date.now() + opt.value * 60 * 60 * 1000).toISOString();
                     await saveDecisions(updated);
+                    menu.style.display = 'none'; // 👈 hide the menu
                     renderGoalsAndSubitems();
                 }
             };
+
 
             menu.appendChild(btn);
         });
