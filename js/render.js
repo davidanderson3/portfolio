@@ -113,6 +113,7 @@ export async function renderGoalsAndSubitems() {
     }
 
     const hiddenContent = hiddenSection.querySelector('#hiddenContent');
+    hiddenContent.innerHTML = '';
     const toggleHidden = hiddenSection.querySelector('#toggleHidden');
     toggleHidden.onclick = () => {
         const isOpen = hiddenContent.style.display === 'block';

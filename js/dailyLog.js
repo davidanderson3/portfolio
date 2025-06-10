@@ -24,7 +24,7 @@ export function showRatingSummary(todayRating, allRatings) {
   }
 
   container.innerHTML = `
-    <h3 style="margin-top: 0;">Today's Mood</h3>
+    <h3 style="margin-top: 0;">Today's Rating</h3>
     <p>Rating: <strong>${todayRating}/10</strong></p>
     <p>You're doing better than <strong>${percentile}%</strong> of your days.</p>
   `;
