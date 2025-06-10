@@ -457,7 +457,8 @@ function createGoalRow(goal, options = {}) {
         }
         goal.completed = true;
         goal.resolution = resolution;
-        goal.dateCompleted = new Date().toISOString().split('T')[0];
+        goal.dateCompleted = new Date().toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
+
 
         const updated = await loadDecisions();
         const idx = updated.findIndex(d => d.id === goal.id);

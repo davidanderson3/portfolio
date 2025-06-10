@@ -57,7 +57,12 @@ export async function renderDailyTasks(currentUser, db) {
   container.appendChild(addForm);
 
   const all = await loadDecisions();
-  const todayKey = new Date().toISOString().split('T')[0];
+  // Old (UTC-based):
+  // const todayKey = new Date().toISOString().split('T')[0];
+
+  // New (local-based):
+  const todayKey = new Date().toLocaleDateString('en-CA');
+
 
   const completionSnap = await db.collection('taskCompletions').doc(currentUser.uid).get();
   const completionMap = completionSnap.exists ? completionSnap.data() : {};
@@ -99,6 +104,7 @@ export async function renderDailyTasks(currentUser, db) {
     text.style.whiteSpace = 'nowrap';
     text.style.overflow = 'hidden';
     text.style.textOverflow = 'ellipsis';
+    text.contentEditable = false;
 
     if (isDismissed) {
       text.style.textDecoration = 'line-through';
@@ -109,6 +115,29 @@ export async function renderDailyTasks(currentUser, db) {
     buttonWrap.style.display = 'flex';
     buttonWrap.style.gap = '8px';
     buttonWrap.style.justifyContent = 'flex-end';
+
+    const editBtn = document.createElement('button');
+    editBtn.innerHTML = '✏️';
+    editBtn.title = 'Edit task';
+    editBtn.style.background = 'none';
+    editBtn.style.border = 'none';
+    editBtn.style.cursor = 'pointer';
+    editBtn.style.fontSize = '1.1em';
+    editBtn.style.padding = '0';
+    editBtn.style.color = '#444';
+    editBtn.style.lineHeight = '1';
+
+    editBtn.onclick = async () => {
+      const originalText = task.text.replace(/^\[Daily\]\s*/, '');
+      const newText = prompt('Edit task:', originalText);
+      if (newText && newText.trim() !== originalText) {
+        const updated = all.map(t =>
+          t.id === task.id ? { ...t, text: `[Daily] ${newText.trim()}` } : t
+        );
+        await saveDecisions(updated);
+        renderDailyTasks(currentUser, db);
+      }
+    };
 
     const skipBtn = document.createElement('button');
     skipBtn.innerHTML = '⏭️';
@@ -163,6 +192,7 @@ export async function renderDailyTasks(currentUser, db) {
       renderDailyTasks(currentUser, db);
     };
 
+    buttonWrap.appendChild(editBtn);
     buttonWrap.appendChild(skipBtn);
     buttonWrap.appendChild(deleteBtn);
     row.appendChild(checkbox);
@@ -170,5 +200,6 @@ export async function renderDailyTasks(currentUser, db) {
     row.appendChild(buttonWrap);
     container.appendChild(row);
   }
+
 }
 
