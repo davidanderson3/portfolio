@@ -24,10 +24,21 @@ window.addEventListener('DOMContentLoaded', () => {
   initAuth(uiRefs, (user) => {
     currentUser = user;
     if (user) {
+      // 🔄 Full cleanup before re-rendering
+      document.getElementById('goalList').innerHTML = '';
+      document.getElementById('completedList').innerHTML = '';
+      const dailyList = document.getElementById('dailyTasksList');
+      if (dailyList) dailyList.innerHTML = '';
+
+      // 🔄 Also clear any persistent global state
+      if (window.openGoalIds) window.openGoalIds.clear?.();
+
+      // ✅ Re-render with fresh data
       renderGoalsAndSubitems(user, db);
       showDailyLogPrompt(user, db);
-      renderDailyTasks(user, db); // ✅ Pass user and db here
-    } else {
+      renderDailyTasks(user, db);
+    }
+    else {
       document.getElementById('goalList').innerHTML = '';
       document.getElementById('completedList').innerHTML = '';
       const dailyList = document.getElementById('dailyTasksList');
