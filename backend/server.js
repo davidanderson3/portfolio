@@ -6,7 +6,6 @@ const PORT = 3001;
 // Serve static files (like index.html, style.css, script.js)
 app.use(express.static(path.resolve(__dirname, '../')));
 
-
 // Enable CORS (optional for Firebase, useful for local testing)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,3 +15,6 @@ app.use((req, res, next) => {
 app.listen(PORT, () => {
   console.log(`✅ Serving static files at http://localhost:${PORT}`);
 });
+
+// 👇 Prevent Node from exiting
+setInterval(() => { }, 1000);

@@ -1,12 +1,13 @@
 /* ------------------------------
    Global Layout
 ------------------------------ */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f8f5f0;
-  background-image: 
+  background-image:
     url('https://www.transparenttextures.com/patterns/french-stucco.png');
   background-repeat: repeat;
   background-size: 600px 600px;
@@ -92,7 +93,8 @@ html, body {
   box-sizing: border-box;
 }
 
-#formContainer, #goalFormContainer {
+#formContainer,
+#goalFormContainer {
   background: #eef3ea;
   padding: 20px;
   border: 1px solid #d0decf;
@@ -172,6 +174,7 @@ button:hover {
   background-color: #effaf0;
   color: #587c63;
 }
+
 
 /* ------------------------------
    Layout and Rows
@@ -420,19 +423,22 @@ button:hover {
 }
 
 .goal-card {
-  position: relative; /* NEW: Ensure dropdown is positioned relative to this */
+  position: relative;
+  /* NEW: Ensure dropdown is positioned relative to this */
   margin-bottom: 14px;
   border-left: 4px solid #999;
   background: #f9f9f9;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  overflow: visible; /* 🔥 This is crucial */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: visible;
+  /* 🔥 This is crucial */
   z-index: 1;
 }
 
 .main-layout,
 .decision-container {
-  overflow: visible !important; /* 🔥 override hidden if set */
+  overflow: visible !important;
+  /* 🔥 override hidden if set */
   position: relative;
 }
 
@@ -446,17 +452,33 @@ button:hover {
 }
 
 
-.indent-0 { margin-left: 0; }
-.indent-1 { margin-left: 20px; }
-.indent-2 { margin-left: 40px; }
-.indent-3 { margin-left: 60px; }
+.indent-0 {
+  margin-left: 0;
+}
+
+.indent-1 {
+  margin-left: 20px;
+}
+
+.indent-2 {
+  margin-left: 40px;
+}
+
+.indent-3 {
+  margin-left: 60px;
+}
 
 /* ------------------------------
    Animation
 ------------------------------ */
 @keyframes flash {
-  0% { background-color: #fff8b3; }
-  100% { background-color: transparent; }
+  0% {
+    background-color: #fff8b3;
+  }
+
+  100% {
+    background-color: transparent;
+  }
 }
 
 .decision.highlight {
@@ -552,6 +574,7 @@ button:hover {
   opacity: 0.5;
   z-index: 10;
 }
+
 /* Allow all interaction within goal children */
 .goal-children,
 .goal-children * {
@@ -562,6 +585,7 @@ button:hover {
 .decision.indent-1 {
   cursor: grab;
 }
+
 .decision.indent-1.dragging {
   opacity: 0.5;
 }
@@ -571,9 +595,11 @@ button:hover {
   user-select: none;
   font-size: 1.2em;
 }
+
 .dragging {
   opacity: 0.5;
 }
+
 .goal-card.drag-over {
   outline: 2px dashed #ccc;
 }
@@ -609,6 +635,7 @@ select.edit-btn {
   min-width: 70px;
   height: 36px;
 }
+
 select.edit-btn:hover {
   background-color: #638b76;
 }
@@ -633,7 +660,7 @@ select.edit-btn:hover {
   padding: 10px 14px;
   border-radius: 6px;
   margin-bottom: 10px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 #dailyTasksList .daily-task label {
@@ -649,9 +676,11 @@ select.edit-btn:hover {
 
 .modal {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.4);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -664,7 +693,7 @@ select.edit-btn:hover {
   border-radius: 10px;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .rating-options {
