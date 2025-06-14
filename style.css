@@ -702,3 +702,15 @@ select.edit-btn:hover {
 .modal-actions {
   text-align: right;
 }
+
+.daily-task-wrapper {
+  user-select: none;
+}
+
+.daily-task-wrapper.dragging {
+  opacity: 0.5;
+}
+
+.daily-task-wrapper.drag-over {
+  outline: 2px dashed #888;
+}
