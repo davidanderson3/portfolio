@@ -461,58 +461,80 @@ button:hover {
     max-width: 100% !important;
   }
 
+  .goal-card {
+    margin-bottom: 10px;
+    padding: 6px 8px;
+  }
+
   .decision-row {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    padding: 12px 12px !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: center !important;
+    gap: 6px;
+    padding: 8px 10px !important;
   }
 
   .left-group,
   .middle-group,
   .right-group {
-    width: 100% !important;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin: 4px 0;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    flex-wrap: nowrap;
+    width: auto !important;
+    flex-shrink: 0;
   }
 
   .middle-group {
-    flex-direction: column;
-    align-items: flex-start;
-    font-size: 1em;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.95em;
   }
 
   .right-group {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-start;
+    flex: 0 0 auto;
+    font-size: 0.9em;
+    flex-wrap: nowrap;
+  }
+
+  .title-column {
+    font-size: 1em;
+    padding-left: 4px;
   }
 
   .button-row {
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: nowrap;
+    gap: 6px;
   }
 
+.button-row button,
+.button-row select.edit-btn {
+  padding: 4px 10px;
+  margin: 0;
+  height: 30px;
+  font-size: 0.9em;
+}
+
+
   .inline-add-form {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 6px;
     padding-left: 0 !important;
   }
 
   .inline-add-form input,
   .inline-add-form button {
-    width: 100% !important;
+    flex: 1 1 auto;
+    min-width: 120px;
+    max-width: 100%;
+    font-size: 0.9em;
   }
 
   .completed-decision-inline .middle-group {
     grid-template-columns: 1fr !important;
-  }
-
-  .goal-card {
-    margin-bottom: 16px;
   }
 
   .navbar {
@@ -531,38 +553,8 @@ button:hover {
     font-size: 1.5em;
     margin-bottom: 10px;
   }
-
-
-.goal-card {
-  margin-bottom: 10px;
-  padding: 6px 8px;
 }
 
-.decision-row {
-  padding: 8px 10px !important;
-}
-
-.middle-group {
-  font-size: 0.95em;
-  padding: 0 8px;
-}
-
-.title-column {
-  font-size: 1em;
-  padding-left: 4px;
-}
-
-.right-group {
-  font-size: 0.9em;
-}
-
-.button-row button,
-.button-row select.edit-btn {
-  height: 28px;
-  font-size: 0.85em;
-  padding: 3px 8px;
-}
-}
 
 .decision.dragging {
   opacity: 0.5;
