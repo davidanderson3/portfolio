@@ -2,12 +2,9 @@ import { loadDecisions, saveDecisions, saveGoalOrder, generateId, formatDaysUnti
 import { db } from './auth.js';
 
 const openGoalIds = new Set();
-const addBtn = document.createElement('button');
-addBtn.type = 'button';
 const goalList = document.getElementById('goalList');
 const completedList = document.getElementById('completedList');
 let dragSrcEl = null;
-let draggedId = null;
 
 ['dragover', 'drop', 'dragenter', 'dragstart'].forEach(event => {
     document.addEventListener(event, e => {
@@ -259,7 +256,6 @@ export async function renderGoalsAndSubitems() {
     });
 }
 
-
 function attachEditButtons(item, buttonWrap) {
     // ✏️ Edit icon button
     const editBtn = document.createElement('button');
@@ -431,8 +427,6 @@ function attachEditButtons(item, buttonWrap) {
     };
 }
 
-
-
 function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');
     row.className = 'decision-row';
@@ -457,15 +451,15 @@ function createGoalRow(goal, options = {}) {
     left.appendChild(checkbox);
 
     checkbox.onchange = async () => {
-        const resolution = prompt(`Mark goal complete: ${goal.text}`);
+        const resolution = prompt(`Mark ${goal.type === 'task' ? 'task' : 'goal'} complete: ${goal.text}`);
         if (!resolution) {
             checkbox.checked = false;
             return;
         }
+
         goal.completed = true;
         goal.resolution = resolution;
-        goal.dateCompleted = new Date().toLocaleDateString('en-CA'); // Format: YYYY-MM-DD
-
+        goal.dateCompleted = new Date().toLocaleDateString('en-CA');
 
         const updated = await loadDecisions();
         const idx = updated.findIndex(d => d.id === goal.id);
@@ -473,8 +467,25 @@ function createGoalRow(goal, options = {}) {
             updated[idx] = goal;
             await saveDecisions(updated);
         }
-        renderGoalsAndSubitems();
+
+        const wrapper = checkbox.closest('.goal-card, .decision.indent-1');
+        if (wrapper) {
+            // Remove task visually from current list
+            wrapper.remove();
+
+            if (goal.type === 'task') {
+                // Re-render children for this goal only
+                const container = wrapper.closest('.goal-children');
+                const goalId = goal.parentGoalId;
+                const parentGoal = updated.find(g => g.id === goalId);
+                if (parentGoal && container) renderChildren(parentGoal, updated, container);
+            } else {
+                completedList.appendChild(wrapper);
+            }
+        }
     };
+
+
 
     const middle = document.createElement('div');
     middle.className = 'middle-group';
@@ -769,65 +780,6 @@ function enableDragAndDrop(wrapper, type = 'goal') {
     });
 }
 
-function enableTaskReorder(wrapper, goalId) {
-    const container = wrapper.parentElement;
-
-    wrapper.addEventListener('dragstart', e => {
-        dragSrcEl = wrapper;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', wrapper.dataset.taskId);
-        wrapper.classList.add('dragging');
-    });
-
-    wrapper.addEventListener('dragover', e => {
-        e.preventDefault();
-        wrapper.classList.add('goal-drop-indicator');
-        e.dataTransfer.dropEffect = 'move';
-    });
-
-    wrapper.addEventListener('dragleave', () => {
-        wrapper.classList.remove('goal-drop-indicator');
-    });
-
-    wrapper.addEventListener('drop', async e => {
-        e.preventDefault();
-        wrapper.classList.remove('goal-drop-indicator');
-
-        if (dragSrcEl && dragSrcEl !== wrapper) {
-            const draggedId = dragSrcEl.dataset.taskId;
-            const dropTargetId = wrapper.dataset.taskId;
-
-            const siblings = [...container.children];
-            const draggedIndex = siblings.findIndex(el => el.dataset.taskId === draggedId);
-            const dropIndex = siblings.findIndex(el => el.dataset.taskId === dropTargetId);
-
-            if (draggedIndex > -1 && dropIndex > -1) {
-                container.insertBefore(dragSrcEl, draggedIndex < dropIndex ? wrapper.nextSibling : wrapper);
-            }
-
-            const newOrder = [...container.children]
-                .map(el => el.dataset.taskId)
-                .filter(Boolean);
-
-            const updated = await loadDecisions();
-            const underGoal = updated.filter(i => i.parentGoalId === goalId && !i.completed);
-            const others = updated.filter(i => i.parentGoalId !== goalId || i.completed);
-
-            // Reorder active tasks under this goal
-            const reordered = newOrder.map(id => underGoal.find(t => t.id === id)).filter(Boolean);
-            await saveDecisions([...others, ...reordered]);
-
-            renderGoalsAndSubitems();
-        }
-
-        dragSrcEl = null;
-    });
-
-    wrapper.addEventListener('dragend', () => {
-        wrapper.classList.remove('dragging');
-    });
-}
-
 function enableTaskDragAndDrop(wrapper, taskList, goalId) {
     wrapper.addEventListener('dragstart', e => {
         e.stopPropagation();
@@ -882,7 +834,13 @@ function enableTaskDragAndDrop(wrapper, taskList, goalId) {
         await saveDecisions([...others, ...reordered]);
         console.log('Saved new order for goal', goalId, newOrder);
 
-        renderGoalsAndSubitems();
+        // Just update this goal's children
+        const parentContainer = wrapper.closest('.goal-children');
+        const parentGoal = updated.find(g => g.id === goalId);
+        if (parentContainer && parentGoal) {
+            renderChildren(parentGoal, updated, parentContainer);
+        }
+
     });
 
     wrapper.addEventListener('dragend', () => {
