@@ -96,7 +96,8 @@ export async function renderGoalsAndSubitems() {
         ...goals.filter(g => !goalOrder.includes(g.id))
     ];
 
-    const now = Date.now();
+    const now = new Date().getTime();
+
 
     // 🔽 Hidden Goals Section
     let hiddenSection = document.getElementById('hiddenList');
@@ -176,8 +177,9 @@ export async function renderGoalsAndSubitems() {
         if (goal.hiddenUntil) {
             try {
                 hideUntil = typeof goal.hiddenUntil === 'string'
-                    ? new Date(goal.hiddenUntil).getTime()
+                    ? Date.parse(goal.hiddenUntil)
                     : goal.hiddenUntil;
+
                 if (isNaN(hideUntil)) hideUntil = 0;
             } catch {
                 hideUntil = 0;
@@ -231,7 +233,6 @@ export async function renderGoalsAndSubitems() {
             const label = document.createElement('div');
             label.className = 'right-aligned';
             label.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
-
             const unhideBtn = document.createElement('button');
             unhideBtn.type = 'button';
             unhideBtn.textContent = 'Unhide';
@@ -328,7 +329,9 @@ function attachEditButtons(item, buttonWrap) {
                 const updated = await loadDecisions();
                 const idx = updated.findIndex(d => d.id === item.id);
                 if (idx !== -1) {
-                    updated[idx].hiddenUntil = new Date(Date.now() + opt.value * 60 * 60 * 1000).toISOString();
+                    const targetTime = new Date(Date.now() + opt.value * 60 * 60 * 1000);
+                    updated[idx].hiddenUntil = targetTime.toLocaleString('en-CA', { hour12: false }); // keeps local time
+
                     await saveDecisions(updated);
                     menu.style.display = 'none'; // 👈 hide the menu
                     renderGoalsAndSubitems();
@@ -510,7 +513,7 @@ function createGoalRow(goal, options = {}) {
 
 function renderChildren(goal, all, container) {
     const children = all.filter(i => i.parentGoalId === goal.id);
-    const now = Date.now();
+    const now = new Date().getTime();
 
     const activeTasks = children.filter(c => {
         let hideUntil = 0;

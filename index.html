@@ -35,12 +35,26 @@
         </div>
       </div>
     </div>
+      <div class="modal-content">
+        <h3>How are you doing today?</h3>
+        <p>Rate from 1 (worst) to 10 (best):</p>
+        <div id="dailyLogRating" class="rating-options">
+          <!-- Radio buttons will be inserted here -->
+        </div>
+        <textarea id="dailyLogText" placeholder="What would make it better?" rows="3"></textarea>
+        <div class="modal-actions">
+          <button id="dailyLogSubmit">Submit</button>
+        </div>
+      </div>
+    </div>
 
 
 
     <section class="main-layout">
       <div class="goals-column">
         <h2>Goals</h2>
+
+        <div id="goalList" class="decision-container"></div>
         <div class="wizard-panel">
           <button id="addGoalBtn">+ Add Goal</button>
           <div id="goalWizard" style="display: none;">
@@ -54,8 +68,6 @@
             </div>
           </div>
         </div>
-        <div id="goalList" class="decision-container"></div>
-
         <hr style="margin: 40px 0;" />
 
         <div id="completedList" class="decision-container"></div>

@@ -299,43 +299,6 @@ button:hover {
 /* ------------------------------
    Completed Styles
 ------------------------------ */
-.completed-decision {
-  background: #e8fff1;
-  border-left: 6px solid #2ecc71;
-  border-radius: 10px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.completed-decision .title {
-  font-weight: 600;
-  font-size: 1.3em;
-  margin-bottom: 8px;
-  color: #2c5c2c;
-}
-
-.completed-decision .label {
-  font-weight: 600;
-  color: #444;
-}
-
-.completed-decision .row {
-  display: flex;
-  gap: 10px;
-  margin: 4px 0;
-  font-size: 0.95em;
-}
-
-.completed-decision-inline {
-  background-color: #f0f9f0;
-  border-left: 4px solid #2ecc71;
-  font-weight: bold;
-}
-
-.completed-decision-inline .title-column {
-  color: #2c5c2c;
-}
 
 .edit-btn {
   padding: 6px 12px;
@@ -447,10 +410,6 @@ button:hover {
   outline: 2px dashed #ccc;
 }
 
-.dragging {
-  opacity: 0.5;
-}
-
 
 .indent-0 {
   margin-left: 0;
@@ -483,6 +442,10 @@ button:hover {
 
 .decision.highlight {
   animation: flash 2s ease-out;
+}
+
+.wizard-panel {
+  padding: 10px 10px 10px 10px;
 }
 
 /* Mobile Fixes for Goal Layout */
@@ -568,6 +531,37 @@ button:hover {
     font-size: 1.5em;
     margin-bottom: 10px;
   }
+
+
+.goal-card {
+  margin-bottom: 10px;
+  padding: 6px 8px;
+}
+
+.decision-row {
+  padding: 8px 10px !important;
+}
+
+.middle-group {
+  font-size: 0.95em;
+  padding: 0 8px;
+}
+
+.title-column {
+  font-size: 1em;
+  padding-left: 4px;
+}
+
+.right-group {
+  font-size: 0.9em;
+}
+
+.button-row button,
+.button-row select.edit-btn {
+  height: 28px;
+  font-size: 0.85em;
+  padding: 3px 8px;
+}
 }
 
 .decision.dragging {
