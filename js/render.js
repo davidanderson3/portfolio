@@ -15,9 +15,26 @@ let dragSrcEl = null;
     });
 });
 
-// Prevent all default drag/drop behavior globally
-document.addEventListener('dragover', e => e.preventDefault());
-document.addEventListener('drop', e => e.preventDefault());
+document.addEventListener('dragover', e => {
+    if (
+        !e.target.closest('.decision') &&
+        !e.target.closest('.goal-card') &&
+        !e.target.closest('.daily-task-wrapper')
+    ) {
+        e.preventDefault();
+    }
+});
+document.addEventListener('drop', e => {
+    if (
+        !e.target.closest('.decision') &&
+        !e.target.closest('.goal-card') &&
+        !e.target.closest('.daily-task-wrapper')
+    ) {
+        e.preventDefault();
+    }
+});
+
+
 
 function enableTaskDrag(wrapper, task, goal, all, container) {
     wrapper.addEventListener('dragstart', e => {

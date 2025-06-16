@@ -509,13 +509,13 @@ button:hover {
     gap: 6px;
   }
 
-.button-row button,
-.button-row select.edit-btn {
-  padding: 4px 10px;
-  margin: 0;
-  height: 30px;
-  font-size: 0.9em;
-}
+  .button-row button,
+  .button-row select.edit-btn {
+    padding: 4px 10px;
+    margin: 0;
+    height: 30px;
+    font-size: 0.9em;
+  }
 
 
   .inline-add-form {
@@ -701,4 +701,17 @@ select.edit-btn:hover {
 
 .modal-actions {
   text-align: right;
+}
+
+.daily-task button,
+.daily-task input {
+  pointer-events: auto;
+}
+
+.daily-task-wrapper.dragging {
+  opacity: 0.6;
+}
+
+.daily-task-wrapper.drag-over {
+  border: 2px dashed #aaa;
 }

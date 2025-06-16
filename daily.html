@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Drag & Drop Tasks</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+
+        #taskList {
+            max-width: 400px;
+            margin: auto;
+        }
+
+        .task {
+            background: #fff8e1;
+            border-left: 4px solid #ffb74d;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+        }
+
+        .task.drag-over {
+            border: 2px dashed #4caf50;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Daily Tasks</h2>
+    <div id="taskList"></div>
+
+    <script>
+        const tasks = ['Walk the dog', 'Read a chapter', 'Stretch', 'Drink water'];
+
+        function renderTasks() {
+            const container = document.getElementById('taskList');
+            container.innerHTML = '';
+
+            tasks.forEach((text, index) => {
+                const el = document.createElement('div');
+                el.className = 'task';
+                el.draggable = true;
+                el.dataset.index = index;
+                el.textContent = text;
+
+                el.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text/plain', index);
+                    el.classList.add('dragging');
+                });
+
+                el.addEventListener('dragend', () => {
+                    el.classList.remove('dragging');
+                });
+
+                el.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    el.classList.add('drag-over');
+                });
+
+                el.addEventListener('dragleave', () => {
+                    el.classList.remove('drag-over');
+                });
+
+                el.addEventListener('drop', e => {
+                    e.preventDefault();
+                    el.classList.remove('drag-over');
+
+                    const fromIndex = +e.dataTransfer.getData('text/plain');
+                    const toIndex = +el.dataset.index;
+
+                    if (fromIndex === toIndex) return;
+
+                    const item = tasks.splice(fromIndex, 1)[0];
+                    tasks.splice(toIndex, 0, item);
+                    renderTasks();
+                });
+
+                container.appendChild(el);
+            });
+        }
+
+        renderTasks();
+    </script>
+</body>
+
+</html>
