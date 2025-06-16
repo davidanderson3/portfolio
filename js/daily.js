@@ -41,6 +41,7 @@ export async function renderDailyTasks(currentUser, db) {
       id: generateId(),
       type: 'task',
       text: `[Daily] ${text}`,
+      recurs: 'daily',  // ✅ ADD THIS LINE
       parentGoalId: null,
       completed: false,
       dateCompleted: '',
@@ -52,11 +53,21 @@ export async function renderDailyTasks(currentUser, db) {
     renderDailyTasks(currentUser, db);
   };
 
+
   addForm.appendChild(input);
   addForm.appendChild(button);
   container.appendChild(addForm);
 
   const all = await loadDecisions();
+  let needsSave = false;
+  for (const task of all) {
+    if (task.type === 'task' && task.text.startsWith('[Daily]') && !task.recurs) {
+      task.recurs = 'daily';
+      needsSave = true;
+    }
+  }
+  if (needsSave) await saveDecisions(all);
+
   const todayKey = new Date().toLocaleDateString('en-CA');
 
   const completionSnap = await db.collection('taskCompletions').doc(currentUser.uid).get();

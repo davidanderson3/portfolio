@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Daily Task Report – Goal Oriented</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-left">Goal Oriented</div>
+        <div class="navbar-right">
+            <span id="userEmail" class="user-email"></span>
+            <button type="button" id="loginBtn">Sign In</button>
+            <button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
+        </div>
+    </div>
+
+    <!-- Daily Log Modal -->
+    <div id="appContainer">
+        <div id="dailyLogModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <h3>How are you doing today?</h3>
+                <p>Rate from 1 (worst) to 10 (best):</p>
+                <div id="dailyLogRating" class="rating-options"></div>
+                <textarea id="dailyLogText" placeholder="What would make it better?" rows="3"></textarea>
+                <div class="modal-actions">
+                    <button id="dailyLogSubmit">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <section class="main-layout">
+        <div class="goals-column">
+            <h2>Daily Task Completion Report</h2>
+            <table id="reportTable">
+                <thead>
+                    <tr id="headerRow">
+                        <th>Task</th>
+                        <!-- Date columns will be injected here -->
+                    </tr>
+                </thead>
+                <tbody id="reportBody">
+                    <!-- Task rows will be injected here -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Script entry point -->
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

@@ -5,51 +5,64 @@ import { initAuth } from './auth.js';
 import { db } from './auth.js';
 import { showDailyLogPrompt } from './dailyLog.js';
 import { initWizard } from './wizard.js';
-
+import { renderDailyTaskReport } from './report.js';
 
 let currentUser = null;
 window.currentUser = null;
 
 window.addEventListener('DOMContentLoaded', () => {
-  const uiRefs = {
-    loginBtn: document.getElementById('loginBtn'),
-    logoutBtn: document.getElementById('logoutBtn'),
-    userEmail: document.getElementById('userEmail'),
-    addGoalBtn: document.getElementById('addGoalBtn'),
-    wizardContainer: document.getElementById('goalWizard'),
-    wizardStep: document.getElementById('wizardStep'),
-    nextBtn: document.getElementById('wizardNextBtn'),
-    backBtn: document.getElementById('wizardBackBtn'),
-    cancelBtn: document.getElementById('wizardCancelBtn'),
-  };
+  const uiRefs = {};
+
+  // Safely collect available UI refs
+  [
+    'loginBtn', 'logoutBtn', 'userEmail', 'addGoalBtn',
+    'goalWizard', 'wizardStep', 'wizardNextBtn',
+    'wizardBackBtn', 'wizardCancelBtn'
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) uiRefs[id] = el;
+  });
 
   initAuth(uiRefs, (user) => {
     currentUser = user;
     window.currentUser = user;
 
+    // Safely clear goal & task containers if they exist
+    const goalList = document.getElementById('goalList');
+    if (goalList) goalList.innerHTML = '';
+
+    const completedList = document.getElementById('completedList');
+    if (completedList) completedList.innerHTML = '';
+
+    const dailyList = document.getElementById('dailyTasksList');
+    if (dailyList) dailyList.innerHTML = '';
+
+    if (window.openGoalIds) window.openGoalIds.clear?.();
 
     if (user) {
-      document.getElementById('goalList').innerHTML = '';
-      document.getElementById('completedList').innerHTML = '';
-      const dailyList = document.getElementById('dailyTasksList');
-      if (dailyList) dailyList.innerHTML = '';
+      if (dailyList) {
+        renderDailyTasks(user, db).then(() => {
+          if (goalList || completedList) {
+            renderGoalsAndSubitems(user, db);
+          }
+          showDailyLogPrompt(user, db);
 
-      if (window.openGoalIds) window.openGoalIds.clear?.();
-
-      // ✅ Move daily tasks render first
-      renderDailyTasks(user, db).then(() => {
-        // Optionally defer these to next tick
-        renderGoalsAndSubitems(user, db);
-        showDailyLogPrompt(user, db);
-      });
-    }
-    else {
-      document.getElementById('goalList').innerHTML = '';
-      document.getElementById('completedList').innerHTML = '';
-      const dailyList = document.getElementById('dailyTasksList');
-      if (dailyList) dailyList.innerHTML = '';
+          // ✅ Only render the report if the report table is present
+          if (document.getElementById('reportBody')) {
+            renderDailyTaskReport(user, db);
+          }
+        });
+      } else {
+        // If no daily list, still try to render report immediately
+        if (document.getElementById('reportBody')) {
+          renderDailyTaskReport(user, db);
+        }
+      }
     }
   });
 
-  initWizard(uiRefs);
+  // Only run wizard if wizard UI is present
+  if (uiRefs.goalWizard && uiRefs.wizardStep) {
+    initWizard(uiRefs);
+  }
 });
