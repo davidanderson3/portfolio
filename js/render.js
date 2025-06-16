@@ -503,29 +503,56 @@ function createGoalRow(goal, options = {}) {
     };
 
 
+    if (goal.type === 'goal') {
+        // Move goal to completed section
+        const wrapper = checkbox.closest('.goal-card');
+        if (wrapper && wrapper.parentElement) {
+            wrapper.parentElement.removeChild(wrapper);
+            if (goal.resolution?.trim()) {
+                const resolutionRow = document.createElement('div');
+                resolutionRow.className = 'link-line';
+                resolutionRow.textContent = `✔️ ${goal.resolution}`;
+                wrapper.appendChild(resolutionRow);
+            }
+            completedList.appendChild(wrapper);
+        }
+    } else {
+        // Re-render only this goal's children to move the task
+        const container = checkbox.closest('.goal-children');
+        if (container) {
+            const all = await loadDecisions();
+            const parent = all.find(d => d.id === goal.parentGoalId);
+            if (parent) {
+                renderChildren(parent, all, container);
+            }
+        }
+    }
+};
 
-    const middle = document.createElement('div');
-    middle.className = 'middle-group';
-    middle.textContent = goal.text;
 
-    const right = document.createElement('div');
-    right.className = 'right-group';
 
-    const due = document.createElement('div');
-    due.className = 'due-column';
-    due.textContent = goal.completed ? goal.dateCompleted : '';
+const middle = document.createElement('div');
+middle.className = 'middle-group';
+middle.textContent = goal.text;
 
-    const buttonWrap = document.createElement('div');
-    buttonWrap.className = 'button-row';
-    attachEditButtons(goal, buttonWrap);
+const right = document.createElement('div');
+right.className = 'right-group';
 
-    right.appendChild(due);
-    right.appendChild(buttonWrap);
+const due = document.createElement('div');
+due.className = 'due-column';
+due.textContent = goal.completed ? goal.dateCompleted : '';
 
-    row.appendChild(left);
-    row.appendChild(middle);
-    row.appendChild(right);
-    return row;
+const buttonWrap = document.createElement('div');
+buttonWrap.className = 'button-row';
+attachEditButtons(goal, buttonWrap);
+
+right.appendChild(due);
+right.appendChild(buttonWrap);
+
+row.appendChild(left);
+row.appendChild(middle);
+row.appendChild(right);
+return row;
 }
 
 function renderChildren(goal, all, container) {
