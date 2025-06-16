@@ -451,6 +451,7 @@ function createGoalRow(goal, options = {}) {
     left.appendChild(checkbox);
 
     checkbox.onchange = async () => {
+<<<<<<< HEAD
         const resolution = prompt(`Mark ${goal.type === 'task' ? 'task' : 'goal'} complete: ${goal.text}`);
         if (!resolution) {
             checkbox.checked = false;
@@ -459,6 +460,18 @@ function createGoalRow(goal, options = {}) {
 
         goal.completed = true;
         goal.resolution = resolution;
+=======
+        if (goal.type !== 'task') {
+            const resolution = prompt(`Mark goal complete: ${goal.text}`);
+            if (!resolution) {
+                checkbox.checked = false;
+                return;
+            }
+            goal.resolution = resolution;
+        }
+
+        goal.completed = true;
+>>>>>>> 995b07a (remove task dialog)
         goal.dateCompleted = new Date().toLocaleDateString('en-CA');
 
         const updated = await loadDecisions();
@@ -468,6 +481,7 @@ function createGoalRow(goal, options = {}) {
             await saveDecisions(updated);
         }
 
+<<<<<<< HEAD
         const wrapper = checkbox.closest('.goal-card, .decision.indent-1');
         if (wrapper) {
             // Remove task visually from current list
@@ -483,6 +497,9 @@ function createGoalRow(goal, options = {}) {
                 completedList.appendChild(wrapper);
             }
         }
+=======
+        renderGoalsAndSubitems();
+>>>>>>> 995b07a (remove task dialog)
     };
 
 
@@ -508,17 +525,6 @@ function createGoalRow(goal, options = {}) {
     row.appendChild(left);
     row.appendChild(middle);
     row.appendChild(right);
-
-    if (!options.hideArrow) {
-        toggle.onclick = () => {
-            const wrapper = row.closest('.goal-card');
-            const container = wrapper?.querySelector('.goal-children');
-            const isVisible = container?.style.display === 'block';
-            toggle.textContent = isVisible ? '▶' : '▼';
-            if (container) container.style.display = isVisible ? 'none' : 'block';
-        };
-    }
-
     return row;
 }
 
