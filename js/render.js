@@ -192,7 +192,10 @@ export async function renderGoalsAndSubitems() {
         wrapper.dataset.goalId = goal.id;
 
         const row = createGoalRow(goal);
+        if (!row) return; // Skip if the row wasn't created
+
         const toggleBtn = row.querySelector('.toggle-triangle');
+
 
         const childrenContainer = document.createElement('div');
         childrenContainer.className = 'goal-children';
@@ -451,16 +454,6 @@ function createGoalRow(goal, options = {}) {
     left.appendChild(checkbox);
 
     checkbox.onchange = async () => {
-<<<<<<< HEAD
-        const resolution = prompt(`Mark ${goal.type === 'task' ? 'task' : 'goal'} complete: ${goal.text}`);
-        if (!resolution) {
-            checkbox.checked = false;
-            return;
-        }
-
-        goal.completed = true;
-        goal.resolution = resolution;
-=======
         if (goal.type !== 'task') {
             const resolution = prompt(`Mark goal complete: ${goal.text}`);
             if (!resolution) {
@@ -471,7 +464,6 @@ function createGoalRow(goal, options = {}) {
         }
 
         goal.completed = true;
->>>>>>> 995b07a (remove task dialog)
         goal.dateCompleted = new Date().toLocaleDateString('en-CA');
 
         const updated = await loadDecisions();
@@ -481,79 +473,53 @@ function createGoalRow(goal, options = {}) {
             await saveDecisions(updated);
         }
 
-<<<<<<< HEAD
         const wrapper = checkbox.closest('.goal-card, .decision.indent-1');
         if (wrapper) {
-            // Remove task visually from current list
             wrapper.remove();
 
             if (goal.type === 'task') {
-                // Re-render children for this goal only
                 const container = wrapper.closest('.goal-children');
                 const goalId = goal.parentGoalId;
                 const parentGoal = updated.find(g => g.id === goalId);
                 if (parentGoal && container) renderChildren(parentGoal, updated, container);
             } else {
+                if (goal.resolution?.trim()) {
+                    const resolutionRow = document.createElement('div');
+                    resolutionRow.className = 'link-line';
+                    resolutionRow.textContent = `✔️ ${goal.resolution}`;
+                    wrapper.appendChild(resolutionRow);
+                }
+
                 completedList.appendChild(wrapper);
             }
         }
-=======
-        renderGoalsAndSubitems();
->>>>>>> 995b07a (remove task dialog)
     };
 
+    const middle = document.createElement('div');
+    middle.className = 'middle-group';
+    middle.textContent = goal.text;
 
-    if (goal.type === 'goal') {
-        // Move goal to completed section
-        const wrapper = checkbox.closest('.goal-card');
-        if (wrapper && wrapper.parentElement) {
-            wrapper.parentElement.removeChild(wrapper);
-            if (goal.resolution?.trim()) {
-                const resolutionRow = document.createElement('div');
-                resolutionRow.className = 'link-line';
-                resolutionRow.textContent = `✔️ ${goal.resolution}`;
-                wrapper.appendChild(resolutionRow);
-            }
-            completedList.appendChild(wrapper);
-        }
-    } else {
-        // Re-render only this goal's children to move the task
-        const container = checkbox.closest('.goal-children');
-        if (container) {
-            const all = await loadDecisions();
-            const parent = all.find(d => d.id === goal.parentGoalId);
-            if (parent) {
-                renderChildren(parent, all, container);
-            }
-        }
-    }
-};
+    const right = document.createElement('div');
+    right.className = 'right-group';
 
+    const due = document.createElement('div');
+    due.className = 'due-column';
+    due.textContent = goal.completed ? goal.dateCompleted : '';
 
+    const buttonWrap = document.createElement('div');
+    buttonWrap.className = 'button-row';
+    attachEditButtons(goal, buttonWrap);
 
-const middle = document.createElement('div');
-middle.className = 'middle-group';
-middle.textContent = goal.text;
+    right.appendChild(due);
+    right.appendChild(buttonWrap);
 
-const right = document.createElement('div');
-right.className = 'right-group';
+    row.appendChild(left);
+    row.appendChild(middle);
+    row.appendChild(right);
 
-const due = document.createElement('div');
-due.className = 'due-column';
-due.textContent = goal.completed ? goal.dateCompleted : '';
-
-const buttonWrap = document.createElement('div');
-buttonWrap.className = 'button-row';
-attachEditButtons(goal, buttonWrap);
-
-right.appendChild(due);
-right.appendChild(buttonWrap);
-
-row.appendChild(left);
-row.appendChild(middle);
-row.appendChild(right);
-return row;
+    return row;
 }
+
 
 function renderChildren(goal, all, container) {
     const children = all.filter(i => i.parentGoalId === goal.id);
