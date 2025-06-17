@@ -17,7 +17,16 @@ let wizardContainer = null;
 let addGoalBtn = null;
 
 export function initWizard(uiRefs) {
-  ({ wizardContainer, addGoalBtn } = uiRefs);
+  // Early exit if key UI elements are missing
+  if (!uiRefs?.wizardContainer || !uiRefs?.addGoalBtn) {
+    console.warn('⚠️ initWizard skipped — missing required UI elements.');
+    return;
+  }
+
+  ({
+    wizardContainer,
+    addGoalBtn
+  } = uiRefs);
 
   uiRefs.addGoalBtn.onclick = () => {
     Object.assign(wizardState, {
@@ -42,41 +51,40 @@ export function initWizard(uiRefs) {
     renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
   };
 
-uiRefs.nextBtn.onclick = async () => {
-  const nextBtn = uiRefs.nextBtn;
-  nextBtn.disabled = true;
+  uiRefs.nextBtn.onclick = async () => {
+    const nextBtn = uiRefs.nextBtn;
+    nextBtn.disabled = true;
 
-  try {
-    if (wizardState.step === 0) {
-      const input = document.getElementById('goalTextInput');
-      if (!input) {
-        renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
+    try {
+      if (wizardState.step === 0) {
+        const input = document.getElementById('goalTextInput');
+        if (!input) {
+          renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
+          return;
+        }
+        wizardState.goalText = input.value.trim();
+        if (!wizardState.goalText) {
+          alert("Goal cannot be empty.");
+          return;
+        }
+      } else if (wizardState.step === 1) {
+        const textarea = document.getElementById('taskList');
+        if (!textarea) {
+          renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
+          return;
+        }
+        wizardState.subtasks = textarea.value
+          .split('\n').map(t => t.trim()).filter(Boolean);
+        await saveGoalWizard();
         return;
       }
-      wizardState.goalText = input.value.trim();
-      if (!wizardState.goalText) {
-        alert("Goal cannot be empty.");
-        return;
-      }
-    } else if (wizardState.step === 1) {
-      const textarea = document.getElementById('taskList');
-      if (!textarea) {
-        renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
-        return;
-      }
-      wizardState.subtasks = textarea.value
-        .split('\n').map(t => t.trim()).filter(Boolean);
-      await saveGoalWizard();
-      return;
+
+      wizardState.step++;
+      renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
+    } finally {
+      nextBtn.disabled = false;
     }
-
-    wizardState.step++;
-    renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
-  } finally {
-    nextBtn.disabled = false;
-  }
-};
-
+  };
 }
 
 function renderWizardStep(container, backBtn) {

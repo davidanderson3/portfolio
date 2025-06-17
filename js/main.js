@@ -11,23 +11,22 @@ let currentUser = null;
 window.currentUser = null;
 
 window.addEventListener('DOMContentLoaded', () => {
-  const uiRefs = {};
-
-  // Safely collect available UI refs
-  [
-    'loginBtn', 'logoutBtn', 'userEmail', 'addGoalBtn',
-    'goalWizard', 'wizardStep', 'wizardNextBtn',
-    'wizardBackBtn', 'wizardCancelBtn'
-  ].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) uiRefs[id] = el;
-  });
+  const uiRefs = {
+    loginBtn: document.getElementById('loginBtn'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    userEmail: document.getElementById('userEmail'),
+    addGoalBtn: document.getElementById('addGoalBtn'),
+    wizardContainer: document.getElementById('goalWizard'),     // formerly goalWizard
+    wizardStep: document.getElementById('wizardStep'),
+    nextBtn: document.getElementById('wizardNextBtn'),          // formerly wizardNextBtn
+    backBtn: document.getElementById('wizardBackBtn'),
+    cancelBtn: document.getElementById('wizardCancelBtn')
+  };
 
   initAuth(uiRefs, (user) => {
     currentUser = user;
     window.currentUser = user;
 
-    // Safely clear goal & task containers if they exist
     const goalList = document.getElementById('goalList');
     if (goalList) goalList.innerHTML = '';
 
@@ -47,19 +46,16 @@ window.addEventListener('DOMContentLoaded', () => {
           }
           showDailyLogPrompt(user, db);
 
-          // ✅ Only render the report if the report table is present
           if (document.getElementById('reportBody')) {
             renderDailyTaskReport(user, db);
           }
         });
       } else {
-        // If no daily list, still try to render report immediately
         if (document.getElementById('reportBody')) {
           renderDailyTaskReport(user, db);
         }
       }
-    }
-    if (user) {
+
       loadDecisions().then(data => {
         const backup = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
@@ -68,11 +64,12 @@ window.addEventListener('DOMContentLoaded', () => {
         a.click();
       });
     }
-
   });
 
-  // Only run wizard if wizard UI is present
-  if (uiRefs.goalWizard && uiRefs.wizardStep) {
+  if (uiRefs.wizardContainer && uiRefs.wizardStep) {
     initWizard(uiRefs);
   }
 });
+
+window.loadDecisions = loadDecisions;
+

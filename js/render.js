@@ -101,19 +101,23 @@ export async function renderGoalsAndSubitems() {
     const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
 
     const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
-    const goalOrder = Array.isArray(snap.data()?.goalOrder)
-        ? snap.data().goalOrder
-        : goals.map(g => g.id);
+    let goalOrder = Array.isArray(snap.data()?.goalOrder) ? snap.data().goalOrder : [];
 
-    const sortedGoals = [
-        ...goalOrder.map(id => goalMap[id]).filter(Boolean),
-        ...goals.filter(g => !goalOrder.includes(g.id))
-    ];
+    const missing = goals
+        .map(g => g.id)
+        .filter(id => !goalOrder.includes(id));
 
+    if (missing.length > 0) {
+        console.warn('🧭 Missing goals not in goalOrder:', missing);
+        goalOrder = [...goalOrder, ...missing];
+        // await saveGoalOrder(goalOrder); // preview mode: do not write to DB
+    }
+
+
+    const sortedGoals = goalOrder.map(id => goalMap[id]).filter(Boolean);
     const now = new Date().getTime();
 
-
-    // 🔽 Hidden Goals Section
+    // Hidden goals section
     let hiddenSection = document.getElementById('hiddenList');
     if (!hiddenSection) {
         hiddenSection = document.createElement('div');
@@ -136,7 +140,7 @@ export async function renderGoalsAndSubitems() {
         hiddenContent.style.display = isOpen ? 'none' : 'block';
     };
 
-    // 🔽 Completed Goals Section (collapsed and sorted by most recent)
+    // Completed goals section
     let completedSection = document.getElementById('completedSection');
     if (!completedSection) {
         completedSection = document.createElement('div');
@@ -144,10 +148,10 @@ export async function renderGoalsAndSubitems() {
 
         const completedHeader = document.createElement('h2');
         const toggle = document.createElement('span');
-        toggle.textContent = '▶'; // collapsed by default
+        toggle.textContent = '▶';
         toggle.style.cursor = 'pointer';
 
-        let completedContent = document.createElement('div');
+        const completedContent = document.createElement('div');
         completedContent.id = 'completedContent';
         completedContent.style.display = 'none';
         completedContent.appendChild(completedList);
@@ -166,21 +170,17 @@ export async function renderGoalsAndSubitems() {
         goalList.parentNode.appendChild(completedSection);
     }
 
-    // Split and sort goals
     const completedGoals = sortedGoals
         .filter(g => g.completed && g.dateCompleted)
         .sort((a, b) => new Date(b.dateCompleted) - new Date(a.dateCompleted));
 
     const hiddenAndActiveGoals = sortedGoals.filter(g => !g.completed);
 
-    // Sort hidden goals newest first
-    // Sort hidden goals oldest first
     hiddenAndActiveGoals.sort((a, b) => {
         const aTime = a.hiddenUntil ? new Date(a.hiddenUntil).getTime() : 0;
         const bTime = b.hiddenUntil ? new Date(b.hiddenUntil).getTime() : 0;
         return aTime - bTime;
     });
-
 
     const finalList = [...completedGoals, ...hiddenAndActiveGoals];
 
@@ -209,11 +209,9 @@ export async function renderGoalsAndSubitems() {
         wrapper.dataset.goalId = goal.id;
 
         const row = createGoalRow(goal);
-        if (!row) return; // Skip if the row wasn't created
+        if (!row) return;
 
         const toggleBtn = row.querySelector('.toggle-triangle');
-
-
         const childrenContainer = document.createElement('div');
         childrenContainer.className = 'goal-children';
 
@@ -243,9 +241,7 @@ export async function renderGoalsAndSubitems() {
                 resolutionRow.textContent = `✔️ ${goal.resolution}`;
                 wrapper.appendChild(resolutionRow);
             }
-
             completedList.appendChild(wrapper);
-            renderedGoalIds.add(goal.id);
         } else if (isHidden) {
             const label = document.createElement('div');
             label.className = 'right-aligned';
@@ -264,15 +260,14 @@ export async function renderGoalsAndSubitems() {
                     renderGoalsAndSubitems();
                 }
             };
-
             label.appendChild(unhideBtn);
             wrapper.appendChild(label);
             hiddenContent.appendChild(wrapper);
-            renderedGoalIds.add(goal.id);
         } else {
             goalList.appendChild(wrapper);
-            renderedGoalIds.add(goal.id);
         }
+
+        renderedGoalIds.add(goal.id);
     });
 }
 
