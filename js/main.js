@@ -59,6 +59,16 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
     }
+    if (user) {
+      loadDecisions().then(data => {
+        const backup = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(backup);
+        a.download = `auto-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+      });
+    }
+
   });
 
   // Only run wizard if wizard UI is present

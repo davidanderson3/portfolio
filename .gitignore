@@ -136,3 +136,6 @@ dist
 .pnp.*
 .DS_Store
 package-lock.json
+decisions-backup-6hWB9QquC1fV2XlX0ixm3Fnq0Sj2.json
+js/serviceAccountKey.json
+serviceAccountKey.json

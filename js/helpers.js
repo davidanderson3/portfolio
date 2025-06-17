@@ -19,14 +19,31 @@ export async function loadDecisions() {
 export async function saveDecisions(items) {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
+
+  if (!Array.isArray(items)) return;
+
+  const hasGoalsOrTasks = items.some(item => item.text && item.id);
+  if (!hasGoalsOrTasks) {
+    console.warn('⚠️ Refusing to save empty or invalid decisions');
+    return;
+  }
+
   await db.collection('decisions').doc(currentUser.uid).set({ items }, { merge: true });
 }
+
 
 export async function saveGoalOrder(order) {
   const currentUser = getCurrentUser();
   if (!currentUser || !Array.isArray(order)) return;
+
+  if (order.length === 0) {
+    console.warn('⚠️ Refusing to save empty goalOrder');
+    return;
+  }
+
   await db.collection('decisions').doc(currentUser.uid).set({ goalOrder: order }, { merge: true });
 }
+
 
 export function parseNaturalDate(input) {
   const today = new Date();
