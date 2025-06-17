@@ -16,27 +16,20 @@ export async function loadDecisions() {
   return data && Array.isArray(data.items) ? data.items : [];  // ✅ fixed
 }
 
-//export async function saveDecisions(items) {
-//  const currentUser = getCurrentUser();
-// if (!currentUser) return;
-
-// if (!Array.isArray(items)) return;
-
-///  const hasGoalsOrTasks = items.some(item => item.text && item.id);
-//  if (!hasGoalsOrTasks) {
-//    console.warn('⚠️ Refusing to save empty or invalid decisions');
-//    return;
-//  }
-
-//  await db.collection('decisions').doc(currentUser.uid).set({ items }, { merge: true });
-//}
-
 export async function saveDecisions(items) {
-  console.warn('🚫 saveDecisions is temporarily disabled during safe test.');
-  return;
+  const currentUser = getCurrentUser();
+ if (!currentUser) return;
+
+ if (!Array.isArray(items)) return;
+
+  const hasGoalsOrTasks = items.some(item => item.text && item.id);
+  if (!hasGoalsOrTasks) {
+    console.warn('⚠️ Refusing to save empty or invalid decisions');
+    return;
+  }
+
+  await db.collection('decisions').doc(currentUser.uid).set({ items }, { merge: true });
 }
-
-
 
 export async function saveGoalOrder(order) {
   const currentUser = getCurrentUser();
