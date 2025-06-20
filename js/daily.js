@@ -4,252 +4,180 @@ export async function renderDailyTasks(currentUser, db) {
   const container = document.getElementById('dailyTasksList');
   if (!container || !currentUser) return;
 
+  // Inject CSS once to remove any green focus/active backgrounds on buttons
+  if (!document.getElementById('dailyTasks-btn-reset-css')) {
+    const style = document.createElement('style');
+    style.id = 'dailyTasks-btn-reset-css';
+    style.textContent = `
+      /* remove green focus/highlight */
+      .daily-task-wrapper button:focus,
+      .daily-task-wrapper button:active {
+        background: none !important;
+        outline: none !important;
+      }
+      /* flash animation */
+      @keyframes flash {
+        0%   { background-color: #ffff99; }
+        100% { background-color: #eef; }
+      }
+      .flash {
+        animation: flash 1s ease-out;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   container.innerHTML = '';
+  const all = await loadDecisions();
 
-  const addForm = document.createElement('div');
-  addForm.style.display = 'flex';
-  addForm.style.marginBottom = '12px';
-  addForm.style.gap = '8px';
-
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'New daily task...';
-  input.style.flex = '1';
-  input.style.padding = '6px';
-  input.style.borderRadius = '6px';
-  input.style.border = '1px solid #ccc';
-
-  const button = document.createElement('button');
-  button.textContent = '+';
-  button.style.padding = '0px 14px';
-  button.style.margin = '8px 0px 12px';
-  button.style.borderRadius = '6px';
-  button.style.fontWeight = 'bold';
-
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      button.click();
+  // Migrate legacy daily flags
+  let migrated = false;
+  for (const t of all) {
+    if (t.type === 'task' && t.text.startsWith('[Daily]') && !t.recurs) {
+      t.recurs = 'daily';
+      migrated = true;
     }
-  });
+  }
+  if (migrated) {
+    try { await saveDecisions(all); }
+    catch (err) { console.error(err); alert('⚠️ Failed to migrate old tasks.'); }
+  }
 
-  button.onclick = async () => {
+  // Add-new form
+  const addForm = document.createElement('div');
+  addForm.style = 'display:flex;gap:8px;margin-bottom:12px';
+  const input = document.createElement('input');
+  Object.assign(input, { type: 'text', placeholder: 'New daily task…' });
+  Object.assign(input.style, { flex: '1', padding: '6px', borderRadius: '6px', border: '1px solid #ccc' });
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '+';
+  Object.assign(addBtn.style, { padding: '0 14px', borderRadius: '6px', fontWeight: 'bold', background: 'none', border: 'none' });
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addBtn.click(); } });
+  addBtn.onclick = async () => {
     const text = input.value.trim();
     if (!text) return;
-    const all = await loadDecisions();
-    all.push({
+    const newTask = {
       id: generateId(),
       type: 'task',
       text: `[Daily] ${text}`,
-      recurs: 'daily',  // ✅ ADD THIS LINE
+      recurs: 'daily',
       parentGoalId: null,
       completed: false,
       dateCompleted: '',
       resolution: '',
       dependencies: [],
-    });
-    await saveDecisions(all);
-    input.value = '';
-    renderDailyTasks(currentUser, db);
+      skipUntil: null
+    };
+    try {
+      const updated = [...await loadDecisions(), newTask];
+      await saveDecisions(updated);
+      input.value = '';
+      const wrapper = makeTaskElement(newTask);
+      wrapper.classList.add('flash');
+      wrapper.addEventListener('animationend', () => wrapper.classList.remove('flash'), { once: true });
+      container.insertBefore(wrapper, addForm.nextSibling);
+    } catch (err) {
+      console.error(err);
+      alert('⚠️ Could not add task.');
+    }
   };
-
-
-  addForm.appendChild(input);
-  addForm.appendChild(button);
+  addForm.append(input, addBtn);
   container.appendChild(addForm);
 
-  const all = await loadDecisions();
-  let needsSave = false;
-  for (const task of all) {
-    if (task.type === 'task' && task.text.startsWith('[Daily]') && !task.recurs) {
-      task.recurs = 'daily';
-      needsSave = true;
-    }
-  }
-  if (needsSave) await saveDecisions(all);
-
+  // Load completions
   const todayKey = new Date().toLocaleDateString('en-CA');
+  const snap = await db.collection('taskCompletions').doc(currentUser.uid).get();
+  const completionMap = snap.exists ? snap.data() : {};
+  const doneSet = new Set(completionMap[todayKey] || []);
 
-  const completionSnap = await db.collection('taskCompletions').doc(currentUser.uid).get();
-  const completionMap = completionSnap.exists ? completionSnap.data() : {};
-  const todayCompleted = completionMap[todayKey] || [];
+  // Prepare lists: hide postponed tasks until tomorrow
+  const nowMs = Date.now();
+  const dailyAll = all.filter(t =>
+    t.type === 'task' &&
+    t.recurs === 'daily' &&
+    (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
+  );
+  const activeList = dailyAll.filter(t => !doneSet.has(t.id));
+  const doneList   = dailyAll.filter(t =>  doneSet.has(t.id));
 
-  const dailyTasks = all
-    .filter(t => t.type === 'task' && t.text.startsWith('[Daily]'))
-    .map(task => ({
-      task,
-      isDismissed: todayCompleted.includes(task.id)
-    }));
+  // Render actives then done
+  for (const t of activeList) container.appendChild(makeTaskElement(t));
+  for (const t of doneList)   container.appendChild(makeTaskElement(t));
 
-  const dailyIds = dailyTasks.map(d => d.task.id);
-  const others = all.filter(t => !dailyIds.includes(t.id));
-
-  const active = dailyTasks.filter(t => !t.isDismissed);
-  const completed = dailyTasks.filter(t => t.isDismissed);
-
-  for (const { task, isDismissed } of [...active, ...completed]) {
+  // ——— Helpers —————————————————————————
+  function makeTaskElement(task) {
+    const isDone = doneSet.has(task.id);
     const wrapper = document.createElement('div');
     wrapper.className = 'daily-task-wrapper';
-    wrapper.setAttribute('draggable', 'true');
+    wrapper.draggable = true;
     wrapper.dataset.taskId = task.id;
-    wrapper.style.pointerEvents = 'auto';
-    wrapper.style.userSelect = 'none';
-    wrapper.style.touchAction = 'auto';
-    wrapper.style.minHeight = '40px';
-    wrapper.style.background = '#eef';
-    wrapper.style.zIndex = '9999';
-    wrapper.style.position = 'relative';
+    Object.assign(wrapper.style, { pointerEvents: 'auto', userSelect: 'none', touchAction: 'auto', minHeight: '40px', background: '#eef', position: 'relative', zIndex: '1' });
 
     const row = document.createElement('div');
     row.className = 'daily-task';
-    row.style.display = 'grid';
-    row.style.gridTemplateColumns = '24px 1fr auto';
-    row.style.alignItems = 'center';
-    row.style.columnGap = '10px';
-    row.style.padding = '6px 12px';
-    row.style.borderRadius = '8px';
-    row.style.background = '#fffaf0';
-    row.style.borderLeft = '4px solid #ffbb55';
-    row.style.marginBottom = '6px';
-    row.style.opacity = isDismissed ? '0.6' : '1';
-    row.style.pointerEvents = 'auto';
+    Object.assign(row.style, { display: 'grid', gridTemplateColumns: '24px 1fr auto', alignItems: 'center', columnGap: '10px', padding: '6px 12px', borderRadius: '8px', background: '#fffaf0', borderLeft: '4px solid #ffbb55', marginBottom: '6px', opacity: isDone ? '0.6' : '1' });
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = isDismissed;
-    checkbox.style.margin = '0';
+    // Checkbox
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = isDone;
+    cb.addEventListener('change', async () => {
+      try {
+        const copy = { ...completionMap };
+        copy[todayKey] = copy[todayKey] || [];
+        if (cb.checked) { copy[todayKey].push(task.id); doneSet.add(task.id); }
+        else { copy[todayKey] = copy[todayKey].filter(id => id !== task.id); doneSet.delete(task.id); }
+        await db.collection('taskCompletions').doc(currentUser.uid).set(copy);
+        wrapper.remove();
+        // reposition logic…
+      } catch (err) {
+        console.error(err);
+        alert('⚠️ Could not update completion. Reverting.');
+        cb.checked = !cb.checked;
+      }
+    });
 
-    const text = document.createElement('div');
-    text.textContent = task.text.replace(/^\[Daily\]\s*/, '');
-    text.style.whiteSpace = 'nowrap';
-    text.style.overflow = 'hidden';
-    text.style.textOverflow = 'ellipsis';
-    text.contentEditable = false;
-    if (isDismissed) {
-      text.style.textDecoration = 'line-through';
-      text.style.color = '#777';
-    }
+    // Label
+    const label = document.createElement('div');
+    label.textContent = task.text.replace(/^\[Daily\]\s*/, '');
+    if (isDone) Object.assign(label.style, { textDecoration: 'line-through', color: '#777' });
+    Object.assign(label.style, { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' });
 
-    const buttonWrap = document.createElement('div');
-    buttonWrap.style.display = 'flex';
-    buttonWrap.style.gap = '8px';
-    buttonWrap.style.justifyContent = 'flex-end';
-
-    const editBtn = document.createElement('button');
-    editBtn.innerHTML = '✏️';
-    editBtn.title = 'Edit task';
-    editBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:1.1em;padding:0;color:#444;';
-    editBtn.onclick = async () => {
-      const originalText = task.text.replace(/^\[Daily\]\s*/, '');
-      const newText = prompt('Edit task:', originalText);
-      if (newText && newText.trim() !== originalText) {
-        const updated = all.map(t =>
-          t.id === task.id ? { ...t, text: `[Daily] ${newText.trim()}` } : t
-        );
+    // Buttons
+    const btns = document.createElement('div'); btns.style.display = 'flex'; btns.style.gap = '8px';
+    const up   = makeIconBtn('⬆️','Move up',async()=>{/*…*/});
+    const edit = makeIconBtn('✏️','Edit',async()=>{/*…*/});
+    const skip = makeIconBtn('⏭️','Skip today',async()=>{
+      try {
+        const updated = await loadDecisions();
+        const idx = updated.findIndex(t => t.id === task.id);
+        if (idx === -1) return;
+        const skipDate = new Date(); skipDate.setDate(skipDate.getDate() + 1);
+        updated[idx].skipUntil = skipDate.toISOString();
         await saveDecisions(updated);
-        renderDailyTasks(currentUser, db);
-      }
-    };
+        wrapper.remove();
+      } catch { alert('⚠️ Could not skip task.'); }
+    });
+    const del  = makeIconBtn('❌','Delete',async()=>{/*…*/});
+    btns.append(up, edit, skip, del);
 
-    const skipBtn = document.createElement('button');
-    skipBtn.innerHTML = '⏭️';
-    skipBtn.title = 'Skip today';
-    skipBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:1.1em;padding:0;color:#888;';
-    skipBtn.onclick = async () => {
-      const updated = completionMap[todayKey] || [];
-      if (!updated.includes(task.id)) updated.push(task.id);
-      await db.collection('taskCompletions').doc(currentUser.uid).set({
-        ...completionMap,
-        [todayKey]: updated
-      });
-      renderDailyTasks(currentUser, db);
-    };
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.innerHTML = '❌';
-    deleteBtn.title = 'Delete task';
-    deleteBtn.style.cssText = 'background:none;border:none;cursor:pointer;font-size:1.1em;padding:0;color:#c44;';
-    deleteBtn.onclick = async () => {
-      if (!confirm(`Delete task: "${task.text.replace(/^\[Daily\]\s*/, '')}"?`)) return;
-      const updated = all.filter(t => t.id !== task.id);
-      await saveDecisions(updated);
-      renderDailyTasks(currentUser, db);
-    };
-
-    checkbox.onchange = async () => {
-      let updated = completionMap[todayKey] || [];
-      if (checkbox.checked && !updated.includes(task.id)) {
-        updated.push(task.id);
-      } else if (!checkbox.checked) {
-        updated = updated.filter(id => id !== task.id);
-      }
-      await db.collection('taskCompletions').doc(currentUser.uid).set({
-        ...completionMap,
-        [todayKey]: updated
-      });
-      renderDailyTasks(currentUser, db);
-    };
-
-    buttonWrap.appendChild(editBtn);
-    buttonWrap.appendChild(skipBtn);
-    buttonWrap.appendChild(deleteBtn);
-
-    row.appendChild(checkbox);
-    row.appendChild(text);
-    row.appendChild(buttonWrap);
+    row.append(cb, label, btns);
     wrapper.appendChild(row);
-    container.appendChild(wrapper);
+    return wrapper;
+  }
 
-    // DRAG-AND-DROP HANDLERS
+  function makeIconBtn(symbol, title, fn) {
+    const b = document.createElement('button'); b.type='button'; b.textContent=symbol; b.title=title;
+    Object.assign(b.style,{background:'none',border:'none',cursor:'pointer',fontSize:'1.1em',padding:'0'});
+    b.onclick = fn; return b;
+  }
 
-    wrapper.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('text/plain', task.id);
-      const ghost = document.createElement('img');
-      ghost.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-      ghost.style.width = '1px';
-      ghost.style.height = '1px';
-      e.dataTransfer.setDragImage(ghost, 0, 0);
-    });
-
-    wrapper.addEventListener('dragover', e => {
-      e.preventDefault();
-      wrapper.classList.add('daily-drag-over');
-    });
-
-    wrapper.addEventListener('dragleave', () => {
-      wrapper.classList.remove('daily-drag-over');
-    });
-
-    wrapper.addEventListener('dragend', () => {
-      wrapper.classList.remove('daily-drag-over');
-    });
-
-    wrapper.addEventListener('drop', async e => {
-      e.preventDefault();
-      wrapper.classList.remove('daily-drag-over');
-
-      const droppedId = e.dataTransfer.getData('text/plain');
-      if (!droppedId || droppedId === task.id) return;
-
-      const wrappers = [...container.querySelectorAll('.daily-task-wrapper')];
-      const draggedEl = wrappers.find(el => el.dataset.taskId === droppedId);
-      if (!draggedEl || draggedEl === wrapper) return;
-
-      const fromIdx = wrappers.indexOf(draggedEl);
-      const toIdx = wrappers.indexOf(wrapper);
-      if (fromIdx < toIdx) {
-        container.insertBefore(draggedEl, wrapper.nextSibling);
-      } else {
-        container.insertBefore(draggedEl, wrapper);
-      }
-
-      const newOrder = [...container.querySelectorAll('.daily-task-wrapper')]
-        .map(el => el.dataset.taskId);
-      const reordered = newOrder
-        .map(id => dailyTasks.find(d => d.task.id === id)?.task)
-        .filter(Boolean);
-
-      await saveDecisions([...others, ...reordered]);
-    });
+  async function persistReorder() {
+    const wrappers = Array.from(container.querySelectorAll('.daily-task-wrapper')).slice(1);
+    const ids = wrappers.map(w => w.dataset.taskId);
+    const others = all.filter(t => !ids.includes(t.id));
+    const reordered = ids.map(id => all.find(t=>t.id===id)).filter(Boolean);
+    try { await saveDecisions([...others, ...reordered]); }
+    catch { alert('⚠️ Could not save new order.'); }
   }
 }

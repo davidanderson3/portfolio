@@ -103,16 +103,14 @@ export async function renderGoalsAndSubitems() {
     const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
     let goalOrder = Array.isArray(snap.data()?.goalOrder) ? snap.data().goalOrder : [];
 
-    const missing = goals
-        .map(g => g.id)
-        .filter(id => !goalOrder.includes(id));
-
-    if (missing.length > 0) {
-        console.warn('🧭 Missing goals not in goalOrder:', missing);
-        goalOrder = [...goalOrder, ...missing];
-        // await saveGoalOrder(goalOrder); // preview mode: do not write to DB
-    }
-
+const missing = goals.map(g => g.id).filter(id => !goalOrder.includes(id));
+// in renderGoalsAndSubitems()
+if (missing.length > 0) {
+  console.warn('🧭 Missing goals not in goalOrder:', missing);
+  goalOrder = [...goalOrder, ...missing];
+  // now persist it—only this field—back to Firestore
+  await saveGoalOrder(goalOrder);
+}
 
     const sortedGoals = goalOrder.map(id => goalMap[id]).filter(Boolean);
     const now = new Date().getTime();
@@ -251,15 +249,30 @@ export async function renderGoalsAndSubitems() {
             unhideBtn.textContent = 'Unhide';
             unhideBtn.className = 'revisit-btn';
             unhideBtn.style.marginLeft = '10px';
+            // file: render.js
+            // … inside renderGoalsAndSubitems(), where you set up unhideBtn …
+            // file: render.js
             unhideBtn.onclick = async () => {
                 const updated = await loadDecisions();
                 const idx = updated.findIndex(d => d.id === goal.id);
-                if (idx !== -1) {
-                    updated[idx].hiddenUntil = null;
-                    await saveDecisions(updated);
-                    renderGoalsAndSubitems();
-                }
+                if (idx === -1) return;
+
+                // clear out the hidden flag in the data
+                updated[idx].hiddenUntil = null;
+                await saveDecisions(updated);
+                console.log('🥷 skipUntil saved for', task.id, '→', updated[idx].skipUntil);
+
+
+                // remove the hidden-label (which contains the Unhide button)
+                const hiddenLabel = wrapper.querySelector('.right-aligned');
+                if (hiddenLabel) hiddenLabel.remove();
+
+                // move only this goal-card back to the active list
+                wrapper.remove();
+                goalList.appendChild(wrapper);
             };
+
+
             label.appendChild(unhideBtn);
             wrapper.appendChild(label);
             hiddenContent.appendChild(wrapper);
@@ -283,7 +296,7 @@ function attachEditButtons(item, buttonWrap) {
     editBtn.style.fontSize = '1.2em';
     buttonWrap.appendChild(editBtn);
 
-    // 🕒 Hide select (only for incomplete items)
+    // 🕒 Hide select (only for incomplete goals)
     if (!item.completed) {
         const clockBtn = document.createElement('button');
         clockBtn.innerHTML = '🕒';
@@ -292,7 +305,6 @@ function attachEditButtons(item, buttonWrap) {
         clockBtn.style.border = 'none';
         clockBtn.style.cursor = 'pointer';
         clockBtn.style.fontSize = '1.2em';
-        clockBtn.style.position = 'relative';
         buttonWrap.appendChild(clockBtn);
 
         const menu = document.createElement('div');
@@ -306,12 +318,11 @@ function attachEditButtons(item, buttonWrap) {
         menu.style.display = 'none';
         menu.style.zIndex = '9999';
         menu.style.minWidth = '120px';
-        menu.style.boxSizing = 'border-box';
-
+        document.body.appendChild(menu);
 
         const options = [
             { label: '1 hour', value: 1 },
-            { label: '2 hour', value: 2 },
+            { label: '2 hours', value: 2 },
             { label: '4 hours', value: 4 },
             { label: '8 hours', value: 8 },
             { label: '1 day', value: 24 },
@@ -320,40 +331,51 @@ function attachEditButtons(item, buttonWrap) {
             { label: '1 month', value: 720 }
         ];
 
-        options.forEach(opt => {
-            const btn = document.createElement('button');
-            btn.textContent = opt.label;
-            btn.style.display = 'block';
-            btn.style.width = '100%';
-            btn.style.padding = '4px 12px';
-            btn.style.border = 'none';
-            btn.style.background = 'none';
-            btn.style.textAlign = 'left';
-            btn.style.cursor = 'pointer';
-            btn.style.color = '#333';
-            btn.style.background = 'white';
+options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';                // ensure it’s a button, not a submit
+    btn.textContent = opt.label;
+    btn.style.display = 'block';
+    btn.style.width = '100%';
+    btn.style.padding = '4px 12px';
+    btn.style.border = 'none';
+    btn.style.background = 'white';
+    btn.style.color = '#333';
+    btn.style.textAlign = 'left';
+    btn.style.cursor = 'pointer';
 
-            btn.onmouseover = () => btn.style.background = '#f0f0f0';
-            btn.onmouseout = () => btn.style.background = 'none';
+    btn.addEventListener('mouseover', () => btn.style.background = '#f0f0f0');
+    btn.addEventListener('mouseout',  () => btn.style.background = 'white');
 
-            btn.onclick = async () => {
-                const updated = await loadDecisions();
-                const idx = updated.findIndex(d => d.id === item.id);
-                if (idx !== -1) {
-                    const targetTime = new Date(Date.now() + opt.value * 60 * 60 * 1000);
-                    updated[idx].hiddenUntil = targetTime.toLocaleString('en-CA', { hour12: false }); // keeps local time
+btn.addEventListener('click', async e => {
+    e.stopPropagation();
+    const updated = await loadDecisions();
+    const idx = updated.findIndex(d => d.id === item.id);
+    if (idx === -1) return;
 
-                    await saveDecisions(updated);
-                    menu.style.display = 'none'; // 👈 hide the menu
-                    renderGoalsAndSubitems();
-                }
-            };
+    // set hiddenUntil and save
+    const targetTime = new Date(Date.now() + opt.value * 3600 * 1000);
+    updated[idx].hiddenUntil = targetTime.toLocaleString('en-CA', { hour12: false });
+    await saveDecisions(updated);
+
+    menu.style.display = 'none';
+
+    // find the correct wrapper (goal or task)
+    const wrapperElem = buttonWrap.closest('[data-goal-id], [data-task-id]');
+    wrapperElem.remove();
+
+    // only move goals into the Hidden section;
+    // tasks simply vanish from the UI until unhidden by render()
+    if (item.type === 'goal') {
+        document.getElementById('hiddenContent').appendChild(wrapperElem);
+    }
+});
 
 
-            menu.appendChild(btn);
-        });
+    menu.appendChild(btn);
+});
 
-        document.body.appendChild(menu);
+
 
         clockBtn.onclick = e => {
             e.stopPropagation();
@@ -363,15 +385,12 @@ function attachEditButtons(item, buttonWrap) {
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         };
 
-        // Dismiss on outside click
         document.addEventListener('click', e => {
             if (!menu.contains(e.target) && e.target !== clockBtn) {
                 menu.style.display = 'none';
             }
         });
     }
-
-
 
     // ❌ Delete icon button
     const deleteBtn = document.createElement('button');
@@ -394,16 +413,18 @@ function attachEditButtons(item, buttonWrap) {
         const updated = await loadDecisions();
         const filtered = updated.filter(d => d.id !== item.id && d.parentGoalId !== item.id);
         await saveDecisions(filtered);
-        renderGoalsAndSubitems();
+
+        // remove only this goal-card from the DOM
+        const wrapperElem = deleteBtn.closest('.goal-card');
+        wrapperElem.remove();
     };
 
+    // ——————— “Edit” → “Save” in-place ———————
     let editing = false;
-
     editBtn.onclick = async () => {
         const row = editBtn.closest('.decision-row');
-        const middle = row?.querySelector('.middle-group');
-        const due = row?.querySelector('.due-column');
-
+        const middle = row.querySelector('.middle-group');
+        const due = row.querySelector('.due-column');
         if (!middle || !due) return;
 
         if (!editing) {
@@ -421,26 +442,28 @@ function attachEditButtons(item, buttonWrap) {
 
             middle.innerHTML = '';
             middle.appendChild(textInput);
-
             due.innerHTML = '';
             due.appendChild(deadlineInput);
         } else {
-            const text = middle.querySelector('input')?.value.trim();
-            const deadline = due.querySelector('input')?.value.trim();
-
+            const newText = middle.querySelector('input')?.value.trim();
+            const newDeadline = due.querySelector('input')?.value.trim();
             const updated = await loadDecisions();
             const idx = updated.findIndex(d => d.id === item.id);
             if (idx !== -1) {
-                updated[idx].text = text;
-                updated[idx].deadline = deadline;
+                updated[idx].text = newText;
+                updated[idx].deadline = newDeadline;
                 await saveDecisions(updated);
-            }
 
-            editing = false;
-            renderGoalsAndSubitems();
+                // update the UI in place
+                middle.textContent = newText;
+                due.textContent = newDeadline;
+                editing = false;
+                editBtn.innerHTML = '✏️';
+            }
         }
     };
 }
+
 
 function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');
@@ -535,8 +558,9 @@ function createGoalRow(goal, options = {}) {
 
 function renderChildren(goal, all, container) {
     const children = all.filter(i => i.parentGoalId === goal.id);
-    const now = new Date().getTime();
+    const now = Date.now();
 
+    // Separate active vs completed tasks, respecting hiddenUntil
     const activeTasks = children.filter(c => {
         let hideUntil = 0;
         if (c.hiddenUntil) {
@@ -547,15 +571,15 @@ function renderChildren(goal, all, container) {
         }
         return !c.completed && (!hideUntil || now >= hideUntil);
     });
-
     const completedTasks = children.filter(c => c.completed);
 
+    // Clear existing children
     container.innerHTML = '';
 
+    // Render active tasks
     const taskList = document.createElement('div');
     taskList.className = 'task-list';
     container.appendChild(taskList);
-
     activeTasks.forEach(task => {
         const wrapper = document.createElement('div');
         wrapper.className = 'decision indent-1';
@@ -571,7 +595,7 @@ function renderChildren(goal, all, container) {
         enableTaskDragAndDrop(wrapper, taskList, goal.id);
     });
 
-    // ✅ Add task input + button
+    // Add-task form
     const addRow = document.createElement('div');
     addRow.className = 'inline-add-form';
     addRow.setAttribute('role', 'presentation');
@@ -593,7 +617,6 @@ function renderChildren(goal, all, container) {
     inputText.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            console.warn('⛔️ Blocked Enter key on task input');
             addBtn.click();
         }
     });
@@ -612,9 +635,8 @@ function renderChildren(goal, all, container) {
     addBtn.style.alignItems = 'center';
     addBtn.style.justifyContent = 'center';
 
-    addBtn.onclick = async (e) => {
+    addBtn.onclick = async e => {
         e.preventDefault();
-
         const text = inputText.value.trim();
         if (!text) return alert('Please enter task text.');
 
@@ -633,75 +655,82 @@ function renderChildren(goal, all, container) {
         await saveDecisions(updated);
 
         inputText.value = '';
-        renderChildren(goal, updated, container); // ⬅ keeps goal expanded
+        renderChildren(goal, updated, container);
     };
 
     addRow.appendChild(inputText);
     addRow.appendChild(addBtn);
     container.appendChild(addRow);
 
-    // ✅ Completed tasks
-    completedTasks.forEach(task => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'decision indent-1 completed-decision-inline';
-        wrapper.setAttribute('draggable', 'false');
+    // Completed tasks (always at bottom)
+    if (completedTasks.length) {
+        const doneContainer = document.createElement('div');
+        doneContainer.className = 'completed-task-list';
+        container.appendChild(doneContainer);
 
-        const row = document.createElement('div');
-        row.className = 'decision-row';
-        row.style.padding = '4px 8px';
-        row.style.fontSize = '0.85em';
-        row.style.alignItems = 'center';
+        completedTasks.forEach(task => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'decision indent-1 completed-decision-inline';
+            wrapper.setAttribute('draggable', 'false');
 
-        const left = document.createElement('div');
-        left.className = 'check-column';
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = true;
-        checkbox.disabled = true;
-        left.appendChild(checkbox);
+            const row = document.createElement('div');
+            row.className = 'decision-row';
+            row.style.padding = '4px 8px';
+            row.style.fontSize = '0.85em';
+            row.style.alignItems = 'center';
 
-        const middle = document.createElement('div');
-        middle.className = 'middle-group';
-        middle.style.display = 'grid';
-        middle.style.gridTemplateColumns = 'minmax(200px, 1fr) minmax(180px, auto)';
-        middle.style.columnGap = '16px';
+            const left = document.createElement('div');
+            left.className = 'check-column';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = true;
+            checkbox.disabled = true;
+            left.appendChild(checkbox);
 
-        const taskText = document.createElement('div');
-        taskText.textContent = task.text;
-        taskText.className = 'title-column';
+            const middle = document.createElement('div');
+            middle.className = 'middle-group';
+            middle.style.display = 'grid';
+            middle.style.gridTemplateColumns = 'minmax(200px, 1fr) minmax(180px, auto)';
+            middle.style.columnGap = '16px';
 
-        const resolution = document.createElement('div');
-        resolution.textContent = task.resolution ? `→ ${task.resolution}` : '';
-        resolution.style.fontStyle = 'italic';
-        resolution.style.color = '#666';
-        resolution.style.fontSize = '0.85em';
+            const taskText = document.createElement('div');
+            taskText.textContent = task.text;
+            taskText.className = 'title-column';
 
-        middle.appendChild(taskText);
-        middle.appendChild(resolution);
+            const resolution = document.createElement('div');
+            resolution.textContent = task.resolution ? `→ ${task.resolution}` : '';
+            resolution.style.fontStyle = 'italic';
+            resolution.style.color = '#666';
+            resolution.style.fontSize = '0.85em';
 
-        const right = document.createElement('div');
-        right.className = 'right-group';
-        right.style.gap = '4px';
+            middle.appendChild(taskText);
+            middle.appendChild(resolution);
 
-        const due = document.createElement('div');
-        due.className = 'due-column';
-        due.textContent = task.dateCompleted || '';
+            const right = document.createElement('div');
+            right.className = 'right-group';
+            right.style.gap = '4px';
 
-        const buttonWrap = document.createElement('div');
-        buttonWrap.className = 'button-row';
-        attachTaskDeleteButton(task, row);
+            const due = document.createElement('div');
+            due.className = 'due-column';
+            due.textContent = task.dateCompleted || '';
 
-        right.appendChild(due);
-        right.appendChild(buttonWrap);
+            const buttonWrap = document.createElement('div');
+            buttonWrap.className = 'button-row';
+            attachTaskDeleteButton(task, row);
 
-        row.appendChild(left);
-        row.appendChild(middle);
-        row.appendChild(right);
-        wrapper.appendChild(row);
+            right.appendChild(due);
+            right.appendChild(buttonWrap);
 
-        container.appendChild(wrapper);
-    });
+            row.appendChild(left);
+            row.appendChild(middle);
+            row.appendChild(right);
+            wrapper.appendChild(row);
+
+            doneContainer.appendChild(wrapper);
+        });
+    }
 }
+
 
 function attachTaskDeleteButton(item, row) {
     const deleteBtn = document.createElement('button');
