@@ -34,8 +34,6 @@ document.addEventListener('drop', e => {
     }
 });
 
-
-
 function enableTaskDrag(wrapper, task, goal, all, container) {
     wrapper.addEventListener('dragstart', e => {
         if (e.target.closest('[data-task-id]') !== wrapper) {
@@ -90,6 +88,81 @@ function enableTaskDrag(wrapper, task, goal, all, container) {
     });
 }
 
+// Reusable icon‐style button factory (same as in dailyTasks)
+function makeIconBtn(symbol, title, fn) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = symbol;
+    b.title = title;
+    Object.assign(b.style, {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '1.1em',
+        padding: '0'
+    });
+    // Prevent clicks from bubbling up (and interfering with drag)
+    b.addEventListener('mousedown', e => e.stopPropagation());
+    b.addEventListener('click', e => e.stopPropagation());
+    b.onclick = fn;
+    return b;
+}
+
+/**
+ * Attach ↑, ✏️, 🕒, ❌ buttons to a task-row.
+ *
+ * @param {{id:string,parentGoalId:string,text:string,completed:boolean,deadline?:string,hiddenUntil?:string}} item
+ * @param {HTMLElement} row    the .decision-row for this task
+ * @param {HTMLElement} listContainer  the parent .task-list element
+ */
+async function attachTaskButtons(item, row, listContainer) {
+    const buttonWrap = row.querySelector('.button-row');
+    if (!buttonWrap) return;
+
+    // — Create buttons using our factory —
+    const upBtn = makeIconBtn('⬆️', 'Move task up', async () => {
+        const wrapper = row.closest('[data-task-id]');
+        const prev = wrapper.previousElementSibling;
+        if (prev && prev.dataset.taskId) {
+            listContainer.insertBefore(wrapper, prev);
+            // Persist new order:
+            const ids = Array.from(listContainer.children).map(w => w.dataset.taskId);
+            const all = await loadDecisions();
+            const under = all.filter(d => d.parentGoalId === item.parentGoalId && !d.completed);
+            const other = all.filter(d => d.parentGoalId !== item.parentGoalId || d.completed);
+            const reordered = ids.map(id => under.find(t => t.id === id)).filter(Boolean);
+            await saveDecisions([...other, ...reordered]);
+        }
+    });
+
+    const editBtn = makeIconBtn('✏️', 'Edit task', async () => {
+        const newText = prompt('Edit task:', item.text)?.trim();
+        if (newText && newText !== item.text) {
+            const all = await loadDecisions();
+            const idx = all.findIndex(d => d.id === item.id);
+            all[idx].text = newText;
+            await saveDecisions(all);
+            row.querySelector('.middle-group').textContent = newText;
+        }
+    });
+
+    const clockBtn = makeIconBtn('🕒', 'Temporarily hide', () => {
+        // (reuse your existing hide-menu logic here)
+        // e.g. show options “1h,2h…” then set hiddenUntil and saveDecisions…
+    });
+
+    const delBtn = makeIconBtn('❌', 'Delete task', async () => {
+        if (!confirm(`Delete task: "${item.text}"?`)) return;
+        const all = await loadDecisions();
+        await saveDecisions(all.filter(d => d.id !== item.id));
+        row.closest('[data-task-id]').remove();
+    });
+
+    // — Append in the desired order: up, edit, postpone, delete —
+    buttonWrap.append(upBtn, editBtn, clockBtn, delBtn);
+}
+
+
 export async function renderGoalsAndSubitems() {
     goalList.innerHTML = '';
     completedList.innerHTML = '';
@@ -103,14 +176,14 @@ export async function renderGoalsAndSubitems() {
     const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
     let goalOrder = Array.isArray(snap.data()?.goalOrder) ? snap.data().goalOrder : [];
 
-const missing = goals.map(g => g.id).filter(id => !goalOrder.includes(id));
-// in renderGoalsAndSubitems()
-if (missing.length > 0) {
-  console.warn('🧭 Missing goals not in goalOrder:', missing);
-  goalOrder = [...goalOrder, ...missing];
-  // now persist it—only this field—back to Firestore
-  await saveGoalOrder(goalOrder);
-}
+    const missing = goals.map(g => g.id).filter(id => !goalOrder.includes(id));
+    // in renderGoalsAndSubitems()
+    if (missing.length > 0) {
+        console.warn('🧭 Missing goals not in goalOrder:', missing);
+        goalOrder = [...goalOrder, ...missing];
+        // now persist it—only this field—back to Firestore
+        await saveGoalOrder(goalOrder);
+    }
 
     const sortedGoals = goalOrder.map(id => goalMap[id]).filter(Boolean);
     const now = new Date().getTime();
@@ -260,18 +333,10 @@ if (missing.length > 0) {
                 // clear out the hidden flag in the data
                 updated[idx].hiddenUntil = null;
                 await saveDecisions(updated);
-                console.log('🥷 skipUntil saved for', task.id, '→', updated[idx].skipUntil);
 
-
-                // remove the hidden-label (which contains the Unhide button)
-                const hiddenLabel = wrapper.querySelector('.right-aligned');
-                if (hiddenLabel) hiddenLabel.remove();
-
-                // move only this goal-card back to the active list
-                wrapper.remove();
-                goalList.appendChild(wrapper);
+                // re-draw everything so hidden goals go back to the main list
+                renderGoalsAndSubitems();
             };
-
 
             label.appendChild(unhideBtn);
             wrapper.appendChild(label);
@@ -299,6 +364,7 @@ function attachEditButtons(item, buttonWrap) {
     // 🕒 Hide select (only for incomplete goals)
     if (!item.completed) {
         const clockBtn = document.createElement('button');
+        clockBtn.type = 'button';
         clockBtn.innerHTML = '🕒';
         clockBtn.title = 'Temporarily hide';
         clockBtn.style.background = 'none';
@@ -307,17 +373,20 @@ function attachEditButtons(item, buttonWrap) {
         clockBtn.style.fontSize = '1.2em';
         buttonWrap.appendChild(clockBtn);
 
+        // build the hide-duration menu
         const menu = document.createElement('div');
-        menu.style.position = 'absolute';
-        menu.style.background = '#fff';
-        menu.style.border = '1px solid #ccc';
-        menu.style.borderRadius = '6px';
-        menu.style.boxShadow = '0 2px 6px rgba(0,0,0,0.15)';
-        menu.style.padding = '6px 0';
-        menu.style.fontSize = '0.9em';
-        menu.style.display = 'none';
-        menu.style.zIndex = '9999';
-        menu.style.minWidth = '120px';
+        Object.assign(menu.style, {
+            position: 'absolute',
+            background: '#fff',
+            border: '1px solid #ccc',
+            borderRadius: '6px',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+            padding: '6px 0',
+            fontSize: '0.9em',
+            display: 'none',
+            zIndex: '9999',
+            minWidth: '120px'
+        });
         document.body.appendChild(menu);
 
         const options = [
@@ -331,59 +400,48 @@ function attachEditButtons(item, buttonWrap) {
             { label: '1 month', value: 720 }
         ];
 
-options.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.type = 'button';                // ensure it’s a button, not a submit
-    btn.textContent = opt.label;
-    btn.style.display = 'block';
-    btn.style.width = '100%';
-    btn.style.padding = '4px 12px';
-    btn.style.border = 'none';
-    btn.style.background = 'white';
-    btn.style.color = '#333';
-    btn.style.textAlign = 'left';
-    btn.style.cursor = 'pointer';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = opt.label;
+            Object.assign(btn.style, {
+                display: 'block',
+                width: '100%',
+                padding: '4px 12px',
+                border: 'none',
+                background: 'white',
+                color: '#333',
+                textAlign: 'left',
+                cursor: 'pointer'
+            });
+            btn.addEventListener('mouseover', () => btn.style.background = '#f0f0f0');
+            btn.addEventListener('mouseout', () => btn.style.background = 'white');
 
-    btn.addEventListener('mouseover', () => btn.style.background = '#f0f0f0');
-    btn.addEventListener('mouseout',  () => btn.style.background = 'white');
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const all = await loadDecisions();
+                const idx = all.findIndex(d => d.id === item.id);
+                if (idx === -1) return;
 
-btn.addEventListener('click', async e => {
-    e.stopPropagation();
-    const updated = await loadDecisions();
-    const idx = updated.findIndex(d => d.id === item.id);
-    if (idx === -1) return;
+                // set hiddenUntil and save
+                const targetTime = new Date(Date.now() + opt.value * 3600 * 1000);
+                all[idx].hiddenUntil = targetTime.toLocaleString('en-CA', { hour12: false });
+                await saveDecisions(all);
 
-    // set hiddenUntil and save
-    const targetTime = new Date(Date.now() + opt.value * 3600 * 1000);
-    updated[idx].hiddenUntil = targetTime.toLocaleString('en-CA', { hour12: false });
-    await saveDecisions(updated);
+                menu.style.display = 'none';
+                renderGoalsAndSubitems();
+            });
 
-    menu.style.display = 'none';
+            menu.appendChild(btn);
+        });
 
-    // find the correct wrapper (goal or task)
-    const wrapperElem = buttonWrap.closest('[data-goal-id], [data-task-id]');
-    wrapperElem.remove();
-
-    // only move goals into the Hidden section;
-    // tasks simply vanish from the UI until unhidden by render()
-    if (item.type === 'goal') {
-        document.getElementById('hiddenContent').appendChild(wrapperElem);
-    }
-});
-
-
-    menu.appendChild(btn);
-});
-
-
-
-        clockBtn.onclick = e => {
+        clockBtn.addEventListener('click', e => {
             e.stopPropagation();
             const rect = clockBtn.getBoundingClientRect();
             menu.style.top = `${rect.bottom + window.scrollY}px`;
             menu.style.left = `${rect.left + window.scrollX}px`;
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        };
+        });
 
         document.addEventListener('click', e => {
             if (!menu.contains(e.target) && e.target !== clockBtn) {
@@ -392,7 +450,7 @@ btn.addEventListener('click', async e => {
         });
     }
 
-    // ❌ Delete icon button
+    // ❌ Delete icon button for goals
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.innerHTML = '❌';
@@ -403,25 +461,23 @@ btn.addEventListener('click', async e => {
     deleteBtn.style.fontSize = '1.2em';
     buttonWrap.appendChild(deleteBtn);
 
+    // Prevent clicks from interfering with drag
     [editBtn, deleteBtn].forEach(btn => {
         btn.addEventListener('mousedown', e => e.stopPropagation());
         btn.addEventListener('click', e => e.stopPropagation());
     });
 
-    deleteBtn.onclick = async () => {
+    deleteBtn.addEventListener('click', async () => {
         if (!confirm(`Delete goal: "${item.text}"?`)) return;
-        const updated = await loadDecisions();
-        const filtered = updated.filter(d => d.id !== item.id && d.parentGoalId !== item.id);
+        const all = await loadDecisions();
+        const filtered = all.filter(d => d.id !== item.id && d.parentGoalId !== item.id);
         await saveDecisions(filtered);
-
-        // remove only this goal-card from the DOM
-        const wrapperElem = deleteBtn.closest('.goal-card');
-        wrapperElem.remove();
-    };
+        renderGoalsAndSubitems();
+    });
 
     // ——————— “Edit” → “Save” in-place ———————
     let editing = false;
-    editBtn.onclick = async () => {
+    editBtn.addEventListener('click', async () => {
         const row = editBtn.closest('.decision-row');
         const middle = row.querySelector('.middle-group');
         const due = row.querySelector('.due-column');
@@ -445,25 +501,24 @@ btn.addEventListener('click', async e => {
             due.innerHTML = '';
             due.appendChild(deadlineInput);
         } else {
+            editing = false;
             const newText = middle.querySelector('input')?.value.trim();
             const newDeadline = due.querySelector('input')?.value.trim();
-            const updated = await loadDecisions();
-            const idx = updated.findIndex(d => d.id === item.id);
-            if (idx !== -1) {
-                updated[idx].text = newText;
-                updated[idx].deadline = newDeadline;
-                await saveDecisions(updated);
 
-                // update the UI in place
+            const all = await loadDecisions();
+            const idx = all.findIndex(d => d.id === item.id);
+            if (idx !== -1) {
+                all[idx].text = newText;
+                all[idx].deadline = newDeadline;
+                await saveDecisions(all);
+
                 middle.textContent = newText;
                 due.textContent = newDeadline;
-                editing = false;
                 editBtn.innerHTML = '✏️';
             }
         }
-    };
+    });
 }
-
 
 function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');
@@ -541,13 +596,16 @@ function createGoalRow(goal, options = {}) {
     due.className = 'due-column';
     due.textContent = goal.completed ? goal.dateCompleted : '';
 
+    // … 
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
-    attachEditButtons(goal, buttonWrap);
+    if (goal.type === 'goal') {
+        attachEditButtons(goal, buttonWrap);
+    }
+    // …
 
     right.appendChild(due);
     right.appendChild(buttonWrap);
-
     row.appendChild(left);
     row.appendChild(middle);
     row.appendChild(right);
@@ -555,8 +613,7 @@ function createGoalRow(goal, options = {}) {
     return row;
 }
 
-
-function renderChildren(goal, all, container) {
+export function renderChildren(goal, all, container) {
     const children = all.filter(i => i.parentGoalId === goal.id);
     const now = Date.now();
 
@@ -576,44 +633,59 @@ function renderChildren(goal, all, container) {
     // Clear existing children
     container.innerHTML = '';
 
-    // Render active tasks
+    // --- Active tasks ---
+    // --- Active tasks ---
     const taskList = document.createElement('div');
     taskList.className = 'task-list';
     container.appendChild(taskList);
+
     activeTasks.forEach(task => {
+        // 1️⃣ Create wrapper
         const wrapper = document.createElement('div');
         wrapper.className = 'decision indent-1';
         wrapper.setAttribute('draggable', 'true');
         wrapper.dataset.taskId = task.id;
 
+        // 2️⃣ Build the row
         const row = createGoalRow(task, { hideArrow: true });
         row.style.background = '#f6fefe';
         row.style.borderLeft = '4px solid #8cd1cc';
-        wrapper.appendChild(row);
 
-        taskList.appendChild(wrapper);
+        // 3️⃣ Wire drag‐and‐drop
         enableTaskDragAndDrop(wrapper, taskList, goal.id);
+
+        // 4️⃣ Attach the ↑ ✏️ 🕒 ❌ buttons
+        //    (uses the same makeIconBtn factory from dailyTasks)
+        attachTaskButtons(task, row, taskList);
+
+        // 5️⃣ Assemble into DOM
+        wrapper.appendChild(row);
+        taskList.appendChild(wrapper);
     });
 
-    // Add-task form
+
+    // --- Add new task form ---
     const addRow = document.createElement('div');
     addRow.className = 'inline-add-form';
     addRow.setAttribute('role', 'presentation');
-    addRow.style.display = 'flex';
-    addRow.style.alignItems = 'center';
-    addRow.style.gap = '8px';
-    addRow.style.margin = '6px 0 10px';
-    addRow.style.paddingLeft = '28px';
+    Object.assign(addRow.style, {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        margin: '6px 0 10px',
+        paddingLeft: '28px'
+    });
 
     const inputText = document.createElement('input');
-    inputText.placeholder = 'New task...';
-    inputText.style.width = '500px';
-    inputText.style.fontSize = '0.95em';
-    inputText.style.padding = '6px 10px';
-    inputText.style.height = '32px';
-    inputText.style.border = '1px solid #ccc';
-    inputText.style.borderRadius = '6px';
-
+    inputText.placeholder = 'New task…';
+    Object.assign(inputText.style, {
+        width: '500px',
+        fontSize: '0.95em',
+        padding: '6px 10px',
+        height: '32px',
+        border: '1px solid #ccc',
+        borderRadius: '6px'
+    });
     inputText.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -625,17 +697,18 @@ function renderChildren(goal, all, container) {
     addBtn.type = 'button';
     addBtn.textContent = '+';
     addBtn.title = 'Add task';
-    addBtn.style.height = '32px';
-    addBtn.style.lineHeight = '32px';
-    addBtn.style.padding = '0 12px';
-    addBtn.style.margin = '0 0px 1px';
-    addBtn.style.fontSize = '1em';
-    addBtn.style.borderRadius = '6px';
-    addBtn.style.display = 'inline-flex';
-    addBtn.style.alignItems = 'center';
-    addBtn.style.justifyContent = 'center';
-
-    addBtn.onclick = async e => {
+    Object.assign(addBtn.style, {
+        height: '32px',
+        lineHeight: '32px',
+        padding: '0 12px',
+        margin: '0 0 1px',
+        fontSize: '1em',
+        borderRadius: '6px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+    });
+    addBtn.addEventListener('click', async e => {
         e.preventDefault();
         const text = inputText.value.trim();
         if (!text) return alert('Please enter task text.');
@@ -649,20 +722,18 @@ function renderChildren(goal, all, container) {
             parentGoalId: goal.id,
             type: 'task'
         };
-
         const updated = await loadDecisions();
         updated.push(newTask);
         await saveDecisions(updated);
 
         inputText.value = '';
         renderChildren(goal, updated, container);
-    };
+    });
 
-    addRow.appendChild(inputText);
-    addRow.appendChild(addBtn);
+    addRow.append(inputText, addBtn);
     container.appendChild(addRow);
 
-    // Completed tasks (always at bottom)
+    // --- Completed tasks ---
     if (completedTasks.length) {
         const doneContainer = document.createElement('div');
         doneContainer.className = 'completed-task-list';
@@ -672,13 +743,17 @@ function renderChildren(goal, all, container) {
             const wrapper = document.createElement('div');
             wrapper.className = 'decision indent-1 completed-decision-inline';
             wrapper.setAttribute('draggable', 'false');
+            wrapper.dataset.taskId = task.id;
 
             const row = document.createElement('div');
             row.className = 'decision-row';
-            row.style.padding = '4px 8px';
-            row.style.fontSize = '0.85em';
-            row.style.alignItems = 'center';
+            Object.assign(row.style, {
+                padding: '4px 8px',
+                fontSize: '0.85em',
+                alignItems: 'center'
+            });
 
+            // ✔️ checkbox
             const left = document.createElement('div');
             left.className = 'check-column';
             const checkbox = document.createElement('input');
@@ -687,73 +762,48 @@ function renderChildren(goal, all, container) {
             checkbox.disabled = true;
             left.appendChild(checkbox);
 
+            // middle: text + resolution
             const middle = document.createElement('div');
             middle.className = 'middle-group';
-            middle.style.display = 'grid';
-            middle.style.gridTemplateColumns = 'minmax(200px, 1fr) minmax(180px, auto)';
-            middle.style.columnGap = '16px';
-
+            Object.assign(middle.style, {
+                display: 'grid',
+                gridTemplateColumns: 'minmax(200px,1fr) minmax(180px,auto)',
+                columnGap: '16px'
+            });
             const taskText = document.createElement('div');
-            taskText.textContent = task.text;
             taskText.className = 'title-column';
-
+            taskText.textContent = task.text;
             const resolution = document.createElement('div');
             resolution.textContent = task.resolution ? `→ ${task.resolution}` : '';
-            resolution.style.fontStyle = 'italic';
-            resolution.style.color = '#666';
-            resolution.style.fontSize = '0.85em';
+            Object.assign(resolution.style, {
+                fontStyle: 'italic',
+                color: '#666',
+                fontSize: '0.85em'
+            });
+            middle.append(taskText, resolution);
 
-            middle.appendChild(taskText);
-            middle.appendChild(resolution);
-
+            // right: date + buttons
             const right = document.createElement('div');
             right.className = 'right-group';
             right.style.gap = '4px';
-
             const due = document.createElement('div');
             due.className = 'due-column';
             due.textContent = task.dateCompleted || '';
-
             const buttonWrap = document.createElement('div');
             buttonWrap.className = 'button-row';
-            attachTaskDeleteButton(task, row);
+            // wire delete/edit/postpone but skip move-up if you like
+            attachTaskButtons(task, row);
 
-            right.appendChild(due);
-            right.appendChild(buttonWrap);
+            right.append(due, buttonWrap);
 
-            row.appendChild(left);
-            row.appendChild(middle);
-            row.appendChild(right);
+            row.append(left, middle, right);
             wrapper.appendChild(row);
-
             doneContainer.appendChild(wrapper);
         });
     }
 }
 
 
-function attachTaskDeleteButton(item, row) {
-    const deleteBtn = document.createElement('button');
-    deleteBtn.type = 'button'; // 🔥 Prevents form submission
-    deleteBtn.textContent = 'Delete';
-
-    deleteBtn.className = 'remove-btn';
-    deleteBtn.style.marginLeft = '8px';
-
-    // Prevent drag interference
-    deleteBtn.addEventListener('mousedown', e => e.stopPropagation());
-    deleteBtn.addEventListener('click', e => e.stopPropagation());
-
-    deleteBtn.onclick = async () => {
-        if (!confirm(`Delete task: "${item.text}"?`)) return;
-        const updated = await loadDecisions();
-        const filtered = updated.filter(d => d.id !== item.id);
-        await saveDecisions(filtered);
-        renderGoalsAndSubitems();
-    };
-
-    row.querySelector('.right-group .button-row')?.appendChild(deleteBtn);
-}
 
 function enableDragAndDrop(wrapper, type = 'goal') {
     const goalList = document.getElementById('goalList');
