@@ -57,11 +57,11 @@ window.addEventListener('DOMContentLoaded', () => {
       }
 
       loadDecisions().then(data => {
-        const backup = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(backup);
-        a.download = `auto-backup-${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
+        localStorage.setItem(
+          `backup-${new Date().toISOString().slice(0, 10)}`,
+          JSON.stringify(data)
+        );
+        console.log('⚡ backup saved to localStorage');
       });
     }
   });
