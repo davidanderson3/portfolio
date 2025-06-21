@@ -1,11 +1,13 @@
+// File: index.js (or whatever your main file is named)
+
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
 import { renderGoalsAndSubitems } from './render.js';
 import { initAuth } from './auth.js';
 import { db } from './auth.js';
-import { showDailyLogPrompt } from './dailyLog.js';
 import { initWizard } from './wizard.js';
 import { renderDailyTaskReport } from './report.js';
+import './stats.js';
 
 let currentUser = null;
 window.currentUser = null;
@@ -16,9 +18,9 @@ window.addEventListener('DOMContentLoaded', () => {
     logoutBtn: document.getElementById('logoutBtn'),
     userEmail: document.getElementById('userEmail'),
     addGoalBtn: document.getElementById('addGoalBtn'),
-    wizardContainer: document.getElementById('goalWizard'),     // formerly goalWizard
+    wizardContainer: document.getElementById('goalWizard'),
     wizardStep: document.getElementById('wizardStep'),
-    nextBtn: document.getElementById('wizardNextBtn'),          // formerly wizardNextBtn
+    nextBtn: document.getElementById('wizardNextBtn'),
     backBtn: document.getElementById('wizardBackBtn'),
     cancelBtn: document.getElementById('wizardCancelBtn')
   };
@@ -44,7 +46,6 @@ window.addEventListener('DOMContentLoaded', () => {
           if (goalList || completedList) {
             renderGoalsAndSubitems(user, db);
           }
-          showDailyLogPrompt(user, db);
 
           if (document.getElementById('reportBody')) {
             renderDailyTaskReport(user, db);
@@ -72,4 +73,3 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.loadDecisions = loadDecisions;
-

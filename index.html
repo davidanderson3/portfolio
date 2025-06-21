@@ -17,7 +17,6 @@
       <span id="userEmail" class="user-email"></span>
       <button type="button" id="loginBtn">Sign In</button>
       <button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
-
     </div>
   </div>
 
@@ -37,8 +36,6 @@
     </div>
   </div>
 
-
-
   <section class="main-layout">
     <div class="goals-column">
       <h2>Goals</h2>
@@ -47,11 +44,9 @@
         <div id="goalWizard" style="display: none;">
           <div id="wizardStep"></div>
           <div class="button-row">
-            <div class="button-row">
-              <button type="button" id="wizardBackBtn" style="display: none;">Back</button>
-              <button type="button" id="wizardCancelBtn">Cancel</button>
-              <button type="button" id="wizardNextBtn">Next</button>
-            </div>
+            <button type="button" id="wizardBackBtn" style="display: none;">Back</button>
+            <button type="button" id="wizardCancelBtn">Cancel</button>
+            <button type="button" id="wizardNextBtn">Next</button>
           </div>
         </div>
       </div>
@@ -59,21 +54,25 @@
 
       <hr style="margin: 40px 0;" />
 
+<section id="statsSection">
+  <h2>Metrics Dashboard</h2>
+  <div id="metricsConfigSection"></div>
+  <div id="genericStatsSummary"></div>
+</section>
+
+
+      <hr style="margin: 40px 0;" />
+
       <div id="completedList" class="decision-container"></div>
     </div>
+
     <div class="right-column">
       <h2>Daily Tasks</h2>
       <div id="dailyTasksList" class="decision-container"></div>
     </div>
   </section>
 
-  </div>
-
-
-
-
   <script type="module" src="js/main.js"></script>
-
 </body>
 
 </html>

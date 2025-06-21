@@ -59,3 +59,6 @@ export function initAuth({ loginBtn, logoutBtn, userEmail }, onLogin) {
     onLogin(user);
   });
 }
+
+export const FieldValue = firebase.firestore.FieldValue;
+
