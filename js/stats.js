@@ -163,6 +163,23 @@ function applyUnitLabels(cfg) {
 
 async function renderStatsSummary() {
   try {
+    // Inject “all-complete” animation CSS once
+    if (!document.getElementById('stats-complete-css')) {
+      const style = document.createElement('style');
+      style.id = 'stats-complete-css';
+      style.textContent = `
+        @keyframes pulse {
+          0%   { transform: scale(1); }
+          50%  { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+        .all-complete {
+          animation: pulse 0.8s ease-in-out 3;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
     // 1) Load exactly the user’s saved metrics (so deletions stick)
     const config = await loadMetricsConfig();
     config.forEach(applyUnitLabels);
@@ -204,6 +221,7 @@ async function renderStatsSummary() {
       borderCollapse: 'collapse',
       marginTop: '16px'
     });
+
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     ['Metric', 'Today’s Value', 'Percentile', 'Actions'].forEach(text => {
@@ -222,15 +240,24 @@ async function renderStatsSummary() {
     // 7) Populate each metric row
     const tbody = document.createElement('tbody');
     const today = todayKey();
+    let visibleCount = 0, filledCount = 0;
 
     for (const cfg of config) {
       applyUnitLabels(cfg);
 
       // Today's entries for this metric
       const entries = ((allStats[today] || {})[cfg.id]) || [];
+
+      // If postponed today, skip entirely
+      if (entries.some(e => e.extra && e.extra.postponed)) {
+        continue;
+      }
+      visibleCount++;
+
       let displayValue = '—', pctText = '—';
 
       if (entries.length) {
+        filledCount++;
         const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
         let actualValue;
 
@@ -258,20 +285,22 @@ async function renderStatsSummary() {
 
       const row = document.createElement('tr');
 
-      // --- Metric Name ---
+      // — Metric Name
       const tdLabel = document.createElement('td');
       tdLabel.textContent = cfg.label;
       Object.assign(tdLabel.style, { padding: '8px', borderBottom: '1px solid #ddd' });
       row.appendChild(tdLabel);
 
-      // --- Today’s Value + Edit Icon ---
+      // — Today’s Value + Edit Icon
       const tdVal = document.createElement('td');
       Object.assign(tdVal.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+
       const displaySpan = document.createElement('span');
       displaySpan.textContent = `${displayValue} ${cfg.unitLabel}`;
       displaySpan.style.marginRight = '8px';
       tdVal.appendChild(displaySpan);
 
+      // Edit pencil
       const pencil = document.createElement('span');
       pencil.textContent = '✏️';
       pencil.style.cursor = 'pointer';
@@ -339,17 +368,29 @@ async function renderStatsSummary() {
       tdVal.appendChild(pencil);
       row.appendChild(tdVal);
 
-      // --- Percentile ---
+      // — Percentile
       const tdPct = document.createElement('td');
       tdPct.textContent = pctText;
       Object.assign(tdPct.style, { padding: '8px', borderBottom: '1px solid #ddd' });
       row.appendChild(tdPct);
 
-      // --- Actions: Rename & Delete ---
+      // — Actions: Postpone, Rename & Delete
       const tdAct = document.createElement('td');
       Object.assign(tdAct.style, { padding: '8px', borderBottom: '1px solid #ddd' });
 
-      // Rename
+      // Postpone ⏭️
+      const postponeIcon = document.createElement('span');
+      postponeIcon.textContent = '⏭️';
+      postponeIcon.style.cursor = 'pointer';
+      postponeIcon.style.marginRight = '8px';
+      postponeIcon.title = 'Postpone until tomorrow';
+      postponeIcon.addEventListener('click', async () => {
+        await recordMetric(cfg.id, null, { postponed: true });
+        await renderStatsSummary();
+      });
+      tdAct.appendChild(postponeIcon);
+
+      // Rename ✏️
       const editIcon = document.createElement('span');
       editIcon.textContent = '✏️';
       editIcon.style.cursor = 'pointer';
@@ -374,19 +415,21 @@ async function renderStatsSummary() {
       });
       tdAct.appendChild(editIcon);
 
-      // Delete
-      const deleteIcon = document.createElement('span');
-      deleteIcon.textContent = '❌';
-      deleteIcon.style.cursor = 'pointer';
-      deleteIcon.title = 'Delete metric';
-      deleteIcon.addEventListener('click', async () => {
-        if (!confirm(`Delete metric "${cfg.label}"?`)) return;
-        const filtered = (await loadMetricsConfig()).filter(m => m.id !== cfg.id);
-        await saveMetricsConfig(filtered);
-        await renderConfigForm();
-        await renderStatsSummary();
-      });
-      tdAct.appendChild(deleteIcon);
+      // Delete ❌
+      if (cfg.id !== 'mood') {
+        const deleteIcon = document.createElement('span');
+        deleteIcon.textContent = '❌';
+        deleteIcon.style.cursor = 'pointer';
+        deleteIcon.title = 'Delete metric';
+        deleteIcon.addEventListener('click', async () => {
+          if (!confirm(`Delete metric "${cfg.label}"?`)) return;
+          const filtered = (await loadMetricsConfig()).filter(m => m.id !== cfg.id);
+          await saveMetricsConfig(filtered);
+          await renderConfigForm();
+          await renderStatsSummary();
+        });
+        tdAct.appendChild(deleteIcon);
+      }
 
       row.appendChild(tdAct);
       tbody.appendChild(row);
@@ -395,11 +438,90 @@ async function renderStatsSummary() {
     table.appendChild(tbody);
     container.appendChild(table);
 
+    // 8) If all visible metrics are filled, trigger the animation
+    if (visibleCount > 0 && visibleCount === filledCount) {
+      table.classList.add('all-complete');
+      setTimeout(() => table.classList.remove('all-complete'), 2500);
+    }
+
   } catch (err) {
     console.error('renderStatsSummary failed:', err);
   }
 }
 
+
+
+
+async function renderConfigForm() {
+    // 1) Load the user’s saved metrics, then re-seed defaults (mood + count)
+    let config = await loadMetricsConfig();
+    config = await ensureMoodConfig();
+    config.forEach(applyUnitLabels);
+
+    // 2) Build the “Add New Metric” form
+    const section = document.getElementById('metricsConfigSection');
+    section.innerHTML = `
+      <h4>Add New Metric</h4>
+      <form id="configForm">
+        <input
+          type="text"
+          id="metricLabel"
+          placeholder="What are you measuring?"
+          required
+        >
+        <label for="metricUnit" style="margin-left:8px;">
+          Unit
+        </label>
+        <select id="metricUnit" required>
+          <option value="pounds">pounds</option>
+          <option value="rating">rating out of 10</option>
+          <option value="minutes">minutes</option>
+          <option value="time_mmss">minutes and seconds MM:SS</option>
+          <option value="list">list</option>
+          <option value="count">count</option>
+        </select>
+        <button type="submit" style="margin-left:8px;">
+          Add Metric
+        </button>
+      </form>
+    `;
+
+    // 3) Wire up the form submit to save the new metric
+    document
+      .getElementById('configForm')
+      .addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const label = document
+          .getElementById('metricLabel')
+          .value
+          .trim();
+        const unit = document
+          .getElementById('metricUnit')
+          .value;
+
+        if (!label || !unit) {
+          alert('Please enter both label and unit.');
+          return;
+        }
+
+        const id = label
+          .toLowerCase()
+          .replace(/\W+/g, '_');
+        const newMetric = { id, label, unit };
+
+        // 4) Merge into existing config
+        const oldCfg = await loadMetricsConfig();
+        await saveMetricsConfig([
+          ...oldCfg.filter(m => m.id !== id),
+          newMetric
+        ]);
+
+        // 5) Re-draw both the form and the stats table
+        await renderConfigForm();
+        await renderStatsSummary();
+      });
+}
 
 
 
