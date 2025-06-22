@@ -242,193 +242,343 @@ export async function attachTaskButtons(item, row, listContainer) {
   buttonWrap.append(upBtn, editBtn, clockBtn, delBtn);
 }
 
+// File: src/render.js
 
+// ─── Updated createGoalRow: only adds its own date‐picker when options.hideScheduled===false ───
+function createGoalRow(goal, options = {}) {
+  const row = document.createElement('div');
+  row.className = 'decision-row';
+
+  // left
+  const left = document.createElement('div');
+  left.className = 'left-group';
+  const toggle = document.createElement('span');
+  toggle.className = 'toggle-triangle';
+  toggle.style.marginRight = '6px';
+  if (!options.hideArrow) {
+    toggle.textContent = '▶';
+    toggle.style.cursor = 'pointer';
+  }
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = goal.completed;
+  checkbox.disabled = goal.completed;
+  left.append(toggle, checkbox);
+  row.appendChild(left);
+
+  // middle
+  const middle = document.createElement('div');
+  middle.className = 'middle-group';
+  middle.textContent = goal.text;
+  row.appendChild(middle);
+
+  // right
+  const right = document.createElement('div');
+  right.className = 'right-group';
+
+  // only show built‐in date‐picker when hideScheduled is false
+  if (!options.hideScheduled) {
+    const schedWrap = document.createElement('div');
+    schedWrap.className = 'scheduled-column';
+    const schedInput = document.createElement('input');
+    schedInput.type = 'date';
+    schedInput.value = goal.scheduled || '';
+    schedInput.title = 'Scheduled';
+    schedInput.onchange = async () => {
+      const items = await loadDecisions();
+      const idx   = items.findIndex(d => d.id === goal.id);
+      if (idx !== -1) {
+        items[idx].scheduled = schedInput.value || null;
+        await saveDecisions(items);
+        renderGoalsAndSubitems();
+      }
+    };
+    schedWrap.appendChild(schedInput);
+    right.appendChild(schedWrap);
+  }
+
+  // due/completed
+  const due = document.createElement('div');
+  due.className = 'due-column';
+  due.textContent = goal.completed ? goal.dateCompleted : '';
+  right.appendChild(due);
+
+  // buttons
+  const buttonWrap = document.createElement('div');
+  buttonWrap.className = 'button-row';
+  if (goal.type === 'goal') attachEditButtons(goal, buttonWrap);
+  right.appendChild(buttonWrap);
+
+  row.appendChild(right);
+  return row;
+}
+
+
+// File: src/render.js
 
 export async function renderGoalsAndSubitems() {
-    goalList.innerHTML = '';
-    completedList.innerHTML = '';
-    const renderedGoalIds = new Set();
-    const all = await loadDecisions();
-    console.log('🔍 Total items loaded:', all.length);
+  // 1) Clear existing
+  goalList.innerHTML = '';
+  completedList.innerHTML = '';
 
-    const goals = all.filter(i => i.type === 'goal' && i.id && i.parentGoalId == null);
-    const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
+  const renderedGoalIds = new Set();
+  const all = await loadDecisions();
+  console.log('🔍 Total items loaded:', all);
 
-    const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
-    let goalOrder = Array.isArray(snap.data()?.goalOrder) ? snap.data().goalOrder : [];
+  // 2) Sync goalOrder
+  const goals = all.filter(i => i.type === 'goal' && !i.parentGoalId);
+  const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
+  const snap = await db.collection('decisions')
+    .doc(firebase.auth().currentUser.uid)
+    .get();
+  let goalOrder = Array.isArray(snap.data()?.goalOrder)
+    ? snap.data().goalOrder
+    : [];
+  const missing = goals.map(g => g.id).filter(id => !goalOrder.includes(id));
+  if (missing.length) {
+    goalOrder = [...goalOrder, ...missing];
+    await saveGoalOrder(goalOrder);
+  }
+  const sortedGoals = goalOrder.map(id => goalMap[id]).filter(Boolean);
+  const now = Date.now();
 
-    const missing = goals.map(g => g.id).filter(id => !goalOrder.includes(id));
-    // in renderGoalsAndSubitems()
-    if (missing.length > 0) {
-        console.warn('🧭 Missing goals not in goalOrder:', missing);
-        goalOrder = [...goalOrder, ...missing];
-        // now persist it—only this field—back to Firestore
-        await saveGoalOrder(goalOrder);
-    }
-
-    const sortedGoals = goalOrder.map(id => goalMap[id]).filter(Boolean);
-    const now = new Date().getTime();
-
-    // Hidden goals section
-    let hiddenSection = document.getElementById('hiddenList');
-    if (!hiddenSection) {
-        hiddenSection = document.createElement('div');
-        hiddenSection.id = 'hiddenList';
-        hiddenSection.innerHTML = `
-      <h2 style="margin-top: 32px;">
-        <span id="toggleHidden" style="cursor: pointer;">▶</span> Hidden Goals
+  // 3) Hidden Goals
+  let hiddenSection = document.getElementById('hiddenList');
+  if (!hiddenSection) {
+    hiddenSection = document.createElement('div');
+    hiddenSection.id = 'hiddenList';
+    hiddenSection.innerHTML = `
+      <h2 style="margin-top:32px">
+        <span id="toggleHidden" style="cursor:pointer">▶</span> Hidden Goals
       </h2>
-      <div id="hiddenContent" style="display: none;"></div>
+      <div id="hiddenContent" style="display:none"></div>
     `;
-        goalList.parentNode.insertBefore(hiddenSection, goalList.nextSibling);
-    }
-
-    const hiddenContent = hiddenSection.querySelector('#hiddenContent');
-    hiddenContent.innerHTML = '';
+    goalList.parentNode.insertBefore(hiddenSection, goalList.nextSibling);
     const toggleHidden = hiddenSection.querySelector('#toggleHidden');
+    const hiddenContent = hiddenSection.querySelector('#hiddenContent');
     toggleHidden.onclick = () => {
-        const isOpen = hiddenContent.style.display === 'block';
-        toggleHidden.textContent = isOpen ? '▶' : '▼';
-        hiddenContent.style.display = isOpen ? 'none' : 'block';
+      const open = hiddenContent.style.display === 'block';
+      toggleHidden.textContent = open ? '▶' : '▼';
+      hiddenContent.style.display = open ? 'none' : 'block';
+    };
+  }
+  const hiddenContent = hiddenSection.querySelector('#hiddenContent');
+  hiddenContent.innerHTML = '';
+
+  // 4) Calendar section
+  let calendarSection = document.getElementById('calendarSection');
+  if (!calendarSection) {
+    calendarSection = document.createElement('div');
+    calendarSection.id = 'calendarSection';
+    calendarSection.innerHTML = `
+      <h2>
+        <span style="visibility:hidden">▶</span> Calendar
+      </h2>
+      <div id="calendarContent"></div>
+    `;
+    const parent = goalList.parentNode;
+    const completedSec = document.getElementById('completedSection');
+    parent.insertBefore(calendarSection, completedSec || hiddenSection.nextSibling);
+  }
+  const calendarContent = calendarSection.querySelector('#calendarContent');
+  calendarContent.innerHTML = '';
+
+  // 5) Completed Goals
+  let completedSection = document.getElementById('completedSection');
+  if (!completedSection) {
+    completedSection = document.createElement('div');
+    completedSection.id = 'completedSection';
+    const hdr = document.createElement('h2');
+    const toggle = document.createElement('span');
+    toggle.textContent = '▶';
+    toggle.style.cursor = 'pointer';
+    hdr.appendChild(toggle);
+    hdr.append(' Completed');
+    const completedContent = document.createElement('div');
+    completedContent.id = 'completedContent';
+    completedContent.style.display = 'none';
+    completedContent.appendChild(completedList);
+    toggle.onclick = () => {
+      const open = completedContent.style.display === 'block';
+      toggle.textContent = open ? '▶' : '▼';
+      completedContent.style.display = open ? 'none' : 'block';
+    };
+    completedSection.appendChild(hdr);
+    completedSection.appendChild(completedContent);
+    goalList.parentNode.appendChild(completedSection);
+  }
+
+  // 6) Split scheduled vs non-scheduled
+  const scheduledGoals = sortedGoals
+    .filter(g => !g.completed && typeof g.scheduled === 'string')
+    .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
+  const nonScheduled = sortedGoals.filter(g => !g.scheduled);
+
+  // 7) Within nonScheduled: completed vs hidden/active
+  const completedGoals = nonScheduled
+    .filter(g => g.completed && g.dateCompleted)
+    .sort((a, b) => new Date(b.dateCompleted) - new Date(a.dateCompleted));
+  const hiddenAndActive = nonScheduled
+    .filter(g => !g.completed)
+    .sort((a, b) => {
+      const ta = a.hiddenUntil ? Date.parse(a.hiddenUntil) || 0 : 0;
+      const tb = b.hiddenUntil ? Date.parse(b.hiddenUntil) || 0 : 0;
+      return ta - tb;
+    });
+
+  // 8) Render scheduled goals (static date + input only on Edit)
+  console.log('📅 scheduledGoals:', scheduledGoals);
+  scheduledGoals.forEach(goal => {
+    const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
+    const isHidden = hideUntil && now < hideUntil;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'decision goal-card';
+    wrapper.dataset.goalId = goal.id;
+    wrapper.setAttribute('draggable', 'true');
+
+    // build row without its own picker
+    const row = createGoalRow(goal, { hideScheduled: true });
+    const buttonWrap = row.querySelector('.button-row');
+    const editBtn = buttonWrap.querySelector('button[title="Edit"]');
+
+    // static date label
+    const dateSpan = document.createElement('span');
+    dateSpan.className   = 'goal-date';
+    dateSpan.textContent = goal.scheduled;
+    buttonWrap.insertBefore(dateSpan, editBtn);
+
+    // hidden date-input
+    const dateInput = document.createElement('input');
+    dateInput.type        = 'date';
+    dateInput.value       = goal.scheduled;
+    dateInput.style.display = 'none';
+    dateInput.onchange    = async () => {
+      const items = await loadDecisions();
+      const idx   = items.findIndex(d => d.id === goal.id);
+      if (idx !== -1) {
+        items[idx].scheduled = dateInput.value || null;
+        await saveDecisions(items);
+        renderGoalsAndSubitems();
+      }
+    };
+    buttonWrap.insertBefore(dateInput, editBtn);
+
+    // reveal on Edit
+    editBtn.addEventListener('click', () => {
+      dateInput.style.display = 'inline-block';
+    });
+
+    wrapper.appendChild(row);
+
+    // children container + render its tasks
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'goal-children';
+    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+    wrapper.appendChild(childrenContainer);
+    renderChildren(goal, all, childrenContainer);
+
+    // toggle caret
+    const toggle = row.querySelector('.toggle-triangle');
+    toggle.onclick = () => {
+      const open = childrenContainer.style.display === 'block';
+      toggle.textContent = open ? '▶' : '▼';
+      childrenContainer.style.display = open ? 'none' : 'block';
+      wrapper.setAttribute('draggable', open ? 'true' : 'false');
+      if (open) openGoalIds.delete(goal.id);
+      else       openGoalIds.add(goal.id);
     };
 
-    // Completed goals section
-    let completedSection = document.getElementById('completedSection');
-    if (!completedSection) {
-        completedSection = document.createElement('div');
-        completedSection.id = 'completedSection';
-
-        const completedHeader = document.createElement('h2');
-        const toggle = document.createElement('span');
-        toggle.textContent = '▶';
-        toggle.style.cursor = 'pointer';
-
-        const completedContent = document.createElement('div');
-        completedContent.id = 'completedContent';
-        completedContent.style.display = 'none';
-        completedContent.appendChild(completedList);
-
-        toggle.onclick = () => {
-            const isOpen = completedContent.style.display === 'block';
-            toggle.textContent = isOpen ? '▶' : '▼';
-            completedContent.style.display = isOpen ? 'none' : 'block';
-        };
-
-        completedHeader.appendChild(toggle);
-        completedHeader.append(' Completed');
-        completedSection.appendChild(completedHeader);
-        completedSection.appendChild(completedContent);
-
-        goalList.parentNode.appendChild(completedSection);
+    // append or hide
+    if (isHidden) {
+      const btn = document.createElement('button');
+      btn.textContent = 'Unhide';
+      btn.onclick   = async () => {
+        const items = await loadDecisions();
+        const i = items.findIndex(d => d.id === goal.id);
+        if (i !== -1) {
+          items[i].hiddenUntil = null;
+          await saveDecisions(items);
+          renderGoalsAndSubitems();
+        }
+      };
+      const lbl = document.createElement('div');
+      lbl.className   = 'right-aligned';
+      lbl.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
+      lbl.appendChild(btn);
+      wrapper.appendChild(lbl);
+      hiddenContent.appendChild(wrapper);
+    } else {
+      calendarContent.appendChild(wrapper);
+      enableDragAndDrop(wrapper, 'goal');
     }
 
-    const completedGoals = sortedGoals
-        .filter(g => g.completed && g.dateCompleted)
-        .sort((a, b) => new Date(b.dateCompleted) - new Date(a.dateCompleted));
+    renderedGoalIds.add(goal.id);
+  });
 
-    const hiddenAndActiveGoals = sortedGoals.filter(g => !g.completed);
+  // 9) Render remaining non-scheduled goals
+  const finalList = [...completedGoals, ...hiddenAndActive];
+  finalList.forEach(goal => {
+    if (renderedGoalIds.has(goal.id)) return;
 
-    hiddenAndActiveGoals.sort((a, b) => {
-        const aTime = a.hiddenUntil ? new Date(a.hiddenUntil).getTime() : 0;
-        const bTime = b.hiddenUntil ? new Date(b.hiddenUntil).getTime() : 0;
-        return aTime - bTime;
-    });
+    const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
+    const isCompleted = !!goal.completed;
+    const isHidden    = hideUntil && now < hideUntil;
 
-    const finalList = [...completedGoals, ...hiddenAndActiveGoals];
+    const wrapper = document.createElement('div');
+    wrapper.className = 'decision goal-card';
+    wrapper.dataset.goalId = goal.id;
+    wrapper.setAttribute('draggable', 'true');
 
-    finalList.forEach(goal => {
-        if (renderedGoalIds.has(goal.id)) return;
+    const row = createGoalRow(goal, { hideScheduled: true });
+    wrapper.appendChild(row);
 
-        let hideUntil = 0;
-        if (goal.hiddenUntil) {
-            try {
-                hideUntil = typeof goal.hiddenUntil === 'string'
-                    ? Date.parse(goal.hiddenUntil)
-                    : goal.hiddenUntil;
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'goal-children';
+    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+    wrapper.appendChild(childrenContainer);
+    renderChildren(goal, all, childrenContainer);
 
-                if (isNaN(hideUntil)) hideUntil = 0;
-            } catch {
-                hideUntil = 0;
-            }
+    const toggleBtn = row.querySelector('.toggle-triangle');
+    toggleBtn.onclick = () => {
+      const open = childrenContainer.style.display === 'block';
+      toggleBtn.textContent = open ? '▶' : '▼';
+      childrenContainer.style.display = open ? 'none' : 'block';
+      wrapper.setAttribute('draggable', open ? 'true' : 'false');
+      if (open) openGoalIds.delete(goal.id);
+      else       openGoalIds.add(goal.id);
+    };
+
+    if (isCompleted) {
+      completedList.appendChild(wrapper);
+    } else if (isHidden) {
+      const btn = document.createElement('button');
+      btn.textContent = 'Unhide';
+      btn.onclick   = async () => {
+        const items = await loadDecisions();
+        const idx = items.findIndex(d => d.id === goal.id);
+        if (idx !== -1) {
+          items[idx].hiddenUntil = null;
+          await saveDecisions(items);
+          renderGoalsAndSubitems();
         }
+      };
+      const lbl = document.createElement('div');
+      lbl.className   = 'right-aligned';
+      lbl.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
+      lbl.appendChild(btn);
+      wrapper.appendChild(lbl);
+      hiddenContent.appendChild(wrapper);
+    } else {
+      goalList.appendChild(wrapper);
+    }
 
-        const isCompleted = !!goal.completed;
-        const isHidden = hideUntil && now < hideUntil;
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'decision goal-card';
-        wrapper.setAttribute('draggable', 'true');
-        wrapper.dataset.goalId = goal.id;
-
-        const row = createGoalRow(goal);
-        if (!row) return;
-
-        const toggleBtn = row.querySelector('.toggle-triangle');
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'goal-children';
-
-        const isOpen = openGoalIds.has(goal.id);
-        childrenContainer.style.display = isOpen ? 'block' : 'none';
-        toggleBtn.textContent = isOpen ? '▼' : '▶';
-        wrapper.setAttribute('draggable', isOpen ? 'false' : 'true');
-
-        toggleBtn.onclick = () => {
-            const isVisible = childrenContainer.style.display === 'block';
-            toggleBtn.textContent = isVisible ? '▶' : '▼';
-            childrenContainer.style.display = isVisible ? 'none' : 'block';
-            wrapper.setAttribute('draggable', isVisible ? 'true' : 'false');
-            if (!isVisible) openGoalIds.add(goal.id);
-            else openGoalIds.delete(goal.id);
-        };
-
-        wrapper.appendChild(row);
-        wrapper.appendChild(childrenContainer);
-        renderChildren(goal, all, childrenContainer);
-        enableDragAndDrop(wrapper, 'goal');
-
-        if (isCompleted) {
-            if (goal.resolution?.trim()) {
-                const resolutionRow = document.createElement('div');
-                resolutionRow.className = 'link-line';
-                resolutionRow.textContent = `✔️ ${goal.resolution}`;
-                wrapper.appendChild(resolutionRow);
-            }
-            completedList.appendChild(wrapper);
-        } else if (isHidden) {
-            const label = document.createElement('div');
-            label.className = 'right-aligned';
-            label.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
-            const unhideBtn = document.createElement('button');
-            unhideBtn.type = 'button';
-            unhideBtn.textContent = 'Unhide';
-            unhideBtn.className = 'revisit-btn';
-            unhideBtn.style.marginLeft = '10px';
-            // file: render.js
-            // … inside renderGoalsAndSubitems(), where you set up unhideBtn …
-            // file: render.js
-            unhideBtn.onclick = async () => {
-                const updated = await loadDecisions();
-                const idx = updated.findIndex(d => d.id === goal.id);
-                if (idx === -1) return;
-
-                // clear out the hidden flag in the data
-                updated[idx].hiddenUntil = null;
-                await saveDecisions(updated);
-
-                // re-draw everything so hidden goals go back to the main list
-                renderGoalsAndSubitems();
-            };
-
-            label.appendChild(unhideBtn);
-            wrapper.appendChild(label);
-            hiddenContent.appendChild(wrapper);
-        } else {
-            goalList.appendChild(wrapper);
-        }
-
-        renderedGoalIds.add(goal.id);
-    });
+    renderedGoalIds.add(goal.id);
+  });
 }
+
+
+
 
 function attachEditButtons(item, buttonWrap) {
     // ✏️ Edit icon button
@@ -601,98 +751,10 @@ function attachEditButtons(item, buttonWrap) {
     });
 }
 
-function createGoalRow(goal, options = {}) {
-    const row = document.createElement('div');
-    row.className = 'decision-row';
+// File: src/render.js
 
-    const left = document.createElement('div');
-    left.className = 'left-group';
 
-    const toggle = document.createElement('span');
-    toggle.className = 'toggle-triangle';
-    toggle.style.marginRight = '6px';
-    if (!options.hideArrow) {
-        toggle.textContent = '▶';
-        toggle.style.cursor = 'pointer';
-    }
 
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = goal.completed;
-    checkbox.disabled = goal.completed;
-
-    left.appendChild(toggle);
-    left.appendChild(checkbox);
-
-    checkbox.onchange = async () => {
-        if (goal.type !== 'task') {
-            const resolution = prompt(`Mark goal complete: ${goal.text}`);
-            if (!resolution) {
-                checkbox.checked = false;
-                return;
-            }
-            goal.resolution = resolution;
-        }
-
-        goal.completed = true;
-        goal.dateCompleted = new Date().toLocaleDateString('en-CA');
-
-        const updated = await loadDecisions();
-        const idx = updated.findIndex(d => d.id === goal.id);
-        if (idx !== -1) {
-            updated[idx] = goal;
-            await saveDecisions(updated);
-        }
-
-        const wrapper = checkbox.closest('.goal-card, .decision.indent-1');
-        if (wrapper) {
-            wrapper.remove();
-
-            if (goal.type === 'task') {
-                const container = wrapper.closest('.goal-children');
-                const goalId = goal.parentGoalId;
-                const parentGoal = updated.find(g => g.id === goalId);
-                if (parentGoal && container) renderChildren(parentGoal, updated, container);
-            } else {
-                if (goal.resolution?.trim()) {
-                    const resolutionRow = document.createElement('div');
-                    resolutionRow.className = 'link-line';
-                    resolutionRow.textContent = `✔️ ${goal.resolution}`;
-                    wrapper.appendChild(resolutionRow);
-                }
-
-                completedList.appendChild(wrapper);
-            }
-        }
-    };
-
-    const middle = document.createElement('div');
-    middle.className = 'middle-group';
-    middle.textContent = goal.text;
-
-    const right = document.createElement('div');
-    right.className = 'right-group';
-
-    const due = document.createElement('div');
-    due.className = 'due-column';
-    due.textContent = goal.completed ? goal.dateCompleted : '';
-
-    // … 
-    const buttonWrap = document.createElement('div');
-    buttonWrap.className = 'button-row';
-    if (goal.type === 'goal') {
-        attachEditButtons(goal, buttonWrap);
-    }
-    // …
-
-    right.appendChild(due);
-    right.appendChild(buttonWrap);
-    row.appendChild(left);
-    row.appendChild(middle);
-    row.appendChild(right);
-
-    return row;
-}
 
 export function renderChildren(goal, all, container) {
     const children = all.filter(i => i.parentGoalId === goal.id);
