@@ -108,6 +108,8 @@ function makeIconBtn(symbol, title, fn) {
     return b;
 }
 
+// File: render.js
+
 /**
  * Attach ↑, ✏️, 🕒, ❌ buttons to a task-row.
  *
@@ -115,52 +117,131 @@ function makeIconBtn(symbol, title, fn) {
  * @param {HTMLElement} row    the .decision-row for this task
  * @param {HTMLElement} listContainer  the parent .task-list element
  */
-async function attachTaskButtons(item, row, listContainer) {
-    const buttonWrap = row.querySelector('.button-row');
-    if (!buttonWrap) return;
+export async function attachTaskButtons(item, row, listContainer) {
+  const buttonWrap = row.querySelector('.button-row');
+  if (!buttonWrap) return;
 
-    // — Create buttons using our factory —
-    const upBtn = makeIconBtn('⬆️', 'Move task up', async () => {
-        const wrapper = row.closest('[data-task-id]');
-        const prev = wrapper.previousElementSibling;
-        if (prev && prev.dataset.taskId) {
-            listContainer.insertBefore(wrapper, prev);
-            // Persist new order:
-            const ids = Array.from(listContainer.children).map(w => w.dataset.taskId);
-            const all = await loadDecisions();
-            const under = all.filter(d => d.parentGoalId === item.parentGoalId && !d.completed);
-            const other = all.filter(d => d.parentGoalId !== item.parentGoalId || d.completed);
-            const reordered = ids.map(id => under.find(t => t.id === id)).filter(Boolean);
-            await saveDecisions([...other, ...reordered]);
-        }
+  // — Move Up button —
+  const upBtn = makeIconBtn('⬆️', 'Move task up', async () => {
+    const wrapper = row.closest('[data-task-id]');
+    const prev = wrapper.previousElementSibling;
+    if (prev && prev.dataset.taskId) {
+      listContainer.insertBefore(wrapper, prev);
+      // Persist new order
+      const ids = Array.from(listContainer.children).map(w => w.dataset.taskId);
+      const all = await loadDecisions();
+      const under = all.filter(d => d.parentGoalId === item.parentGoalId && !d.completed);
+      const other = all.filter(d => d.parentGoalId !== item.parentGoalId || d.completed);
+      const reordered = ids.map(id => under.find(t => t.id === id)).filter(Boolean);
+      await saveDecisions([...other, ...reordered]);
+    }
+  });
+
+  // — Edit button —
+  const editBtn = makeIconBtn('✏️', 'Edit task', async () => {
+    const newText = prompt('Edit task:', item.text)?.trim();
+    if (newText && newText !== item.text) {
+      const all = await loadDecisions();
+      const idx = all.findIndex(d => d.id === item.id);
+      all[idx].text = newText;
+      await saveDecisions(all);
+      row.querySelector('.middle-group').textContent = newText;
+    }
+  });
+
+  // — Temporarily hide (postpone) button & dropdown —
+  const clockBtn = makeIconBtn('🕒', 'Temporarily hide', () => {/* click is handled below */});
+
+  // build the hide-duration menu
+  const menu = document.createElement('div');
+  Object.assign(menu.style, {
+    position: 'absolute',
+    background: '#fff',
+    border: '1px solid #ccc',
+    borderRadius: '6px',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+    padding: '6px 0',
+    fontSize: '0.9em',
+    display: 'none',
+    zIndex: '9999',
+    minWidth: '120px'
+  });
+  document.body.appendChild(menu);
+
+  const options = [
+    { label: '1 hour',  value: 1 },
+    { label: '2 hours', value: 2 },
+    { label: '4 hours', value: 4 },
+    { label: '8 hours', value: 8 },
+    { label: '1 day',   value: 24 },
+    { label: '4 days',  value: 96 },
+    { label: '1 week',  value: 168 },
+    { label: '1 month', value: 720 }
+  ];
+
+  options.forEach(opt => {
+    const optBtn = document.createElement('button');
+    optBtn.type = 'button';
+    optBtn.textContent = opt.label;
+    Object.assign(optBtn.style, {
+      display: 'block',
+      width: '100%',
+      padding: '4px 12px',
+      border: 'none',
+      background: 'white',
+      color: '#333',
+      textAlign: 'left',
+      cursor: 'pointer'
+    });
+    optBtn.addEventListener('mouseover', () => optBtn.style.background = '#f0f0f0');
+    optBtn.addEventListener('mouseout',  () => optBtn.style.background = 'white');
+
+    optBtn.addEventListener('click', async e => {
+      e.stopPropagation();
+      // load, set hiddenUntil, save
+      const all = await loadDecisions();
+      const idx = all.findIndex(d => d.id === item.id);
+      if (idx === -1) return;
+
+      const targetTime = new Date(Date.now() + opt.value * 3600 * 1000);
+      // use ISO format so parsing is reliable
+      all[idx].hiddenUntil = targetTime.toISOString();
+      await saveDecisions(all);
+
+      menu.style.display = 'none';
+      // re-render everything so this task disappears until the time elapses
+      renderGoalsAndSubitems();
     });
 
-    const editBtn = makeIconBtn('✏️', 'Edit task', async () => {
-        const newText = prompt('Edit task:', item.text)?.trim();
-        if (newText && newText !== item.text) {
-            const all = await loadDecisions();
-            const idx = all.findIndex(d => d.id === item.id);
-            all[idx].text = newText;
-            await saveDecisions(all);
-            row.querySelector('.middle-group').textContent = newText;
-        }
-    });
+    menu.appendChild(optBtn);
+  });
 
-    const clockBtn = makeIconBtn('🕒', 'Temporarily hide', () => {
-        // (reuse your existing hide-menu logic here)
-        // e.g. show options “1h,2h…” then set hiddenUntil and saveDecisions…
-    });
+  clockBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const rect = clockBtn.getBoundingClientRect();
+    menu.style.top  = `${rect.bottom + window.scrollY}px`;
+    menu.style.left = `${rect.left   + window.scrollX}px`;
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+  });
 
-    const delBtn = makeIconBtn('❌', 'Delete task', async () => {
-        if (!confirm(`Delete task: "${item.text}"?`)) return;
-        const all = await loadDecisions();
-        await saveDecisions(all.filter(d => d.id !== item.id));
-        row.closest('[data-task-id]').remove();
-    });
+  document.addEventListener('click', e => {
+    if (!menu.contains(e.target) && e.target !== clockBtn) {
+      menu.style.display = 'none';
+    }
+  });
 
-    // — Append in the desired order: up, edit, postpone, delete —
-    buttonWrap.append(upBtn, editBtn, clockBtn, delBtn);
+  // — Delete button —
+  const delBtn = makeIconBtn('❌', 'Delete task', async () => {
+    if (!confirm(`Delete task: "${item.text}"?`)) return;
+    const all = await loadDecisions();
+    await saveDecisions(all.filter(d => d.id !== item.id));
+    row.closest('[data-task-id]').remove();
+  });
+
+  // append in the desired order
+  buttonWrap.append(upBtn, editBtn, clockBtn, delBtn);
 }
+
 
 
 export async function renderGoalsAndSubitems() {

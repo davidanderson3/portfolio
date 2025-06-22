@@ -2,10 +2,17 @@
 
 import { auth, db, getCurrentUser, FieldValue } from './auth.js';
 
-/** UTILS **/
+/**
+ * Returns today’s date key in YYYY-MM-DD using local time.
+ */
 function todayKey() {
-    return new Date().toISOString().slice(0, 10);
+    const d = new Date();
+    const year  = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day   = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
+
 
 // File: src/stats.js
 
@@ -13,31 +20,34 @@ async function ensureMoodConfig() {
     const user = getCurrentUser();
     if (!user) return [];
 
-    // 1) Load the raw document (without unconditionally writing it back)
     const docRef = db
         .collection('users').doc(user.uid)
         .collection('settings').doc('metricsConfig');
     const snap = await docRef.get();
     const current = snap.exists ? snap.data().metrics || [] : [];
 
-    // 2) If Mood is missing, insert it into your local copy
     let updated = current;
-    if (!current.find(m => m.id === 'mood')) {
-        updated = [{ id: 'mood', label: 'Mood Rating', unit: 'rating' }, ...current];
+
+    // 1) Ensure Mood Rating exists
+    if (!updated.find(m => m.id === 'mood')) {
+        updated = [{ id: 'mood', label: 'Mood Rating', unit: 'rating' }, ...updated];
     }
 
-    // 3) If the doc truly didn’t exist, save for the first time *only*
+    // 2) Ensure a basic Count metric exists
+    if (!updated.find(m => m.id === 'count')) {
+        updated = [...updated, { id: 'count', label: 'Count', unit: 'count' }];
+    }
+
+    // 3) If the doc didn’t exist, write it once
     if (!snap.exists) {
         await docRef.set({ metrics: updated }, { merge: true });
-    } else if (updated !== current) {
-        // If the user manually deleted Mood later, we *could* re-insert, but
-        // you probably don’t want to overwrite their choice—so skip this write.
     }
 
-    // 4) Label it for display
+    // 4) Apply display labels and return
     updated.forEach(applyUnitLabels);
     return updated;
 }
+
 
 
 /** FIRESTORE LOADERS & SAVERS **/
@@ -85,21 +95,35 @@ async function safeSaveMetricsConfig(merger) {
     await docRef.set({ metrics: newMetrics }, { merge: true });
 }
 
+/**
+ * Save a metric entry (with local-date key) for the current user.
+ *
+ * @param {string} metricId
+ * @param {number|string} value
+ * @param {any} extra
+ */
 async function recordMetric(metricId, value, extra = null) {
     const user = getCurrentUser();
     if (!user) return;
+
+    // Use local-date key for grouping
     const ref = db
         .collection('users').doc(user.uid)
         .collection('dailyStats').doc(todayKey());
 
-    const entry = { timestamp: Date.now(), value, extra };
+    const entry = {
+        timestamp: Date.now(),
+        value,
+        extra
+    };
 
     await ref.set({
         metrics: {
-            [metricId]: FieldValue.arrayUnion(entry)   // ← use FieldValue here
+            [metricId]: FieldValue.arrayUnion(entry)
         }
     }, { merge: true });
 }
+
 
 // … rest of your code …
 
@@ -124,256 +148,277 @@ function computePercentile(val, allValues) {
     return Math.round((below / sorted.length) * 100);
 }
 
-
-
-/** CONFIG & ENTRY FORM RENDERERS **/
 function applyUnitLabels(cfg) {
     cfg.unitLabel = {
-        pounds: 'pounds',
-        rating: 'rating out of 10',
-        minutes: 'minutes',
-        time_mmss: 'minutes and seconds'
-    }[cfg.unit];
+        pounds:    'pounds',
+        rating:    'rating out of 10',
+        minutes:   'minutes',
+        time_mmss: 'minutes and seconds',
+        list:      'list',
+        count:     'count'
+    }[cfg.unit] || cfg.unit;
 }
 
-async function renderConfigForm() {
-    // 1) Load current config and ensure Mood exists
-    let config = await loadMetricsConfig();
-    config = await ensureMoodConfig();
-    config.forEach(applyUnitLabels);
-
-    // 2) Inject the config form HTML
-    const section = document.getElementById('metricsConfigSection');
-    // File: src/stats.js, inside renderConfigForm()
-
-    section.innerHTML = `
-  <h4>Add New Metric</h4>
-  <form id="configForm">
-    <input type="text" id="metricLabel" placeholder="What are you measuring?" required>
-    <label for="metricUnit" style="margin-left:8px;">Unit</label>
-    <select id="metricUnit" required>
-      <option value="pounds">pounds</option>
-      <option value="rating">rating out of 10</option>
-      <option value="minutes">minutes</option>
-      <option value="time_mmss">minutes and seconds</option>
-    </select>
-    <button type="submit" style="margin-left:8px;">Add Metric</button>
-  </form>
-`;
-
-    // 4) Handle form submission for adding new metrics
-    document.getElementById('configForm').addEventListener('submit', async e => {
-        e.preventDefault();
-        const label = document.getElementById('metricLabel').value.trim();
-        const unit = document.getElementById('metricUnit').value;
-        if (!label || !unit) {
-            alert('Please enter both label and unit.');
-            return;
-        }
-        const id = label.toLowerCase().replace(/\W+/g, '_');
-        const newMetric = { id, label, unit };
-
-        const oldCfg = await loadMetricsConfig();
-        await saveMetricsConfig([
-            ...oldCfg.filter(m => m.id !== id),
-            newMetric
-        ]);
-
-        await renderConfigForm();
-        await renderStatsSummary();
-    });
-}
+// File: src/stats.js
 
 async function renderStatsSummary() {
-    try {
-        const config = await ensureMoodConfig();
-        const allStats = await loadAllStats();
+  try {
+    // 1) Load exactly the user’s saved metrics (so deletions stick)
+    const config = await loadMetricsConfig();
+    config.forEach(applyUnitLabels);
 
-        const container = document.getElementById('genericStatsSummary');
-        if (!container) return;
-        container.innerHTML = '';
+    // 2) Load all recorded stats
+    const allStats = await loadAllStats();
 
-        // build percentile arrays
-        const valuesByMetric = {};
-        Object.values(allStats).forEach(dayMetrics => {
-            Object.entries(dayMetrics).forEach(([metricId, entries]) => {
-                const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
-                (valuesByMetric[metricId] = valuesByMetric[metricId] || []).push(latest.value);
-            });
-        });
+    // 3) Build a map of metricId → unit
+    const unitByMetric = config.reduce((acc, m) => {
+      acc[m.id] = m.unit;
+      return acc;
+    }, {});
 
-        // table & headers
-        const table = document.createElement('table');
-        Object.assign(table.style, { width: '100%', borderCollapse: 'collapse', marginTop: '16px' });
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        ['Metric', 'Today\'s Value', 'Percentile', 'Actions'].forEach(text => {
-            const th = document.createElement('th');
-            th.textContent = text;
-            Object.assign(th.style, { borderBottom: '2px solid #444', textAlign: 'left', padding: '8px' });
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
+    // 4) Gather past values for percentiles
+    const valuesByMetric = {};
+    Object.values(allStats).forEach(dayMetrics => {
+      Object.entries(dayMetrics).forEach(([metricId, entries]) => {
+        const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
+        let metricValue = latest.value;
+        if (unitByMetric[metricId] === 'list' && typeof metricValue === 'string') {
+          metricValue = metricValue
+            .split('\n')
+            .filter(line => line.trim() !== '')
+            .length;
+        }
+        (valuesByMetric[metricId] = valuesByMetric[metricId] || []).push(metricValue);
+      });
+    });
 
-        const tbody = document.createElement('tbody');
-        const today = todayKey();
+    // 5) Prepare the container
+    const container = document.getElementById('genericStatsSummary');
+    if (!container) return;
+    container.innerHTML = '';
 
-        for (const cfg of config) {
-            applyUnitLabels(cfg);
-            const entries = ((allStats[today] || {})[cfg.id]) || [];
-            let displayValue = '—', pctText = '—';
-            if (entries.length) {
-                const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
-                if (cfg.unit === 'time_mmss') {
-                    const m = Math.floor(latest.value),
-                        s = String(Math.round((latest.value - m) * 60)).padStart(2, '0');
-                    displayValue = `${m}:${s}`;
-                } else {
-                    displayValue = `${latest.value}`;
-                }
-                const pct = computePercentile(latest.value, valuesByMetric[cfg.id] || []);
-                pctText = `${pct}th`;
-            }
+    // 6) Build table header
+    const table = document.createElement('table');
+    Object.assign(table.style, {
+      width: '100%',
+      borderCollapse: 'collapse',
+      marginTop: '16px'
+    });
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['Metric', 'Today’s Value', 'Percentile', 'Actions'].forEach(text => {
+      const th = document.createElement('th');
+      th.textContent = text;
+      Object.assign(th.style, {
+        borderBottom: '2px solid #444',
+        textAlign: 'left',
+        padding: '8px'
+      });
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
 
-            const row = document.createElement('tr');
-            // metric name
-            const tdLabel = document.createElement('td');
-            tdLabel.textContent = cfg.label;
-            Object.assign(tdLabel.style, { padding: '8px', borderBottom: '1px solid #ddd' });
-            row.appendChild(tdLabel);
+    // 7) Populate each metric row
+    const tbody = document.createElement('tbody');
+    const today = todayKey();
 
-            // today's value + edit
-            const tdVal = document.createElement('td');
-            Object.assign(tdVal.style, { padding: '8px', borderBottom: '1px solid #ddd' });
-            const displaySpan = document.createElement('span');
-            displaySpan.textContent = `${displayValue} ${cfg.unitLabel}`;
-            displaySpan.style.marginRight = '8px';
-            tdVal.appendChild(displaySpan);
+    for (const cfg of config) {
+      applyUnitLabels(cfg);
 
-            const pencil = document.createElement('span');
-            pencil.textContent = '✏️';
-            pencil.style.cursor = 'pointer';
-            pencil.title = 'Edit today’s value';
-            pencil.addEventListener('click', () => {
-                tdVal.innerHTML = '';
-                const inp = document.createElement('input');
-                inp.type = cfg.unit === 'rating' ? 'number' : 'text';
-                inp.value = displayValue;
-                inp.style.width = '80px';
-                tdVal.appendChild(inp);
+      // Today's entries for this metric
+      const entries = ((allStats[today] || {})[cfg.id]) || [];
+      let displayValue = '—', pctText = '—';
 
-                const saveIcon = document.createElement('span');
-                saveIcon.textContent = '💾';
-                saveIcon.style.cursor = 'pointer';
-                saveIcon.style.marginLeft = '8px';
-                saveIcon.title = 'Save';
-                saveIcon.addEventListener('click', async () => {
-                    console.log('💾 Save clicked:', cfg.id, inp.value);
-                    let raw = inp.value.trim(), val;
-                    if (!raw) return alert('Enter a value');
-                    if (cfg.unit === 'time_mmss') {
-                        const [m, s] = raw.split(':').map(n => parseInt(n, 10));
-                        if (isNaN(m) || isNaN(s)) return alert('Bad MM:SS');
-                        val = m + s / 60;
-                    } else if (cfg.unit === 'rating') {
-                        val = parseInt(raw, 10);
-                        if (isNaN(val) || val < 1 || val > 10) return alert('Enter 1–10');
-                    } else {
-                        val = parseFloat(raw);
-                        if (isNaN(val)) return alert('Invalid number');
-                    }
-                    try {
-                        await recordMetric(cfg.id, val, null);
-                        console.log('✅ recordMetric succeeded');
-                        await renderStatsSummary();
-                    } catch (err) {
-                        console.error('❌ recordMetric error:', err);
-                        alert('Save failed – check console');
-                    }
-                });
-                tdVal.appendChild(saveIcon);
+      if (entries.length) {
+        const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
+        let actualValue;
 
-                const cancel = document.createElement('span');
-                cancel.textContent = '❌';
-                cancel.style.cursor = 'pointer';
-                cancel.style.marginLeft = '4px';
-                cancel.title = 'Cancel';
-                cancel.addEventListener('click', () => renderStatsSummary());
-                tdVal.appendChild(cancel);
-            });
-            tdVal.appendChild(pencil);
-            row.appendChild(tdVal);
+        if (cfg.unit === 'time_mmss') {
+          const m = Math.floor(latest.value),
+                s = String(Math.round((latest.value - m) * 60)).padStart(2, '0');
+          displayValue = `${m}:${s}`;
+          actualValue = latest.value;
 
-            // percentile
-            const tdPct = document.createElement('td');
-            tdPct.textContent = pctText;
-            Object.assign(tdPct.style, { padding: '8px', borderBottom: '1px solid #ddd' });
-            row.appendChild(tdPct);
+        } else if (cfg.unit === 'list' && typeof latest.value === 'string') {
+          displayValue = latest.value;
+          actualValue = latest.value
+            .split('\n')
+            .filter(line => line.trim() !== '')
+            .length;
 
-            // metric actions (rename/delete)
-            const tdAct = document.createElement('td');
-            Object.assign(tdAct.style, { padding: '8px', borderBottom: '1px solid #ddd' });
-
-            // rename
-            const editBtn = document.createElement('button');
-            editBtn.textContent = '✏️';
-            editBtn.title = 'Rename metric';
-            editBtn.style.marginRight = '8px';
-            editBtn.addEventListener('click', async () => {
-                const newLabel = prompt('New label for "' + cfg.label + '":', cfg.label);
-                if (newLabel == null) return;
-                const newUnit = prompt(
-                    'Unit (pounds, rating, minutes, time_mmss):', cfg.unit
-                );
-                if (newUnit == null) return;
-                const updated = (await loadMetricsConfig()).map(m =>
-                    m.id === cfg.id
-                        ? { id: m.id, label: newLabel.trim(), unit: newUnit.trim() }
-                        : m
-                );
-                await saveMetricsConfig(updated);
-                await renderConfigForm();
-                await renderStatsSummary();
-            });
-            tdAct.appendChild(editBtn);
-
-            // delete (skip Mood)
-            if (cfg.id !== 'mood') {
-                const delBtn = document.createElement('button');
-                delBtn.textContent = '❌';
-                delBtn.title = 'Delete metric';
-                delBtn.addEventListener('click', async () => {
-                    if (!confirm(`Delete "${cfg.label}"?`)) return;
-                    const filtered = (await loadMetricsConfig()).filter(m => m.id !== cfg.id);
-                    await saveMetricsConfig(filtered);
-                    await renderConfigForm();
-                    await renderStatsSummary();
-                });
-                tdAct.appendChild(delBtn);
-            }
-
-            row.appendChild(tdAct);
-            tbody.appendChild(row);
+        } else {
+          displayValue = `${latest.value}`;
+          actualValue = latest.value;
         }
 
-        table.appendChild(tbody);
-        container.appendChild(table);
+        const pct = computePercentile(actualValue, valuesByMetric[cfg.id] || []);
+        pctText = `${pct}th`;
+      }
+
+      const row = document.createElement('tr');
+
+      // --- Metric Name ---
+      const tdLabel = document.createElement('td');
+      tdLabel.textContent = cfg.label;
+      Object.assign(tdLabel.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+      row.appendChild(tdLabel);
+
+      // --- Today’s Value + Edit Icon ---
+      const tdVal = document.createElement('td');
+      Object.assign(tdVal.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+      const displaySpan = document.createElement('span');
+      displaySpan.textContent = `${displayValue} ${cfg.unitLabel}`;
+      displaySpan.style.marginRight = '8px';
+      tdVal.appendChild(displaySpan);
+
+      const pencil = document.createElement('span');
+      pencil.textContent = '✏️';
+      pencil.style.cursor = 'pointer';
+      pencil.title = 'Edit today’s value';
+      pencil.addEventListener('click', () => {
+        tdVal.innerHTML = '';
+
+        // Choose input type
+        let inp;
+        if (cfg.unit === 'rating') {
+          inp = document.createElement('input');
+          inp.type = 'number';
+          inp.min = '1'; inp.max = '10'; inp.step = '1';
+          inp.placeholder = '1–10';
+        } else if (cfg.unit === 'list') {
+          inp = document.createElement('textarea');
+          inp.rows = 4;
+          inp.style.width = '100%';
+          inp.placeholder = cfg.unitLabel;
+        } else {
+          inp = document.createElement('input');
+          inp.type = 'text';
+          inp.placeholder = cfg.unitLabel;
+        }
+        inp.value = displayValue;
+        tdVal.appendChild(inp);
+
+        // Save icon
+        const saveIcon = document.createElement('span');
+        saveIcon.textContent = '💾';
+        saveIcon.style.cursor = 'pointer';
+        saveIcon.style.marginLeft = '8px';
+        saveIcon.title = 'Save';
+        saveIcon.addEventListener('click', async () => {
+          const raw = inp.value.trim();
+          let val;
+          if (!raw) return alert('Enter a value');
+          if (cfg.unit === 'time_mmss') {
+            const [m, s] = raw.split(':').map(n => parseInt(n, 10));
+            if (isNaN(m) || isNaN(s)) return alert('Bad MM:SS');
+            val = m + s / 60;
+          } else if (cfg.unit === 'rating') {
+            val = parseInt(raw, 10);
+            if (isNaN(val) || val < 1 || val > 10) return alert('Enter 1–10');
+          } else if (cfg.unit === 'list') {
+            val = raw;
+          } else {
+            val = parseFloat(raw);
+            if (isNaN(val)) return alert('Invalid number');
+          }
+          await recordMetric(cfg.id, val, null);
+          await renderStatsSummary();
+        });
+        tdVal.appendChild(saveIcon);
+
+        // Cancel icon
+        const cancel = document.createElement('span');
+        cancel.textContent = '❌';
+        cancel.style.cursor = 'pointer';
+        cancel.style.marginLeft = '4px';
+        cancel.title = 'Cancel';
+        cancel.addEventListener('click', () => renderStatsSummary());
+        tdVal.appendChild(cancel);
+      });
+      tdVal.appendChild(pencil);
+      row.appendChild(tdVal);
+
+      // --- Percentile ---
+      const tdPct = document.createElement('td');
+      tdPct.textContent = pctText;
+      Object.assign(tdPct.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+      row.appendChild(tdPct);
+
+      // --- Actions: Rename & Delete ---
+      const tdAct = document.createElement('td');
+      Object.assign(tdAct.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+
+      // Rename
+      const editIcon = document.createElement('span');
+      editIcon.textContent = '✏️';
+      editIcon.style.cursor = 'pointer';
+      editIcon.style.marginRight = '8px';
+      editIcon.title = 'Rename metric';
+      editIcon.addEventListener('click', async () => {
+        const newLabel = prompt(`New label for "${cfg.label}":`, cfg.label);
+        if (newLabel == null) return;
+        const newUnit = prompt(
+          `New unit for "${cfg.label}"? (pounds, rating, minutes, time_mmss, list, count)`,
+          cfg.unit
+        );
+        if (newUnit == null) return;
+        const updated = (await loadMetricsConfig()).map(m =>
+          m.id === cfg.id
+            ? { id: m.id, label: newLabel.trim(), unit: newUnit.trim() }
+            : m
+        );
+        await saveMetricsConfig(updated);
+        await renderConfigForm();
+        await renderStatsSummary();
+      });
+      tdAct.appendChild(editIcon);
+
+      // Delete
+      const deleteIcon = document.createElement('span');
+      deleteIcon.textContent = '❌';
+      deleteIcon.style.cursor = 'pointer';
+      deleteIcon.title = 'Delete metric';
+      deleteIcon.addEventListener('click', async () => {
+        if (!confirm(`Delete metric "${cfg.label}"?`)) return;
+        const filtered = (await loadMetricsConfig()).filter(m => m.id !== cfg.id);
+        await saveMetricsConfig(filtered);
+        await renderConfigForm();
+        await renderStatsSummary();
+      });
+      tdAct.appendChild(deleteIcon);
+
+      row.appendChild(tdAct);
+      tbody.appendChild(row);
     }
-    catch (err) {
-        console.error('renderStatsSummary failed:', err);
-    }
+
+    table.appendChild(tbody);
+    container.appendChild(table);
+
+  } catch (err) {
+    console.error('renderStatsSummary failed:', err);
+  }
 }
+
+
+
+
 
 async function initMetricsUI() {
-
-    // 2) Ensure Mood metric exists in config
     await ensureMoodConfig();
-
-    // 3) Render your forms and summary
-    await renderConfigForm();
-    await renderStatsSummary();
+    await renderStatsSummary();   // ← stats table first
+    await renderConfigForm();     // ← then “Add New Metric”
 }
+
+auth.onAuthStateChanged(user => {
+    if (!user) return;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMetricsUI);
+    } else {
+        initMetricsUI();
+    }
+});
+
 
 
 
