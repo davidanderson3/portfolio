@@ -42,12 +42,13 @@ export function createGoalRow(goal, options = {}) {
         toggle.textContent = '▶';
         toggle.style.cursor = 'pointer';
     }
+
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = !!goal.completed;
     checkbox.disabled = !!goal.completed;
 
-    // ← Added handler to mark complete and refresh
+    // ← add this handler:
     checkbox.onchange = async () => {
         const items = await loadDecisions();
         const idx = items.findIndex(d => d.id === goal.id);
