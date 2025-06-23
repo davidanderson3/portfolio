@@ -16,11 +16,17 @@ import {
     renderChildren
 } from './tasks.js';
 
+import {
+    renderGoalTags,
+    initializeGoalTagSupport
+} from './goalTags.js';
+
 const openGoalIds = new Set();
 const goalList = document.getElementById('goalList');
 const completedList = document.getElementById('completedList');
 
 initializeGlobalDragHandlers();
+initializeGoalTagSupport();
 
 export function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');
@@ -61,24 +67,18 @@ export function createGoalRow(goal, options = {}) {
         schedInput.value = goal.scheduled || '';
         schedInput.title = 'Scheduled';
 
-        // ← Updated handler:
         schedInput.onchange = async () => {
-            // 1) Persist the new date
             const items = await loadDecisions();
             const idx = items.findIndex(d => d.id === goal.id);
             if (idx === -1) return;
             items[idx].scheduled = schedInput.value || null;
             await saveDecisions(items);
 
-            // 2) Remove this card from whatever list it's in
             const card = schedInput.closest('.decision.goal-card');
             if (card) card.remove();
 
-            // 3) Render it into the calendar:
             const calendarContent = document.getElementById('calendarContent');
-            // ensure calendarContent exists
             if (calendarContent) {
-                // clear out just the calendar and rebuild its scheduled goals
                 calendarContent.innerHTML = '';
                 renderCalendarSection(items, calendarContent);
             }
@@ -103,7 +103,6 @@ export function createGoalRow(goal, options = {}) {
     row.appendChild(right);
     return row;
 }
-
 
 export async function renderGoalsAndSubitems() {
     clearDOM();
@@ -246,6 +245,7 @@ function renderCalendarSection(all, calendarContent) {
                 const wrapper = makeGoalWrapper(goal);
                 const row = createGoalRow(goal, { hideScheduled: true });
                 wrapper.appendChild(row);
+                renderGoalTags(goal, row);
 
                 const childrenContainer = document.createElement('div');
                 childrenContainer.className = 'goal-children';
@@ -262,9 +262,7 @@ function renderCalendarSection(all, calendarContent) {
 async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
     hiddenContent.innerHTML = '';
     const now = Date.now();
-    const rendered = new Set(); // track those from calendar
-    // calendar-rendered IDs were only in renderCalendarSection,
-    // but we’d need to collect them if you mix active+scheduled in one set.
+    const rendered = new Set();
 
     sortedGoals.forEach(goal => {
         if (rendered.has(goal.id)) return;
@@ -272,6 +270,7 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
         const wrapper = makeGoalWrapper(goal);
         const row = createGoalRow(goal, { hideScheduled: true });
         wrapper.appendChild(row);
+        renderGoalTags(goal, row);
 
         const childrenContainer = document.createElement('div');
         childrenContainer.className = 'goal-children';
@@ -313,6 +312,7 @@ function setupToggle(wrapper, row, childrenContainer, id) {
         open ? openGoalIds.delete(id) : openGoalIds.add(id);
     };
 }
+
 
 function addHiddenControls(wrapper, row, goal, hiddenContent) {
     const lbl = document.createElement('span');
