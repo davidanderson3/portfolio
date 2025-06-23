@@ -118,7 +118,7 @@ function makeIconBtn(symbol, title, fn) {
 /**
  * Attach ↑, ✏️, 🕒, ❌ buttons to a task-row.
  *
- * @param {{id:string,parentGoalId:string,text:string,completed:boolean,deadline?:string,hiddenUntil?:string}} item
+ * @param {{id:string,parentGoalId:string,text:string,completed:boolean,scheduled?:string,hiddenUntil?:string}} item
  * @param {HTMLElement} row    the .decision-row for this task
  * @param {HTMLElement} listContainer  the parent .task-list element
  */
@@ -322,22 +322,21 @@ function createGoalRow(goal, options = {}) {
 }
 
 export async function renderGoalsAndSubitems() {
-    // 1) Clear existing
+    // 1) Clear existing DOM
     goalList.innerHTML = '';
     completedList.innerHTML = '';
 
+    // track which have been rendered so they don’t duplicate
     const renderedGoalIds = new Set();
-    const all = await loadDecisions();
 
-    // 2) Sync goalOrder (unchanged) …
+    // 2) Load all decisions and sync goalOrder
+    const all = await loadDecisions();
     const goals = all.filter(i => i.type === 'goal' && !i.parentGoalId);
     const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
     const snap = await db.collection('decisions')
         .doc(firebase.auth().currentUser.uid)
         .get();
-    let goalOrder = Array.isArray(snap.data()?.goalOrder)
-        ? snap.data().goalOrder
-        : [];
+    let goalOrder = Array.isArray(snap.data()?.goalOrder) ? snap.data().goalOrder : [];
     const missing = goals.map(g => g.id).filter(id => !goalOrder.includes(id));
     if (missing.length) {
         goalOrder = [...goalOrder, ...missing];
@@ -345,7 +344,8 @@ export async function renderGoalsAndSubitems() {
     }
     const sortedGoals = goalOrder.map(id => goalMap[id]).filter(Boolean);
     const now = Date.now();
-    // 3) Hidden Goals
+
+    // 3) Hidden Goals section (only once)
     let hiddenSection = document.getElementById('hiddenList');
     if (!hiddenSection) {
         hiddenSection = document.createElement('div');
@@ -354,16 +354,13 @@ export async function renderGoalsAndSubitems() {
       <h2 style="margin-top:32px">
         <span id="toggleHidden" style="cursor:pointer">▶</span> Hidden Goals
       </h2>
-      <div id="hiddenContent" style="display:none"></div><hr style="margin: 40px 0;" />
+      <div id="hiddenContent" style="display:none"></div>
+      <hr style="margin: 40px 0;" />
     `;
-        // Insert immediately before Completed (or at end if not yet created)
         const container = goalList.parentNode;
         const completedSection = document.getElementById('completedSection');
-        if (completedSection) {
-            container.insertBefore(hiddenSection, completedSection);
-        } else {
-            container.appendChild(hiddenSection);
-        }
+        if (completedSection) container.insertBefore(hiddenSection, completedSection);
+        else container.appendChild(hiddenSection);
 
         const toggleHidden = hiddenSection.querySelector('#toggleHidden');
         const hiddenContent = hiddenSection.querySelector('#hiddenContent');
@@ -373,31 +370,82 @@ export async function renderGoalsAndSubitems() {
             hiddenContent.style.display = open ? 'none' : 'block';
         };
     }
+    const hiddenContent = hiddenSection.querySelector('#hiddenContent');
 
-
-
-    // 4) Calendar section
+    // 4) Calendar section & render all scheduled goals
     let calendarSection = document.getElementById('calendarSection');
     if (!calendarSection) {
         calendarSection = document.createElement('div');
         calendarSection.id = 'calendarSection';
         calendarSection.innerHTML = `
-        <h2>
-           Calendar
-        </h2>
-        <div id="calendarContent"></div>
-        <hr style="margin: 40px 0;" />
+      <h2>Calendar</h2>
+      <div id="calendarContent"></div>
+      <hr style="margin: 40px 0;" />
     `;
-        // insert immediately before the metrics summary or (fallback) before Hidden Goals
         const metricsContainer = document.getElementById('statsSection');
-        const insertBeforeEl = metricsContainer || document.getElementById('hiddenList');
+        const insertBeforeEl = metricsContainer || hiddenSection;
         insertBeforeEl.parentNode.insertBefore(calendarSection, insertBeforeEl);
     }
     const calendarContent = calendarSection.querySelector('#calendarContent');
     calendarContent.innerHTML = '';
 
+    // 4a) filter+sort only those with a valid scheduled date
+    const scheduledGoals = all
+        .filter(g => g.scheduled && typeof g.scheduled === 'string' && !isNaN(Date.parse(g.scheduled)))
+        .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
 
-    // 5) Completed Goals container setup
+    // 4b) group by YYYY-MM-DD
+    const byDate = scheduledGoals.reduce((groups, goal) => {
+        const key = goal.scheduled.slice(0, 10);
+        (groups[key] = groups[key] || []).push(goal);
+        return groups;
+    }, {});
+
+    // 4c) render each date + its full goal cards
+    Object.keys(byDate).sort().forEach(dateKey => {
+        // parse YYYY-MM-DD into a local Date at midnight
+        const [year, month, day] = dateKey.split('-').map(Number);
+        const dateObj = new Date(year, month - 1, day);
+
+        // date header (now correctly local)
+        const header = document.createElement('h3');
+        header.textContent = dateObj.toLocaleDateString();
+        calendarContent.appendChild(header);
+
+        // each goal under that date
+        byDate[dateKey].forEach(goal => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'decision goal-card';
+            wrapper.dataset.goalId = goal.id;
+            wrapper.setAttribute('draggable', 'true');
+
+            // build the row + children
+            const row = createGoalRow(goal, { hideScheduled: true });
+            wrapper.appendChild(row);
+
+            const childrenContainer = document.createElement('div');
+            childrenContainer.className = 'goal-children';
+            childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+            wrapper.appendChild(childrenContainer);
+            renderChildren(goal, all, childrenContainer);
+
+            // expand/collapse toggle
+            const toggle = row.querySelector('.toggle-triangle');
+            toggle.onclick = () => {
+                const open = childrenContainer.style.display === 'block';
+                toggle.textContent = open ? '▶' : '▼';
+                childrenContainer.style.display = open ? 'none' : 'block';
+                wrapper.setAttribute('draggable', open ? 'true' : 'false');
+                open ? openGoalIds.delete(goal.id) : openGoalIds.add(goal.id);
+            };
+
+            calendarContent.appendChild(wrapper);
+            renderedGoalIds.add(goal.id);
+        });
+    });
+
+
+    // 5) Completed Goals container (only once)
     let completedSection = document.getElementById('completedSection');
     if (!completedSection) {
         completedSection = document.createElement('div');
@@ -422,211 +470,32 @@ export async function renderGoalsAndSubitems() {
         goalList.parentNode.appendChild(completedSection);
     }
 
-    // 6) Scheduled vs non‐scheduled
-    const scheduledGoals = sortedGoals
-        .filter(g => !g.completed && typeof g.scheduled === 'string')
-        .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
+    // 6) Render remaining (unscheduled active or hidden, then completed)
+    // — first, wipe out the old hidden list so unhidden items vanish
+    hiddenContent.innerHTML = '';
 
-    // **DEBUG LOG:**
-    console.log(
-        '🔹 scheduledGoals:',
-        scheduledGoals.map(g => ({
-            id: g.id,
-            text: g.text,
-            scheduled: g.scheduled
-        }))
-    );
-
-
-    // 7) All completed
-    const completedGoals = sortedGoals
-        .filter(g => g.completed && g.dateCompleted)
-        .sort((a, b) => new Date(b.dateCompleted) - new Date(a.dateCompleted));
-
-    // 8) Hidden & active = not completed
-    const hiddenAndActive = sortedGoals
-        .filter(g => !g.completed)
-        .sort((a, b) => {
-            const ta = g => g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
-            return ta(a) - ta(b);
-        });
-
-    // 9) Render scheduled goals
-    scheduledGoals.forEach(goal => {
-        const hideUntil = goal.hiddenUntil
-            ? Date.parse(goal.hiddenUntil) || 0
-            : 0;
-        const isHidden = hideUntil && now < hideUntil;
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'decision goal-card';
-        wrapper.dataset.goalId = goal.id;
-        wrapper.setAttribute('draggable', 'true');
-
-        const row = createGoalRow(goal, { hideScheduled: true });
-        wrapper.appendChild(row);
-
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'goal-children';
-        childrenContainer.style.display = openGoalIds.has(goal.id)
-            ? 'block'
-            : 'none';
-        wrapper.appendChild(childrenContainer);
-        renderChildren(goal, all, childrenContainer);
-
-        const toggle = row.querySelector('.toggle-triangle');
-        toggle.onclick = () => {
-            const open = childrenContainer.style.display === 'block';
-            toggle.textContent = open ? '▶' : '▼';
-            childrenContainer.style.display = open ? 'none' : 'block';
-            wrapper.setAttribute('draggable', open ? 'true' : 'false');
-            open ? openGoalIds.delete(goal.id) : openGoalIds.add(goal.id);
-        };
-
-        // Replace your `if (isHidden) { … }` branch with this complete block.
-        // This puts the Unhide button at the top of each hidden goal card so it can’t be missed.
-
-        // Replace your hidden‐branch entirely with this block.
-        // It injects both a “Hidden until …” label and an “Unhide” button into each hidden goal’s button row.
-
-        // 9) Render scheduled goals (with hidden-and-button logic + mark as rendered)
-        scheduledGoals.forEach(goal => {
-            const hideUntil = goal.hiddenUntil
-                ? Date.parse(goal.hiddenUntil) || 0
-                : 0;
-            const isHidden = hideUntil && now < hideUntil;
-
-            // Build the card wrapper
-            const wrapper = document.createElement('div');
-            wrapper.className = 'decision goal-card';
-            wrapper.dataset.goalId = goal.id;
-            wrapper.setAttribute('draggable', 'true');
-
-            // Build the row and children container
-            const row = createGoalRow(goal, { hideScheduled: true });
-            wrapper.appendChild(row);
-            const childrenContainer = document.createElement('div');
-            childrenContainer.className = 'goal-children';
-            childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
-            wrapper.appendChild(childrenContainer);
-            renderChildren(goal, all, childrenContainer);
-
-            // Scheduled date display & picker
-            const buttonWrap = row.querySelector('.button-row');
-            const editBtn = buttonWrap.querySelector('button[title="Edit"]');
-            const dateSpan = document.createElement('span');
-            dateSpan.className = 'goal-date';
-            dateSpan.textContent = goal.scheduled;
-            buttonWrap.insertBefore(dateSpan, editBtn);
-
-            const dateInput = document.createElement('input');
-            dateInput.type = 'date';
-            dateInput.value = goal.scheduled;
-            dateInput.style.display = 'none';
-            dateInput.onchange = async () => {
-                const allItems = await loadDecisions();
-                const idx = allItems.findIndex(d => d.id === goal.id);
-                if (idx !== -1) {
-                    allItems[idx].scheduled = dateInput.value || null;
-                    await saveDecisions(allItems);
-                    renderGoalsAndSubitems();
-                }
-            };
-            buttonWrap.insertBefore(dateInput, editBtn);
-            editBtn.addEventListener('click', () => dateInput.style.display = 'inline-block');
-
-            // Toggle children
-            const toggle = row.querySelector('.toggle-triangle');
-            toggle.onclick = () => {
-                const open = childrenContainer.style.display === 'block';
-                toggle.textContent = open ? '▶' : '▼';
-                childrenContainer.style.display = open ? 'none' : 'block';
-                wrapper.setAttribute('draggable', open ? 'true' : 'false');
-                open ? openGoalIds.delete(goal.id) : openGoalIds.add(goal.id);
-            };
-
-            // Replace your hidden‐branch in BOTH your scheduledGoals and remaining‐goals loops with this complete block:
-
-            if (isHidden) {
-                // 1) Grab the row’s button container (or fallback to the row itself)
-                const buttonWrap = row.querySelector('.button-row') || row;
-
-                // 2) “Hidden until …” label
-                const lbl = document.createElement('span');
-                lbl.textContent = `Hidden until ${new Date(hideUntil).toLocaleString()}`;
-                lbl.style.margin = '0 8px';
-                lbl.style.fontStyle = 'italic';
-                buttonWrap.appendChild(lbl);
-
-                // 3) Unhide button
-                const unhideBtn = document.createElement('button');
-                unhideBtn.type = 'button';
-                unhideBtn.textContent = 'Unhide';
-                Object.assign(unhideBtn.style, {
-                    background: 'none',
-                    border: '1px solid #88c',
-                    borderRadius: '4px',
-                    padding: '2px 6px',
-                    cursor: 'pointer',
-                    fontSize: '0.9em',
-                    marginLeft: '8px'
-                });
-                unhideBtn.addEventListener('click', async e => {
-                    e.stopPropagation();
-                    const items = await loadDecisions();
-                    const idx = items.findIndex(d => d.id === goal.id);
-                    if (idx !== -1) {
-                        items[idx].hiddenUntil = null;
-                        await saveDecisions(items);
-                        renderGoalsAndSubitems();
-                    }
-                });
-                buttonWrap.appendChild(unhideBtn);
-
-                // 4) Finally append into Hidden section and mark rendered
-                hiddenContent.appendChild(wrapper);
-                renderedGoalIds.add(goal.id);
-
-            } else {
-                calendarContent.appendChild(wrapper);
-                enableDragAndDrop(wrapper, 'goal');
-                renderedGoalIds.add(goal.id);
-            }
-
-
-            // **CRUCIAL** mark as rendered so the “remaining” loop won’t duplicate it
-            renderedGoalIds.add(goal.id);
-        });
-
-
-    });
-
-    // 10) Render remaining goals: active → hidden → completed
     const remaining = sortedGoals.filter(g => !renderedGoalIds.has(g.id));
-    // 10) Render remaining goals (active → hidden → completed)
     remaining.forEach(goal => {
+        const now = Date.now();
         const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
         const isCompleted = !!goal.completed;
         const isHidden = hideUntil && now < hideUntil;
 
-        // Build the goal card wrapper
+        // build goal card
         const wrapper = document.createElement('div');
         wrapper.className = 'decision goal-card';
         wrapper.dataset.goalId = goal.id;
         wrapper.setAttribute('draggable', 'true');
 
-        // Create the row and append
         const row = createGoalRow(goal, { hideScheduled: true });
         wrapper.appendChild(row);
 
-        // Create & render children container
         const childrenContainer = document.createElement('div');
         childrenContainer.className = 'goal-children';
         childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
         wrapper.appendChild(childrenContainer);
         renderChildren(goal, all, childrenContainer);
 
-        // Wire up expand/collapse toggle
         const toggleBtn = row.querySelector('.toggle-triangle');
         toggleBtn.onclick = () => {
             const open = childrenContainer.style.display === 'block';
@@ -636,29 +505,26 @@ export async function renderGoalsAndSubitems() {
             open ? openGoalIds.delete(goal.id) : openGoalIds.add(goal.id);
         };
 
-        // Find the row’s button container
         const buttonWrap = row.querySelector('.button-row');
 
         if (!isCompleted && !isHidden) {
-            // Active & visible → main list
+            // active
             goalList.appendChild(wrapper);
 
         } else if (isHidden) {
-            // Hidden → hidden section, with label + button
-
-            // 1) Hidden-until label
+            // hidden
             const lbl = document.createElement('span');
             lbl.textContent = `Hidden until ${new Date(hideUntil).toLocaleString()}`;
             lbl.style.margin = '0 8px';
             lbl.style.fontStyle = 'italic';
             buttonWrap.appendChild(lbl);
 
-            // 2) Unhide button
             const unhideBtn = document.createElement('button');
             unhideBtn.type = 'button';
             unhideBtn.textContent = 'Unhide';
             Object.assign(unhideBtn.style, {
-                background: 'none',
+                background: '#88c',
+                color: '#fff',
                 border: '1px solid #88c',
                 borderRadius: '4px',
                 padding: '2px 6px',
@@ -668,30 +534,28 @@ export async function renderGoalsAndSubitems() {
             });
             unhideBtn.addEventListener('click', async e => {
                 e.stopPropagation();
-                const allItems = await loadDecisions();
-                const idx = allItems.findIndex(d => d.id === goal.id);
+                const items = await loadDecisions();
+                const idx = items.findIndex(d => d.id === goal.id);
                 if (idx !== -1) {
-                    allItems[idx].hiddenUntil = null;
-                    await saveDecisions(allItems);
-                    renderGoalsAndSubitems();
+                    items[idx].hiddenUntil = null;
+                    await saveDecisions(items);
+                    await renderGoalsAndSubitems();
                 }
             });
             buttonWrap.appendChild(unhideBtn);
 
-            // 3) Append into Hidden Goals container
             hiddenContent.appendChild(wrapper);
 
         } else {
-            // Completed → completed section
+            // completed
             completedList.appendChild(wrapper);
         }
 
-        // Mark rendered so the scheduled loop or this block won’t duplicate it
         renderedGoalIds.add(goal.id);
     });
 
-
 }
+
 
 function attachEditButtons(item, buttonWrap) {
     // ✏️ Edit icon button
@@ -848,7 +712,6 @@ function attachEditButtons(item, buttonWrap) {
             editing = true;
             editBtn.innerHTML = '💾';
 
-            // replace text + deadline inputs
             const textInput = document.createElement('input');
             const scheduledInput = document.createElement('input');
 
