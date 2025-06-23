@@ -1,3 +1,8 @@
+import {
+    initializeGlobalDragHandlers,
+    enableGoalDragAndDrop,
+    enableTaskDragAndDrop
+} from './dragAndDrop.js';    // ← not './dragDrop.js'
 import { loadDecisions, saveDecisions, saveGoalOrder, generateId, formatDaysUntil } from './helpers.js';
 import { db } from './auth.js';
 
@@ -6,94 +11,7 @@ const goalList = document.getElementById('goalList');
 const completedList = document.getElementById('completedList');
 let dragSrcEl = null;
 
-['dragover', 'drop', 'dragenter', 'dragstart'].forEach(event => {
-    document.addEventListener(event, e => {
-        if (!e.target.closest('.decision') && !e.target.closest('.goal-card')) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    });
-});
-
-document.addEventListener('dragover', e => {
-    if (
-        !e.target.closest('.decision') &&
-        !e.target.closest('.goal-card') &&
-        !e.target.closest('.daily-task-wrapper')
-    ) {
-        e.preventDefault();
-    }
-});
-
-document.addEventListener('drop', e => {
-    if (
-        !e.target.closest('.decision') &&
-        !e.target.closest('.goal-card') &&
-        !e.target.closest('.daily-task-wrapper')
-    ) {
-        e.preventDefault();
-    }
-});
-
-function enableTaskDrag(wrapper, task, goal, all, container) {
-    wrapper.addEventListener('dragstart', e => {
-        if (e.target.closest('[data-task-id]') !== wrapper) {
-            e.preventDefault(); // Only allow dragging the wrapper itself
-            return;
-        }
-        draggedId = task.id;
-        e.dataTransfer.setData('text/plain', draggedId);
-        wrapper.classList.add('dragging');
-    });
-
-    wrapper.addEventListener('dragend', () => {
-        draggedId = null;
-        wrapper.classList.remove('dragging');
-    });
-
-    wrapper.addEventListener('dragover', e => {
-        e.preventDefault();
-        const dragging = e.dataTransfer.getData('text/plain');
-        if (dragging && dragging !== task.id) {
-            wrapper.classList.add('drag-over');
-        }
-    });
-
-    wrapper.addEventListener('dragleave', () => {
-        wrapper.classList.remove('drag-over');
-    });
-
-    wrapper.addEventListener('drop', async e => {
-        e.preventDefault();
-        wrapper.classList.remove('drag-over');
-
-        const droppedId = e.dataTransfer.getData('text/plain');
-        if (!droppedId || droppedId === task.id) return;
-
-        const updated = await loadDecisions();
-
-        const underGoal = updated.filter(i => i.parentGoalId === goal.id && !i.completed);
-        const others = updated.filter(i => i.parentGoalId !== goal.id || i.completed);
-
-        const fromIdx = underGoal.findIndex(i => i.id === droppedId);
-        const toIdx = underGoal.findIndex(i => i.id === task.id);
-
-        if (fromIdx === -1 || toIdx === -1) return;
-
-        const [moved] = underGoal.splice(fromIdx, 1);
-        underGoal.splice(toIdx, 0, moved);
-
-        const reordered = [...others, ...underGoal];
-        await saveDecisions(reordered);
-        console.log(
-            'About to save',
-            items.length,
-            'items; missing:',
-            all.map(d => d.id).filter(id => !items.find(x => x.id === id))
-        );
-        renderGoalsAndSubitems();
-    });
-}
+initializeGlobalDragHandlers();
 
 // Reusable icon‐style button factory (same as in dailyTasks)
 function makeIconBtn(symbol, title, fn) {
@@ -428,6 +346,7 @@ export async function renderGoalsAndSubitems() {
             wrapper.className = 'decision goal-card';
             wrapper.dataset.goalId = goal.id;
             wrapper.setAttribute('draggable', 'true');
+            enableGoalDragAndDrop(wrapper);
 
             // build the row + children
             const row = createGoalRow(goal, { hideScheduled: true });
@@ -479,33 +398,32 @@ export async function renderGoalsAndSubitems() {
         completedSection.appendChild(completedContent);
         goalList.parentNode.appendChild(completedSection);
     }
-
     // 6) Render remaining (unscheduled active or hidden, then completed)
     // — first, wipe out the old hidden list so unhidden items vanish
     hiddenContent.innerHTML = '';
 
     const remaining = sortedGoals.filter(g => !renderedGoalIds.has(g.id));
     remaining.forEach(goal => {
-        const now = Date.now();
-        const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
-        const isCompleted = !!goal.completed;
-        const isHidden = hideUntil && now < hideUntil;
-
-        // build goal card
         const wrapper = document.createElement('div');
         wrapper.className = 'decision goal-card';
         wrapper.dataset.goalId = goal.id;
-        wrapper.setAttribute('draggable', 'true');
 
+        // wire up goal drag
+        wrapper.setAttribute('draggable', 'true');
+        enableGoalDragAndDrop(wrapper);
+
+        // build the row
         const row = createGoalRow(goal, { hideScheduled: true });
         wrapper.appendChild(row);
 
+        // render this goal's children (tasks)
         const childrenContainer = document.createElement('div');
         childrenContainer.className = 'goal-children';
         childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
         wrapper.appendChild(childrenContainer);
         renderChildren(goal, all, childrenContainer);
 
+        // toggle expand/collapse
         const toggleBtn = row.querySelector('.toggle-triangle');
         toggleBtn.onclick = () => {
             const open = childrenContainer.style.display === 'block';
@@ -515,31 +433,29 @@ export async function renderGoalsAndSubitems() {
             open ? openGoalIds.delete(goal.id) : openGoalIds.add(goal.id);
         };
 
-        const buttonWrap = row.querySelector('.button-row');
+        // determine hidden/completed state
+        const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
+        const isHidden = hideUntil && Date.now() < hideUntil;
 
-        if (!isCompleted && !isHidden) {
-            // active
+        if (!goal.completed && !isHidden) {
+            // active goals
             goalList.appendChild(wrapper);
 
         } else if (isHidden) {
-            // hidden
+            // hidden goals
             const lbl = document.createElement('span');
             lbl.textContent = `Hidden until ${new Date(hideUntil).toLocaleString()}`;
             lbl.style.margin = '0 8px';
             lbl.style.fontStyle = 'italic';
-            buttonWrap.appendChild(lbl);
+            row.querySelector('.button-row').appendChild(lbl);
 
             const unhideBtn = document.createElement('button');
             unhideBtn.type = 'button';
             unhideBtn.textContent = 'Unhide';
             Object.assign(unhideBtn.style, {
-                background: '#88c',
-                color: '#fff',
-                border: '1px solid #88c',
-                borderRadius: '4px',
-                padding: '2px 6px',
-                cursor: 'pointer',
-                fontSize: '0.9em',
+                background: '#88c', color: '#fff',
+                border: '1px solid #88c', borderRadius: '4px',
+                padding: '2px 6px', cursor: 'pointer', fontSize: '0.9em',
                 marginLeft: '8px'
             });
             unhideBtn.addEventListener('click', async e => {
@@ -552,17 +468,19 @@ export async function renderGoalsAndSubitems() {
                     await renderGoalsAndSubitems();
                 }
             });
-            buttonWrap.appendChild(unhideBtn);
+            row.querySelector('.button-row').appendChild(unhideBtn);
 
             hiddenContent.appendChild(wrapper);
 
         } else {
-            // completed
+            // completed goals
             completedList.appendChild(wrapper);
         }
 
         renderedGoalIds.add(goal.id);
     });
+
+
 
 }
 
@@ -783,46 +701,15 @@ export function renderChildren(goal, all, container) {
         const wrapper = document.createElement('div');
         wrapper.className = 'decision indent-1';
         wrapper.dataset.taskId = task.id;
+
+        // ← insert these two lines here:
         wrapper.setAttribute('draggable', 'true');
+        enableTaskDragAndDrop(wrapper, taskList, goal.id);
 
         const row = createGoalRow(task, { hideArrow: true, hideScheduled: true });
-        // inside your activeTasks.forEach(task => { … })
-
-
-        // ────────── ADD THIS ──────────
-        // wire up the checkbox so completed tasks move down under this goal
-        const cb = row.querySelector('input[type="checkbox"]');
-        cb.onchange = async () => {
-            // mark done
-            task.completed = true;
-            task.dateCompleted = new Date().toLocaleDateString('en-CA');
-
-            // persist
-            const items = await loadDecisions();
-            const idx = items.findIndex(d => d.id === task.id);
-            items[idx] = task;
-            await saveDecisions(items);
-            console.log(
-                'About to save',
-                items.length,
-                'items; missing:',
-                all.map(d => d.id).filter(id => !items.find(x => x.id === id))
-            );
-
-            // re-render only this goal's children
-            renderChildren(goal, items, container);
-        };
-        // ─────────────────────────────
-
-        row.style.background = '#f6fefe';
-        row.style.borderLeft = '4px solid #8cd1cc';
-        enableTaskDragAndDrop(wrapper, taskList, goal.id);
-        attachTaskButtons(task, row, taskList);
-
-        wrapper.appendChild(row);
-        taskList.appendChild(wrapper);
-
+        // …rest of your code…
     });
+
 
     // --- Add new task form ---
     const addRow = document.createElement('div');
@@ -966,146 +853,6 @@ export function renderChildren(goal, all, container) {
         });
     }
 }
-
-function enableDragAndDrop(wrapper, type = 'goal') {
-    const goalList = document.getElementById('goalList');
-
-    wrapper.addEventListener('dragstart', e => {
-        if (type === 'goal' && e.target.closest('[data-task-id]')) {
-            // 💥 Don't allow goal drag when dragging a task
-            e.stopPropagation();
-            return;
-        }
-
-        dragSrcEl = wrapper;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', wrapper.dataset.goalId);
-        wrapper.classList.add('dragging');
-    });
-
-    wrapper.addEventListener('dragover', e => {
-        if (type === 'goal' && e.target.closest('[data-task-id]')) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-        if (type === 'goal') wrapper.classList.add('goal-drop-indicator');
-    });
-
-    wrapper.addEventListener('dragleave', () => {
-        if (type === 'goal') wrapper.classList.remove('goal-drop-indicator');
-    });
-
-    wrapper.addEventListener('drop', async e => {
-        if (type === 'goal' && e.target.closest('[data-task-id]')) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-
-        wrapper.classList.remove('goal-drop-indicator');
-
-        if (dragSrcEl && dragSrcEl !== wrapper) {
-            const draggedId = dragSrcEl.dataset.goalId;
-            const dropTargetId = wrapper.dataset.goalId;
-
-            if (!draggedId || !dropTargetId) return;
-
-            const siblings = [...goalList.children];
-            const draggedIndex = siblings.findIndex(el => el.dataset.goalId === draggedId);
-            const dropIndex = siblings.findIndex(el => el.dataset.goalId === dropTargetId);
-
-            if (draggedIndex > -1 && dropIndex > -1) {
-                goalList.insertBefore(dragSrcEl, draggedIndex < dropIndex ? wrapper.nextSibling : wrapper);
-            }
-
-            const newOrder = [...goalList.children]
-                .map(el => el.dataset.goalId)
-                .filter(Boolean);
-
-            await saveGoalOrder(newOrder);
-        }
-
-        dragSrcEl = null;
-    });
-
-    wrapper.addEventListener('dragend', () => {
-        wrapper.classList.remove('dragging');
-    });
-}
-
-function enableTaskDragAndDrop(wrapper, taskList, goalId) {
-    wrapper.addEventListener('dragstart', e => {
-        e.stopPropagation();
-        dragSrcEl = wrapper;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', wrapper.dataset.taskId);
-        wrapper.classList.add('dragging');
-        console.log('Dragging task:', wrapper.dataset.taskId);
-    });
-
-    wrapper.addEventListener('dragover', e => {
-        e.preventDefault(); // 🔥 prevents page reload
-        e.stopPropagation();
-        wrapper.classList.add('drag-over');
-    });
-
-    wrapper.addEventListener('dragleave', () => {
-        wrapper.classList.remove('drag-over');
-    });
-
-    wrapper.addEventListener('drop', async e => {
-        e.preventDefault(); // 🔥 prevents page reload
-        e.stopPropagation();
-        wrapper.classList.remove('drag-over');
-
-        const droppedId = e.dataTransfer.getData('text/plain');
-        const targetId = wrapper.dataset.taskId;
-
-        if (!droppedId || droppedId === targetId) return;
-
-        console.log(`Dropped task: ${droppedId} on ${targetId}`);
-
-        const children = [...taskList.children].filter(el => el.dataset.taskId);
-        const fromIdx = children.findIndex(el => el.dataset.taskId === droppedId);
-        const toIdx = children.findIndex(el => el.dataset.taskId === targetId);
-
-        if (fromIdx === -1 || toIdx === -1) return;
-
-        const draggedEl = children[fromIdx];
-        taskList.insertBefore(draggedEl, fromIdx < toIdx ? wrapper.nextSibling : wrapper);
-
-        const newOrder = [...taskList.children]
-            .map(el => el.dataset.taskId)
-            .filter(Boolean);
-
-        const updated = await loadDecisions();
-        const underGoal = updated.filter(i => i.parentGoalId === goalId && !i.completed);
-        const others = updated.filter(i => i.parentGoalId !== goalId || i.completed);
-
-        const reordered = newOrder.map(id => underGoal.find(t => t.id === id)).filter(Boolean);
-
-        await saveDecisions([...others, ...reordered]);
-        console.log(
-            'About to save',
-            items.length,
-            'items; missing:',
-            all.map(d => d.id).filter(id => !items.find(x => x.id === id))
-        );
-        console.log('Saved new order for goal', goalId, newOrder);
-
-        // Just update this goal's children
-        const parentContainer = wrapper.closest('.goal-children');
-        const parentGoal = updated.find(g => g.id === goalId);
-        if (parentContainer && parentGoal) {
-            renderChildren(parentGoal, updated, parentContainer);
-        }
-
-    });
-
-    wrapper.addEventListener('dragend', () => {
-        wrapper.classList.remove('dragging');
-    });
-}
-
 
 
 
