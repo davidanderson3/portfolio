@@ -6,63 +6,63 @@ import { auth, db, getCurrentUser, FieldValue } from './auth.js';
  * Returns today’s date key in YYYY-MM-DD using local time.
  */
 function todayKey() {
-    const d = new Date();
-    const year  = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day   = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 
 // File: src/stats.js
 
 async function ensureMoodConfig() {
-    const user = getCurrentUser();
-    if (!user) return [];
+  const user = getCurrentUser();
+  if (!user) return [];
 
-    const docRef = db
-        .collection('users').doc(user.uid)
-        .collection('settings').doc('metricsConfig');
-    const snap = await docRef.get();
-    const current = snap.exists ? snap.data().metrics || [] : [];
+  const docRef = db
+    .collection('users').doc(user.uid)
+    .collection('settings').doc('metricsConfig');
+  const snap = await docRef.get();
+  const current = snap.exists ? snap.data().metrics || [] : [];
 
-    let updated = current;
+  let updated = current;
 
-    // 1) Ensure Mood Rating exists
-    if (!updated.find(m => m.id === 'mood')) {
-        updated = [{ id: 'mood', label: 'Mood Rating', unit: 'rating' }, ...updated];
-    }
+  // 1) Ensure Mood Rating exists
+  if (!updated.find(m => m.id === 'mood')) {
+    updated = [{ id: 'mood', label: 'Mood Rating', unit: 'rating' }, ...updated];
+  }
 
-    // 2) Ensure a basic Count metric exists
-    if (!updated.find(m => m.id === 'count')) {
-        updated = [...updated, { id: 'count', label: 'Count', unit: 'count' }];
-    }
+  // 2) Ensure a basic Count metric exists
+  if (!updated.find(m => m.id === 'count')) {
+    updated = [...updated, { id: 'count', label: 'Count', unit: 'count' }];
+  }
 
-    // 3) If the doc didn’t exist, write it once
-    if (!snap.exists) {
-        await docRef.set({ metrics: updated }, { merge: true });
-    }
+  // 3) If the doc didn’t exist, write it once
+  if (!snap.exists) {
+    await docRef.set({ metrics: updated }, { merge: true });
+  }
 
-    // 4) Apply display labels and return
-    updated.forEach(applyUnitLabels);
-    return updated;
+  // 4) Apply display labels and return
+  updated.forEach(applyUnitLabels);
+  return updated;
 }
 
 
 
 /** FIRESTORE LOADERS & SAVERS **/
 async function loadMetricsConfig() {
-    const user = auth.currentUser;
-    if (!user) throw new Error('Not signed in');
-    const snap = await db
-        .collection('users').doc(user.uid)
-        .collection('settings').doc('metricsConfig')
-        .get();
-    return snap.exists ? snap.data().metrics : [];
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not signed in');
+  const snap = await db
+    .collection('users').doc(user.uid)
+    .collection('settings').doc('metricsConfig')
+    .get();
+  return snap.exists ? snap.data().metrics : [];
 }
 
 async function saveMetricsConfig(metrics) {
-    await safeSaveMetricsConfig(() => metrics);
+  await safeSaveMetricsConfig(() => metrics);
 }
 
 /**
@@ -72,27 +72,27 @@ async function saveMetricsConfig(metrics) {
  *   A function that receives the *existing* metrics array and returns the new one.
  */
 async function safeSaveMetricsConfig(merger) {
-    const user = getCurrentUser();
-    if (!user) return;
+  const user = getCurrentUser();
+  if (!user) return;
 
-    // 1) Load whatever is currently saved
-    const docRef = db
-        .collection('users').doc(user.uid)
-        .collection('settings').doc('metricsConfig');
-    const snap = await docRef.get();
-    const oldMetrics = snap.exists ? snap.data().metrics || [] : [];
+  // 1) Load whatever is currently saved
+  const docRef = db
+    .collection('users').doc(user.uid)
+    .collection('settings').doc('metricsConfig');
+  const snap = await docRef.get();
+  const oldMetrics = snap.exists ? snap.data().metrics || [] : [];
 
-    // 2) Let caller produce the updated array
-    const newMetrics = merger(oldMetrics.slice());
+  // 2) Let caller produce the updated array
+  const newMetrics = merger(oldMetrics.slice());
 
-    // 3) Only write *if* something actually changed
-    const same =
-        oldMetrics.length === newMetrics.length &&
-        oldMetrics.every((m, i) => JSON.stringify(m) === JSON.stringify(newMetrics[i]));
-    if (same) return;
+  // 3) Only write *if* something actually changed
+  const same =
+    oldMetrics.length === newMetrics.length &&
+    oldMetrics.every((m, i) => JSON.stringify(m) === JSON.stringify(newMetrics[i]));
+  if (same) return;
 
-    // 4) Merge-write back your new array
-    await docRef.set({ metrics: newMetrics }, { merge: true });
+  // 4) Merge-write back your new array
+  await docRef.set({ metrics: newMetrics }, { merge: true });
 }
 
 /**
@@ -103,25 +103,25 @@ async function safeSaveMetricsConfig(merger) {
  * @param {any} extra
  */
 async function recordMetric(metricId, value, extra = null) {
-    const user = getCurrentUser();
-    if (!user) return;
+  const user = getCurrentUser();
+  if (!user) return;
 
-    // Use local-date key for grouping
-    const ref = db
-        .collection('users').doc(user.uid)
-        .collection('dailyStats').doc(todayKey());
+  // Use local-date key for grouping
+  const ref = db
+    .collection('users').doc(user.uid)
+    .collection('dailyStats').doc(todayKey());
 
-    const entry = {
-        timestamp: Date.now(),
-        value,
-        extra
-    };
+  const entry = {
+    timestamp: Date.now(),
+    value,
+    extra
+  };
 
-    await ref.set({
-        metrics: {
-            [metricId]: FieldValue.arrayUnion(entry)
-        }
-    }, { merge: true });
+  await ref.set({
+    metrics: {
+      [metricId]: FieldValue.arrayUnion(entry)
+    }
+  }, { merge: true });
 }
 
 
@@ -129,34 +129,34 @@ async function recordMetric(metricId, value, extra = null) {
 
 
 async function loadAllStats() {
-    const user = auth.currentUser;
-    if (!user) return {};
-    const snaps = await db
-        .collection('users').doc(user.uid)
-        .collection('dailyStats')
-        .get();
-    const out = {};
-    snaps.forEach(doc => out[doc.id] = doc.data().metrics || {});
-    return out;
+  const user = auth.currentUser;
+  if (!user) return {};
+  const snaps = await db
+    .collection('users').doc(user.uid)
+    .collection('dailyStats')
+    .get();
+  const out = {};
+  snaps.forEach(doc => out[doc.id] = doc.data().metrics || {});
+  return out;
 }
 
 
 /** PERCENTILE & SUMMARY RENDER **/
 function computePercentile(val, allValues) {
-    const sorted = allValues.slice().sort((a, b) => a - b);
-    const below = sorted.filter(v => v < val).length;
-    return Math.round((below / sorted.length) * 100);
+  const sorted = allValues.slice().sort((a, b) => a - b);
+  const below = sorted.filter(v => v < val).length;
+  return Math.round((below / sorted.length) * 100);
 }
 
 function applyUnitLabels(cfg) {
-    cfg.unitLabel = {
-        pounds:    'pounds',
-        rating:    'rating out of 10',
-        minutes:   'minutes',
-        time_mmss: 'minutes and seconds',
-        list:      'list',
-        count:     'count'
-    }[cfg.unit] || cfg.unit;
+  cfg.unitLabel = {
+    pounds: 'pounds',
+    rating: 'rating out of 10',
+    minutes: 'minutes',
+    time_mmss: 'minutes and seconds',
+    list: 'list',
+    count: 'count'
+  }[cfg.unit] || cfg.unit;
 }
 
 // File: src/stats.js
@@ -263,7 +263,7 @@ async function renderStatsSummary() {
 
         if (cfg.unit === 'time_mmss') {
           const m = Math.floor(latest.value),
-                s = String(Math.round((latest.value - m) * 60)).padStart(2, '0');
+            s = String(Math.round((latest.value - m) * 60)).padStart(2, '0');
           displayValue = `${m}:${s}`;
           actualValue = latest.value;
 
@@ -449,30 +449,41 @@ async function renderStatsSummary() {
   }
 }
 
-
-
+// File: src/stats.js
 
 async function renderConfigForm() {
-    // 1) Load the user’s saved metrics, then re-seed defaults (mood + count)
-    let config = await loadMetricsConfig();
-    config = await ensureMoodConfig();
-    config.forEach(applyUnitLabels);
+  // 1) Load the user’s saved metrics, then re-seed defaults (mood + count)
+  let config = await loadMetricsConfig();
+  config = await ensureMoodConfig();
+  config.forEach(applyUnitLabels);
 
-    // 2) Build the “Add New Metric” form
-    const section = document.getElementById('metricsConfigSection');
-    section.innerHTML = `
-      <h4>Add New Metric</h4>
+  // 2) Build the “Show Form” button and hidden container
+  const section = document.getElementById('metricsConfigSection');
+  section.innerHTML = `
+    <button id="showConfigBtn" style="margin-bottom: 12px;">
+      ➕ Add New Metric
+    </button>
+    <div id="configFormContainer" style="display: none;"></div>
+  `;
+
+  const formContainer = document.getElementById('configFormContainer');
+  const showBtn = document.getElementById('showConfigBtn');
+
+  // 3) When clicked, render the actual form inside the container
+  showBtn.addEventListener('click', () => {
+    formContainer.innerHTML = `
       <form id="configForm">
         <input
           type="text"
           id="metricLabel"
           placeholder="What are you measuring?"
           required
+          style="margin-right: 8px;"
         >
-        <label for="metricUnit" style="margin-left:8px;">
+        <label for="metricUnit">
           Unit
         </label>
-        <select id="metricUnit" required>
+        <select id="metricUnit" required style="margin: 0 8px;">
           <option value="pounds">pounds</option>
           <option value="rating">rating out of 10</option>
           <option value="minutes">minutes</option>
@@ -480,73 +491,68 @@ async function renderConfigForm() {
           <option value="list">list</option>
           <option value="count">count</option>
         </select>
-        <button type="submit" style="margin-left:8px;">
-          Add Metric
-        </button>
+        <button type="submit">Add Metric</button>
+        <button type="button" id="cancelConfig" style="margin-left:8px;">✖️ Cancel</button>
       </form>
     `;
+    formContainer.style.display = 'block';
+    showBtn.disabled = true;
 
-    // 3) Wire up the form submit to save the new metric
-    document
-      .getElementById('configForm')
-      .addEventListener('submit', async e => {
-        e.preventDefault();
+    // 4) Wire up “Cancel” to hide the form again
+    document.getElementById('cancelConfig').addEventListener('click', () => {
+      formContainer.style.display = 'none';
+      showBtn.disabled = false;
+      formContainer.innerHTML = '';
+    });
 
-        const label = document
-          .getElementById('metricLabel')
-          .value
-          .trim();
-        const unit = document
-          .getElementById('metricUnit')
-          .value;
-
-        if (!label || !unit) {
-          alert('Please enter both label and unit.');
-          return;
-        }
-
-        const id = label
-          .toLowerCase()
-          .replace(/\W+/g, '_');
-        const newMetric = { id, label, unit };
-
-        // 4) Merge into existing config
-        const oldCfg = await loadMetricsConfig();
-        await saveMetricsConfig([
-          ...oldCfg.filter(m => m.id !== id),
-          newMetric
-        ]);
-
-        // 5) Re-draw both the form and the stats table
-        await renderConfigForm();
-        await renderStatsSummary();
-      });
+    // 5) Wire up the form submit to save the new metric
+    document.getElementById('configForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const label = document.getElementById('metricLabel').value.trim();
+      const unit = document.getElementById('metricUnit').value;
+      if (!label || !unit) {
+        alert('Please enter both label and unit.');
+        return;
+      }
+      const id = label.toLowerCase().replace(/\W+/g, '_');
+      const newMetric = { id, label, unit };
+      const oldCfg = await loadMetricsConfig();
+      await saveMetricsConfig([
+        ...oldCfg.filter(m => m.id !== id),
+        newMetric
+      ]);
+      // 6) Reset and re-render both form and summary
+      formContainer.style.display = 'none';
+      formContainer.innerHTML = '';
+      showBtn.disabled = false;
+      await renderConfigForm();
+      await renderStatsSummary();
+    });
+  });
 }
-
-
 
 
 async function initMetricsUI() {
-    await ensureMoodConfig();
-    await renderStatsSummary();   // ← stats table first
-    await renderConfigForm();     // ← then “Add New Metric”
+  await ensureMoodConfig();
+  await renderStatsSummary();   // ← stats table first
+  await renderConfigForm();     // ← then “Add New Metric”
 }
 
 auth.onAuthStateChanged(user => {
-    if (!user) return;
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initMetricsUI);
-    } else {
-        initMetricsUI();
-    }
+  if (!user) return;
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMetricsUI);
+  } else {
+    initMetricsUI();
+  }
 });
 
 
 
 
 auth.onAuthStateChanged(user => {
-    if (!user) return;
-    if (document.readyState === 'loading')
-        document.addEventListener('DOMContentLoaded', initMetricsUI);
-    else initMetricsUI();
+  if (!user) return;
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', initMetricsUI);
+  else initMetricsUI();
 });
