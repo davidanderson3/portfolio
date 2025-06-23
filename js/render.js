@@ -133,19 +133,12 @@ export async function attachTaskButtons(item, row, listContainer) {
         const prev = wrapper.previousElementSibling;
         if (prev && prev.dataset.taskId) {
             listContainer.insertBefore(wrapper, prev);
-            // Persist new order
             const ids = Array.from(listContainer.children).map(w => w.dataset.taskId);
             const all = await loadDecisions();
             const under = all.filter(d => d.parentGoalId === item.parentGoalId && !d.completed);
             const other = all.filter(d => d.parentGoalId !== item.parentGoalId || d.completed);
             const reordered = ids.map(id => under.find(t => t.id === id)).filter(Boolean);
             await saveDecisions([...other, ...reordered]);
-            console.log(
-                'About to save',
-                items.length,
-                'items; missing:',
-                all.map(d => d.id).filter(id => !items.find(x => x.id === id))
-            );
         }
     });
 
@@ -157,31 +150,17 @@ export async function attachTaskButtons(item, row, listContainer) {
             const idx = all.findIndex(d => d.id === item.id);
             all[idx].text = newText;
             await saveDecisions(all);
-            console.log(
-                'About to save',
-                items.length,
-                'items; missing:',
-                all.map(d => d.id).filter(id => !items.find(x => x.id === id))
-            );
             row.querySelector('.middle-group').textContent = newText;
         }
     });
 
     // — Temporarily hide (postpone) button & dropdown —
-    const clockBtn = makeIconBtn('🕒', 'Temporarily hide', () => {/* click is handled below */ });
-
-    // build the hide-duration menu
+    const clockBtn = makeIconBtn('🕒', 'Temporarily hide', () => { });
     const menu = document.createElement('div');
     Object.assign(menu.style, {
-        position: 'absolute',
-        background: '#fff',
-        border: '1px solid #ccc',
-        borderRadius: '6px',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-        padding: '6px 0',
-        fontSize: '0.9em',
-        display: 'none',
-        zIndex: '9999',
+        position: 'absolute', background: '#fff', border: '1px solid #ccc',
+        borderRadius: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        padding: '6px 0', fontSize: '0.9em', display: 'none', zIndex: '9999',
         minWidth: '120px'
     });
     document.body.appendChild(menu);
@@ -202,39 +181,28 @@ export async function attachTaskButtons(item, row, listContainer) {
         optBtn.type = 'button';
         optBtn.textContent = opt.label;
         Object.assign(optBtn.style, {
-            display: 'block',
-            width: '100%',
-            padding: '4px 12px',
-            border: 'none',
-            background: 'white',
-            color: '#333',
-            textAlign: 'left',
-            cursor: 'pointer'
+            display: 'block', width: '100%', padding: '4px 12px',
+            border: 'none', background: 'white', color: '#333',
+            textAlign: 'left', cursor: 'pointer'
         });
         optBtn.addEventListener('mouseover', () => optBtn.style.background = '#f0f0f0');
         optBtn.addEventListener('mouseout', () => optBtn.style.background = 'white');
 
         optBtn.addEventListener('click', async e => {
             e.stopPropagation();
-            // load, set hiddenUntil, save
+            // 1) postpone
             const all = await loadDecisions();
             const idx = all.findIndex(d => d.id === item.id);
             if (idx === -1) return;
-
-            const targetTime = new Date(Date.now() + opt.value * 3600 * 1000);
-            // use ISO format so parsing is reliable
-            all[idx].hiddenUntil = targetTime.toISOString();
+            all[idx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
             await saveDecisions(all);
-            console.log(
-                'About to save',
-                items.length,
-                'items; missing:',
-                all.map(d => d.id).filter(id => !items.find(x => x.id === id))
-            );
-
             menu.style.display = 'none';
-            // re-render everything so this task disappears until the time elapses
-            renderGoalsAndSubitems();
+            // 2) re-render only this goal’s task‐list
+            const goalCard = row.closest('.decision.goal-card');
+            const goalId = goalCard.dataset.goalId;
+            const taskListContainer = goalCard.querySelector('.goal-children');
+            const goalObj = all.find(d => d.id === goalId);
+            renderChildren(goalObj, all, taskListContainer);
         });
 
         menu.appendChild(optBtn);
@@ -247,7 +215,6 @@ export async function attachTaskButtons(item, row, listContainer) {
         menu.style.left = `${rect.left + window.scrollX}px`;
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     });
-
     document.addEventListener('click', e => {
         if (!menu.contains(e.target) && e.target !== clockBtn) {
             menu.style.display = 'none';
@@ -259,18 +226,14 @@ export async function attachTaskButtons(item, row, listContainer) {
         if (!confirm(`Delete task: "${item.text}"?`)) return;
         const all = await loadDecisions();
         await saveDecisions(all.filter(d => d.id !== item.id));
-        console.log(
-            'About to save',
-            items.length,
-            'items; missing:',
-            all.map(d => d.id).filter(id => !items.find(x => x.id === id))
-        );
         row.closest('[data-task-id]').remove();
     });
 
-    // append in the desired order
+    // append them
     buttonWrap.append(upBtn, editBtn, clockBtn, delBtn);
 }
+
+
 
 // File: src/render.js
 
@@ -295,25 +258,26 @@ function createGoalRow(goal, options = {}) {
     checkbox.checked = !!goal.completed;
     checkbox.disabled = !!goal.completed;
 
-    // ── Completion handler ──
-    checkbox.addEventListener('change', async () => {
-        // mark completed and set date
-        goal.completed = true;
-        goal.dateCompleted = new Date().toISOString().split('T')[0];
+    // ── Completion handler (goals only) ──
+    if (goal.type === 'goal') {
+        checkbox.addEventListener('change', async () => {
+            // mark completed and set date
+            goal.completed = true;
+            goal.dateCompleted = new Date().toISOString().split('T')[0];
 
-        // persist the change
-        const items = await loadDecisions();
-        const idx = items.findIndex(d => d.id === goal.id);
-        items[idx] = goal;
-        await saveDecisions(items);
+            // persist the change
+            const items = await loadDecisions();
+            const idx = items.findIndex(d => d.id === goal.id);
+            items[idx] = goal;
+            await saveDecisions(items);
 
-        // move _this_ goal card into the completed list
-        const wrapper = checkbox.closest('.decision.goal-card');
-        wrapper.remove();
-        wrapper.querySelector('.due-column').textContent = goal.dateCompleted;
-        completedList.appendChild(wrapper);
-    });
-
+            // move _this_ goal card into the completed list without full reload
+            const wrapper = checkbox.closest('.decision.goal-card');
+            wrapper.remove();
+            wrapper.querySelector('.due-column').textContent = goal.dateCompleted;
+            completedList.appendChild(wrapper);
+        });
+    }
 
     left.append(toggle, checkbox);
     row.appendChild(left);
@@ -355,12 +319,15 @@ function createGoalRow(goal, options = {}) {
 
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
-    if (goal.type === 'goal') attachEditButtons(goal, buttonWrap);
+    if (goal.type === 'goal') {
+        attachEditButtons(goal, buttonWrap);
+    }
     right.appendChild(buttonWrap);
 
     row.appendChild(right);
     return row;
 }
+
 
 
 export async function renderGoalsAndSubitems() {
@@ -575,6 +542,7 @@ export async function renderGoalsAndSubitems() {
     });
 
     // 10) Render remaining goals (completed + hidden/active)
+    // 10) Render remaining goals (completed + hidden/active)
     const finalList = [...completedGoals, ...hiddenAndActive];
     finalList.forEach(goal => {
         if (renderedGoalIds.has(goal.id)) return;
@@ -591,23 +559,23 @@ export async function renderGoalsAndSubitems() {
         const row = createGoalRow(goal, { hideScheduled: true });
         wrapper.appendChild(row);
 
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'goal-children';
-        childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
-        wrapper.appendChild(childrenContainer);
-        renderChildren(goal, all, childrenContainer);
+        // renamed variable here to avoid redeclaration
+        const childrenContainer2 = document.createElement('div');
+        childrenContainer2.className = 'goal-children';
+        childrenContainer2.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+        wrapper.appendChild(childrenContainer2);
+        renderChildren(goal, all, childrenContainer2);
 
         const toggleBtn = row.querySelector('.toggle-triangle');
         toggleBtn.onclick = () => {
-            const open = childrenContainer.style.display === 'block';
+            const open = childrenContainer2.style.display === 'block';
             toggleBtn.textContent = open ? '▶' : '▼';
-            childrenContainer.style.display = open ? 'none' : 'block';
+            childrenContainer2.style.display = open ? 'none' : 'block';
             wrapper.setAttribute('draggable', open ? 'true' : 'false');
             open ? openGoalIds.delete(goal.id) : openGoalIds.add(goal.id);
         };
 
         if (isCompleted) {
-            // completedList only gets goals with a dateCompleted
             completedList.appendChild(wrapper);
         } else if (isHidden) {
             const btn = document.createElement('button');
@@ -618,12 +586,6 @@ export async function renderGoalsAndSubitems() {
                 if (idx !== -1) {
                     items[idx].hiddenUntil = null;
                     await saveDecisions(items);
-                    console.log(
-                        'About to save',
-                        items.length,
-                        'items; missing:',
-                        all.map(d => d.id).filter(id => !items.find(x => x.id === id))
-                    );
                     renderGoalsAndSubitems();
                 }
             };
@@ -637,8 +599,14 @@ export async function renderGoalsAndSubitems() {
             goalList.appendChild(wrapper);
         }
 
-        renderedGoalIds.add(goal.id);
+        // re-render just this goal’s tasks
+        const goalCard = row.closest('.decision.goal-card');
+        const goalId = goalCard.dataset.goalId;
+        const taskContainer = goalCard.querySelector('.goal-children');
+        const goalObj = all.find(d => d.id === goalId);
+        renderChildren(goalObj, all, taskContainer);
     });
+
 }
 
 
@@ -720,16 +688,18 @@ function attachEditButtons(item, buttonWrap) {
                 const targetTime = new Date(Date.now() + opt.value * 3600 * 1000);
                 all[idx].hiddenUntil = targetTime.toLocaleString('en-CA', { hour12: false });
                 await saveDecisions(all);
+
                 console.log(
                     'About to save',
-                    items.length,
+                    all.length,
                     'items; missing:',
-                    all.map(d => d.id).filter(id => !items.find(x => x.id === id))
+                    []  // nothing is missing here since we're only updating
                 );
 
                 menu.style.display = 'none';
                 renderGoalsAndSubitems();
             });
+
 
             menu.appendChild(btn);
         });
@@ -773,12 +743,13 @@ function attachEditButtons(item, buttonWrap) {
         await saveDecisions(filtered);
         console.log(
             'About to save',
-            items.length,
+            filtered.length,
             'items; missing:',
-            all.map(d => d.id).filter(id => !items.find(x => x.id === id))
+            all.map(d => d.id).filter(id => !filtered.find(x => x.id === id))
         );
         renderGoalsAndSubitems();
     });
+
 
     // ——————— “Edit” → “Save” in-place ———————
     let editing = false;
@@ -791,16 +762,13 @@ function attachEditButtons(item, buttonWrap) {
         if (!editing) {
             editing = true;
             editBtn.innerHTML = '💾';
-
             const textInput = document.createElement('input');
+            const deadlineInput = document.createElement('input');
             textInput.value = item.text;
             textInput.style.width = '100%';
-
-            const deadlineInput = document.createElement('input');
             deadlineInput.type = 'date';
             deadlineInput.value = item.deadline || '';
             deadlineInput.style.width = '140px';
-
             middle.innerHTML = '';
             middle.appendChild(textInput);
             due.innerHTML = '';
@@ -816,11 +784,12 @@ function attachEditButtons(item, buttonWrap) {
                 all[idx].text = newText;
                 all[idx].deadline = newDeadline;
                 await saveDecisions(all);
+
+                // fixed: use `all` instead of undefined `items`
                 console.log(
                     'About to save',
-                    items.length,
-                    'items; missing:',
-                    all.map(d => d.id).filter(id => !items.find(x => x.id === id))
+                    all.length,
+                    'items'
                 );
 
                 middle.textContent = newText;
@@ -829,6 +798,7 @@ function attachEditButtons(item, buttonWrap) {
             }
         }
     });
+
 }
 
 // File: src/render.js
@@ -959,15 +929,17 @@ export function renderChildren(goal, all, container) {
         const updated = await loadDecisions();
         updated.push(newTask);
         await saveDecisions(updated);
+        // fixed console.log: refer to 'updated' instead of undefined 'items'
         console.log(
             'About to save',
-            items.length,
+            updated.length,
             'items; missing:',
-            all.map(d => d.id).filter(id => !items.find(x => x.id === id))
+            all.map(d => d.id).filter(id => !updated.find(x => x.id === id))
         );
         inputText.value = '';
         renderChildren(goal, updated, container);
     });
+
 
     addRow.append(inputText, addBtn);
     container.appendChild(addRow);
