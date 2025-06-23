@@ -545,14 +545,20 @@ export async function renderGoalsAndSubitems() {
                 open ? openGoalIds.delete(goal.id) : openGoalIds.add(goal.id);
             };
 
+            // Replace your hidden‐branch in BOTH your scheduledGoals and remaining‐goals loops with this complete block:
+
             if (isHidden) {
-                // Hidden-until label
+                // 1) Grab the row’s button container (or fallback to the row itself)
+                const buttonWrap = row.querySelector('.button-row') || row;
+
+                // 2) “Hidden until …” label
                 const lbl = document.createElement('span');
                 lbl.textContent = `Hidden until ${new Date(hideUntil).toLocaleString()}`;
                 lbl.style.margin = '0 8px';
+                lbl.style.fontStyle = 'italic';
                 buttonWrap.appendChild(lbl);
 
-                // Per-goal Unhide button
+                // 3) Unhide button
                 const unhideBtn = document.createElement('button');
                 unhideBtn.type = 'button';
                 unhideBtn.textContent = 'Unhide';
@@ -567,23 +573,26 @@ export async function renderGoalsAndSubitems() {
                 });
                 unhideBtn.addEventListener('click', async e => {
                     e.stopPropagation();
-                    const allItems = await loadDecisions();
-                    const idx = allItems.findIndex(d => d.id === goal.id);
+                    const items = await loadDecisions();
+                    const idx = items.findIndex(d => d.id === goal.id);
                     if (idx !== -1) {
-                        allItems[idx].hiddenUntil = null;
-                        await saveDecisions(allItems);
+                        items[idx].hiddenUntil = null;
+                        await saveDecisions(items);
                         renderGoalsAndSubitems();
                     }
                 });
                 buttonWrap.appendChild(unhideBtn);
 
+                // 4) Finally append into Hidden section and mark rendered
                 hiddenContent.appendChild(wrapper);
+                renderedGoalIds.add(goal.id);
 
             } else {
-                // Visible on calendar
                 calendarContent.appendChild(wrapper);
                 enableDragAndDrop(wrapper, 'goal');
+                renderedGoalIds.add(goal.id);
             }
+
 
             // **CRUCIAL** mark as rendered so the “remaining” loop won’t duplicate it
             renderedGoalIds.add(goal.id);
@@ -594,25 +603,30 @@ export async function renderGoalsAndSubitems() {
 
     // 10) Render remaining goals: active → hidden → completed
     const remaining = sortedGoals.filter(g => !renderedGoalIds.has(g.id));
+    // 10) Render remaining goals (active → hidden → completed)
     remaining.forEach(goal => {
         const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
         const isCompleted = !!goal.completed;
         const isHidden = hideUntil && now < hideUntil;
 
+        // Build the goal card wrapper
         const wrapper = document.createElement('div');
         wrapper.className = 'decision goal-card';
         wrapper.dataset.goalId = goal.id;
         wrapper.setAttribute('draggable', 'true');
 
+        // Create the row and append
         const row = createGoalRow(goal, { hideScheduled: true });
         wrapper.appendChild(row);
 
+        // Create & render children container
         const childrenContainer = document.createElement('div');
         childrenContainer.className = 'goal-children';
         childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
         wrapper.appendChild(childrenContainer);
         renderChildren(goal, all, childrenContainer);
 
+        // Wire up expand/collapse toggle
         const toggleBtn = row.querySelector('.toggle-triangle');
         toggleBtn.onclick = () => {
             const open = childrenContainer.style.display === 'block';
@@ -622,34 +636,60 @@ export async function renderGoalsAndSubitems() {
             open ? openGoalIds.delete(goal.id) : openGoalIds.add(goal.id);
         };
 
+        // Find the row’s button container
+        const buttonWrap = row.querySelector('.button-row');
+
         if (!isCompleted && !isHidden) {
-            // Active, visible
+            // Active & visible → main list
             goalList.appendChild(wrapper);
 
         } else if (isHidden) {
-            // Hidden
-            const btn = document.createElement('button');
-            btn.textContent = 'Unhide';
-            btn.onclick = async () => {
-                const items = await loadDecisions();
-                const idx = items.findIndex(d => d.id === goal.id);
+            // Hidden → hidden section, with label + button
+
+            // 1) Hidden-until label
+            const lbl = document.createElement('span');
+            lbl.textContent = `Hidden until ${new Date(hideUntil).toLocaleString()}`;
+            lbl.style.margin = '0 8px';
+            lbl.style.fontStyle = 'italic';
+            buttonWrap.appendChild(lbl);
+
+            // 2) Unhide button
+            const unhideBtn = document.createElement('button');
+            unhideBtn.type = 'button';
+            unhideBtn.textContent = 'Unhide';
+            Object.assign(unhideBtn.style, {
+                background: 'none',
+                border: '1px solid #88c',
+                borderRadius: '4px',
+                padding: '2px 6px',
+                cursor: 'pointer',
+                fontSize: '0.9em',
+                marginLeft: '8px'
+            });
+            unhideBtn.addEventListener('click', async e => {
+                e.stopPropagation();
+                const allItems = await loadDecisions();
+                const idx = allItems.findIndex(d => d.id === goal.id);
                 if (idx !== -1) {
-                    items[idx].hiddenUntil = null;
-                    await saveDecisions(items);
+                    allItems[idx].hiddenUntil = null;
+                    await saveDecisions(allItems);
                     renderGoalsAndSubitems();
                 }
-            };
-            const lbl = document.createElement('div');
-            lbl.className = 'right-aligned';
-            lbl.textContent = `Hidden until: ${new Date(hideUntil).toLocaleString()}`;
-            lbl.appendChild(btn);
+            });
+            buttonWrap.appendChild(unhideBtn);
+
+            // 3) Append into Hidden Goals container
             hiddenContent.appendChild(wrapper);
 
         } else {
-            // Completed
+            // Completed → completed section
             completedList.appendChild(wrapper);
         }
+
+        // Mark rendered so the scheduled loop or this block won’t duplicate it
+        renderedGoalIds.add(goal.id);
     });
+
 
 }
 
