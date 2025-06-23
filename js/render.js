@@ -154,25 +154,27 @@ export async function attachTaskButtons(item, row, listContainer) {
     });
 
     // — Temporarily hide (postpone) button & dropdown —
-    const clockBtn = makeIconBtn('🕒', 'Temporarily hide', () => { });
+    const clockBtn = makeIconBtn('🕒', 'Postpone goal', () => { });
     const menu = document.createElement('div');
     Object.assign(menu.style, {
-        position: 'absolute', background: '#fff', border: '1px solid #ccc',
-        borderRadius: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-        padding: '6px 0', fontSize: '0.9em', display: 'none', zIndex: '9999',
+        position: 'absolute',
+        background: '#fff',
+        border: '1px solid #ccc',
+        borderRadius: '6px',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        padding: '6px 0',
+        fontSize: '0.9em',
+        display: 'none',
+        zIndex: '9999',
         minWidth: '120px'
     });
     document.body.appendChild(menu);
 
     const options = [
-        { label: '1 hour', value: 1 },
-        { label: '2 hours', value: 2 },
-        { label: '4 hours', value: 4 },
-        { label: '8 hours', value: 8 },
         { label: '1 day', value: 24 },
-        { label: '4 days', value: 96 },
+        { label: '2 days', value: 48 },
         { label: '1 week', value: 168 },
-        { label: '1 month', value: 720 }
+        { label: '2 weeks', value: 336 }
     ];
 
     options.forEach(opt => {
@@ -180,28 +182,31 @@ export async function attachTaskButtons(item, row, listContainer) {
         optBtn.type = 'button';
         optBtn.textContent = opt.label;
         Object.assign(optBtn.style, {
-            display: 'block', width: '100%', padding: '4px 12px',
-            border: 'none', background: 'white', color: '#333',
-            textAlign: 'left', cursor: 'pointer'
+            display: 'block',
+            width: '100%',
+            padding: '4px 12px',
+            border: 'none',
+            background: 'white',
+            color: '#333',
+            textAlign: 'left',
+            cursor: 'pointer'
         });
-        optBtn.addEventListener('mouseover', () => optBtn.style.background = '#f0f0f0');
-        optBtn.addEventListener('mouseout', () => optBtn.style.background = 'white');
+        optBtn.addEventListener('mouseenter', () => optBtn.style.background = '#f0f0f0');
+        optBtn.addEventListener('mouseleave', () => optBtn.style.background = 'white');
 
         optBtn.addEventListener('click', async e => {
             e.stopPropagation();
-            // 1) postpone
+            // 1) update hiddenUntil
             const all = await loadDecisions();
             const idx = all.findIndex(d => d.id === item.id);
             if (idx === -1) return;
             all[idx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
             await saveDecisions(all);
+
+            // 2) hide this goal card only
             menu.style.display = 'none';
-            // 2) re-render only this goal’s task‐list
             const goalCard = row.closest('.decision.goal-card');
-            const goalId = goalCard.dataset.goalId;
-            const taskListContainer = goalCard.querySelector('.goal-children');
-            const goalObj = all.find(d => d.id === goalId);
-            renderChildren(goalObj, all, taskListContainer);
+            if (goalCard) goalCard.style.display = 'none';
         });
 
         menu.appendChild(optBtn);
@@ -214,11 +219,16 @@ export async function attachTaskButtons(item, row, listContainer) {
         menu.style.left = `${rect.left + window.scrollX}px`;
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     });
+
     document.addEventListener('click', e => {
         if (!menu.contains(e.target) && e.target !== clockBtn) {
             menu.style.display = 'none';
         }
     });
+
+    // append everything
+    buttonWrap.append(clockBtn);
+
 
     // — Delete button —
     const delBtn = makeIconBtn('❌', 'Delete task', async () => {
