@@ -46,6 +46,22 @@ export function createGoalRow(goal, options = {}) {
     checkbox.type = 'checkbox';
     checkbox.checked = !!goal.completed;
     checkbox.disabled = !!goal.completed;
+
+    // ← Added handler to mark complete and refresh
+    checkbox.onchange = async () => {
+        const items = await loadDecisions();
+        const idx = items.findIndex(d => d.id === goal.id);
+        if (idx === -1) return;
+
+        items[idx].completed = checkbox.checked;
+        items[idx].dateCompleted = checkbox.checked
+            ? new Date().toISOString()
+            : null;
+
+        await saveDecisions(items);
+        await renderGoalsAndSubitems();
+    };
+
     left.append(toggle, checkbox);
     row.appendChild(left);
 
@@ -103,6 +119,7 @@ export function createGoalRow(goal, options = {}) {
     row.appendChild(right);
     return row;
 }
+
 
 export async function renderGoalsAndSubitems() {
     clearDOM();

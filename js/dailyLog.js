@@ -83,7 +83,6 @@ export async function showDailyLogPrompt(currentUser, db) {
       ratingContainer.appendChild(label);
     }
   }
-
   modal.style.display = 'flex';
 
   submitBtn.onclick = async () => {
