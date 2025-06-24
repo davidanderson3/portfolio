@@ -9,6 +9,7 @@ import { initWizard } from './wizard.js';
 import { renderDailyTaskReport } from './report.js';
 import './stats.js';
 
+
 let currentUser = null;
 window.currentUser = null;
 

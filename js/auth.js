@@ -17,10 +17,8 @@ firebase.initializeApp(firebaseConfig);
 export const auth = firebase.auth();
 export const db = firebase.firestore();
 
-let currentUser = null;
-
 export function getCurrentUser() {
-  return currentUser;
+  return auth.currentUser;
 }
 
 export function initAuth({ loginBtn, logoutBtn, userEmail }, onLogin) {
