@@ -237,21 +237,28 @@ export async function renderDailyTasks(currentUser, db) {
       }
     }));
 
-    // Skip
-    btns.append(makeIconBtn('⏭️', 'Skip today', async () => {
+    // Skip until next local midnight
+    btns.append(makeIconBtn('⏭️', 'Skip until next day', async () => {
       try {
         const allDecs = await loadDecisions();
         const idx = allDecs.findIndex(t => t.id === task.id);
         if (idx === -1) return;
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        allDecs[idx].skipUntil = tomorrow.toISOString();
+        const now = new Date();
+        // Construct tomorrow at 00:00 local time
+        const tomorrowMidnight = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() + 1,
+          0, 0, 0, 0
+        );
+        allDecs[idx].skipUntil = tomorrowMidnight.toISOString();
         await saveDecisions(allDecs);
         wrapper.remove();
       } catch {
         alert('⚠️ Could not skip task.');
       }
     }));
+
 
     // Delete
     btns.append(makeIconBtn('❌', 'Delete', async () => {
