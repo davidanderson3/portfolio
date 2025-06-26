@@ -1,4 +1,4 @@
-// File: main.js
+// main.js
 
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
@@ -14,6 +14,7 @@ let currentUser = null;
 window.currentUser = null;
 
 window.addEventListener('DOMContentLoaded', () => {
+  // 1) UI references
   const uiRefs = {
     loginBtn: document.getElementById('loginBtn'),
     logoutBtn: document.getElementById('logoutBtn'),
@@ -26,44 +27,59 @@ window.addEventListener('DOMContentLoaded', () => {
     cancelBtn: document.getElementById('wizardCancelBtn')
   };
 
-  initAuth(uiRefs, (user) => {
+  // 2) Splash vs App containers
+  const splash = document.getElementById('splash');
+  const signupBtn = document.getElementById('signupBtn');
+  const goalsView = document.getElementById('goalsView');
+
+  // “Sign Up” just triggers the same auth
+  signupBtn.addEventListener('click', () => uiRefs.loginBtn.click());
+
+  // 3) Initialize auth (shows splash or app)
+  initAuth(uiRefs, async (user) => {
     currentUser = user;
     window.currentUser = user;
 
-    // Clear existing lists
+    if (!user) {
+      // signed out → show splash, hide app
+      splash.style.display = 'flex';
+      goalsView.style.display = 'none';
+      return;
+    }
+
+    // signed in → hide splash, show app
+    splash.style.display = 'none';
+    goalsView.style.display = '';
+
+    // clear out any old content
     ['goalList', 'completedList', 'dailyTasksList'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '';
     });
+    window.openGoalIds?.clear?.();
 
-    if (window.openGoalIds) window.openGoalIds.clear?.();
+    // wire up tabs and render default panels
+    initTabs(currentUser, db);
+    renderGoalsAndSubitems(currentUser, db);
 
-    if (user) {
-      // Initialize tabs now that we have currentUser & db
-      initTabs(currentUser, db);
-
-      // Render goals/calendar immediately
-      renderGoalsAndSubitems(currentUser, db);
-
-      // If you have a report section
-      if (document.getElementById('reportBody')) {
-        renderDailyTaskReport(currentUser, db);
-      }
-
-      // Backup decisions to localStorage
-      loadDecisions().then(data => {
-        const key = `backup-${new Date().toISOString().slice(0, 10)}`;
-        localStorage.setItem(key, JSON.stringify(data));
-        console.log('⚡ backup saved to localStorage');
-      });
+    if (document.getElementById('reportBody')) {
+      renderDailyTaskReport(currentUser, db);
     }
+
+    // backup decisions
+    const data = await loadDecisions();
+    localStorage.setItem(
+      `backup-${new Date().toISOString().slice(0, 10)}`,
+      JSON.stringify(data)
+    );
+    console.log('⚡ backup saved to localStorage');
   });
 
-  // Wizard UI initialization
+  // 4) Wizard initialization
   if (uiRefs.wizardContainer && uiRefs.wizardStep) {
     initWizard(uiRefs);
   }
 });
 
-// Expose for debugging
+// for debugging
 window.loadDecisions = loadDecisions;

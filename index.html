@@ -11,6 +11,32 @@
 </head>
 
 <body>
+  <!-- Add this **before** your <section id="goalsView"> in index.html -->
+  <section id="splash" class="main-layout" style="
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  ">
+    <h1>Welcome to Goal Oriented</h1>
+    <p style="max-width: 600px; text-align: center;">
+      Track your goals, daily tasks, and metrics—all in one place.
+      Sign up or sign in to get started.
+    </p>
+    <button id="signupBtn" style="
+      padding: 12px 24px;
+      font-size: 1.1em;
+      border-radius: 6px;
+      background-color: #7aa68c;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 20px;
+    ">
+      Sign Up
+    </button>
+  </section>
 
   <!-- GOALS VIEW (with its own navbar, tabs, and content) -->
   <section id="goalsView">
