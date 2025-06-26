@@ -48,8 +48,9 @@ export function createGoalRow(goal, options = {}) {
     checkbox.checked = !!goal.completed;
     checkbox.disabled = !!goal.completed;
 
-    // ← add this handler:
+
     checkbox.onchange = async () => {
+        // 1) Update DB
         const items = await loadDecisions();
         const idx = items.findIndex(d => d.id === goal.id);
         if (idx === -1) return;
@@ -58,10 +59,23 @@ export function createGoalRow(goal, options = {}) {
         items[idx].dateCompleted = checkbox.checked
             ? new Date().toISOString()
             : null;
-
         await saveDecisions(items);
-        await renderGoalsAndSubitems();
+
+        // 2) Move the row in the DOM
+        const wrapper = row.closest('.decision.goal-card') || row;
+        if (checkbox.checked) {
+            // disable further toggles
+            checkbox.disabled = true;
+            // append to completedList
+            completedList.appendChild(wrapper);
+        } else {
+            // re-enable if needed
+            checkbox.disabled = false;
+            // insert back into goalList
+            goalList.appendChild(wrapper);
+        }
     };
+
 
     left.append(toggle, checkbox);
     row.appendChild(left);
