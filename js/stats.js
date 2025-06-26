@@ -13,9 +13,6 @@ function todayKey() {
   return `${year}-${month}-${day}`;
 }
 
-
-// File: src/stats.js
-
 async function ensureMoodConfig() {
   const user = getCurrentUser();
   if (!user) return [];
@@ -47,8 +44,6 @@ async function ensureMoodConfig() {
   updated.forEach(applyUnitLabels);
   return updated;
 }
-
-
 
 /** FIRESTORE LOADERS & SAVERS **/
 async function loadMetricsConfig() {
@@ -124,10 +119,6 @@ async function recordMetric(metricId, value, extra = null) {
   }, { merge: true });
 }
 
-
-// … rest of your code …
-
-
 async function loadAllStats() {
   const user = auth.currentUser;
   if (!user) return {};
@@ -139,7 +130,6 @@ async function loadAllStats() {
   snaps.forEach(doc => out[doc.id] = doc.data().metrics || {});
   return out;
 }
-
 
 /** PERCENTILE & SUMMARY RENDER **/
 function computePercentile(val, allValues) {
@@ -158,8 +148,6 @@ function applyUnitLabels(cfg) {
     count: 'count'
   }[cfg.unit] || cfg.unit;
 }
-
-// File: src/stats.js
 
 async function renderStatsSummary() {
   try {
@@ -449,8 +437,6 @@ async function renderStatsSummary() {
   }
 }
 
-// File: src/stats.js
-
 async function renderConfigForm() {
   // 1) Load the user’s saved metrics, then re-seed defaults (mood + count)
   let config = await loadMetricsConfig();
@@ -531,11 +517,10 @@ async function renderConfigForm() {
   });
 }
 
-
-async function initMetricsUI() {
+export async function initMetricsUI() {
   await ensureMoodConfig();
-  await renderStatsSummary();   // ← stats table first
-  await renderConfigForm();     // ← then “Add New Metric”
+  await renderStatsSummary();
+  await renderConfigForm();
 }
 
 auth.onAuthStateChanged(user => {
@@ -546,9 +531,6 @@ auth.onAuthStateChanged(user => {
     initMetricsUI();
   }
 });
-
-
-
 
 auth.onAuthStateChanged(user => {
   if (!user) return;
