@@ -11,69 +11,102 @@
 </head>
 
 <body>
-  <div class="navbar">
-    <div class="navbar-left">Goal Oriented</div>
-    <div class="navbar-right">
-      <span id="userEmail" class="user-email"></span>
-      <button type="button" id="loginBtn">Sign In</button>
-      <button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
-    </div>
-  </div>
-
-  <div id="appContainer">
-    <div id="dailyLogModal" class="modal" style="display:none;">
-      <div class="modal-content">
-        <h3>How are you doing today?</h3>
-        <p>Rate from 1 (worst) to 10 (best):</p>
-        <div id="dailyLogRating" class="rating-options">
-          <!-- Radio buttons will be inserted here -->
-        </div>
-        <textarea id="dailyLogText" placeholder="What would make it better?" rows="3"></textarea>
-        <div class="modal-actions">
-          <button id="dailyLogSubmit">Submit</button>
-        </div>
+  <!-- DAILY LOG MODAL (global) -->
+  <div id="dailyLogModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>How are you doing today?</h3>
+      <p>Rate from 1 (worst) to 10 (best):</p>
+      <div id="dailyLogRating" class="rating-options"></div>
+      <textarea id="dailyLogText" placeholder="What would make it better?" rows="3"></textarea>
+      <div class="modal-actions">
+        <button id="dailyLogSubmit">Submit</button>
       </div>
     </div>
   </div>
 
-  <section class="main-layout">
-    <div class="goals-column">
-      <h2>Goals</h2>
-      <div class="wizard-panel">
-        <button id="addGoalBtn">+ Add Goal</button>
-        <div id="goalWizard" style="display: none;">
-          <div id="wizardStep"></div>
-          <div class="button-row">
-            <button type="button" id="wizardBackBtn" style="display: none;">Back</button>
-            <button type="button" id="wizardCancelBtn">Cancel</button>
-            <button type="button" id="wizardNextBtn">Next</button>
+  <!-- GOALS VIEW (with its own navbar, tabs, and content) -->
+  <section id="goalsView">
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <div class="container navbar-inner">
+        <div class="navbar-left">Goal Oriented</div>
+        <div class="navbar-right">
+          <span id="userEmail" class="user-email"></span>
+          <button type="button" id="loginBtn">Sign In</button>
+          <button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- TABS BAR -->
+    <div class="tabs">
+      <div class="container">
+        <button class="tab-button active" data-target="goalsPanel">Goals</button>
+        <button class="tab-button" data-target="calendarPanel">Calendar</button>
+      </div>
+    </div>
+
+    <!-- TABS CONTENT PANELS -->
+    <div id="goalsPanel" class="main-layout">
+      <div class="goals-column">
+        <h2>Goals</h2>
+
+        <div class="wizard-panel">
+          <button id="addGoalBtn">+ Add Goal</button>
+          <div id="goalWizard" style="display: none;">
+            <div id="wizardStep"></div>
+            <div class="button-row">
+              <button type="button" id="wizardBackBtn" style="display: none;">Back</button>
+              <button type="button" id="wizardCancelBtn">Cancel</button>
+              <button type="button" id="wizardNextBtn">Next</button>
+            </div>
           </div>
         </div>
+
+        <div id="goalList" class="decision-container"></div>
+
+        <hr style="margin: 40px 0;" />
+
+        <section id="statsSection">
+          <h2>Metrics Dashboard</h2>
+          <div id="genericStatsSummary"></div>
+          <div id="metricsConfigSection"></div>
+        </section>
+
+        <hr style="margin: 40px 0;" />
+
+        <div id="completedList" class="decision-container"></div>
       </div>
-      <div id="goalList" class="decision-container"></div>
 
-      <hr style="margin: 40px 0;" />
-
-<section id="statsSection">
-  <h2>Metrics Dashboard</h2>
-  <div id="genericStatsSummary"></div>
-  <div id="metricsConfigSection"></div>
-  
-</section>
-
-
-      <hr style="margin: 40px 0;" />
-
-      <div id="completedList" class="decision-container"></div>
+      <div class="right-column">
+        <h2>Daily Tasks</h2>
+        <div id="dailyTasksList" class="decision-container"></div>
+      </div>
     </div>
 
-    <div class="right-column">
-      <h2>Daily Tasks</h2>
-      <div id="dailyTasksList" class="decision-container"></div>
+    <div id="calendarPanel" class="main-layout" style="display:none;">
+      <h2>Calendar</h2>
+      <div id="calendarContent"></div>
     </div>
   </section>
 
   <script type="module" src="js/main.js"></script>
+  <script>
+    // Tab Switching Logic
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // toggle buttons
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // show/hide panels
+        const target = btn.getAttribute('data-target');
+        ['goalsPanel', 'calendarPanel'].forEach(id => {
+          document.getElementById(id).style.display = (id === target) ? 'flex' : 'none';
+        });
+      });
+    });
+  </script>
 </body>
 
 </html>

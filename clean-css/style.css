@@ -25,11 +25,12 @@ body {
   justify-content: center;
   gap: 32px;
   max-width: 1440px;
-  margin: 1px auto;
+  margin: 40px auto;
   padding: 0 20px;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(2px);
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgba(150, 150, 150, 0.05);
 }
 
@@ -47,33 +48,24 @@ body {
    Navbar
 ------------------------------ */
 .navbar {
-  background: linear-gradient(to right, #d7e8d0, #e3d4c9);
+  background: linear-gradient(to right, #d7e8d0, #c9e3dd);
   color: #2f3e40;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 5px 24px;
+  padding: 14px 24px;
+  font-size: 1.8em;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   background-blend-mode: overlay;
 }
 
-.navbar-inner {
-  width: 90%;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .navbar-left {
   font-weight: bold;
-  font-size: 1.8em;
 }
 
 .navbar-right button {
   margin-left: 10px;
-  background-color: rgba(25x5, 255, 255, 0.85);
+  background-color: rgba(255, 255, 255, 0.85);
   color: #3c5c50;
   border: 1px solid #a4cbb5;
   padding: 6px 12px;
@@ -89,11 +81,13 @@ body {
   border-color: #8bb89f;
 }
 
+
+
 /* ------------------------------
    Content Containers
 ------------------------------ */
 #appContainer {
-
+  padding: 24px;
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -347,6 +341,7 @@ button:hover {
 @media (max-width: 768px) {
   .main-layout {
     flex-direction: column;
+    padding: 0 12px;
   }
 
   .goals-column,
@@ -583,79 +578,36 @@ button:hover {
   border: 2px dashed #aaa;
 }
 
-/* ------------------------------
-   Global Container Wrapper
-   — used by navbar, tabs, main-layout, etc.
------------------------------- */
-.container {}
-
-/* ------------------------------
-   Navbar
------------------------------- */
-.navbar {
-  background: linear-gradient(to right, #d7e8d0, #c9e3dd);
-  color: #2f3e40;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  background-blend-mode: overlay;
-}
-
-/* move the flex and padding into the inner container */
-.navbar-inner {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 0;
-  /* vertical padding only (horizontal comes from .container) */
-}
-
-.navbar-left {
-  font-weight: bold;
-  font-size: 1.8em;
-}
-
-.navbar-right button {
-  margin-left: 10px;
-  background-color: rgba(255, 255, 255, 0.85);
-  color: #3c5c50;
-  border: 1px solid #a4cbb5;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-/* ------------------------------
-   Tabs
------------------------------- */
+/* ————————————————————————————————————————————————————————————
+   Tabs bar
+———————————————————————————————————————————————————————————— */
 .tabs {
-  margin-top: 20px;
-  /* if you want your tabs in the same container width: */
-  width: 100%;
   display: flex;
-  justify-content: flex-start;
-  /* push tabs to left */
+  border-bottom: 2px solid #ddd;
+  background-color: #fafafa;
+  overflow-x: auto;
 }
 
-/* example tab items */
-.tabs button {
-  margin-right: 10px;
-  padding: 8px 16px;
-  background: #eef;
+.tab-button {
+  flex: 1;
+  padding: 12px 16px;
+  background: none;
   border: none;
-  border-radius: 4px;
+  border-bottom: 3px solid transparent;
+  font-size: 1rem;
   cursor: pointer;
+  transition: border-color 0.2s;
 }
 
-/* ------------------------------
-   Main Layout
------------------------------- */
-.main-layout {
-  width: 100%;
-  display: block;
+.tab-button.active {
+  border-bottom-color: #007bff;
+  font-weight: bold;
 }
 
+.tab-button:focus {
+  outline: none;
+  background-color: #f0f0f0;
+}
 
 /* ————————————————————————————————————————————————————————————
    Your existing global styles
@@ -668,6 +620,31 @@ body {
   color: #333;
 }
 
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+}
+
+.navbar-left {
+  font-size: 1.25rem;
+}
+
+.navbar-right .user-email {
+  margin-right: 10px;
+}
+
+.navbar-right button {
+  margin-left: 5px;
+  padding: 6px 12px;
+  background-color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
 .main-layout {
   display: flex;
@@ -695,118 +672,4 @@ body {
     font-size: 0.9rem;
     padding: 10px;
   }
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   1) Container inside goalsView
-───────────────────────────────────────────────────────────────────────────── */
-#goalsView {
-  /* make it a flex-column so navbar → tabs → content stack */
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  margin: 30px auto;
-  /* give some breathing room vertically */
-  max-width: 1200px;
-  /* match your global container */
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0 20px;
-  /* horizontal gutter */
-}
-
-/* if you want an inner wrapper like .container */
-#goalsView .container {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  /* match your page-width */
-  margin: 0 auto;
-  /* center on page */
-  padding: 0 20px;
-  /* gutter */
-  display: flex;
-  align-items: center;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   2) Navbar tweaks for contrast & spacing
-───────────────────────────────────────────────────────────────────────────── */
-#goalsView .navbar {
-  background: linear-gradient(to right, #8bb89f, #483823);
-  color: #ffffff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  background-blend-mode: normal;
-  border-radius: 8px 8px 0 0;
-  /* round the top corners when sitting in goalsView */
-  overflow: hidden;
-}
-
-#goalsView .navbar-inner {
-  /* sits inside your .container wrapper */
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* buttons & text in navbar */
-#goalsView .navbar-left,
-#goalsView .navbar-right button {
-  color: #fff;
-}
-
-/* make the right-side buttons darker */
-#goalsView .navbar-right button {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
-}
-
-#goalsView .navbar-right button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   3) Tabs pulled left & higher contrast
-───────────────────────────────────────────────────────────────────────────── */
-#goalsView .tabs {
-  margin: 0;
-  /* remove top margins inherited elsewhere */
-  padding: 8px 0;
-  display: flex;
-  justify-content: flex-start;
-  background-color: #f0f5f2;
-  /* subtle contrast under the navbar */
-  border-bottom: 1px solid #d0e0d4;
-}
-
-#goalsView .tabs button {
-  margin-right: 12px;
-  padding: 8px 16px;
-  background: #7aa68c;
-  color: #fff;
-  border-radius: 4px 4px 0 0;
-  border: 1px solid #638b76;
-}
-
-#goalsView .tabs button.active,
-#goalsView .tabs button:hover {
-  background: #638b76;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
-   4) Main content panel under tabs
-───────────────────────────────────────────────────────────────────────────── */
-#goalsView .goals-column,
-#goalsView .right-column {
-  background: rgba(255, 255, 255, 0.85);
-  padding: 20px;
-  border: 1px solid #d0decf;
-  border-top: none;
-  /* so it visually connects under the tabs */
-  border-radius: 0 0 8px 8px;
-  /* round the bottom corners */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
