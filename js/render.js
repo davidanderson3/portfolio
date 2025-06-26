@@ -418,9 +418,14 @@ function attachEditButtons(item, buttonWrap) {
             { label: '4 hours', value: 4 },
             { label: '8 hours', value: 8 },
             { label: '1 day', value: 24 },
+            { label: '2 days', value: 48 },
+            { label: '3 days', value: 72 },
             { label: '4 days', value: 96 },
             { label: '1 week', value: 168 },
-            { label: '1 month', value: 720 }
+            { label: '2 weeks', value: 336 },
+            { label: '1 month', value: 720 },
+            { label: '2 months', value: 1440 },
+            { label: '3 months', value: 2160 }
         ];
 
         options.forEach(opt => {
