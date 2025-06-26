@@ -129,6 +129,7 @@ export async function renderGoalsAndSubitems() {
     const calendarContent = initCalendarSection();
     initCompletedSection();
 
+    // render into the existing #calendarContent panel
     renderCalendarSection(allDecisions, calendarContent);
     await renderRemainingGoals(allDecisions, sortedGoals, hiddenContent);
 }
@@ -191,24 +192,17 @@ function initHiddenSection() {
     return hiddenSection.querySelector('#hiddenContent');
 }
 
+// initCalendarSection.js
 function initCalendarSection() {
-    let calendarSection = document.getElementById('calendarSection');
-    if (!calendarSection) {
-        calendarSection = document.createElement('div');
-        calendarSection.id = 'calendarSection';
-        calendarSection.innerHTML = `
-      <h2>Calendar</h2>
-      <div id="calendarContent"></div>
-      <hr style="margin: 40px 0;" />
-    `;
-        const metricsContainer = document.getElementById('statsSection');
-        const insertBeforeEl = metricsContainer || document.getElementById('hiddenList');
-        insertBeforeEl.parentNode.insertBefore(calendarSection, insertBeforeEl);
+    // grab the static panel in your HTML:
+    const calendarContent = document.getElementById('calendarContent');
+    if (!calendarContent) {
+        throw new Error('No #calendarContent found in DOM');
     }
-    const calendarContent = calendarSection.querySelector('#calendarContent');
-    calendarContent.innerHTML = '';
+    calendarContent.innerHTML = '';   // clear prior render
     return calendarContent;
 }
+
 
 function initCompletedSection() {
     if (document.getElementById('completedSection')) return;
@@ -238,6 +232,7 @@ function initCompletedSection() {
     goalList.parentNode.appendChild(completedSection);
 }
 
+// renderCalendarSection.js
 function renderCalendarSection(all, calendarContent) {
     const scheduled = all
         .filter(g => g.scheduled && !isNaN(Date.parse(g.scheduled)))
@@ -276,6 +271,7 @@ function renderCalendarSection(all, calendarContent) {
             });
         });
 }
+
 
 async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
     hiddenContent.innerHTML = '';

@@ -626,27 +626,6 @@ button:hover {
   transition: all 0.2s;
 }
 
-/* ------------------------------
-   Tabs
------------------------------- */
-.tabs {
-  margin-top: 20px;
-  /* if you want your tabs in the same container width: */
-  width: 100%;
-  display: flex;
-  justify-content: flex-start;
-  /* push tabs to left */
-}
-
-/* example tab items */
-.tabs button {
-  margin-right: 10px;
-  padding: 8px 16px;
-  background: #eef;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
 
 /* ------------------------------
    Main Layout
@@ -796,6 +775,11 @@ body {
   background: #638b76;
 }
 
+#goalsView .tabs .container {
+  justify-content: flex-start !important;
+}
+
+
 /* ─────────────────────────────────────────────────────────────────────────────
    4) Main content panel under tabs
 ───────────────────────────────────────────────────────────────────────────── */
@@ -809,4 +793,9 @@ body {
   border-radius: 0 0 8px 8px;
   /* round the bottom corners */
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+h2 {
+  margin: 0.5em 0;
+  /* 0.5em top & bottom, 0 left & right */
 }
