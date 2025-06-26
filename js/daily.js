@@ -1,8 +1,17 @@
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 
 export async function renderDailyTasks(currentUser, db) {
-  const container = document.getElementById('dailyTasksList');
-  if (!container || !currentUser) return;
+  const panel = document.getElementById('dailyPanel');
+  if (!panel || !currentUser) return;
+
+  // — ensure our container exists
+  let container = panel.querySelector('#dailyTasksList');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'dailyTasksList';
+    container.className = 'decision-container';
+    panel.appendChild(container);
+  }
 
   // — Inject CSS once to remove green focus/active backgrounds on buttons
   if (!document.getElementById('dailyTasks-btn-reset-css')) {
@@ -104,13 +113,10 @@ export async function renderDailyTasks(currentUser, db) {
   for (const t of activeList) container.appendChild(makeTaskElement(t));
   for (const t of doneList) container.appendChild(makeTaskElement(t));
 
-
   // ——— Helpers —————————————————————————
 
-  // Handle both check and uncheck: update style & reinsert immediately
   async function onToggleTaskCompletion(task, cb, wrapper) {
     try {
-      // 1) Update in-memory map & doneSet
       completionMap[todayKey] = completionMap[todayKey] || [];
       if (cb.checked) {
         completionMap[todayKey].push(task.id);
@@ -119,11 +125,7 @@ export async function renderDailyTasks(currentUser, db) {
         completionMap[todayKey] = completionMap[todayKey].filter(id => id !== task.id);
         doneSet.delete(task.id);
       }
-
-      // 2) Persist
       await db.collection('taskCompletions').doc(currentUser.uid).set(completionMap);
-
-      // 3) Update styling
       const rowEl = wrapper.querySelector('.daily-task');
       const labelEl = rowEl.children[1];
       rowEl.style.opacity = cb.checked ? '0.6' : '1';
@@ -134,8 +136,6 @@ export async function renderDailyTasks(currentUser, db) {
         labelEl.style.textDecoration = '';
         labelEl.style.color = '';
       }
-
-      // 4) Reposition
       if (cb.checked) {
         container.appendChild(wrapper);
       } else {
@@ -152,7 +152,6 @@ export async function renderDailyTasks(currentUser, db) {
     }
   }
 
-  // Build the DOM for a single task
   function makeTaskElement(task) {
     const isDone = doneSet.has(task.id);
     const wrapper = document.createElement('div');
@@ -184,7 +183,6 @@ export async function renderDailyTasks(currentUser, db) {
       opacity: isDone ? '0.6' : '1'
     });
 
-    // Checkbox
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.checked = isDone;
@@ -192,7 +190,6 @@ export async function renderDailyTasks(currentUser, db) {
       onToggleTaskCompletion(task, cb, wrapper)
     );
 
-    // Label
     const label = document.createElement('div');
     label.textContent = task.text.replace(/^\[Daily\]\s*/, '');
     if (isDone) {
@@ -204,12 +201,10 @@ export async function renderDailyTasks(currentUser, db) {
       textOverflow: 'ellipsis'
     });
 
-    // Buttons container
     const btns = document.createElement('div');
     btns.style.display = 'flex';
     btns.style.gap = '8px';
 
-    // Move Up
     btns.append(makeIconBtn('⬆️', 'Move up', async () => {
       const prev = wrapper.previousElementSibling;
       if (prev && prev.classList.contains('daily-task-wrapper')) {
@@ -219,7 +214,6 @@ export async function renderDailyTasks(currentUser, db) {
       }
     }));
 
-    // Edit
     btns.append(makeIconBtn('✏️', 'Edit', async () => {
       const original = task.text.replace(/^\[Daily\]\s*/, '');
       const edited = prompt('Edit task:', original);
@@ -237,21 +231,14 @@ export async function renderDailyTasks(currentUser, db) {
       }
     }));
 
-    // Skip until next local midnight
     btns.append(makeIconBtn('⏭️', 'Skip until next day', async () => {
       try {
         const allDecs = await loadDecisions();
         const idx = allDecs.findIndex(t => t.id === task.id);
         if (idx === -1) return;
         const now = new Date();
-        // Construct tomorrow at 00:00 local time
-        const tomorrowMidnight = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate() + 1,
-          0, 0, 0, 0
-        );
-        allDecs[idx].skipUntil = tomorrowMidnight.toISOString();
+        const tm = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        allDecs[idx].skipUntil = tm.toISOString();
         await saveDecisions(allDecs);
         wrapper.remove();
       } catch {
@@ -259,8 +246,6 @@ export async function renderDailyTasks(currentUser, db) {
       }
     }));
 
-
-    // Delete
     btns.append(makeIconBtn('❌', 'Delete', async () => {
       if (!confirm('Delete this task?')) return;
       try {
@@ -277,7 +262,6 @@ export async function renderDailyTasks(currentUser, db) {
     return wrapper;
   }
 
-  // Create an icon-style button
   function makeIconBtn(symbol, title, fn) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -294,14 +278,11 @@ export async function renderDailyTasks(currentUser, db) {
     return b;
   }
 
-  // Persist drag-and-drop order
   async function persistReorder() {
     const wrappers = Array.from(container.querySelectorAll('.daily-task-wrapper')).slice(1);
     const ids = wrappers.map(w => w.dataset.taskId);
     const others = all.filter(t => !ids.includes(t.id));
-    const reordered = ids
-      .map(id => all.find(t => t.id === id))
-      .filter(Boolean);
+    const reordered = ids.map(id => all.find(t => t.id === id)).filter(Boolean);
     await saveDecisions([...others, ...reordered]);
   }
 }

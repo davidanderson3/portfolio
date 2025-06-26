@@ -1,4 +1,4 @@
-// File: index.js (or whatever your main file is named)
+// File: main.js
 
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
@@ -8,7 +8,7 @@ import { db } from './auth.js';
 import { initWizard } from './wizard.js';
 import { renderDailyTaskReport } from './report.js';
 import './stats.js';
-
+import { initTabs } from './tabs.js';
 
 let currentUser = null;
 window.currentUser = null;
@@ -30,47 +30,40 @@ window.addEventListener('DOMContentLoaded', () => {
     currentUser = user;
     window.currentUser = user;
 
-    const goalList = document.getElementById('goalList');
-    if (goalList) goalList.innerHTML = '';
-
-    const completedList = document.getElementById('completedList');
-    if (completedList) completedList.innerHTML = '';
-
-    const dailyList = document.getElementById('dailyTasksList');
-    if (dailyList) dailyList.innerHTML = '';
+    // Clear existing lists
+    ['goalList', 'completedList', 'dailyTasksList'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '';
+    });
 
     if (window.openGoalIds) window.openGoalIds.clear?.();
 
     if (user) {
-      if (dailyList) {
-        renderDailyTasks(user, db).then(() => {
-          if (goalList || completedList) {
-            renderGoalsAndSubitems(user, db);
-          }
+      // Initialize tabs now that we have currentUser & db
+      initTabs(currentUser, db);
 
-          if (document.getElementById('reportBody')) {
-            renderDailyTaskReport(user, db);
-          }
-        });
-      } else {
-        if (document.getElementById('reportBody')) {
-          renderDailyTaskReport(user, db);
-        }
+      // Render goals/calendar immediately
+      renderGoalsAndSubitems(currentUser, db);
+
+      // If you have a report section
+      if (document.getElementById('reportBody')) {
+        renderDailyTaskReport(currentUser, db);
       }
 
+      // Backup decisions to localStorage
       loadDecisions().then(data => {
-        localStorage.setItem(
-          `backup-${new Date().toISOString().slice(0, 10)}`,
-          JSON.stringify(data)
-        );
+        const key = `backup-${new Date().toISOString().slice(0, 10)}`;
+        localStorage.setItem(key, JSON.stringify(data));
         console.log('⚡ backup saved to localStorage');
       });
     }
   });
 
+  // Wizard UI initialization
   if (uiRefs.wizardContainer && uiRefs.wizardStep) {
     initWizard(uiRefs);
   }
 });
 
+// Expose for debugging
 window.loadDecisions = loadDecisions;
