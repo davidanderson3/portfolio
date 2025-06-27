@@ -1,4 +1,4 @@
-// File: main.js
+// File: js/main.js
 
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
@@ -9,6 +9,9 @@ import { initWizard } from './wizard.js';
 import { renderDailyTaskReport } from './report.js';
 import './stats.js';
 import { initTabs } from './tabs.js';
+
+// ← Import the new button-styles initializer:
+import { initButtonStyles } from './buttonStyles.js';
 
 let currentUser = null;
 window.currentUser = null;
@@ -30,39 +33,32 @@ window.addEventListener('DOMContentLoaded', () => {
     currentUser = user;
     window.currentUser = user;
 
-    // Clear existing lists
     ['goalList', 'completedList', 'dailyTasksList'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '';
     });
-
-    if (window.openGoalIds) window.openGoalIds.clear?.();
+    window.openGoalIds?.clear();
 
     if (user) {
-      // Initialize tabs now that we have currentUser & db
       initTabs(currentUser, db);
-
-      // Render goals/calendar immediately
       renderGoalsAndSubitems(currentUser, db);
-
-      // If you have a report section
       if (document.getElementById('reportBody')) {
         renderDailyTaskReport(currentUser, db);
       }
-
-      // Backup decisions to localStorage
       loadDecisions().then(data => {
-        const key = `backup-${new Date().toISOString().slice(0, 10)}`;
+        const key = `backup-${new Date().toISOString().slice(0,10)}`;
         localStorage.setItem(key, JSON.stringify(data));
         console.log('⚡ backup saved to localStorage');
       });
     }
   });
 
-  // Wizard UI initialization
   if (uiRefs.wizardContainer && uiRefs.wizardStep) {
     initWizard(uiRefs);
   }
+
+  // ← Finally, kick off the button styling:
+  initButtonStyles();
 });
 
 // Expose for debugging

@@ -33,7 +33,7 @@ body {
   box-shadow: 0 4px 12px rgba(150, 150, 150, 0.05);
 }
 
-.goals-column {
+.left-column {
   width: 60%;
   max-width: 1080px;
 }
@@ -349,7 +349,7 @@ button:hover {
     flex-direction: column;
   }
 
-  .goals-column,
+  .left-column,
   .right-column {
     width: 100% !important;
     max-width: 100% !important;
@@ -654,7 +654,7 @@ body {
   padding: 20px;
 }
 
-.goals-column {
+.left-column {
   flex: 1 1 300px;
   padding: 10px;
 }
@@ -783,8 +783,9 @@ body {
 /* ─────────────────────────────────────────────────────────────────────────────
    4) Main content panel under tabs
 ───────────────────────────────────────────────────────────────────────────── */
-#goalsView .goals-column,
-#goalsView .right-column {
+#goalsView .left-column,
+#goalsView .right-column,
+#goalsView .full-column {
   background: rgba(255, 255, 255, 0.85);
   padding: 20px;
   border: 1px solid #d0decf;
@@ -798,4 +799,22 @@ body {
 h2 {
   margin: 0.5em 0;
   /* 0.5em top & bottom, 0 left & right */
+}
+
+/* base look */
+.postpone-option {
+  display: block;
+  width: 100%;
+  padding: 4px 12px;
+  border: none;
+  background: white;
+  color: #333;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* hover look */
+.postpone-option:hover {
+  background: #f0f0f0;
+  color: #333;
 }

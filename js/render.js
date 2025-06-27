@@ -442,6 +442,10 @@ function attachEditButtons(item, buttonWrap) {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.textContent = opt.label;
+            // mark as a postpone‐menu button so global styles skip it
+            btn.classList.add('postpone-option');
+
+            // base styling
             Object.assign(btn.style, {
                 display: 'block',
                 width: '100%',
@@ -452,15 +456,16 @@ function attachEditButtons(item, buttonWrap) {
                 textAlign: 'left',
                 cursor: 'pointer'
             });
-            btn.addEventListener('mouseenter', () => btn.style.background = '#f0f0f0');
-            btn.addEventListener('mouseleave', () => btn.style.background = 'white');
 
+            // click handler
             btn.addEventListener('click', async e => {
                 e.stopPropagation();
                 const all = await loadDecisions();
                 const idx = all.findIndex(d => d.id === item.id);
                 if (idx === -1) return;
-                all[idx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+                all[idx].hiddenUntil = new Date(
+                    Date.now() + opt.value * 3600 * 1000
+                ).toISOString();
                 await saveDecisions(all);
                 menu.style.display = 'none';
                 const wrapper = buttonWrap.closest('.decision.goal-card');
@@ -469,6 +474,7 @@ function attachEditButtons(item, buttonWrap) {
 
             menu.appendChild(btn);
         });
+
 
         clockBtn.addEventListener('click', e => {
             e.stopPropagation();
