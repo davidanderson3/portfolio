@@ -1,60 +1,63 @@
+import { loadLists, saveLists } from './helpers.js';
+import { auth } from './auth.js';
+
+/* 1️⃣  DOM ready: wait for Firebase auth before loading lists */
 window.addEventListener('DOMContentLoaded', () => {
   initTabs();
-  initListsPanel();
+  auth.onAuthStateChanged(() => {
+    initListsPanel();             // runs once auth is settled
+  });
 });
 
+/* 2️⃣  TABS HEADER (unchanged) */
 function initTabs() {
   const buttons = document.querySelectorAll('.tab-button');
-  const panels  = document.querySelectorAll('.main-layout');
+  const panels = document.querySelectorAll('.main-layout');
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
-      panels.forEach(p => p.style.display = 'none');
+      panels.forEach(p => (p.style.display = 'none'));
       const panel = document.getElementById(btn.dataset.target);
       if (panel) panel.style.display = 'flex';
     });
   });
 }
 
-function initListsPanel() {
+/* 3️⃣  LISTS PANEL – only the top section changes */
+async function initListsPanel() {
   const panel = document.getElementById('listsPanel');
   if (!panel) return;
 
+  /* 1️⃣  panel scaffolding */
   panel.innerHTML = '';
-  panel.style.display       = 'flex';
+  panel.style.display = 'flex';
   panel.style.flexDirection = 'column';
-  panel.style.width         = '100%';
-  panel.style.boxSizing     = 'border-box';
-  panel.style.padding       = '0 1rem';
+  panel.style.width = '100%';
+  panel.style.boxSizing = 'border-box';
+  panel.style.padding = '0 1rem';
 
-  const tabsContainer = document.createElement('div');
-  tabsContainer.id = 'listTabs';
-  tabsContainer.style.margin = '1rem 0';
-  panel.appendChild(tabsContainer);
+  const tabsContainer = Object.assign(document.createElement('div'), {
+    id: 'listTabs',
+    style: 'margin:1rem 0'
+  });
+  const addColumnBtnForList = Object.assign(document.createElement('button'), {
+    type: 'button',
+    id: 'addColumnToListBtn',
+    textContent: '+ Add Column',
+    style: 'align-self:flex-start;margin-bottom:1rem'
+  });
+  const listsContainer = Object.assign(document.createElement('div'), { id: 'listsContainer' });
+  const itemForm = Object.assign(document.createElement('div'), { id: 'itemForm', style: 'margin:1rem 0' });
 
-  const addColumnBtnForList = document.createElement('button');
-  addColumnBtnForList.type        = 'button';
-  addColumnBtnForList.id          = 'addColumnToListBtn';
-  addColumnBtnForList.textContent = '+ Add Column';
-  addColumnBtnForList.style.alignSelf   = 'flex-start';
-  addColumnBtnForList.style.marginBottom = '1rem';
-  panel.appendChild(addColumnBtnForList);
+  panel.append(tabsContainer, addColumnBtnForList, listsContainer, itemForm);
 
-  const listsContainer = document.createElement('div');
-  listsContainer.id = 'listsContainer';
-  panel.appendChild(listsContainer);
-
-  const itemForm = document.createElement('div');
-  itemForm.id = 'itemForm';
-  itemForm.style.margin = '1rem 0';
-  panel.appendChild(itemForm);
-
+  /* 2️⃣  create-list form (keeps your original markup) */
   const createForm = document.createElement('div');
   createForm.id = 'listForm';
   createForm.innerHTML = `
     <h3>Create New List</h3>
     <label for="listName">List Name:</label>
     <input type="text" id="listName" placeholder="My List" style="margin-left:.5rem">
-    <div id="columnsContainer" style="margin: .5rem 0"><label>Columns:</label></div>
+    <div id="columnsContainer" style="margin:.5rem 0"><label>Columns:</label></div>
     <button type="button" id="addColumnBtn">+ Column</button>
     <button type="button" id="createListBtn">Create List</button>
     <hr/>
@@ -62,32 +65,21 @@ function initListsPanel() {
   panel.appendChild(createForm);
 
   const columnsContainer = createForm.querySelector('#columnsContainer');
-  const addColumnBtn     = createForm.querySelector('#addColumnBtn');
-  const createListBtn    = createForm.querySelector('#createListBtn');
+  const addColumnBtn = createForm.querySelector('#addColumnBtn');
+  const createListBtn = createForm.querySelector('#createListBtn');
 
-  const STORAGE_KEY = 'myLists';
-  let listsArray = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]').map(l => ({
-    name: l.name,
-    columns: Array.isArray(l.columns)
-      ? l.columns.map(c =>
-          typeof c === 'string'
-            ? { name: c, type: 'text' }
-            : { name: c.name, type: c.type || 'text' }
-        )
-      : [],
-    items: Array.isArray(l.items) ? l.items : []
-  }));
-
-  function saveLists() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(listsArray));
-  }
+  /* 🔑 LOAD & PERSIST setup */
+  let listsArray = await loadLists();       // from Firestore or fallback
+  const persist = async () => {            // replaces old saveLists()
+    await saveLists(listsArray);
+  };
 
   function renderTabs() {
     tabsContainer.innerHTML = '';
     listsArray.forEach((list, idx) => {
       const btn = document.createElement('button');
-      btn.type        = 'button';
-      btn.className   = 'list-tab';
+      btn.type = 'button';
+      btn.className = 'list-tab';
       btn.textContent = list.name;
       btn.dataset.index = idx;
       btn.style.marginRight = '0.5rem';
@@ -106,15 +98,18 @@ function initListsPanel() {
     renderItemForm();
   }
 
-  addColumnBtnForList.addEventListener('click', () => {
-    const colName = prompt('Enter new column name:').trim();
+  addColumnBtnForList.addEventListener('click', async () => {
+    const colName = (prompt('Enter new column name:') || '').trim();
     if (!colName) return;
-    const colType = prompt('Enter column type (text, number, date, checkbox):', 'text')
+    const colType = (prompt('Enter column type (text, number, date, checkbox):', 'text') || '')
       .trim()
       .toLowerCase();
-    if (!['text', 'number', 'date', 'checkbox'].includes(colType)) {
+    // where you check colType
+    if (!['text', 'number', 'date', 'checkbox', 'link', 'list'].includes(colType)) {
       return alert('Invalid column type.');
     }
+
+
     const list = listsArray[selectedListIndex];
     if (list.columns.find(c => c.name === colName)) {
       return alert('Column already exists.');
@@ -123,19 +118,19 @@ function initListsPanel() {
     list.items.forEach(item => {
       item[colName] = colType === 'checkbox' ? false : '';
     });
-    saveLists();
+    await persist();
     renderSelectedList();
     renderItemForm();
   });
 
   function renderSelectedList() {
-    const list    = listsArray[selectedListIndex] || { columns: [], items: [] };
+    const list = listsArray[selectedListIndex] || { columns: [], items: [] };
     const columns = list.columns;
-    const items   = list.items;
+    const items = list.items;
 
     listsContainer.innerHTML = '';
     const table = document.createElement('table');
-    table.style.width         = '100%';
+    table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
 
     const thead = table.createTHead();
@@ -143,38 +138,59 @@ function initListsPanel() {
     columns.forEach((col, i) => {
       const th = document.createElement('th');
       th.textContent = col.name;
-      th.style.border  = '1px solid #ccc';
+      th.style.border = '1px solid #ccc';
       th.style.padding = '8px';
       th.style.position = 'relative';
-      th.addEventListener('dblclick', () => {
-        const oldName = col.name;
-        const newName = prompt('Rename column:', oldName);
-        if (!newName) return;
-        col.name = newName.trim();
-        items.forEach(item => {
-          item[newName] = item[oldName];
-          delete item[oldName];
-        });
-        saveLists();
-        renderSelectedList();
-        renderItemForm();
-      });
+
+th.addEventListener('dblclick', async () => {
+  const oldName = col.name;
+  // 1) rename
+  const newName = (prompt('Rename column:', oldName) || '').trim();
+  if (!newName) return;
+
+  // 2) change type
+  const newType = (prompt(
+    'Enter new column type (text, number, date, checkbox, link, list):',
+    col.type
+  ) || '').trim().toLowerCase();
+  if (!['text','number','date','checkbox','link','list'].includes(newType)) {
+    return alert('Invalid column type.');
+  }
+
+  // 3) migrate data
+  items.forEach(item => {
+    item[newName] = item[oldName];
+    delete item[oldName];
+  });
+
+  // 4) apply to schema
+  col.name = newName;
+  col.type = newType;
+
+  // 5) persist & rerender
+  await persist();
+  renderSelectedList();
+  renderItemForm();
+});
+
 
       const rm = document.createElement('button');
-      rm.textContent    = '❌';
-      rm.title          = 'Remove column';
-      rm.style.background = 'none';
-      rm.style.border     = 'none';
-      rm.style.cursor     = 'pointer';
-      rm.style.fontSize   = '1.2em';
-      rm.style.padding    = '0';
-      rm.style.marginLeft = '4px';
-      rm.addEventListener('click', e => {
+      rm.textContent = '❌';
+      rm.title = 'Remove column';
+      Object.assign(rm.style, {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '1.2em',
+        padding: '0',
+        marginLeft: '4px'
+      });
+      rm.addEventListener('click', async e => {
         e.stopPropagation();
         if (!confirm(`Delete column "${col.name}"?`)) return;
         list.columns.splice(i, 1);
         items.forEach(item => delete item[col.name]);
-        saveLists();
+        await persist();
         renderSelectedList();
         renderItemForm();
       });
@@ -183,7 +199,7 @@ function initListsPanel() {
     });
 
     const actTh = document.createElement('th');
-    actTh.textContent  = 'Actions';
+    actTh.textContent = 'Actions';
     actTh.style.border = '1px solid #ccc';
     actTh.style.padding = '8px';
     hdrRow.appendChild(actTh);
@@ -196,31 +212,41 @@ function initListsPanel() {
         cell.textContent = col.type === 'checkbox'
           ? (item[col.name] ? '✔️' : '')
           : (item[col.name] || '');
-        cell.style.border  = '1px solid #ccc';
+        cell.style.border = '1px solid #ccc';
         cell.style.padding = '8px';
         cell.addEventListener('dblclick', () => {
           let inp;
           if (col.type === 'checkbox') {
             inp = document.createElement('input');
-            inp.type    = 'checkbox';
+            inp.type = 'checkbox';
             inp.checked = !!item[col.name];
           } else {
             inp = document.createElement('input');
-            inp.type    = col.type;
-            inp.value   = item[col.name] || '';
+            inp.type = col.type;
+            inp.value = item[col.name] || '';
           }
           cell.innerHTML = '';
           cell.appendChild(inp);
           inp.focus();
-          inp.addEventListener('blur', () => {
+          inp.addEventListener('blur', async () => {
             if (col.type === 'checkbox') {
               item[col.name] = inp.checked;
               cell.textContent = inp.checked ? '✔️' : '';
+            } else if (col.type === 'link') {
+              const url = item[col.name] || '';
+              cell.innerHTML = url
+                ? `<a href="${url}" target="_blank">${url}</a>`
+                : '';
+            } else if (col.type === 'list') {
+              const raw = item[col.name] || '';
+              const lines = raw.split('\n').filter(l => l.trim());
+              cell.innerHTML = lines.length
+                ? '<ul>' + lines.map(l => `<li>${l}</li>`).join('') + '</ul>'
+                : '';
             } else {
-              item[col.name] = inp.value.trim();
-              cell.textContent = item[col.name];
+              cell.textContent = item[col.name] || '';
             }
-            saveLists();
+            await persist();
           });
           inp.addEventListener('keydown', e => {
             if (e.key === 'Enter') inp.blur();
@@ -229,19 +255,21 @@ function initListsPanel() {
       });
 
       const actionCell = row.insertCell();
-      actionCell.style.border  = '1px solid #ccc';
+      actionCell.style.border = '1px solid #ccc';
       actionCell.style.padding = '8px';
 
       const editBtn = document.createElement('button');
-      editBtn.textContent    = '✏️';
-      editBtn.title          = 'Edit row';
-      editBtn.style.background = 'none';
-      editBtn.style.border     = 'none';
-      editBtn.style.cursor     = 'pointer';
-      editBtn.style.fontSize   = '1.2em';
-      editBtn.style.padding    = '0';
-      editBtn.style.marginRight= '0.5rem';
-      editBtn.addEventListener('click', () => {
+      editBtn.textContent = '✏️';
+      editBtn.title = 'Edit row';
+      Object.assign(editBtn.style, {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '1.2em',
+        padding: '0',
+        marginRight: '0.5rem'
+      });
+      editBtn.addEventListener('click', async () => {
         columns.forEach(col => {
           if (col.type === 'checkbox') {
             item[col.name] = confirm(`Check "${col.name}"?`);
@@ -250,23 +278,25 @@ function initListsPanel() {
             if (val !== null) item[col.name] = val.trim();
           }
         });
-        saveLists();
+        await persist();
         renderSelectedList();
       });
       actionCell.appendChild(editBtn);
 
       const deleteBtn = document.createElement('button');
-      deleteBtn.textContent    = '❌';
-      deleteBtn.title          = 'Delete row';
-      deleteBtn.style.background = 'none';
-      deleteBtn.style.border     = 'none';
-      deleteBtn.style.cursor     = 'pointer';
-      deleteBtn.style.fontSize   = '1.2em';
-      deleteBtn.style.padding    = '0';
-      deleteBtn.addEventListener('click', () => {
+      deleteBtn.textContent = '❌';
+      deleteBtn.title = 'Delete row';
+      Object.assign(deleteBtn.style, {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '1.2em',
+        padding: '0'
+      });
+      deleteBtn.addEventListener('click', async () => {
         if (!confirm('Delete this row?')) return;
         listsArray[selectedListIndex].items.splice(idx, 1);
-        saveLists();
+        await persist();
         renderSelectedList();
       });
       actionCell.appendChild(deleteBtn);
@@ -284,8 +314,14 @@ function initListsPanel() {
     const inputs = columns.map(col => {
       const label = document.createElement('label');
       label.textContent = col.name;
-      const input = document.createElement('input');
-      input.type = col.type;
+let input;
+if (col.type === 'list') {
+  input = document.createElement('textarea');
+  input.rows = 3;
+} else {
+  input = document.createElement('input');
+  input.type = col.type === 'link' ? 'url' : col.type;
+}
       input.name = col.name;
       if (col.type === 'checkbox') input.checked = false;
       else input.value = '';
@@ -296,11 +332,10 @@ function initListsPanel() {
     });
 
     const addBtn = document.createElement('button');
-    addBtn.type        = 'button';
+    addBtn.type = 'button';
     addBtn.textContent = 'Add Item';
     addBtn.style.marginTop = '0.5rem';
-    // default styling (no background/border overrides)
-    addBtn.addEventListener('click', () => {
+    addBtn.addEventListener('click', async () => {
       const newItem = {};
       inputs.forEach(input => {
         newItem[input.name] =
@@ -309,7 +344,7 @@ function initListsPanel() {
         else input.value = '';
       });
       listsArray[selectedListIndex].items.push(newItem);
-      saveLists();
+      await persist();
       appendItemRow(newItem);
     });
     itemForm.appendChild(addBtn);
@@ -317,8 +352,8 @@ function initListsPanel() {
 
   function appendItemRow(item) {
     const tbl = listsContainer.querySelector('table');
-    const tb  = tbl.tBodies[0];
-    const cols= listsArray[selectedListIndex].columns;
+    const tb = tbl.tBodies[0];
+    const cols = listsArray[selectedListIndex].columns;
     const idx = listsArray[selectedListIndex].items.length - 1;
     const row = tb.insertRow();
 
@@ -326,23 +361,23 @@ function initListsPanel() {
       const cell = row.insertCell();
       cell.textContent =
         col.type === 'checkbox' ? (item[col.name] ? '✔️' : '') : item[col.name] || '';
-      cell.style.border  = '1px solid #ccc';
+      cell.style.border = '1px solid #ccc';
       cell.style.padding = '8px';
       cell.addEventListener('dblclick', () => {
         let inp;
         if (col.type === 'checkbox') {
           inp = document.createElement('input');
-          inp.type    = 'checkbox';
+          inp.type = 'checkbox';
           inp.checked = !!item[col.name];
         } else {
           inp = document.createElement('input');
-          inp.type    = col.type;
-          inp.value   = item[col.name] || '';
+          inp.type = col.type;
+          inp.value = item[col.name] || '';
         }
         cell.innerHTML = '';
         cell.appendChild(inp);
         inp.focus();
-        inp.addEventListener('blur', () => {
+        inp.addEventListener('blur', async () => {
           if (col.type === 'checkbox') {
             item[col.name] = inp.checked;
             cell.textContent = inp.checked ? '✔️' : '';
@@ -350,7 +385,7 @@ function initListsPanel() {
             item[col.name] = inp.value.trim();
             cell.textContent = item[col.name];
           }
-          saveLists();
+          await persist();
         });
         inp.addEventListener('keydown', e => {
           if (e.key === 'Enter') inp.blur();
@@ -359,19 +394,21 @@ function initListsPanel() {
     });
 
     const ac = row.insertCell();
-    ac.style.border  = '1px solid #ccc';
+    ac.style.border = '1px solid #ccc';
     ac.style.padding = '8px';
 
     const eb = document.createElement('button');
-    eb.textContent    = '✏️';
-    eb.title          = 'Edit row';
-    eb.style.background = 'none';
-    eb.style.border     = 'none';
-    eb.style.cursor     = 'pointer';
-    eb.style.fontSize   = '1.2em';
-    eb.style.padding    = '0';
-    eb.style.marginRight= '0.5rem';
-    eb.addEventListener('click', () => {
+    eb.textContent = '✏️';
+    eb.title = 'Edit row';
+    Object.assign(eb.style, {
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '1.2em',
+      padding: '0',
+      marginRight: '0.5rem'
+    });
+    eb.addEventListener('click', async () => {
       cols.forEach(col => {
         if (col.type === 'checkbox') {
           item[col.name] = confirm(`Check "${col.name}"?`);
@@ -380,26 +417,28 @@ function initListsPanel() {
           if (val !== null) item[col.name] = val.trim();
         }
       });
-      saveLists();
+      await persist();
       renderSelectedList();
     });
     ac.appendChild(eb);
 
-    const db = document.createElement('button');
-    db.textContent    = '❌';
-    db.title          = 'Delete row';
-    db.style.background = 'none';
-    db.style.border     = 'none';
-    db.style.cursor     = 'pointer';
-    db.style.fontSize   = '1.2em';
-    db.style.padding    = '0';
-    db.addEventListener('click', () => {
+    const dbBtn = document.createElement('button');
+    dbBtn.textContent = '❌';
+    dbBtn.title = 'Delete row';
+    Object.assign(dbBtn.style, {
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '1.2em',
+      padding: '0'
+    });
+    dbBtn.addEventListener('click', async () => {
       if (!confirm('Delete this row?')) return;
       listsArray[selectedListIndex].items.splice(idx, 1);
-      saveLists();
+      await persist();
       renderSelectedList();
     });
-    ac.appendChild(db);
+    ac.appendChild(dbBtn);
   }
 
   function addColumnInput() {
@@ -408,27 +447,30 @@ function initListsPanel() {
     row.style.margin = '0.25rem 0';
     row.innerHTML = `
       <input type="text" class="columnName" placeholder="Column Name" style="margin-right:.5rem">
-      <select class="columnType">
-        <option value="text">Text</option>
-        <option value="number">Number</option>
-        <option value="date">Date</option>
-        <option value="checkbox">Checkbox</option>
-      </select>
+    <select class="columnType">
+      <option value="text">Text</option>
+      <option value="number">Number</option>
+      <option value="date">Date</option>
+      <option value="checkbox">Checkbox</option>
+     <option value="list">List</option>
+    </select>
       <button type="button" class="removeColumnBtn">❌</button>
     `;
     const removeBtn = row.querySelector('.removeColumnBtn');
-    removeBtn.style.background = 'none';
-    removeBtn.style.border     = 'none';
-    removeBtn.style.cursor     = 'pointer';
-    removeBtn.style.fontSize   = '1.2em';
-    removeBtn.style.padding    = '0';
+    Object.assign(removeBtn.style, {
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '1.2em',
+      padding: '0'
+    });
     removeBtn.addEventListener('click', () => row.remove());
     columnsContainer.appendChild(row);
   }
 
   addColumnInput();
   addColumnBtn.addEventListener('click', addColumnInput);
-  createListBtn.addEventListener('click', () => {
+  createListBtn.addEventListener('click', async () => {
     const name = createForm.querySelector('#listName').value.trim();
     const rows = Array.from(columnsContainer.querySelectorAll('.column-row'));
     const cols = rows.map(r => {
@@ -441,7 +483,7 @@ function initListsPanel() {
     if (!cols.length) return alert('Add at least one column.');
 
     listsArray.push({ name, columns: cols, items: [] });
-    saveLists();
+    await persist();
     renderTabs();
     selectList(listsArray.length - 1);
 

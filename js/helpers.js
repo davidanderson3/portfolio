@@ -74,3 +74,45 @@ export function formatDaysUntil(dateStr) {
   if (diffDays > 0) return `in ${diffDays} day${diffDays === 1 ? '' : 's'}`;
   return `overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? '' : 's'}`;
 }
+
+/* lists support */
+const LISTS_KEY = 'myLists';
+
+export async function loadLists() {
+  const user = getCurrentUser?.();
+  if (!user) {
+    return JSON.parse(localStorage.getItem(LISTS_KEY) || '[]'); // anonymous → localStorage
+  }
+
+  const doc = await db.collection('lists').doc(user.uid).get();
+  if (doc.exists && Array.isArray(doc.data().lists)) {
+    return doc.data().lists;                                   // Firestore copy exists
+  }
+
+  // first-time sign-in: migrate legacy localStorage
+  const legacy = JSON.parse(localStorage.getItem(LISTS_KEY) || '[]');
+  if (legacy.length) {
+    await db.collection('lists').doc(user.uid).set({ lists: legacy });
+    localStorage.removeItem(LISTS_KEY);
+    return legacy;
+  }
+  return [];
+}
+
+/* overwrite the old saveLists with this safer version */
+export async function saveLists(lists) {
+  // strip out any undefined values that Firestore rejects
+  const sanitized = JSON.parse(JSON.stringify(lists ?? []));  // undefined → []
+
+  const user = getCurrentUser?.();
+  if (!user) {
+    localStorage.setItem(LISTS_KEY, JSON.stringify(sanitized));
+    return;
+  }
+  await db.collection('lists')
+          .doc(user.uid)
+          .set({ lists: sanitized }, { merge: true });
+}
+
+
+

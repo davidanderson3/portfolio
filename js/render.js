@@ -246,14 +246,18 @@ function initCompletedSection() {
     goalList.parentNode.appendChild(completedSection);
 }
 
-// renderCalendarSection.js
 function renderCalendarSection(all, calendarContent) {
     const scheduled = all
-        .filter(g => g.scheduled && !isNaN(Date.parse(g.scheduled)))
+        .filter(
+            g =>
+                g.scheduled &&                 // has a scheduled date
+                !g.completed &&                // NEW: ignore completed items
+                !isNaN(Date.parse(g.scheduled))
+        )
         .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
 
     const byDate = scheduled.reduce((groups, goal) => {
-        const key = goal.scheduled.slice(0, 10);
+        const key = goal.scheduled.slice(0, 10); // "YYYY-MM-DD"
         (groups[key] = groups[key] || []).push(goal);
         return groups;
     }, {});
@@ -262,20 +266,18 @@ function renderCalendarSection(all, calendarContent) {
         .sort()
         .forEach(dateKey => {
             const [y, m, d] = dateKey.split('-').map(Number);
-            const dateObj = new Date(y, m - 1, d);
-
-            const header = document.createElement('h3');
-            header.textContent = dateObj.toLocaleDateString();
+            const header    = document.createElement('h3');
+            header.textContent = new Date(y, m - 1, d).toLocaleDateString();
             calendarContent.appendChild(header);
 
             byDate[dateKey].forEach(goal => {
-                const wrapper = makeGoalWrapper(goal);
-                const row = createGoalRow(goal, { hideScheduled: true });
+                const wrapper           = makeGoalWrapper(goal);
+                const row               = createGoalRow(goal, { hideScheduled: true });
                 wrapper.appendChild(row);
                 renderGoalTags(goal, row);
 
                 const childrenContainer = document.createElement('div');
-                childrenContainer.className = 'goal-children';
+                childrenContainer.className   = 'goal-children';
                 childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
                 wrapper.appendChild(childrenContainer);
                 renderChildren(goal, all, childrenContainer);
@@ -285,6 +287,7 @@ function renderCalendarSection(all, calendarContent) {
             });
         });
 }
+
 
 
 async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
