@@ -148,12 +148,12 @@ export async function attachTaskButtons(item, row, listContainer) {
 /**
  * Render all tasks under a goal, including add-new and completed.
  */
-export function renderChildren(goal, all, container) {
+export async function renderChildren(goal, all, container) {
     container.innerHTML = '';
     const now = Date.now();
     const children = all.filter(item => item.parentGoalId === goal.id);
 
-    // Active
+    // Active tasks
     const active = children.filter(c => {
         const hideUntil = c.hiddenUntil ? Date.parse(c.hiddenUntil) || 0 : 0;
         return !c.completed && (!hideUntil || now >= hideUntil);
@@ -171,8 +171,22 @@ export function renderChildren(goal, all, container) {
 
         const row = createGoalRow(task, { hideArrow: true, hideScheduled: true });
         wrapper.appendChild(row);
-        taskList.appendChild(wrapper);
+        taskList.append(wrapper);
+
+        // Attach task buttons
         attachTaskButtons(task, row, taskList);
+
+        // Wire up the task checkbox to move it into completed section
+        const cb = row.querySelector('input[type="checkbox"]');
+        cb.addEventListener('change', async () => {
+            task.completed = cb.checked;
+            task.dateCompleted = cb.checked ? new Date().toISOString() : '';
+            const allDecisions = await loadDecisions();
+            const idx = allDecisions.findIndex(d => d.id === task.id);
+            if (idx !== -1) allDecisions[idx] = task;
+            await saveDecisions(allDecisions);
+            renderChildren(goal, allDecisions, container);
+        });
     });
 
     // New-task form
@@ -252,7 +266,16 @@ export function renderChildren(goal, all, container) {
             const cb = document.createElement('input');
             cb.type = 'checkbox';
             cb.checked = true;
-            cb.disabled = true;
+            // allow unchecking to move back to active
+            cb.addEventListener('change', async () => {
+                task.completed = cb.checked;
+                task.dateCompleted = cb.checked ? new Date().toISOString() : '';
+                const allDecisions = await loadDecisions();
+                const idx = allDecisions.findIndex(d => d.id === task.id);
+                if (idx !== -1) allDecisions[idx] = task;
+                await saveDecisions(allDecisions);
+                renderChildren(goal, allDecisions, container);
+            });
             left.appendChild(cb);
 
             const middle = document.createElement('div');
@@ -289,3 +312,4 @@ export function renderChildren(goal, all, container) {
         });
     }
 }
+

@@ -131,34 +131,31 @@ export function createGoalRow(goal, options = {}) {
     checkbox.checked = !!goal.completed;
     checkbox.disabled = !!goal.completed;
 
+    // only attach the onchange logic if this row is a goal
+    if (goal.type === 'goal') {
+        checkbox.onchange = async () => {
+            // 1) Update DB
+            const items = await loadDecisions();
+            const idx = items.findIndex(d => d.id === goal.id);
+            if (idx === -1) return;
 
-    checkbox.onchange = async () => {
-        // 1) Update DB
-        const items = await loadDecisions();
-        const idx = items.findIndex(d => d.id === goal.id);
-        if (idx === -1) return;
+            items[idx].completed = checkbox.checked;
+            items[idx].dateCompleted = checkbox.checked
+                ? new Date().toISOString()
+                : null;
+            await saveDecisions(items);
 
-        items[idx].completed = checkbox.checked;
-        items[idx].dateCompleted = checkbox.checked
-            ? new Date().toISOString()
-            : null;
-        await saveDecisions(items);
-
-        // 2) Move the row in the DOM
-        const wrapper = row.closest('.decision.goal-card') || row;
-        if (checkbox.checked) {
-            // disable further toggles
-            checkbox.disabled = true;
-            // append to completedList
-            completedList.appendChild(wrapper);
-        } else {
-            // re-enable if needed
-            checkbox.disabled = false;
-            // insert back into goalList
-            goalList.appendChild(wrapper);
-        }
-    };
-
+            // 2) Move the row in the DOM
+            const wrapper = row.closest('.decision.goal-card') || row;
+            if (checkbox.checked) {
+                checkbox.disabled = true;
+                completedList.appendChild(wrapper);
+            } else {
+                checkbox.disabled = false;
+                goalList.appendChild(wrapper);
+            }
+        };
+    }
 
     left.append(toggle, checkbox);
     row.appendChild(left);
@@ -174,32 +171,7 @@ export function createGoalRow(goal, options = {}) {
     right.className = 'right-group';
 
     if (goal.type === 'goal' && !options.hideScheduled) {
-        const schedWrap = document.createElement('div');
-        schedWrap.className = 'scheduled-column';
-        const schedInput = document.createElement('input');
-        schedInput.type = 'date';
-        schedInput.value = goal.scheduled || '';
-        schedInput.title = 'Scheduled';
-
-        schedInput.onchange = async () => {
-            const items = await loadDecisions();
-            const idx = items.findIndex(d => d.id === goal.id);
-            if (idx === -1) return;
-            items[idx].scheduled = schedInput.value || null;
-            await saveDecisions(items);
-
-            const card = schedInput.closest('.decision.goal-card');
-            if (card) card.remove();
-
-            const calendarContent = document.getElementById('calendarContent');
-            if (calendarContent) {
-                calendarContent.innerHTML = '';
-                renderCalendarSection(items, calendarContent);
-            }
-        };
-
-        schedWrap.appendChild(schedInput);
-        right.appendChild(schedWrap);
+        // … your scheduled-date code here …
     }
 
     const due = document.createElement('div');
@@ -217,6 +189,7 @@ export function createGoalRow(goal, options = {}) {
     row.appendChild(right);
     return row;
 }
+
 
 export async function renderGoalsAndSubitems() {
   clearDOM();

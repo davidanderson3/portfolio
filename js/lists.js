@@ -12,15 +12,32 @@ window.addEventListener('DOMContentLoaded', () => {
 /* 2️⃣  TABS HEADER (unchanged) */
 function initTabs() {
   const buttons = document.querySelectorAll('.tab-button');
-  const panels = document.querySelectorAll('.main-layout');
+  const panels  = document.querySelectorAll('.main-layout');
+
+  // wire up clicks
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
+      // hide everything
       panels.forEach(p => (p.style.display = 'none'));
-      const panel = document.getElementById(btn.dataset.target);
-      if (panel) panel.style.display = 'flex';
+      // show the one this button points to
+      const target = document.getElementById(btn.dataset.target);
+      if (target) target.style.display = 'flex';
+
+      // update active state
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
     });
   });
+
+  // on init: hide all panels, then activate the first tab
+  panels.forEach(p => (p.style.display = 'none'));
+  if (buttons.length > 0) {
+    buttons[0].classList.add('active');
+    const defaultPanel = document.getElementById(buttons[0].dataset.target);
+    if (defaultPanel) defaultPanel.style.display = 'flex';
+  }
 }
+
 
 /* 3️⃣  LISTS PANEL – only the top section changes */
 async function initListsPanel() {
@@ -29,7 +46,7 @@ async function initListsPanel() {
 
   /* 1️⃣  panel scaffolding */
   panel.innerHTML = '';
-  panel.style.display = 'flex';
+  //panel.style.display = 'flex';
   panel.style.flexDirection = 'column';
   panel.style.width = '100%';
   panel.style.boxSizing = 'border-box';
