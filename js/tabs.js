@@ -1,5 +1,3 @@
-// File: js/tabs.js
-import { renderDailyTasks } from './daily.js';
 import { initMetricsUI } from './stats.js';
 
 export function initTabs(currentUser, db) {

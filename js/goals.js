@@ -129,7 +129,6 @@ export function createGoalRow(goal, options = {}) {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = !!goal.completed;
-    checkbox.disabled = !!goal.completed;
 
     // only attach the onchange logic if this row is a goal
     if (goal.type === 'goal') {
@@ -148,10 +147,8 @@ export function createGoalRow(goal, options = {}) {
             // 2) Move the row in the DOM
             const wrapper = row.closest('.decision.goal-card') || row;
             if (checkbox.checked) {
-                checkbox.disabled = true;
                 completedList.appendChild(wrapper);
             } else {
-                checkbox.disabled = false;
                 goalList.appendChild(wrapper);
             }
         };
@@ -189,6 +186,7 @@ export function createGoalRow(goal, options = {}) {
     row.appendChild(right);
     return row;
 }
+
 
 
 export async function renderGoalsAndSubitems() {

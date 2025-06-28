@@ -42,6 +42,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (user) {
       initTabs(currentUser, db);
       renderGoalsAndSubitems(currentUser, db);
+      renderDailyTasks(currentUser, db);
       if (document.getElementById('reportBody')) {
         renderDailyTaskReport(currentUser, db);
       }

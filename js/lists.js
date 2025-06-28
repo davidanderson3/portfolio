@@ -1,37 +1,94 @@
 import { loadLists, saveLists } from './helpers.js';
 import { auth } from './auth.js';
 
-/* 1️⃣  DOM ready: wait for Firebase auth before loading lists */
+let isScaffolded = false;
+let listsArray = [];
+let selectedListIndex = 0;
+let persist;
+
+
 window.addEventListener('DOMContentLoaded', () => {
   initTabs();
-  auth.onAuthStateChanged(() => {
-    initListsPanel();             // runs once auth is settled
+  auth.onAuthStateChanged(async () => {
+    listsArray = await loadLists();
+    persist = debounce(async () => saveLists(listsArray), 250);
+    initListsPanel();
   });
 });
 
-/* 2️⃣  TABS HEADER (unchanged) */
+// 1️⃣ One-time scaffold build
+function setupScaffolding(panel) {
+  panel.innerHTML = '';
+  panel.style.display = 'flex';
+  panel.style.flexDirection = 'column';
+  panel.style.width = '100%';
+  panel.style.boxSizing = 'border-box';
+  panel.style.padding = '0 1rem';
+
+  const tabsContainer = document.createElement('div');
+  tabsContainer.id = 'listTabs';
+  tabsContainer.style.margin = '1rem 0';
+
+  const addColumnBtn = document.createElement('button');
+  addColumnBtn.type = 'button';
+  addColumnBtn.id = 'addColumnToListBtn';
+  addColumnBtn.textContent = '+ Add Column';
+  addColumnBtn.style.alignSelf = 'flex-start';
+  addColumnBtn.style.marginBottom = '1rem';
+  addColumnBtn.addEventListener('click', onAddColumn);
+
+  const listsContainer = document.createElement('div');
+  listsContainer.id = 'listsContainer';
+
+  const itemForm = document.createElement('div');
+  itemForm.id = 'itemForm';
+  itemForm.style.margin = '1rem 0';
+
+  const createForm = document.createElement('div');
+  createForm.id = 'listForm';
+  createForm.innerHTML = `
+    <h3>Create New List</h3>
+    <label for="listName">List Name:</label>
+    <input type="text" id="listName" placeholder="My List" style="margin-left:.5rem">
+    <div id="columnsContainer" style="margin:.5rem 0"><label>Columns:</label></div>
+    <button type="button" id="addColumnBtn">+ Column</button>
+    <button type="button" id="createListBtn">Create List</button>
+    <hr/>
+  `;
+
+  panel.append(tabsContainer, addColumnBtn, listsContainer, itemForm, createForm);
+}
+// 2️⃣ Bind the create-list controls
+function bindCreateForm() {
+  const columnsContainer = document.querySelector('#columnsContainer');
+  document.querySelector('#addColumnBtn').addEventListener('click', addColumnInput);
+  document.querySelector('#createListBtn').addEventListener('click', onCreateList);
+  addColumnInput();
+}
+// 3️⃣ Simple debounce helper to batch saves
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+
 function initTabs() {
   const buttons = document.querySelectorAll('.tab-button');
-  const panels  = document.querySelectorAll('.main-layout');
-
-  // wire up clicks
+  const panels = document.querySelectorAll('.main-layout');
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
-      // hide everything
-      panels.forEach(p => (p.style.display = 'none'));
-      // show the one this button points to
+      panels.forEach(p => p.style.display = 'none');
       const target = document.getElementById(btn.dataset.target);
       if (target) target.style.display = 'flex';
-
-      // update active state
       buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
     });
   });
-
-  // on init: hide all panels, then activate the first tab
-  panels.forEach(p => (p.style.display = 'none'));
-  if (buttons.length > 0) {
+  panels.forEach(p => p.style.display = 'none');
+  if (buttons.length) {
     buttons[0].classList.add('active');
     const defaultPanel = document.getElementById(buttons[0].dataset.target);
     if (defaultPanel) defaultPanel.style.display = 'flex';

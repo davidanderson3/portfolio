@@ -2,19 +2,19 @@ import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 
 // Shared skip intervals (same as goals)
 const skipOptions = [
-  { label: '1 hour',   value: 1   },
-  { label: '2 hours',  value: 2   },
-  { label: '4 hours',  value: 4   },
-  { label: '8 hours',  value: 8   },
-  { label: '1 day',    value: 24  },
-  { label: '2 days',   value: 48  },
-  { label: '3 days',   value: 72  },
-  { label: '4 days',   value: 96  },
-  { label: '1 week',   value: 168 },
-  { label: '2 weeks',  value: 336 },
-  { label: '1 month',  value: 720 },
-  { label: '2 months', value: 1440},
-  { label: '3 months', value: 2160}
+  { label: '1 hour', value: 1 },
+  { label: '2 hours', value: 2 },
+  { label: '4 hours', value: 4 },
+  { label: '8 hours', value: 8 },
+  { label: '1 day', value: 24 },
+  { label: '2 days', value: 48 },
+  { label: '3 days', value: 72 },
+  { label: '4 days', value: 96 },
+  { label: '1 week', value: 168 },
+  { label: '2 weeks', value: 336 },
+  { label: '1 month', value: 720 },
+  { label: '2 months', value: 1440 },
+  { label: '3 months', value: 2160 }
 ];
 
 export async function renderDailyTasks(currentUser, db) {
@@ -29,6 +29,15 @@ export async function renderDailyTasks(currentUser, db) {
     container.className = 'decision-container';
     panel.appendChild(container);
   }
+    // — ensure our weekly container exists
+  let weeklyContainer = panel.querySelector('#weeklyTasksList');
+  if (!weeklyContainer) {
+    weeklyContainer = document.createElement('div');
+    weeklyContainer.id = 'weeklyTasksList';
+    weeklyContainer.className = 'decision-container';
+    panel.appendChild(weeklyContainer);
+  }
+
 
   // — Inject CSS once to remove green focus/active backgrounds on buttons
   if (!document.getElementById('dailyTasks-btn-reset-css')) {
@@ -86,7 +95,7 @@ export async function renderDailyTasks(currentUser, db) {
     const newTask = {
       id: generateId(),
       type: 'task',
-      text: `[Daily] ${text}`,
+      text: `${text}`,
       recurs: 'daily',
       parentGoalId: null,
       completed: false,
@@ -111,9 +120,62 @@ export async function renderDailyTasks(currentUser, db) {
   container.appendChild(addForm);
 
   // — Load today’s completions
+  // — Compute keys and completion sets
   const todayKey = new Date().toLocaleDateString('en-CA');
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const weekKey = monday.toISOString().split('T')[0];
   const snap = await db.collection('taskCompletions').doc(currentUser.uid).get();
   const completionMap = snap.exists ? snap.data() : {};
+  const dailyDone = new Set(completionMap[todayKey] || []);
+  const weeklyDone = new Set(completionMap[weekKey] || []);
+
+  // — Add-new WEEKLY form
+  (function () {
+    const form = document.createElement('div');
+    form.style = 'display:flex;gap:8px;margin-bottom:12px';
+
+    const input = document.createElement('input');
+    Object.assign(input, { type: 'text', placeholder: 'New weekly task…' });
+    Object.assign(input.style, { flex: '1', padding: '6px', borderRadius: '6px', border: '1px solid #ccc' });
+
+    const btn = document.createElement('button');
+    btn.textContent = '+';
+    Object.assign(btn.style, { padding: '0 14px', borderRadius: '6px', fontWeight: 'bold', background: 'none', border: 'none' });
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); btn.click(); }
+    });
+
+    btn.onclick = async () => {
+      const text = input.value.trim();
+      if (!text) return;
+      const task = {
+        id: generateId(),
+        type: 'task',
+        text: `${text}`,
+        recurs: 'weekly',
+        parentGoalId: null,
+        completed: false,
+        dateCompleted: '',
+        resolution: '',
+        dependencies: [],
+        skipUntil: null
+      };
+      const updated = [...await loadDecisions(), task];
+      await saveDecisions(updated);
+      input.value = '';
+      const wrap = makeTaskElement(task, weekKey, weeklyDone, completionMap, weeklyContainer);
+      wrap.classList.add('flash');
+      wrap.addEventListener('animationend', () => wrap.classList.remove('flash'), { once: true });
+      weeklyContainer.appendChild(wrap);
+    };
+
+    form.append(input, btn);
+    weeklyContainer.appendChild(form);
+  })();
+
   const doneSet = new Set(completionMap[todayKey] || []);
 
   // — Prepare and split lists
@@ -128,7 +190,7 @@ export async function renderDailyTasks(currentUser, db) {
 
   // — Render active then done
   for (const t of activeList) container.appendChild(makeTaskElement(t));
-  for (const t of doneList)  container.appendChild(makeTaskElement(t));
+  for (const t of doneList) container.appendChild(makeTaskElement(t));
 
   // ——— Helpers —————————————————————————
 
@@ -278,8 +340,8 @@ export async function renderDailyTasks(currentUser, db) {
     });
     function toggleMenu() {
       const rect = clockBtn.getBoundingClientRect();
-      menu.style.top  = `${rect.bottom + window.scrollY}px`;
-      menu.style.left = `${rect.left   + window.scrollX}px`;
+      menu.style.top = `${rect.bottom + window.scrollY}px`;
+      menu.style.left = `${rect.left + window.scrollX}px`;
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
     document.addEventListener('click', e => {
@@ -327,7 +389,7 @@ export async function renderDailyTasks(currentUser, db) {
       background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1em', padding: '0'
     });
     b.addEventListener('mousedown', e => e.stopPropagation());
-    b.addEventListener('click',     e => e.stopPropagation());
+    b.addEventListener('click', e => e.stopPropagation());
     b.onclick = fn;
     return b;
   }
@@ -340,3 +402,11 @@ export async function renderDailyTasks(currentUser, db) {
     await saveDecisions([...others, ...reordered]);
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const panel = document.getElementById('dailyPanel');
+  if (panel && panel.style.display !== 'none') {
+    // You still need access to currentUser and db here:
+    renderDailyTasks(currentUser, db);
+  }
+});
