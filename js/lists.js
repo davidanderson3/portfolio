@@ -156,21 +156,23 @@ async function initListsPanel() {
       btn.className = 'list-tab';
       btn.textContent = list.name;
       btn.dataset.index = idx;
-      btn.style.marginRight = '0.5rem';
       btn.addEventListener('click', () => selectList(idx));
       tabsContainer.appendChild(btn);
     });
   }
 
   let selectedListIndex = 0;
-  function selectList(idx) {
-    selectedListIndex = idx;
-    Array.from(tabsContainer.children).forEach((btn, i) =>
-      btn.classList.toggle('active', i === idx)
-    );
-    renderSelectedList();
-    renderItemForm();
-  }
+function selectList(idx) {
+  selectedListIndex = idx;
+
+  Array.from(tabsContainer.children).forEach((btn, i) =>
+    btn.classList.toggle('active', i === idx)
+  );
+
+  renderSelectedList();
+  renderItemForm();
+}
+
 
   addColumnBtnForList.addEventListener('click', async () => {
     const colName = (prompt('Enter new column name:') || '').trim();

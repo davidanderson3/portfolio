@@ -829,3 +829,38 @@ h2 {
 #metricsPanel .full-column {
   flex: 1 1 100%;
 }
+
+/* Minimalist list-selector tabs */
+#listTabs {
+  display: flex;
+  gap: 0; /* we'll rely on borders instead of space */
+}
+
+#listTabs .list-tab {
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  border-right: 1px solid #ccc;
+  cursor: pointer;
+  font-weight: normal;
+  transition: color 0.2s;
+}
+
+/* Remove the trailing border on last tab */
+#listTabs .list-tab:last-child {
+  border-right: none;
+}
+
+/* Active state: underline instead of background */
+#listTabs .list-tab.active {
+  color: #000;
+  border-bottom: 2px solid #000;
+  font-weight: bold;
+}
+
+/* Hover state */
+#listTabs .list-tab:hover {
+  color: #333;
+}

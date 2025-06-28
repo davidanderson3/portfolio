@@ -20,12 +20,22 @@ function isIconButton(btn) {
 
 // Apply styling to a single button (unless it’s detected as an icon)
 function styleButton(btn) {
+  // 0️⃣ Don’t restyle our list-selector tabs
+  if (btn.classList.contains('list-tab')
+      || btn.closest('#listTabs')) {
+    return;
+  }
+
+  // 1️⃣ Skip icon-only buttons
   if (isIconButton(btn)) return;
+
+  // 2️⃣ Style everything else
   btn.style.backgroundColor = randomDarkColor();
   btn.style.color           = '#fff';
   btn.style.border          = 'none';
   btn.style.cursor          = 'pointer';
 }
+
 
 // Style all existing buttons on the page
 function styleAllButtons(root = document) {

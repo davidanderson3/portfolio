@@ -2,7 +2,7 @@ import { initMetricsUI } from './stats.js';
 
 export function initTabs(currentUser, db) {
     const tabButtons = document.querySelectorAll('.tab-button');
-    const panels = ['goalsPanel', 'calendarPanel', 'dailyPanel', 'metricsPanel'];
+    const panels = ['goalsPanel', 'calendarPanel', 'dailyPanel', 'metricsPanel', 'listsPanel'];
 
     tabButtons.forEach(btn => {
         btn.addEventListener('click', async () => {
