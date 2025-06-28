@@ -818,3 +818,14 @@ h2 {
   background: #f0f0f0;
   color: #333;
 }
+
+#metricsPanel.main-layout {
+  justify-content: flex-start !important;
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+#metricsPanel .full-column {
+  flex: 1 1 100%;
+}

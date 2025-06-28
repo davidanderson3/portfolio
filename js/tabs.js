@@ -3,37 +3,46 @@ import { renderDailyTasks } from './daily.js';
 import { initMetricsUI } from './stats.js';
 
 export function initTabs(currentUser, db) {
-    document.querySelectorAll('.tab-button').forEach(btn => {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const panels = ['goalsPanel', 'calendarPanel', 'dailyPanel', 'metricsPanel'];
+
+    tabButtons.forEach(btn => {
         btn.addEventListener('click', async () => {
-            // 1) Toggle active class
-            document.querySelectorAll('.tab-button')
-                .forEach(b => b.classList.remove('active'));
+            tabButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
-            // 2) Show/hide panels
             const target = btn.dataset.target;
-            ['goalsPanel', 'calendarPanel', 'dailyPanel', 'metricsPanel']
-                .forEach(id => {
-                    const el = document.getElementById(id);
-                    el.style.display = (id === target) ? 'flex' : 'none';
-                });
+            panels.forEach(id => {
+                const el = document.getElementById(id);
+                el.style.display = (id === target) ? 'flex' : 'none';
+            });
 
-            // 3) Load content as needed
+            history.pushState(null, '', `#${target}`);
+
             if (target === 'dailyPanel') {
                 await renderDailyTasks(currentUser, db);
-            }
-            else if (target === 'metricsPanel') {
-                // initialize and render your stats UI
+            } else if (target === 'metricsPanel') {
                 await initMetricsUI();
             }
         });
     });
+
+    const hash = window.location.hash.substring(1);
+    const initial = hash && panels.includes(hash)
+        ? hash
+        : document.querySelector('.tab-button.active')?.dataset.target || panels[0];
+
+    tabButtons.forEach(b => b.classList.remove('active'));
+    document.querySelector(`.tab-button[data-target="${initial}"]`)?.classList.add('active');
+    panels.forEach(id => {
+        const el = document.getElementById(id);
+        el.style.display = (id === initial) ? 'flex' : 'none';
+    });
 }
 
-// Optionally, if you want the Metrics tab to render on page‐load when active:
 document.addEventListener('DOMContentLoaded', () => {
-    const active = document.querySelector('.tab-button.active')?.dataset.target;
-    if (active === 'metricsPanel') {
+    const activeTarget = document.querySelector('.tab-button.active')?.dataset.target;
+    if (activeTarget === 'metricsPanel') {
         initMetricsUI();
     }
 });
