@@ -753,7 +753,7 @@ body {
 #goalsView .tabs {
   margin: 0;
   /* remove top margins inherited elsewhere */
-  padding: 8px 0;
+  padding: 8px 0 0 0;
   display: flex;
   justify-content: flex-start;
   background-color: #f0f5f2;
@@ -863,4 +863,12 @@ h2 {
 /* Hover state */
 #listTabs .list-tab:hover {
   color: #333;
+}
+
+#listsContainer button,
+#listsPanel button[title="Edit row"],
+#listsPanel button[title="Delete row"] {
+  background: none !important;
+  border: none    !important;
+  cursor: pointer !important;
 }
