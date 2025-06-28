@@ -218,23 +218,25 @@ export function createGoalRow(goal, options = {}) {
     return row;
 }
 
-
-
 export async function renderGoalsAndSubitems() {
   clearDOM();
   const { allDecisions, sortedGoals } = await loadAndSyncGoals();
 
+  // 1) Render the calendar on the left
+  const calendarContent = initCalendarSection();
+  renderCalendarSection(allDecisions, calendarContent);
+
+  // 2) Render the notes on the right
   const notesList = initNotesSection();
   if (notesList) {
     await renderNotesSection(notesList);
   }
 
+  // 3) Hidden & completed goals below
   const hiddenContent = initHiddenSection();
   initCompletedSection();
   await renderRemainingGoals(allDecisions, sortedGoals, hiddenContent);
 }
-
-
 
 
 function clearDOM() {
