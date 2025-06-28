@@ -2,7 +2,7 @@
 
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 import { enableTaskDragAndDrop } from './dragAndDrop.js';
-import { createGoalRow } from './render.js';
+import { createGoalRow } from './goals.js';
 
 // Reusable icon-style button factory
 function makeIconBtn(symbol, title, fn) {
@@ -74,12 +74,21 @@ export async function attachTaskButtons(item, row, listContainer) {
     });
     document.body.appendChild(menu);
 
-    const options = [
-        { label: '1 day', value: 24 },
-        { label: '2 days', value: 48 },
-        { label: '1 week', value: 168 },
-        { label: '2 weeks', value: 336 }
-    ];
+        const options = [
+            { label: '1 hour', value: 1 },
+            { label: '2 hours', value: 2 },
+            { label: '4 hours', value: 4 },
+            { label: '8 hours', value: 8 },
+            { label: '1 day', value: 24 },
+            { label: '2 days', value: 48 },
+            { label: '3 days', value: 72 },
+            { label: '4 days', value: 96 },
+            { label: '1 week', value: 168 },
+            { label: '2 weeks', value: 336 },
+            { label: '1 month', value: 720 },
+            { label: '2 months', value: 1440 },
+            { label: '3 months', value: 2160 }
+        ];
 
     options.forEach(opt => {
         const optBtn = document.createElement('button');

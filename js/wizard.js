@@ -1,6 +1,6 @@
 import { parseNaturalDate } from './helpers.js';
 import { generateId, loadDecisions, saveDecisions, saveGoalOrder } from './helpers.js';
-import { renderGoalsAndSubitems } from './render.js';
+import { renderGoalsAndSubitems } from './goals.js';
 import { getCurrentUser } from './auth.js';
 
 const db = firebase.firestore();

@@ -2,7 +2,7 @@
 
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
-import { renderGoalsAndSubitems } from './render.js';
+import { renderGoalsAndSubitems } from './goals.js';
 import { initAuth } from './auth.js';
 import { db } from './auth.js';
 import { initWizard } from './wizard.js';

@@ -1,5 +1,22 @@
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 
+// Shared skip intervals (same as goals)
+const skipOptions = [
+  { label: '1 hour',   value: 1   },
+  { label: '2 hours',  value: 2   },
+  { label: '4 hours',  value: 4   },
+  { label: '8 hours',  value: 8   },
+  { label: '1 day',    value: 24  },
+  { label: '2 days',   value: 48  },
+  { label: '3 days',   value: 72  },
+  { label: '4 days',   value: 96  },
+  { label: '1 week',   value: 168 },
+  { label: '2 weeks',  value: 336 },
+  { label: '1 month',  value: 720 },
+  { label: '2 months', value: 1440},
+  { label: '3 months', value: 2160}
+];
+
 export async function renderDailyTasks(currentUser, db) {
   const panel = document.getElementById('dailyPanel');
   if (!panel || !currentUser) return;
@@ -111,7 +128,7 @@ export async function renderDailyTasks(currentUser, db) {
 
   // — Render active then done
   for (const t of activeList) container.appendChild(makeTaskElement(t));
-  for (const t of doneList) container.appendChild(makeTaskElement(t));
+  for (const t of doneList)  container.appendChild(makeTaskElement(t));
 
   // ——— Helpers —————————————————————————
 
@@ -205,6 +222,7 @@ export async function renderDailyTasks(currentUser, db) {
     btns.style.display = 'flex';
     btns.style.gap = '8px';
 
+    // Move up
     btns.append(makeIconBtn('⬆️', 'Move up', async () => {
       const prev = wrapper.previousElementSibling;
       if (prev && prev.classList.contains('daily-task-wrapper')) {
@@ -214,6 +232,7 @@ export async function renderDailyTasks(currentUser, db) {
       }
     }));
 
+    // Edit
     btns.append(makeIconBtn('✏️', 'Edit', async () => {
       const original = task.text.replace(/^\[Daily\]\s*/, '');
       const edited = prompt('Edit task:', original);
@@ -231,6 +250,44 @@ export async function renderDailyTasks(currentUser, db) {
       }
     }));
 
+    // Skip interval (clock + dropdown menu)
+    const clockBtn = makeIconBtn('🕒', 'Skip interval', () => toggleMenu());
+    const menu = document.createElement('div');
+    Object.assign(menu.style, {
+      position: 'absolute', background: '#fff', border: '1px solid #ccc', borderRadius: '6px',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.15)', padding: '6px 0', fontSize: '0.9em',
+      display: 'none', zIndex: '9999', minWidth: '120px'
+    });
+    document.body.appendChild(menu);
+    skipOptions.forEach(opt => {
+      const optBtn = document.createElement('button'); optBtn.type = 'button'; optBtn.textContent = opt.label;
+      Object.assign(optBtn.style, {
+        display: 'block', width: '100%', padding: '4px 12px', border: 'none', background: 'white',
+        color: '#333', textAlign: 'left', cursor: 'pointer'
+      });
+      optBtn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const allDecs = await loadDecisions();
+        const idx = allDecs.findIndex(d => d.id === task.id);
+        if (idx === -1) return;
+        allDecs[idx].skipUntil = new Date(Date.now() + opt.value * 3600000).toISOString();
+        await saveDecisions(allDecs);
+        menu.style.display = 'none'; wrapper.remove();
+      });
+      menu.appendChild(optBtn);
+    });
+    function toggleMenu() {
+      const rect = clockBtn.getBoundingClientRect();
+      menu.style.top  = `${rect.bottom + window.scrollY}px`;
+      menu.style.left = `${rect.left   + window.scrollX}px`;
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    document.addEventListener('click', e => {
+      if (!menu.contains(e.target) && e.target !== clockBtn) menu.style.display = 'none';
+    });
+    btns.append(clockBtn);
+
+    // Skip until next day
     btns.append(makeIconBtn('⏭️', 'Skip until next day', async () => {
       try {
         const allDecs = await loadDecisions();
@@ -241,11 +298,10 @@ export async function renderDailyTasks(currentUser, db) {
         allDecs[idx].skipUntil = tm.toISOString();
         await saveDecisions(allDecs);
         wrapper.remove();
-      } catch {
-        alert('⚠️ Could not skip task.');
-      }
+      } catch { alert('⚠️ Could not skip task.'); }
     }));
 
+    // Delete
     btns.append(makeIconBtn('❌', 'Delete', async () => {
       if (!confirm('Delete this task?')) return;
       try {
@@ -268,12 +324,10 @@ export async function renderDailyTasks(currentUser, db) {
     b.textContent = symbol;
     b.title = title;
     Object.assign(b.style, {
-      background: 'none',
-      border: 'none',
-      cursor: 'pointer',
-      fontSize: '1.1em',
-      padding: '0'
+      background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1em', padding: '0'
     });
+    b.addEventListener('mousedown', e => e.stopPropagation());
+    b.addEventListener('click',     e => e.stopPropagation());
     b.onclick = fn;
     return b;
   }
