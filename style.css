@@ -787,6 +787,7 @@ body {
 #goalsView .right-column,
 #goalsView .full-column {
   background: rgba(255, 255, 255, 0.85);
+  width: 100%;
   padding: 20px;
   border: 1px solid #d0decf;
   border-top: none;

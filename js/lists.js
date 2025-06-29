@@ -6,14 +6,10 @@ let listsArray = [];
 let selectedListIndex = 0;
 let persist;
 
-
-window.addEventListener('DOMContentLoaded', () => {
-  initTabs();
-  auth.onAuthStateChanged(async () => {
-    listsArray = await loadLists();
-    persist = debounce(async () => saveLists(listsArray), 250);
-    initListsPanel();
-  });
+auth.onAuthStateChanged(async () => {
+  listsArray = await loadLists();
+  persist = debounce(async () => saveLists(listsArray), 250);
+  initListsPanel();
 });
 
 // 1️⃣ One-time scaffold build
@@ -104,7 +100,7 @@ function debounce(fn, delay) {
 }
 
 
-function initTabs() {
+function initListTabs() {
   const buttons = document.querySelectorAll('.tab-button');
   const panels = document.querySelectorAll('.main-layout');
   buttons.forEach(btn => {
