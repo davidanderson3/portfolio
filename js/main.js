@@ -9,12 +9,15 @@ import { initWizard } from './wizard.js';
 import { renderDailyTaskReport } from './report.js';
 import './stats.js';
 import { initTabs } from './tabs.js';
+import { renderNotesPanel } from './notes.js';
 
 // ← Import the new button-styles initializer:
 import { initButtonStyles } from './buttonStyles.js';
 
+window.renderNotesPanel = renderNotesPanel;
 let currentUser = null;
 window.currentUser = null;
+
 
 window.addEventListener('DOMContentLoaded', () => {
   const uiRefs = {

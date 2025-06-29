@@ -58,6 +58,35 @@ function setupScaffolding(panel) {
 
   panel.append(tabsContainer, addColumnBtn, listsContainer, itemForm, createForm);
 }
+
+// ─── 1️⃣ Column-input helper MUST come first ─────────────────
+function addColumnInput() {
+  const container = document.querySelector('#columnsContainer');
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'Column name';
+  input.style.marginRight = '0.5rem';
+  container.append(input);
+}
+
+// ─── 2️⃣ Create-list handler MUST also come before binder ────
+async function onCreateList() {
+  const name = document.querySelector('#listName').value.trim();
+  if (!name) return alert('List needs a name.');
+  const cols = Array.from(document.querySelectorAll('#columnsContainer input'))
+                    .map(i => i.value.trim())
+                    .filter(v => v);
+  if (!cols.length) return alert('Add at least one column.');
+  const newList = {
+    name,
+    columns: cols.map(c => ({ name: c, type: 'text' })),
+    items: []
+  };
+  listsArray.push(newList);
+  await persist();
+  renderTabs();
+  selectList(listsArray.length - 1);
+}
 // 2️⃣ Bind the create-list controls
 function bindCreateForm() {
   const columnsContainer = document.querySelector('#columnsContainer');
@@ -149,6 +178,9 @@ panel.append(
   itemForm,
   createForm
 );
+
+  bindCreateForm();
+
 
   // ─── 5) Load data & wire persistence ─────────────────────────
   let listsArray = await loadLists();

@@ -28,89 +28,6 @@ const completedList = document.getElementById('completedList');
 initializeGlobalDragHandlers();
 initializeGoalTagSupport();
 
-async function loadNotes() {
-  const uid = firebase.auth().currentUser.uid;
-  const snapshot = await db
-    .collection('dailyNotes')
-    .doc(uid)
-    .collection('notes')
-    .orderBy('timestamp', 'desc')
-    .limit(10)
-    .get();
-  return snapshot.docs.map(doc => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      text: data.text,
-      timestamp: data.timestamp?.toDate().toISOString() || new Date().toISOString()
-    };
-  });
-}
-
-async function saveNote(text) {
-  const uid = firebase.auth().currentUser.uid;
-  await db
-    .collection('dailyNotes')
-    .doc(uid)
-    .collection('notes')
-    .add({
-      text,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-}
-
-function initNotesSection() {
-  const notesContainer = document.getElementById('notes');
-  if (!notesContainer) {
-    return null;
-  }
-  notesContainer.innerHTML = '';
-
-  const notesList = document.createElement('div');
-  notesList.id = 'notesList';
-  notesContainer.appendChild(notesList);
-
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.id = 'notesInput';
-  input.placeholder = 'Enter note…';
-  notesContainer.appendChild(input);
-
-  const addBtn = document.createElement('button');
-  addBtn.textContent = 'Add Note';
-  notesContainer.appendChild(addBtn);
-
-  addBtn.addEventListener('click', async () => {
-    const text = input.value.trim();
-    if (!text) return;
-    await saveNote(text);
-    input.value = '';
-    await renderNotesSection(notesList);
-  });
-
-  return notesList;
-}
-
-
-async function renderNotesSection(container) {
-  const notes = await loadNotes();
-  container.innerHTML = '';
-  notes.forEach(note => {
-    const item = document.createElement('div');
-    item.className = 'note-item';
-    const time = document.createElement('span');
-    time.className = 'note-time';
-    time.textContent = new Date(note.timestamp).toLocaleString();
-    const text = document.createElement('span');
-    text.className = 'note-text';
-    text.textContent = note.text;
-    item.appendChild(time);
-    item.appendChild(document.createTextNode(' – '));
-    item.appendChild(text);
-    container.appendChild(item);
-  });
-}
-
 export function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');
     row.className = 'decision-row';
@@ -196,12 +113,6 @@ export async function renderGoalsAndSubitems() {
   // 1) Render the calendar on the left
   const calendarContent = initCalendarSection();
   renderCalendarSection(allDecisions, calendarContent);
-
-  // 2) Render the notes on the right
-  const notesList = initNotesSection();
-  if (notesList) {
-    await renderNotesSection(notesList);
-  }
 
   // 3) Hidden & completed goals below
   const hiddenContent = initHiddenSection();
