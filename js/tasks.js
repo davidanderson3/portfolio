@@ -26,7 +26,7 @@ function makeIconBtn(symbol, title, fn) {
 /**
  * Attach ↑, ✏️, 🕒, ❌ buttons to a task-row.
  */
-export async function attachTaskButtons(item, row, listContainer) {
+export function attachTaskButtons(item, row, listContainer, allDecisions) {
     const buttonWrap = row.querySelector('.button-row');
     if (!buttonWrap) return;
 
@@ -37,11 +37,12 @@ export async function attachTaskButtons(item, row, listContainer) {
         if (prev?.dataset.taskId) {
             listContainer.insertBefore(wrapper, prev);
             const ids = Array.from(listContainer.children).map(w => w.dataset.taskId);
-            const all = await loadDecisions();
-            const under = all.filter(d => d.parentGoalId === item.parentGoalId && !d.completed);
-            const other = all.filter(d => d.parentGoalId !== item.parentGoalId || d.completed);
+            const under = allDecisions.filter(d => d.parentGoalId === item.parentGoalId && !d.completed);
+            const other = allDecisions.filter(d => d.parentGoalId !== item.parentGoalId || d.completed);
             const reordered = ids.map(id => under.find(t => t.id === id)).filter(Boolean);
-            await saveDecisions([...other, ...reordered]);
+            const updated = [...other, ...reordered];
+            await saveDecisions(updated);
+            allDecisions.splice(0, allDecisions.length, ...updated);
         }
     });
 
@@ -49,10 +50,9 @@ export async function attachTaskButtons(item, row, listContainer) {
     const editBtn = makeIconBtn('✏️', 'Edit task', async () => {
         const newText = prompt('Edit task:', item.text)?.trim();
         if (newText && newText !== item.text) {
-            const all = await loadDecisions();
-            const idx = all.findIndex(d => d.id === item.id);
-            all[idx].text = newText;
-            await saveDecisions(all);
+            const idx = allDecisions.findIndex(d => d.id === item.id);
+            allDecisions[idx].text = newText;
+            await saveDecisions(allDecisions);
             row.querySelector('.middle-group').textContent = newText;
         }
     });
@@ -108,11 +108,10 @@ export async function attachTaskButtons(item, row, listContainer) {
         optBtn.addEventListener('mouseleave', () => optBtn.style.background = 'white');
         optBtn.addEventListener('click', async e => {
             e.stopPropagation();
-            const all = await loadDecisions();
-            const idx = all.findIndex(d => d.id === item.id);
+            const idx = allDecisions.findIndex(d => d.id === item.id);
             if (idx === -1) return;
-            all[idx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
-            await saveDecisions(all);
+            allDecisions[idx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+            await saveDecisions(allDecisions);
             menu.style.display = 'none';
 
             // Hide only the postponed task wrapper, not the entire goal
@@ -139,8 +138,9 @@ export async function attachTaskButtons(item, row, listContainer) {
     // Delete
     const delBtn = makeIconBtn('❌', 'Delete task', async () => {
         if (!confirm(`Delete task: "${item.text}"?`)) return;
-        const all = await loadDecisions();
-        await saveDecisions(all.filter(d => d.id !== item.id));
+        const updated = allDecisions.filter(d => d.id !== item.id);
+        await saveDecisions(updated);
+        allDecisions.splice(0, allDecisions.length, ...updated);
         row.closest('[data-task-id]').remove();
     });
 
@@ -177,18 +177,17 @@ export async function renderChildren(goal, all, container) {
         taskList.append(wrapper);
 
         // Attach task buttons
-        attachTaskButtons(task, row, taskList);
+        attachTaskButtons(task, row, taskList, all);
 
         // Wire up the task checkbox to move it into completed section
         const cb = row.querySelector('input[type="checkbox"]');
         cb.addEventListener('change', async () => {
             task.completed = cb.checked;
             task.dateCompleted = cb.checked ? new Date().toISOString() : '';
-            const allDecisions = await loadDecisions();
-            const idx = allDecisions.findIndex(d => d.id === task.id);
-            if (idx !== -1) allDecisions[idx] = task;
-            await saveDecisions(allDecisions);
-            renderChildren(goal, allDecisions, container);
+            const idx = all.findIndex(d => d.id === task.id);
+            if (idx !== -1) all[idx] = task;
+            await saveDecisions(all);
+            renderChildren(goal, all, container);
         });
     });
 
@@ -233,11 +232,10 @@ export async function renderChildren(goal, all, container) {
             parentGoalId: goal.id,
             type: 'task'
         };
-        const updated = await loadDecisions();
-        updated.push(newTask);
-        await saveDecisions(updated);
+        all.push(newTask);
+        await saveDecisions(all);
         inputText.value = '';
-        renderChildren(goal, updated, container);
+        renderChildren(goal, all, container);
     });
 
     addForm.append(inputText, addBtn);
@@ -273,11 +271,10 @@ export async function renderChildren(goal, all, container) {
             cb.addEventListener('change', async () => {
                 task.completed = cb.checked;
                 task.dateCompleted = cb.checked ? new Date().toISOString() : '';
-                const allDecisions = await loadDecisions();
-                const idx = allDecisions.findIndex(d => d.id === task.id);
-                if (idx !== -1) allDecisions[idx] = task;
-                await saveDecisions(allDecisions);
-                renderChildren(goal, allDecisions, container);
+                const idx = all.findIndex(d => d.id === task.id);
+                if (idx !== -1) all[idx] = task;
+                await saveDecisions(all);
+                renderChildren(goal, all, container);
             });
             left.appendChild(cb);
 
@@ -306,7 +303,7 @@ export async function renderChildren(goal, all, container) {
             due.textContent = task.dateCompleted || '';
             const btnWrap = document.createElement('div');
             btnWrap.className = 'button-row';
-            attachTaskButtons(task, row, doneContainer);
+            attachTaskButtons(task, row, doneContainer, all);
 
             right.append(due, btnWrap);
             row.append(left, middle, right);
