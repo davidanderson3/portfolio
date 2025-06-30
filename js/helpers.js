@@ -125,5 +125,24 @@ export async function saveLists(lists) {
           .set({ lists: sanitized }, { merge: true });
 }
 
+// Reusable icon-style button factory
+export function makeIconBtn(symbol, title, fn) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = symbol;
+  b.title = title;
+  Object.assign(b.style, {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '1.1em',
+    padding: '0'
+  });
+  b.addEventListener('mousedown', e => e.stopPropagation());
+  b.addEventListener('click', e => e.stopPropagation());
+  b.onclick = fn;
+  return b;
+}
+
 
 

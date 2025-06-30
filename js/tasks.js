@@ -1,27 +1,8 @@
 // ── tasks.js ──
 
-import { loadDecisions, saveDecisions, generateId } from './helpers.js';
+import { loadDecisions, saveDecisions, generateId, makeIconBtn } from './helpers.js';
 import { enableTaskDragAndDrop } from './dragAndDrop.js';
 import { createGoalRow } from './goals.js';
-
-// Reusable icon-style button factory
-function makeIconBtn(symbol, title, fn) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = symbol;
-    b.title = title;
-    Object.assign(b.style, {
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '1.1em',
-        padding: '0'
-    });
-    b.addEventListener('mousedown', e => e.stopPropagation());
-    b.addEventListener('click', e => e.stopPropagation());
-    b.onclick = fn;
-    return b;
-}
 
 /**
  * Attach ↑, ✏️, 🕒, ❌ buttons to a task-row.
