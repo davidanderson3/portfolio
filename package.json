@@ -10,9 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.1.0",
-    "firebase": "^11.8.1",
-    "firebase-admin": "^13.4.0"
+    "firebase": "^11.8.1"
   },
   "devDependencies": {
     "purgecss": "^7.0.2"
