@@ -74,21 +74,21 @@ export async function attachTaskButtons(item, row, listContainer) {
     });
     document.body.appendChild(menu);
 
-        const options = [
-            { label: '1 hour', value: 1 },
-            { label: '2 hours', value: 2 },
-            { label: '4 hours', value: 4 },
-            { label: '8 hours', value: 8 },
-            { label: '1 day', value: 24 },
-            { label: '2 days', value: 48 },
-            { label: '3 days', value: 72 },
-            { label: '4 days', value: 96 },
-            { label: '1 week', value: 168 },
-            { label: '2 weeks', value: 336 },
-            { label: '1 month', value: 720 },
-            { label: '2 months', value: 1440 },
-            { label: '3 months', value: 2160 }
-        ];
+    const options = [
+        { label: '1 hour', value: 1 },
+        { label: '2 hours', value: 2 },
+        { label: '4 hours', value: 4 },
+        { label: '8 hours', value: 8 },
+        { label: '1 day', value: 24 },
+        { label: '2 days', value: 48 },
+        { label: '3 days', value: 72 },
+        { label: '4 days', value: 96 },
+        { label: '1 week', value: 168 },
+        { label: '2 weeks', value: 336 },
+        { label: '1 month', value: 720 },
+        { label: '2 months', value: 1440 },
+        { label: '3 months', value: 2160 }
+    ];
 
     options.forEach(opt => {
         const optBtn = document.createElement('button');
@@ -114,8 +114,10 @@ export async function attachTaskButtons(item, row, listContainer) {
             all[idx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
             await saveDecisions(all);
             menu.style.display = 'none';
-            const goalCard = row.closest('.decision.goal-card');
-            if (goalCard) goalCard.style.display = 'none';
+
+            // Hide only the postponed task wrapper, not the entire goal
+            const wrapper = row.closest('[data-task-id]');
+            if (wrapper) wrapper.style.display = 'none';
         });
         menu.appendChild(optBtn);
     });
@@ -144,6 +146,7 @@ export async function attachTaskButtons(item, row, listContainer) {
 
     buttonWrap.append(upBtn, editBtn, clockBtn, delBtn);
 }
+
 
 /**
  * Render all tasks under a goal, including add-new and completed.
