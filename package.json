@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "purge:css": "purgecss --config purgecss.config.js --output ./clean-css"
-  }
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -16,5 +16,5 @@
   },
   "devDependencies": {
     "purgecss": "^7.0.2"
-  },
+  }
 }
