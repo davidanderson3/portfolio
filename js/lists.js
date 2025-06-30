@@ -255,6 +255,8 @@ async function initListsPanel() {
   if (listsArray.length) selectList(0);
 
 
+  // In js/lists.js:
+
   function renderSelectedList() {
     const list = listsArray[selectedListIndex] || { columns: [], items: [] };
     const { columns, items } = list;
@@ -285,13 +287,13 @@ async function initListsPanel() {
     items.forEach((item, rowIdx) => {
       const tr = tbody.insertRow();
 
+      // Data cells
       columns.forEach((col, colIdx) => {
         const td = tr.insertCell();
         td.style.border = '1px solid #ccc';
         td.style.padding = '8px';
 
         if (colIdx === 0) {
-          // Always show label; link it only if a URL exists
           const url = item[col.name] || '';
           const label = item[col.name + '_label'] || item[col.name] || '';
           if (url) {
@@ -328,28 +330,51 @@ async function initListsPanel() {
       const actionCell = tr.insertCell();
       actionCell.style.border = '1px solid #ccc';
       actionCell.style.padding = '8px';
+      actionCell.style.display = 'flex';
+      actionCell.style.gap = '0.5rem';
 
-      const del = document.createElement('button');
-      del.textContent = '❌';
-      Object.assign(del.style, { background: 'none', border: 'none', cursor: 'pointer' });
-      del.addEventListener('click', async () => {
-        if (!confirm('Delete this row?')) return;
-        list.items.splice(rowIdx, 1);
+      // Up button
+      const upBtn = document.createElement('button');
+      upBtn.textContent = '⬆️';
+      upBtn.title = 'Move up';
+      Object.assign(upBtn.style, { background: 'none', border: 'none', cursor: 'pointer' });
+      upBtn.addEventListener('click', async () => {
+        if (rowIdx === 0) return; // already at top
+        const itemsArr = listsArray[selectedListIndex].items;
+        [itemsArr[rowIdx - 1], itemsArr[rowIdx]] = [itemsArr[rowIdx], itemsArr[rowIdx - 1]];
         await persist();
         renderSelectedList();
+        selectList(selectedListIndex);
       });
-      actionCell.append(del);
+      actionCell.append(upBtn);
 
+      // Edit button
       const edit = document.createElement('button');
       edit.textContent = '✏️';
+      edit.title = 'Edit';
       Object.assign(edit.style, { background: 'none', border: 'none', cursor: 'pointer' });
       edit.addEventListener('click', () => openRowEditor(rowIdx));
       actionCell.append(edit);
+
+      // Delete button
+      const del = document.createElement('button');
+      del.textContent = '❌';
+      del.title = 'Delete';
+      Object.assign(del.style, { background: 'none', border: 'none', cursor: 'pointer' });
+      del.addEventListener('click', async () => {
+        if (!confirm('Delete this row?')) return;
+        listsArray[selectedListIndex].items.splice(rowIdx, 1);
+        await persist();
+        renderSelectedList();
+        selectList(selectedListIndex);
+      });
+      actionCell.append(del);
     });
 
     table.append(tbody);
     listsContainer.append(table);
   }
+
 
 
   function openRowEditor(rowIdx) {
