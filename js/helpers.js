@@ -1,5 +1,45 @@
 import { getCurrentUser, db } from './auth.js';
 
+// Demo data for visitors who aren't signed in
+const SAMPLE_DECISIONS = [
+  {
+    id: 'demo-goal',
+    type: 'goal',
+    text: 'Welcome to Goal Oriented',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    parentGoalId: null,
+  },
+  {
+    id: 'demo-task-1',
+    type: 'task',
+    text: 'Explore the demo tasks',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    parentGoalId: 'demo-goal',
+  },
+  {
+    id: 'demo-task-2',
+    type: 'task',
+    text: 'Sign up to save your own goals',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    parentGoalId: 'demo-goal',
+  },
+  {
+    id: 'demo-goal-2',
+    type: 'goal',
+    text: 'Another sample goal',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    parentGoalId: null,
+  }
+];
+
 // Cache decisions in-memory to avoid repeated Firestore reads
 let decisionsCache = null;
 
@@ -14,8 +54,9 @@ export async function loadDecisions(forceRefresh = false) {
 
   const currentUser = getCurrentUser();
   if (!currentUser) {
-    console.warn('🚫 No current user — skipping loadDecisions');
-    return [];
+    console.warn('🚫 No current user — returning sample data');
+    decisionsCache = SAMPLE_DECISIONS;
+    return decisionsCache;
   }
   const snap = await db.collection('decisions').doc(currentUser.uid).get();
   const data = snap.data();
