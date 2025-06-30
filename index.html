@@ -13,7 +13,7 @@
 <body>
   <!-- Add this **before** your <section id="goalsView"> in index.html -->
   <section id="splash" class="main-layout" style="
-    display: flex;
+    display: none;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -53,14 +53,14 @@
     </nav>
 
     <!-- TABS BAR -->
-<div class="tabs">
-  <button class="tab-button active" data-target="goalsPanel">Goals</button>
-  <button class="tab-button" data-target="calendarPanel">Calendar</button>
-  <button class="tab-button" data-target="dailyPanel">Daily</button>
-  <button class="tab-button" data-target="metricsPanel">Metrics</button>
-  <button class="tab-button" data-target="listsPanel">Lists</button>
-  <button class="tab-button" data-target="notesPanel">Notes</button>  <!-- New -->
-</div>
+    <div class="tabs">
+      <button class="tab-button active" data-target="goalsPanel">Goals</button>
+      <button class="tab-button" data-target="calendarPanel">Calendar</button>
+      <button class="tab-button" data-target="dailyPanel">Daily</button>
+      <button class="tab-button" data-target="metricsPanel">Metrics</button>
+      <button class="tab-button" data-target="listsPanel">Lists</button>
+      <button class="tab-button" data-target="notesPanel">Notes</button> <!-- New -->
+    </div>
 
     <!-- TABS CONTENT PANELS -->
     <div id="goalsPanel" class="main-layout">
@@ -98,17 +98,17 @@
       </div>
     </div>
 
-<!-- DAILY PANEL -->
-<div id="dailyPanel" class="main-layout" style="display:none;">
-  <div class="left-column">
-    <h2>Daily</h2>
-    <div id="dailyTasksList" class="decision-container"></div>
-  </div>
-  <div class="right-column">
-    <h2>Weekly</h2>
-    <div id="weeklyTasksList" class="decision-container"></div>
-  </div>
-</div>
+    <!-- DAILY PANEL -->
+    <div id="dailyPanel" class="main-layout" style="display:none;">
+      <div class="left-column">
+        <h2>Daily</h2>
+        <div id="dailyTasksList" class="decision-container"></div>
+      </div>
+      <div class="right-column">
+        <h2>Weekly</h2>
+        <div id="weeklyTasksList" class="decision-container"></div>
+      </div>
+    </div>
 
 
     <!-- METRICS PANEL -->
@@ -127,11 +127,11 @@
         <!-- lists.js will inject the form and rendered lists here -->
       </div>
     </div>
-        <!-- NOTES PANEL -->
+    <!-- NOTES PANEL -->
     <div id="notesPanel" class="main-layout" style="display:none;">
       <div class="full-column">
         <h2>Notes</h2>
-        
+
       </div>
     </div>
   </section>

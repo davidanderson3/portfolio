@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+    "purge:css": "purgecss --config purgecss.config.js --output ./clean-css"
+  }
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -17,7 +17,4 @@
   "devDependencies": {
     "purgecss": "^7.0.2"
   },
-  "scripts": {
-    "purge:css": "purgecss --config purgecss.config.js --output ./clean-css"
-  }
 }

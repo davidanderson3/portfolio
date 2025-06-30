@@ -300,44 +300,44 @@ async function renderStatsSummary() {
     const avg = numericVals.length
       ? (numericVals.reduce((sum, v) => sum + v, 0) / numericVals.length).toFixed(2)
       : '—';
-const tdAvg = document.createElement('td');
-tdAvg.textContent = avg;
-Object.assign(tdAvg.style, { padding: '8px', borderBottom: '1px solid #ddd' });
-row.appendChild(tdAvg);
+    const tdAvg = document.createElement('td');
+    tdAvg.textContent = avg;
+    Object.assign(tdAvg.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+    row.appendChild(tdAvg);
 
     const td6 = document.createElement('td');
-Object.assign(td6.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+    Object.assign(td6.style, { padding: '8px', borderBottom: '1px solid #ddd' });
 
-const postpone = document.createElement('span');
-postpone.textContent = '⏭️';
-postpone.style.cursor = 'pointer';
-postpone.addEventListener('click', async () => {
-  await recordMetric(cfg.id, null, { postponed: true });
-  await renderStatsSummary();
-});
-td6.appendChild(postpone);
+    const postpone = document.createElement('span');
+    postpone.textContent = '⏭️';
+    postpone.style.cursor = 'pointer';
+    postpone.addEventListener('click', async () => {
+      await recordMetric(cfg.id, null, { postponed: true });
+      await renderStatsSummary();
+    });
+    td6.appendChild(postpone);
 
-const configEdit = document.createElement('span');
-configEdit.textContent = '✏️';
-configEdit.style.cursor = 'pointer';
-configEdit.style.marginLeft = '8px';
-configEdit.addEventListener('click', () => renderConfigForm(cfg));
-td6.appendChild(configEdit);
+    const configEdit = document.createElement('span');
+    configEdit.textContent = '✏️';
+    configEdit.style.cursor = 'pointer';
+    configEdit.style.marginLeft = '8px';
+    configEdit.addEventListener('click', () => renderConfigForm(cfg));
+    td6.appendChild(configEdit);
 
-if (cfg.id !== 'mood') {
-  const del = document.createElement('span');
-  del.textContent = '❌';
-  del.style.cursor = 'pointer';
-  del.style.marginLeft = '8px';
-  del.addEventListener('click', async () => {
-    await saveMetricsConfig((await loadMetricsConfig()).filter(m => m.id !== cfg.id));
-    await renderConfigForm();
-    await renderStatsSummary();
-  });
-  td6.appendChild(del);
-}
+    if (cfg.id !== 'mood') {
+      const del = document.createElement('span');
+      del.textContent = '❌';
+      del.style.cursor = 'pointer';
+      del.style.marginLeft = '8px';
+      del.addEventListener('click', async () => {
+        await saveMetricsConfig((await loadMetricsConfig()).filter(m => m.id !== cfg.id));
+        await renderConfigForm();
+        await renderStatsSummary();
+      });
+      td6.appendChild(del);
+    }
 
-row.appendChild(td6);
+    row.appendChild(td6);
 
     tbody.appendChild(row);
   }
@@ -438,16 +438,6 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-auth.onAuthStateChanged(user => {
-  if (!user) return;
-  if (document.readyState === 'loading')
-    document.addEventListener('DOMContentLoaded', initMetricsUI);
-  else initMetricsUI();
-});
-
-// ——— after all of your functions and at the very bottom of the file ———
-
-// DEBUG: expose for console inspection
 window._statsDebug = {
   loadMetricsConfig,
   renderStatsSummary,
