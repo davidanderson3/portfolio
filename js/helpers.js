@@ -1,10 +1,17 @@
 import { getCurrentUser, db } from './auth.js';
 
+// Cache decisions in-memory to avoid repeated Firestore reads
+let decisionsCache = null;
+
 export function generateId() {
   return '_' + Math.random().toString(36).substr(2, 9);
 }
 
-export async function loadDecisions() {
+export async function loadDecisions(forceRefresh = false) {
+  if (decisionsCache && !forceRefresh) {
+    return decisionsCache;
+  }
+
   const currentUser = getCurrentUser();
   if (!currentUser) {
     console.warn('🚫 No current user — skipping loadDecisions');
@@ -12,7 +19,8 @@ export async function loadDecisions() {
   }
   const snap = await db.collection('decisions').doc(currentUser.uid).get();
   const data = snap.data();
-  return data && Array.isArray(data.items) ? data.items : [];
+  decisionsCache = data && Array.isArray(data.items) ? data.items : [];
+  return decisionsCache;
 }
 
 export async function saveDecisions(items) {
@@ -29,6 +37,9 @@ export async function saveDecisions(items) {
     .collection('decisions')
     .doc(currentUser.uid)
     .set({ items }, { merge: true });
+
+  // Update in-memory cache after successful save
+  decisionsCache = items;
 }
 
 export async function saveGoalOrder(order) {
