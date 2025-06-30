@@ -89,41 +89,6 @@ function addColumnInput() {
   container.append(row);
 }
 
-
-async function onCreateList() {
-  const name = document.querySelector('#listName').value.trim();
-  if (!name) return alert('List needs a name.');
-
-  const rows = Array.from(document.querySelectorAll('#columnsContainer > div'));
-  const cols = rows.map(row => {
-    const nameInp = row.querySelector('input[type="text"]');
-    const typeSel = row.querySelector('select');
-    return {
-      name: nameInp.value.trim(),
-      type: typeSel.value
-    };
-  }).filter(col => col.name);
-
-  if (!cols.length) return alert('Add at least one column.');
-
-  const newList = { name, columns: cols, items: [] };
-  listsArray.push(newList);
-  await persist();
-
-  renderTabs();
-  selectList(listsArray.length - 1);
-}
-
-function bindCreateForm() {
-  document.querySelector('#addColumnBtn')
-    .addEventListener('click', addColumnInput);
-
-  document.querySelector('#createListBtn')
-    .addEventListener('click', onCreateList);
-
-  addColumnInput();
-}
-
 // 3️⃣ Simple debounce helper to batch saves
 function debounce(fn, delay) {
   let timer;
@@ -212,8 +177,6 @@ async function initListsPanel() {
     createForm
   );
 
-  bindCreateForm();
-
 
   // ─── 5) Load data & wire persistence ─────────────────────────
   let listsArray = await loadLists();
@@ -242,6 +205,55 @@ async function initListsPanel() {
     renderSelectedList();
     renderItemForm();
   }
+
+  // Place this _inside_ initListsPanel, immediately after your selectList definition
+
+  async function onCreateList() {
+    // 1) Read and validate the list name
+    const name = document.querySelector('#listName').value.trim();
+    if (!name) {
+      alert('List needs a name.');
+      return;
+    }
+
+    // 2) Gather column definitions (name+type) from the create form
+    const rows = Array.from(document.querySelectorAll('#columnsContainer > div'));
+    const cols = rows.map(row => {
+      const nameInp = row.querySelector('input[type="text"]');
+      const typeSel = row.querySelector('select');
+      return { name: nameInp.value.trim(), type: typeSel.value };
+    }).filter(col => col.name);
+
+    if (!cols.length) {
+      alert('Add at least one column.');
+      return;
+    }
+
+    // 3) Build the newList object before using it
+    const newList = { name, columns: cols, items: [] };
+
+    // 4) Push, persist, re-render, and select the new tab
+    listsArray.push(newList);
+    await persist();
+    renderTabs();
+    selectList(listsArray.length - 1);
+  }
+
+  // Then immediately bind it (and column-input) in the same scope:
+  document.getElementById('addColumnBtn')
+    .addEventListener('click', addColumnInput);
+  document.getElementById('createListBtn')
+    .addEventListener('click', onCreateList);
+
+
+  // 3️⃣ Bind it to your button
+  document.getElementById('createListBtn')
+    .addEventListener('click', onCreateList);
+
+  // 4️⃣ Finally, do the initial render
+  renderTabs();
+  if (listsArray.length) selectList(0);
+
 
   function renderSelectedList() {
     const list = listsArray[selectedListIndex] || { columns: [], items: [] };
