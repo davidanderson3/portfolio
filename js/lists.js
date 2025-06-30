@@ -55,41 +55,75 @@ function setupScaffolding(panel) {
   panel.append(tabsContainer, addColumnBtn, listsContainer, itemForm, createForm);
 }
 
-// ─── 1️⃣ Column-input helper MUST come first ─────────────────
 function addColumnInput() {
   const container = document.querySelector('#columnsContainer');
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'Column name';
-  input.style.marginRight = '0.5rem';
-  container.append(input);
+
+  const row = document.createElement('div');
+  row.style.display = 'flex';
+  row.style.alignItems = 'center';
+  row.style.marginBottom = '0.5rem';
+
+  const nameInp = document.createElement('input');
+  nameInp.type = 'text';
+  nameInp.placeholder = 'Column name';
+  Object.assign(nameInp.style, { marginRight: '0.5rem', flex: '1' });
+  row.append(nameInp);
+
+  const typeSel = document.createElement('select');
+  ['text', 'number', 'date', 'checkbox', 'link', 'list'].forEach(type => {
+    const opt = document.createElement('option');
+    opt.value = type;
+    opt.textContent = type;
+    typeSel.append(opt);
+  });
+  Object.assign(typeSel.style, { marginRight: '0.5rem' });
+  row.append(typeSel);
+
+  const rem = document.createElement('button');
+  rem.type = 'button';
+  rem.textContent = '❌';
+  Object.assign(rem.style, { background: 'none', border: 'none', cursor: 'pointer' });
+  rem.addEventListener('click', () => row.remove());
+  row.append(rem);
+
+  container.append(row);
 }
 
-// ─── 2️⃣ Create-list handler MUST also come before binder ────
+
 async function onCreateList() {
   const name = document.querySelector('#listName').value.trim();
   if (!name) return alert('List needs a name.');
-  const cols = Array.from(document.querySelectorAll('#columnsContainer input'))
-    .map(i => i.value.trim())
-    .filter(v => v);
+
+  const rows = Array.from(document.querySelectorAll('#columnsContainer > div'));
+  const cols = rows.map(row => {
+    const nameInp = row.querySelector('input[type="text"]');
+    const typeSel = row.querySelector('select');
+    return {
+      name: nameInp.value.trim(),
+      type: typeSel.value
+    };
+  }).filter(col => col.name);
+
   if (!cols.length) return alert('Add at least one column.');
-  const newList = {
-    name,
-    columns: cols.map(c => ({ name: c, type: 'text' })),
-    items: []
-  };
+
+  const newList = { name, columns: cols, items: [] };
   listsArray.push(newList);
   await persist();
+
   renderTabs();
   selectList(listsArray.length - 1);
 }
-// 2️⃣ Bind the create-list controls
+
 function bindCreateForm() {
-  const columnsContainer = document.querySelector('#columnsContainer');
-  document.querySelector('#addColumnBtn').addEventListener('click', addColumnInput);
-  document.querySelector('#createListBtn').addEventListener('click', onCreateList);
+  document.querySelector('#addColumnBtn')
+    .addEventListener('click', addColumnInput);
+
+  document.querySelector('#createListBtn')
+    .addEventListener('click', onCreateList);
+
   addColumnInput();
 }
+
 // 3️⃣ Simple debounce helper to batch saves
 function debounce(fn, delay) {
   let timer;
