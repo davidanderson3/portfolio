@@ -1,4 +1,4 @@
-import { loadDecisions, saveDecisions, generateId } from './helpers.js';
+import { loadDecisions, saveDecisions, generateId, makeIconBtn } from './helpers.js';
 
 // Shared skip intervals (same as goals)
 const skipOptions = [
@@ -378,20 +378,6 @@ export async function renderDailyTasks(currentUser, db) {
     row.append(cb, label, btns);
     wrapper.appendChild(row);
     return wrapper;
-  }
-
-  function makeIconBtn(symbol, title, fn) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = symbol;
-    b.title = title;
-    Object.assign(b.style, {
-      background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1em', padding: '0'
-    });
-    b.addEventListener('mousedown', e => e.stopPropagation());
-    b.addEventListener('click', e => e.stopPropagation());
-    b.onclick = fn;
-    return b;
   }
 
   async function persistReorder() {
