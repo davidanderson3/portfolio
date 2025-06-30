@@ -53,18 +53,18 @@
     </nav>
 
     <!-- TABS BAR -->
-    <div class="tabs">
-      <div class="container">
-        <button class="tab-button active" data-target="goalsPanel">Goals</button>
-        <button class="tab-button" data-target="calendarPanel">Calendar</button>
-        <button class="tab-button" data-target="dailyPanel">Daily</button>
-        <button class="tab-button" data-target="metricsPanel">Metrics</button>
-      </div>
-    </div>
+<div class="tabs">
+  <button class="tab-button active" data-target="goalsPanel">Goals</button>
+  <button class="tab-button" data-target="calendarPanel">Calendar</button>
+  <button class="tab-button" data-target="dailyPanel">Daily</button>
+  <button class="tab-button" data-target="metricsPanel">Metrics</button>
+  <button class="tab-button" data-target="listsPanel">Lists</button>
+  <button class="tab-button" data-target="notesPanel">Notes</button>  <!-- New -->
+</div>
 
     <!-- TABS CONTENT PANELS -->
     <div id="goalsPanel" class="main-layout">
-      <div class="goals-column">
+      <div class="full-column">
         <h2>Goals</h2>
 
         <div id="goalList" class="decision-container"></div>
@@ -84,57 +84,60 @@
 
         <div id="completedList" class="decision-container"></div>
       </div>
-
-      <div class="right-column">
-        <h2>Daily Tasks</h2>
-        <div id="dailyTasksList" class="decision-container"></div>
-      </div>
     </div>
 
     <!-- CALENDAR PANEL -->
     <div id="calendarPanel" class="main-layout" style="display:none;">
-      <div class="goals-column">
+      <div class="left-column">
         <h2>Calendar</h2>
         <div id="calendarContent"></div>
       </div>
       <div class="right-column">
-        <!-- e.g. a mini-legend or upcoming events -->
         <h2>Notes</h2>
         <p>No events today.</p>
       </div>
     </div>
 
-    <!-- DAILY PANEL -->
-    <div id="dailyPanel" class="main-layout" style="display:none;">
-      <div class="goals-column">
-        <h2>Daily</h2>
-        <div id="dailyTasksList" class="decision-container"></div>
-      </div>
-      <div class="right-column">
-        <!-- maybe a summary or statistics -->
-        <h2>Summary</h2>
-        <p><em>0 of X tasks done</em></p>
-      </div>
-    </div>
+<!-- DAILY PANEL -->
+<div id="dailyPanel" class="main-layout" style="display:none;">
+  <div class="left-column">
+    <h2>Daily</h2>
+    <div id="dailyTasksList" class="decision-container"></div>
+  </div>
+  <div class="right-column">
+    <h2>Weekly</h2>
+    <div id="weeklyTasksList" class="decision-container"></div>
+  </div>
+</div>
+
 
     <!-- METRICS PANEL -->
     <div id="metricsPanel" class="main-layout" style="display:none;">
-      <div class="goals-column">
+      <div class="full-column">
         <h2>Metrics</h2>
         <div id="genericStatsSummary"></div>
         <div id="metricsConfigSection"></div>
       </div>
-      <div class="right-column">
-        <h2>Configure</h2>
+    </div>
 
+    <!-- LISTS PANEL -->
+    <div id="listsPanel" class="main-layout" style="display:none">
+      <div class="full-column">
+        <h2>Lists</h2>
+        <!-- lists.js will inject the form and rendered lists here -->
+      </div>
+    </div>
+        <!-- NOTES PANEL -->
+    <div id="notesPanel" class="main-layout" style="display:none;">
+      <div class="full-column">
+        <h2>Notes</h2>
+        
       </div>
     </div>
   </section>
 
-
-  </section>
-
   <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/lists.js"></script>
 </body>
 
 </html>

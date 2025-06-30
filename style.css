@@ -33,7 +33,7 @@ body {
   box-shadow: 0 4px 12px rgba(150, 150, 150, 0.05);
 }
 
-.goals-column {
+.left-column {
   width: 60%;
   max-width: 1080px;
 }
@@ -349,7 +349,7 @@ button:hover {
     flex-direction: column;
   }
 
-  .goals-column,
+  .left-column,
   .right-column {
     width: 100% !important;
     max-width: 100% !important;
@@ -654,7 +654,7 @@ body {
   padding: 20px;
 }
 
-.goals-column {
+.left-column {
   flex: 1 1 300px;
   padding: 10px;
 }
@@ -753,7 +753,7 @@ body {
 #goalsView .tabs {
   margin: 0;
   /* remove top margins inherited elsewhere */
-  padding: 8px 0;
+  padding: 8px 0 0 0;
   display: flex;
   justify-content: flex-start;
   background-color: #f0f5f2;
@@ -783,9 +783,11 @@ body {
 /* ─────────────────────────────────────────────────────────────────────────────
    4) Main content panel under tabs
 ───────────────────────────────────────────────────────────────────────────── */
-#goalsView .goals-column,
-#goalsView .right-column {
+#goalsView .left-column,
+#goalsView .right-column,
+#goalsView .full-column {
   background: rgba(255, 255, 255, 0.85);
+  width: 100%;
   padding: 20px;
   border: 1px solid #d0decf;
   border-top: none;
@@ -798,4 +800,76 @@ body {
 h2 {
   margin: 0.5em 0;
   /* 0.5em top & bottom, 0 left & right */
+}
+
+/* base look */
+.postpone-option {
+  display: block;
+  width: 100%;
+  padding: 4px 12px;
+  border: none;
+  background: white;
+  color: #333;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* hover look */
+.postpone-option:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+#metricsPanel.main-layout {
+  justify-content: flex-start !important;
+  max-width: none !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+#metricsPanel .full-column {
+  flex: 1 1 100%;
+}
+
+/* Minimalist list-selector tabs */
+#listTabs {
+  display: flex;
+  gap: 0; /* we'll rely on borders instead of space */
+}
+
+#listTabs .list-tab {
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  border-right: 1px solid #ccc;
+  cursor: pointer;
+  font-weight: normal;
+  transition: color 0.2s;
+}
+
+/* Remove the trailing border on last tab */
+#listTabs .list-tab:last-child {
+  border-right: none;
+}
+
+/* Active state: underline instead of background */
+#listTabs .list-tab.active {
+  color: #000;
+  border-bottom: 2px solid #000;
+  font-weight: bold;
+}
+
+/* Hover state */
+#listTabs .list-tab:hover {
+  color: #333;
+}
+
+#listsContainer button,
+#listsPanel button[title="Edit row"],
+#listsPanel button[title="Delete row"] {
+  background: none !important;
+  border: none    !important;
+  cursor: pointer !important;
 }

@@ -46,36 +46,30 @@ export function createGoalRow(goal, options = {}) {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.checked = !!goal.completed;
-    checkbox.disabled = !!goal.completed;
 
+    // only attach the onchange logic if this row is a goal
+    if (goal.type === 'goal') {
+        checkbox.onchange = async () => {
+            // 1) Update DB
+            const items = await loadDecisions();
+            const idx = items.findIndex(d => d.id === goal.id);
+            if (idx === -1) return;
 
-    checkbox.onchange = async () => {
-        // 1) Update DB
-        const items = await loadDecisions();
-        const idx = items.findIndex(d => d.id === goal.id);
-        if (idx === -1) return;
+            items[idx].completed = checkbox.checked;
+            items[idx].dateCompleted = checkbox.checked
+                ? new Date().toISOString()
+                : null;
+            await saveDecisions(items);
 
-        items[idx].completed = checkbox.checked;
-        items[idx].dateCompleted = checkbox.checked
-            ? new Date().toISOString()
-            : null;
-        await saveDecisions(items);
-
-        // 2) Move the row in the DOM
-        const wrapper = row.closest('.decision.goal-card') || row;
-        if (checkbox.checked) {
-            // disable further toggles
-            checkbox.disabled = true;
-            // append to completedList
-            completedList.appendChild(wrapper);
-        } else {
-            // re-enable if needed
-            checkbox.disabled = false;
-            // insert back into goalList
-            goalList.appendChild(wrapper);
-        }
-    };
-
+            // 2) Move the row in the DOM
+            const wrapper = row.closest('.decision.goal-card') || row;
+            if (checkbox.checked) {
+                completedList.appendChild(wrapper);
+            } else {
+                goalList.appendChild(wrapper);
+            }
+        };
+    }
 
     left.append(toggle, checkbox);
     row.appendChild(left);
@@ -91,32 +85,7 @@ export function createGoalRow(goal, options = {}) {
     right.className = 'right-group';
 
     if (goal.type === 'goal' && !options.hideScheduled) {
-        const schedWrap = document.createElement('div');
-        schedWrap.className = 'scheduled-column';
-        const schedInput = document.createElement('input');
-        schedInput.type = 'date';
-        schedInput.value = goal.scheduled || '';
-        schedInput.title = 'Scheduled';
-
-        schedInput.onchange = async () => {
-            const items = await loadDecisions();
-            const idx = items.findIndex(d => d.id === goal.id);
-            if (idx === -1) return;
-            items[idx].scheduled = schedInput.value || null;
-            await saveDecisions(items);
-
-            const card = schedInput.closest('.decision.goal-card');
-            if (card) card.remove();
-
-            const calendarContent = document.getElementById('calendarContent');
-            if (calendarContent) {
-                calendarContent.innerHTML = '';
-                renderCalendarSection(items, calendarContent);
-            }
-        };
-
-        schedWrap.appendChild(schedInput);
-        right.appendChild(schedWrap);
+        // … your scheduled-date code here …
     }
 
     const due = document.createElement('div');
@@ -136,17 +105,21 @@ export function createGoalRow(goal, options = {}) {
 }
 
 
-export async function renderGoalsAndSubitems() {
-    clearDOM();
-    const { allDecisions, sortedGoals } = await loadAndSyncGoals();
-    const hiddenContent = initHiddenSection();
-    const calendarContent = initCalendarSection();
-    initCompletedSection();
 
-    // render into the existing #calendarContent panel
-    renderCalendarSection(allDecisions, calendarContent);
-    await renderRemainingGoals(allDecisions, sortedGoals, hiddenContent);
+export async function renderGoalsAndSubitems() {
+  clearDOM();
+  const { allDecisions, sortedGoals } = await loadAndSyncGoals();
+
+  // 1) Render the calendar on the left
+  const calendarContent = initCalendarSection();
+  renderCalendarSection(allDecisions, calendarContent);
+
+  // 3) Hidden & completed goals below
+  const hiddenContent = initHiddenSection();
+  initCompletedSection();
+  await renderRemainingGoals(allDecisions, sortedGoals, hiddenContent);
 }
+
 
 function clearDOM() {
     goalList.innerHTML = '';
@@ -246,14 +219,18 @@ function initCompletedSection() {
     goalList.parentNode.appendChild(completedSection);
 }
 
-// renderCalendarSection.js
 function renderCalendarSection(all, calendarContent) {
     const scheduled = all
-        .filter(g => g.scheduled && !isNaN(Date.parse(g.scheduled)))
+        .filter(
+            g =>
+                g.scheduled &&                 // has a scheduled date
+                !g.completed &&                // NEW: ignore completed items
+                !isNaN(Date.parse(g.scheduled))
+        )
         .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
 
     const byDate = scheduled.reduce((groups, goal) => {
-        const key = goal.scheduled.slice(0, 10);
+        const key = goal.scheduled.slice(0, 10); // "YYYY-MM-DD"
         (groups[key] = groups[key] || []).push(goal);
         return groups;
     }, {});
@@ -262,20 +239,18 @@ function renderCalendarSection(all, calendarContent) {
         .sort()
         .forEach(dateKey => {
             const [y, m, d] = dateKey.split('-').map(Number);
-            const dateObj = new Date(y, m - 1, d);
-
-            const header = document.createElement('h3');
-            header.textContent = dateObj.toLocaleDateString();
+            const header    = document.createElement('h3');
+            header.textContent = new Date(y, m - 1, d).toLocaleDateString();
             calendarContent.appendChild(header);
 
             byDate[dateKey].forEach(goal => {
-                const wrapper = makeGoalWrapper(goal);
-                const row = createGoalRow(goal, { hideScheduled: true });
+                const wrapper           = makeGoalWrapper(goal);
+                const row               = createGoalRow(goal, { hideScheduled: true });
                 wrapper.appendChild(row);
                 renderGoalTags(goal, row);
 
                 const childrenContainer = document.createElement('div');
-                childrenContainer.className = 'goal-children';
+                childrenContainer.className   = 'goal-children';
                 childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
                 wrapper.appendChild(childrenContainer);
                 renderChildren(goal, all, childrenContainer);
@@ -285,6 +260,7 @@ function renderCalendarSection(all, calendarContent) {
             });
         });
 }
+
 
 
 async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
@@ -442,6 +418,10 @@ function attachEditButtons(item, buttonWrap) {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.textContent = opt.label;
+            // mark as a postpone‐menu button so global styles skip it
+            btn.classList.add('postpone-option');
+
+            // base styling
             Object.assign(btn.style, {
                 display: 'block',
                 width: '100%',
@@ -452,15 +432,16 @@ function attachEditButtons(item, buttonWrap) {
                 textAlign: 'left',
                 cursor: 'pointer'
             });
-            btn.addEventListener('mouseenter', () => btn.style.background = '#f0f0f0');
-            btn.addEventListener('mouseleave', () => btn.style.background = 'white');
 
+            // click handler
             btn.addEventListener('click', async e => {
                 e.stopPropagation();
                 const all = await loadDecisions();
                 const idx = all.findIndex(d => d.id === item.id);
                 if (idx === -1) return;
-                all[idx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+                all[idx].hiddenUntil = new Date(
+                    Date.now() + opt.value * 3600 * 1000
+                ).toISOString();
                 await saveDecisions(all);
                 menu.style.display = 'none';
                 const wrapper = buttonWrap.closest('.decision.goal-card');
@@ -469,6 +450,7 @@ function attachEditButtons(item, buttonWrap) {
 
             menu.appendChild(btn);
         });
+
 
         clockBtn.addEventListener('click', e => {
             e.stopPropagation();
