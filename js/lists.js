@@ -220,19 +220,19 @@ async function initListsPanel() {
 
     // Header
     const thead = table.createTHead();
-    const hdr = thead.insertRow();
+    const headerRow = thead.insertRow();
     columns.forEach(col => {
       const th = document.createElement('th');
       th.textContent = col.name;
       th.style.border = '1px solid #ccc';
       th.style.padding = '8px';
-      hdr.append(th);
+      headerRow.append(th);
     });
     const actionsTh = document.createElement('th');
     actionsTh.textContent = 'Actions';
     actionsTh.style.border = '1px solid #ccc';
     actionsTh.style.padding = '8px';
-    hdr.append(actionsTh);
+    headerRow.append(actionsTh);
 
     // Body
     const tbody = document.createElement('tbody');
@@ -245,7 +245,7 @@ async function initListsPanel() {
         td.style.padding = '8px';
 
         if (colIdx === 0) {
-          // first column: URL + label
+          // Always show label; link it only if a URL exists
           const url = item[col.name] || '';
           const label = item[col.name + '_label'] || item[col.name] || '';
           if (url) {
@@ -254,14 +254,15 @@ async function initListsPanel() {
             a.target = '_blank';
             a.textContent = label;
             td.append(a);
+          } else {
+            td.textContent = label;
           }
         }
         else if (col.type === 'checkbox') {
           td.textContent = item[col.name] ? '✔️' : '';
         }
         else if (col.type === 'list') {
-          const raw = item[col.name] || '';
-          const lines = raw.split('\n').filter(l => l.trim());
+          const lines = (item[col.name] || '').split('\n').filter(l => l.trim());
           if (lines.length) {
             const ul = document.createElement('ul');
             lines.forEach(line => {
@@ -277,7 +278,7 @@ async function initListsPanel() {
         }
       });
 
-      // Actions
+      // Actions cell
       const actionCell = tr.insertCell();
       actionCell.style.border = '1px solid #ccc';
       actionCell.style.padding = '8px';
@@ -287,7 +288,7 @@ async function initListsPanel() {
       Object.assign(del.style, { background: 'none', border: 'none', cursor: 'pointer' });
       del.addEventListener('click', async () => {
         if (!confirm('Delete this row?')) return;
-        items.splice(rowIdx, 1);
+        list.items.splice(rowIdx, 1);
         await persist();
         renderSelectedList();
       });
@@ -303,6 +304,7 @@ async function initListsPanel() {
     table.append(tbody);
     listsContainer.append(table);
   }
+
 
   function openRowEditor(rowIdx) {
     const list = listsArray[selectedListIndex];
@@ -479,17 +481,15 @@ async function initListsPanel() {
 
     list.columns.forEach((col, colIdx) => {
       if (colIdx === 0) {
-        // URL input
         const urlInp = document.createElement('input');
         urlInp.type = 'url';
         urlInp.name = col.name;
-        urlInp.placeholder = `${col.name} URL`;
+        urlInp.placeholder = `${col.name} URL (optional)`;
         Object.assign(urlInp.style, {
           flex: '1 1 auto', minWidth: '6rem', padding: '.25rem', fontSize: '.9rem'
         });
         inputsContainer.append(urlInp);
 
-        // Label input
         const lblInp = document.createElement('input');
         lblInp.type = 'text';
         lblInp.name = `${col.name}_label`;
@@ -498,8 +498,7 @@ async function initListsPanel() {
           flex: '1 1 auto', minWidth: '6rem', padding: '.25rem', fontSize: '.9rem'
         });
         inputsContainer.append(lblInp);
-      }
-      else if (col.type === 'list') {
+      } else if (col.type === 'list') {
         const txt = document.createElement('textarea');
         txt.name = col.name;
         txt.rows = 2;
@@ -508,8 +507,7 @@ async function initListsPanel() {
           flex: '1 1 100%', padding: '.25rem', fontSize: '.9rem'
         });
         inputsContainer.append(txt);
-      }
-      else {
+      } else {
         const inp = document.createElement('input');
         inp.type = col.type === 'link' ? 'url' : col.type;
         inp.name = col.name;
@@ -521,13 +519,13 @@ async function initListsPanel() {
       }
     });
 
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = '➕ Add';
-    Object.assign(btn.style, {
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.textContent = '➕ Add';
+    Object.assign(addBtn.style, {
       padding: '.25rem .75rem', fontSize: '.9rem', cursor: 'pointer', marginTop: '.5rem'
     });
-    btn.addEventListener('click', async () => {
+    addBtn.addEventListener('click', async () => {
       const newItem = {};
       inputsContainer.querySelectorAll('input,textarea').forEach(i => {
         newItem[i.name] = i.value.trim();
@@ -537,7 +535,34 @@ async function initListsPanel() {
       await persist();
       renderSelectedList();
     });
-    itemForm.append(btn);
+    itemForm.append(addBtn);
+
+    const deleteListBtn = document.createElement('button');
+    deleteListBtn.type = 'button';
+    deleteListBtn.textContent = 'Delete This List';
+    Object.assign(deleteListBtn.style, {
+      display: 'block',
+      marginTop: '0.5rem',
+      background: 'none',
+      border: '1px solid #f00',
+      color: '#f00',
+      cursor: 'pointer',
+      padding: '.25rem .75rem'
+    });
+    deleteListBtn.addEventListener('click', async () => {
+      if (!confirm(`Delete the entire list “${list.name}”? This cannot be undone.`)) return;
+      listsArray.splice(selectedListIndex, 1);
+      await persist();
+      renderTabs();
+      if (listsArray.length) {
+        selectedListIndex = Math.max(0, selectedListIndex - 1);
+        selectList(selectedListIndex);
+      } else {
+        listsContainer.innerHTML = '';
+        itemForm.innerHTML = '';
+      }
+    });
+    itemForm.append(deleteListBtn);
   }
 
 
@@ -571,3 +596,4 @@ async function initListsPanel() {
   }
 }
 
+window.initListsPanel = initListsPanel;
