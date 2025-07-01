@@ -230,12 +230,13 @@ async function renderStatsSummary() {
   const valuesByMetric = {};
   Object.values(allStats).forEach(day => {
     Object.entries(day).forEach(([id, entries]) => {
-      const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
-      let v = latest.value;
-      if (unitByMetric[id] === 'list' && typeof v === 'string') {
-        v = v.split('\n').filter(l => l.trim()).length;
-      }
-      (valuesByMetric[id] = valuesByMetric[id] || []).push(v);
+      entries.filter(e => !(e.extra && e.extra.postponed)).forEach(entry => {
+        let v = entry.value;
+        if (unitByMetric[id] === 'list' && typeof v === 'string') {
+          v = v.split('\n').filter(l => l.trim()).length;
+        }
+        (valuesByMetric[id] = valuesByMetric[id] || []).push(v);
+      });
     });
   });
   const container = document.getElementById('genericStatsSummary');
