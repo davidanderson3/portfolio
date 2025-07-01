@@ -23,24 +23,36 @@ export async function initTabReports(user, db) {
 function renderGoalsReport(items) {
   const container = document.getElementById('goalsReport');
   if (!container) return;
+
+  const now = Date.now();
   const goals = items.filter(i => i.type === 'goal');
-  const completed = goals.filter(g => g.completed).length;
-  container.innerHTML = '<h3>Goal Progress</h3><canvas></canvas>';
-  const ctx = container.querySelector('canvas').getContext('2d');
-  new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Completed', 'Pending'],
-      datasets: [{
-        data: [completed, goals.length - completed],
-        backgroundColor: ['#5cb85c', '#d9534f']
-      }]
-    },
-    options: {
-      plugins: { legend: { position: 'bottom' } },
-      responsive: true
-    }
+  const tasks = items.filter(i => i.type === 'task');
+
+  const activeGoals = goals.filter(g => {
+    const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
+    return !g.completed && (!hideUntil || now >= hideUntil);
   });
+  const hiddenGoals = goals.filter(g => {
+    const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
+    return hideUntil && now < hideUntil;
+  });
+
+  const activeTasks = tasks.filter(t => {
+    const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
+    return !t.completed && (!hideUntil || now >= hideUntil);
+  });
+  const hiddenTasks = tasks.filter(t => {
+    const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
+    return hideUntil && now < hideUntil;
+  });
+
+  container.innerHTML = `
+    <h3>Goal Status</h3>
+    <p>Active goals: ${activeGoals.length}</p>
+    <p>Active tasks: ${activeTasks.length}</p>
+    <p>Hidden goals: ${hiddenGoals.length}</p>
+    <p>Hidden tasks: ${hiddenTasks.length}</p>
+  `;
 }
 
 async function renderDailyReport(items, user, db) {
@@ -68,7 +80,6 @@ async function renderDailyReport(items, user, db) {
     },
     options: { responsive: true }
   });
-  container.textContent = `Total goals: ${goals.length}. Completed: ${completed}. Pending: ${goals.length - completed}.`;
 }
 
 function renderListsReport(lists) {
