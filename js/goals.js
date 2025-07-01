@@ -125,6 +125,8 @@ export async function renderGoalsAndSubitems() {
 function clearDOM() {
     goalList.innerHTML = '';
     completedList.innerHTML = '';
+    const hiddenContent = document.getElementById('hiddenContent');
+    if (hiddenContent) hiddenContent.innerHTML = '';
 }
 
 async function loadAndSyncGoals() {
