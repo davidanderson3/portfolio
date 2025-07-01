@@ -125,7 +125,10 @@ async function recordMetric(metricId, value, extra = null) {
   };
 
   if (!user) {
-    const all = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+    let all = JSON.parse(localStorage.getItem(STATS_KEY) || 'null');
+    if (!all || !Object.keys(all).length) {
+      all = JSON.parse(JSON.stringify(SAMPLE_METRIC_DATA));
+    }
     const day = todayKey();
     all[day] = all[day] || {};
     all[day][metricId] = all[day][metricId] || [];
