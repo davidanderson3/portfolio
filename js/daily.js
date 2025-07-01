@@ -19,7 +19,7 @@ const skipOptions = [
 
 export async function renderDailyTasks(currentUser, db) {
   const panel = document.getElementById('dailyPanel');
-  if (!panel || !currentUser) return;
+  if (!panel) return;
 
   // — ensure our container exists
   let container = panel.querySelector('#dailyTasksList');
@@ -63,6 +63,7 @@ export async function renderDailyTasks(currentUser, db) {
   // — Clear and load all tasks
   container.innerHTML = '';
   const all = await loadDecisions();
+  weeklyContainer.innerHTML = "";
 
   // — Migrate legacy “[Daily]” flags
   let migrated = false;
@@ -191,6 +192,13 @@ export async function renderDailyTasks(currentUser, db) {
   // — Render active then done
   for (const t of activeList) container.appendChild(makeTaskElement(t));
   for (const t of doneList) container.appendChild(makeTaskElement(t));
+  const weeklyList = all.filter(t =>
+    t.type === "task" &&
+    t.recurs === "weekly" &&
+    (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
+  );
+  for (const t of weeklyList) weeklyContainer.appendChild(makeTaskElement(t));
+
 
   // ——— Helpers —————————————————————————
 
