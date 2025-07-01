@@ -17,17 +17,12 @@ import {
     renderChildren
 } from './tasks.js';
 
-import {
-    renderGoalTags,
-    initializeGoalTagSupport
-} from './goalTags.js';
 
 const openGoalIds = new Set();
 const goalList = document.getElementById('goalList');
 const completedList = document.getElementById('completedList');
 
 initializeGlobalDragHandlers();
-initializeGoalTagSupport();
 
 export function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');
@@ -255,7 +250,6 @@ function renderCalendarSection(all, calendarContent) {
                 const wrapper           = makeGoalWrapper(goal);
                 const row               = createGoalRow(goal, { hideScheduled: true });
                 wrapper.appendChild(row);
-                renderGoalTags(goal, row);
 
                 const childrenContainer = document.createElement('div');
                 childrenContainer.className   = 'goal-children';
@@ -282,7 +276,6 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
         const wrapper = makeGoalWrapper(goal);
         const row = createGoalRow(goal, { hideScheduled: true });
         wrapper.appendChild(row);
-        renderGoalTags(goal, row);
 
         const childrenContainer = document.createElement('div');
         childrenContainer.className = 'goal-children';
