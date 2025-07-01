@@ -131,8 +131,7 @@ async function recordMetric(metricId, value, extra = null) {
     }
     const day = todayKey();
     all[day] = all[day] || {};
-    all[day][metricId] = all[day][metricId] || [];
-    all[day][metricId].push(entry);
+    all[day][metricId] = [entry];
     localStorage.setItem(STATS_KEY, JSON.stringify(all));
     return;
   }
@@ -144,7 +143,7 @@ async function recordMetric(metricId, value, extra = null) {
   try {
     await ref.set({
       metrics: {
-        [metricId]: FieldValue.arrayUnion(entry)
+        [metricId]: [entry]
       }
     }, { merge: true });
   } catch (err) {
@@ -152,8 +151,7 @@ async function recordMetric(metricId, value, extra = null) {
     const all = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
     const day = todayKey();
     all[day] = all[day] || {};
-    all[day][metricId] = all[day][metricId] || [];
-    all[day][metricId].push(entry);
+    all[day][metricId] = [entry];
     localStorage.setItem(STATS_KEY, JSON.stringify(all));
   }
 }
