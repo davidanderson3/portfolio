@@ -671,8 +671,8 @@ body {
   }
 
   .tabs .tab-button {
-    font-size: 0.9rem;
-    padding: 10px;
+    font-size: 1rem;
+    padding: 12px;
   }
 }
 
@@ -763,7 +763,8 @@ body {
 
 #goalsView .tabs button {
   margin-right: 0;
-  padding: 8px 16px;
+  padding: 12px 24px;
+  font-size: 1.1rem;
   background: #e8efe9;
   background-image: url('https://www.transparenttextures.com/patterns/paper-1.png');
   background-repeat: repeat;
