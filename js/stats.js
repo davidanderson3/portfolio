@@ -127,7 +127,13 @@ async function loadAllStats() {
 
 function computeRank(val, allValues, direction) {
   if (!allValues.length) return '—';
-  const sorted = allValues.slice().sort((a, b) => direction === 'lower' ? a - b : b - a);
+  const dir = (direction || '').toLowerCase();
+  const numeric = allValues
+    .map(v => typeof v === 'string' ? parseFloat(v) : v)
+    .filter(v => typeof v === 'number' && !isNaN(v));
+  val = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(val) || !numeric.length) return '—';
+  const sorted = numeric.slice().sort((a, b) => dir === 'lower' ? a - b : b - a);
   const index = sorted.findIndex(v => v === val);
   return index >= 0 ? `${index + 1}/${sorted.length}` : '—';
 }
@@ -201,12 +207,13 @@ async function renderStatsSummary() {
   const valuesByMetric = {};
   Object.values(allStats).forEach(day => {
     Object.entries(day).forEach(([id, entries]) => {
-      const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
-      let v = latest.value;
-      if (unitByMetric[id] === 'list' && typeof v === 'string') {
-        v = v.split('\n').filter(l => l.trim()).length;
-      }
-      (valuesByMetric[id] = valuesByMetric[id] || []).push(v);
+      entries.filter(e => !(e.extra && e.extra.postponed)).forEach(entry => {
+        let v = entry.value;
+        if (unitByMetric[id] === 'list' && typeof v === 'string') {
+          v = v.split('\n').filter(l => l.trim()).length;
+        }
+        (valuesByMetric[id] = valuesByMetric[id] || []).push(v);
+      });
     });
   });
   const container = document.getElementById('genericStatsSummary');
