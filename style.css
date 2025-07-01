@@ -47,14 +47,13 @@ body {
    Navbar
 ------------------------------ */
 .navbar {
-  background: linear-gradient(to right, #d7e8d0, #e3d4c9);
-  color: #2f3e40;
+  background: #ffffff;
+  color: #000000;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 5px 24px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  background-blend-mode: overlay;
+  border-bottom: 1px solid #cccccc;
 }
 
 .navbar-inner {
@@ -73,20 +72,19 @@ body {
 
 .navbar-right button {
   margin-left: 10px;
-  background-color: rgba(25x5, 255, 255, 0.85);
-  color: #3c5c50;
-  border: 1px solid #a4cbb5;
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #cccccc;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s;
 }
 
 .navbar-right button:hover {
-  background-color: #dbeee3;
-  border-color: #8bb89f;
+  background-color: #f2f2f2;
+  border-color: #999999;
 }
 
 /* ------------------------------
@@ -594,10 +592,9 @@ button:hover {
    Navbar
 ------------------------------ */
 .navbar {
-  background: linear-gradient(to right, #d7e8d0, #c9e3dd);
-  color: #2f3e40;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  background-blend-mode: overlay;
+  background: #ffffff;
+  color: #000000;
+  border-bottom: 1px solid #cccccc;
 }
 
 /* move the flex and padding into the inner container */
@@ -617,14 +614,14 @@ button:hover {
 
 .navbar-right button {
   margin-left: 10px;
-  background-color: rgba(255, 255, 255, 0.85);
-  color: #3c5c50;
-  border: 1px solid #a4cbb5;
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #cccccc;
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
 }
 
 
@@ -715,13 +712,10 @@ body {
    2) Navbar tweaks for contrast & spacing
 ───────────────────────────────────────────────────────────────────────────── */
 #goalsView .navbar {
-  background: linear-gradient(to right, #8bb89f, #483823);
-  color: #ffffff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-  background-blend-mode: normal;
-  border-radius: 8px 8px 0 0;
-  /* round the top corners when sitting in goalsView */
-  overflow: hidden;
+  background: #ffffff;
+  color: #000000;
+  border-bottom: 1px solid #cccccc;
+  border-radius: 0;
 }
 
 #goalsView .navbar-inner {
@@ -735,17 +729,19 @@ body {
 /* buttons & text in navbar */
 #goalsView .navbar-left,
 #goalsView .navbar-right button {
-  color: #fff;
+  color: #000000;
 }
 
-/* make the right-side buttons darker */
 #goalsView .navbar-right button {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  transition: background-color 0.2s;
 }
 
 #goalsView .navbar-right button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: #f2f2f2;
+  border-color: #999999;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -753,41 +749,34 @@ body {
 ───────────────────────────────────────────────────────────────────────────── */
 #goalsView .tabs {
   margin: 0;
-  /* remove top margins inherited elsewhere */
   padding: 8px 0 0 0;
   display: flex;
   justify-content: flex-start;
-  background-color: #f0f5f2;
-  /* subtle contrast under the navbar */
-  border-bottom: 1px solid #d0e0d4;
+  background-color: #ffffff;
+  border-bottom: 1px solid #cccccc;
 }
 
 #goalsView .tabs button {
   margin-right: 0;
   padding: 12px 24px;
   font-size: 1.1rem;
-  background: #e8efe9;
-  background-image: url('https://www.transparenttextures.com/patterns/paper-1.png');
-  background-repeat: repeat;
-  color: #275539;
-  border-radius: 6px 6px 0 0;
-  border: 1px solid #b1c8b6;
+  background: #ffffff;
+  color: #000000;
+  border-radius: 4px 4px 0 0;
+  border: 1px solid #cccccc;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out,
-              color 0.2s ease-in-out;
+  transition: background-color 0.2s ease-in-out;
 }
 
 #goalsView .tabs button.active {
-  background: #7aa68c;
-  background-image: url('https://www.transparenttextures.com/patterns/paper-1.png');
-  background-repeat: repeat;
-  color: #fff;
-  border-color: #638b76;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  color: #000000;
+  border-bottom: 2px solid #000000;
+  border-color: #000000;
 }
 
 #goalsView .tabs button:hover:not(.active) {
-  background: #dfe9e2;
+  background: #f2f2f2;
 }
 
 #goalsView .tabs .container {
