@@ -68,6 +68,14 @@ async function renderDailyReport(items, user, db) {
     },
     options: { responsive: true }
   });
+  container.textContent = `Total goals: ${goals.length}. Completed: ${completed}. Pending: ${goals.length - completed}.`;
+}
+
+function renderDailyReport(items) {
+  const container = document.getElementById('dailyReport');
+  if (!container) return;
+  const tasks = items.filter(i => i.type === 'task' && i.recurs === 'daily');
+  container.textContent = `Daily tasks: ${tasks.length}`;
 }
 
 function renderListsReport(lists) {
@@ -96,4 +104,5 @@ function renderListsReport(lists) {
       scales: { y: { beginAtZero: true } }
     }
   });
+  container.textContent = `Lists: ${lists.length}`;
 }

@@ -17,9 +17,11 @@ const skipOptions = [
   { label: '3 months', value: 2160 }
 ];
 
+const COMPLETION_KEY = 'taskCompletions';
+
 export async function renderDailyTasks(currentUser, db) {
   const panel = document.getElementById('dailyPanel');
-  if (!panel || !currentUser) return;
+  if (!panel) return;
 
   // — ensure our container exists
   let container = panel.querySelector('#dailyTasksList');
@@ -63,6 +65,7 @@ export async function renderDailyTasks(currentUser, db) {
   // — Clear and load all tasks
   container.innerHTML = '';
   const all = await loadDecisions();
+  weeklyContainer.innerHTML = "";
 
   // — Migrate legacy “[Daily]” flags
   let migrated = false;
@@ -126,8 +129,13 @@ export async function renderDailyTasks(currentUser, db) {
   const monday = new Date(now);
   monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   const weekKey = monday.toISOString().split('T')[0];
-  const snap = await db.collection('taskCompletions').doc(currentUser.uid).get();
-  const completionMap = snap.exists ? snap.data() : {};
+  let completionMap = {};
+  if (currentUser) {
+    const snap = await db.collection('taskCompletions').doc(currentUser.uid).get();
+    completionMap = snap.exists ? snap.data() : {};
+  } else {
+    completionMap = JSON.parse(localStorage.getItem(COMPLETION_KEY) || '{}');
+  }
   const dailyDone = new Set(completionMap[todayKey] || []);
   const weeklyDone = new Set(completionMap[weekKey] || []);
 
@@ -191,6 +199,13 @@ export async function renderDailyTasks(currentUser, db) {
   // — Render active then done
   for (const t of activeList) container.appendChild(makeTaskElement(t));
   for (const t of doneList) container.appendChild(makeTaskElement(t));
+  const weeklyList = all.filter(t =>
+    t.type === "task" &&
+    t.recurs === "weekly" &&
+    (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
+  );
+  for (const t of weeklyList) weeklyContainer.appendChild(makeTaskElement(t));
+
 
   // ——— Helpers —————————————————————————
 
@@ -204,7 +219,11 @@ export async function renderDailyTasks(currentUser, db) {
         completionMap[todayKey] = completionMap[todayKey].filter(id => id !== task.id);
         doneSet.delete(task.id);
       }
-      await db.collection('taskCompletions').doc(currentUser.uid).set(completionMap);
+      if (currentUser) {
+        await db.collection('taskCompletions').doc(currentUser.uid).set(completionMap);
+      } else {
+        localStorage.setItem(COMPLETION_KEY, JSON.stringify(completionMap));
+      }
       const rowEl = wrapper.querySelector('.daily-task');
       const labelEl = rowEl.children[1];
       rowEl.style.opacity = cb.checked ? '0.6' : '1';
