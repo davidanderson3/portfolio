@@ -45,6 +45,7 @@ window.addEventListener('DOMContentLoaded', () => {
       goalsView.style.display = '';
       initTabs(null, db);
       renderGoalsAndSubitems();
+      renderDailyTasks(null, db);
       return;
     }
 
