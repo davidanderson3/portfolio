@@ -373,13 +373,16 @@ async function renderStatsSummary() {
         inp.min = '1';
         inp.max = '10';
         inp.step = '1';
+        inp.placeholder = '1–10';
       } else if (cfg.unit === 'list') {
         inp = document.createElement('textarea');
         inp.rows = 4;
         inp.style.width = '100%';
+        inp.placeholder = cfg.unitLabel;
       } else {
         inp = document.createElement('input');
         inp.type = 'text';
+        inp.placeholder = cfg.unitLabel;
       }
       inp.value = editValue;
       td2.appendChild(inp);
