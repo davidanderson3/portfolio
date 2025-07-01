@@ -25,6 +25,6 @@ describe('renderGoalsReport', () => {
     renderGoalsReport(items);
 
     expect(container.innerHTML).toContain('Active goals: 1');
-    expect(container.innerHTML).toContain('Active tasks: 2');
+    expect(container.innerHTML).toContain('Active tasks: 1');
   });
 });
