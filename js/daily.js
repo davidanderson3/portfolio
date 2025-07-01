@@ -1,4 +1,5 @@
 import { loadDecisions, saveDecisions, generateId, makeIconBtn } from './helpers.js';
+import { db } from './auth.js';
 
 // Shared skip intervals (same as goals)
 const skipOptions = [
@@ -413,8 +414,8 @@ export async function renderDailyTasks(currentUser, db) {
 document.addEventListener('DOMContentLoaded', () => {
   const panel = document.getElementById('dailyPanel');
   if (panel && panel.style.display !== 'none') {
-    // You still need access to currentUser and db here:
-    renderDailyTasks(currentUser, db);
+    // Render tasks for the current user if the Daily tab is visible
+    renderDailyTasks(window.currentUser, db);
   }
 });
 
