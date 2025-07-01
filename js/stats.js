@@ -386,6 +386,7 @@ async function renderStatsSummary() {
       }
       inp.value = editValue;
       td2.appendChild(inp);
+      inp.focus();
       const saveIcon = document.createElement('span');
       saveIcon.textContent = '💾';
       saveIcon.style.cursor = 'pointer';
