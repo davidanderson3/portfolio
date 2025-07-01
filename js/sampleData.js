@@ -155,6 +155,76 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'weekly',
     parentGoalId: null,
+  },
+  {
+    id: 'daily-task-4',
+    type: 'task',
+    text: 'Drink a glass of water',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    recurs: 'daily',
+    parentGoalId: null,
+  },
+  {
+    id: 'daily-task-5',
+    type: 'task',
+    text: 'Check calendar for events',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    recurs: 'daily',
+    parentGoalId: null,
+  },
+  {
+    id: 'daily-task-6',
+    type: 'task',
+    text: 'Stretch for five minutes',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    recurs: 'daily',
+    parentGoalId: null,
+  },
+  {
+    id: 'daily-task-7',
+    type: 'task',
+    text: 'Review yesterday\'s accomplishments',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    recurs: 'daily',
+    parentGoalId: null,
+  },
+  {
+    id: 'daily-task-8',
+    type: 'task',
+    text: 'Take a short walk',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    recurs: 'daily',
+    parentGoalId: null,
+  },
+  {
+    id: 'daily-task-9',
+    type: 'task',
+    text: 'Plan tomorrow\'s tasks',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    recurs: 'daily',
+    parentGoalId: null,
+  },
+  {
+    id: 'daily-task-10',
+    type: 'task',
+    text: 'Reflect on progress',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    recurs: 'daily',
+    parentGoalId: null,
   }
 ];
 
@@ -184,3 +254,28 @@ export const SAMPLE_LISTS = [
   }
 ];
 
+export const SAMPLE_NOTES = [
+  { id: 'note1', text: 'Welcome to the notes panel!', timestamp: new Date().toISOString() },
+  { id: 'note2', text: 'Sign up to sync your notes.', timestamp: new Date().toISOString() },
+  { id: 'note3', text: 'Jot down quick ideas here.', timestamp: new Date().toISOString() },
+  { id: 'note4', text: 'Notes are saved locally when logged out.', timestamp: new Date().toISOString() },
+  { id: 'note5', text: 'Use markdown for formatting.', timestamp: new Date().toISOString() },
+  { id: 'note6', text: 'Double-click a note to edit.', timestamp: new Date().toISOString() },
+  { id: 'note7', text: 'Pin important reminders.', timestamp: new Date().toISOString() },
+  { id: 'note8', text: 'Delete notes you no longer need.', timestamp: new Date().toISOString() },
+  { id: 'note9', text: 'Everything here is temporary.', timestamp: new Date().toISOString() },
+  { id: 'note10', text: 'Create an account to sync across devices.', timestamp: new Date().toISOString() }
+];
+
+export const SAMPLE_METRICS = [
+  { id: 'mood', label: 'Mood Rating', unit: 'rating', direction: 'higher' },
+  { id: 'steps', label: 'Steps Walked', unit: 'count', direction: 'higher' },
+  { id: 'sleep', label: 'Hours Slept', unit: 'hours', direction: 'higher' },
+  { id: 'focus', label: 'Focus Minutes', unit: 'minutes', direction: 'higher' },
+  { id: 'water', label: 'Glasses of Water', unit: 'count', direction: 'higher' },
+  { id: 'reading', label: 'Reading Time', unit: 'minutes', direction: 'higher' },
+  { id: 'exercise', label: 'Exercise Time', unit: 'minutes', direction: 'higher' },
+  { id: 'snacks', label: 'Unhealthy Snacks', unit: 'count', direction: 'lower' },
+  { id: 'screen', label: 'Screen Hours', unit: 'hours', direction: 'lower' },
+  { id: 'gratitude', label: 'Gratitude Entries', unit: 'count', direction: 'higher' }
+];

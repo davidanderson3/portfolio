@@ -5,7 +5,7 @@ import { initAuth } from './auth.js';
 import { db } from './auth.js';
 import { initWizard } from './wizard.js';
 import { renderDailyTaskReport } from './report.js';
-import './stats.js';
+import { initMetricsUI } from './stats.js';
 import { initTabs } from './tabs.js';
 import { initButtonStyles } from './buttonStyles.js';
 
@@ -73,3 +73,5 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.loadDecisions = loadDecisions;
+window.renderDailyTasks = renderDailyTasks;
+window.initMetricsUI = initMetricsUI;
