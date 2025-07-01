@@ -1,6 +1,6 @@
 export function initTabs(currentUser, db) {
   const tabButtons = document.querySelectorAll('.tab-button');
-  const panels    = ['goalsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','notesPanel'];
+  const panels    = ['goalsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel'];
 
   tabButtons.forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -22,9 +22,6 @@ export function initTabs(currentUser, db) {
       if (target === 'dailyPanel') {
         await window.renderDailyTasks(currentUser, db);
       }
-      else if (target === 'notesPanel') {
-  await window.renderNotesPanel();
-}
       else if (target === 'metricsPanel') {
         await window.initMetricsUI();
       }
