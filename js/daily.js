@@ -39,6 +39,8 @@ export async function renderDailyTasks(currentUser, db) {
     weeklyContainer.className = 'decision-container';
     panel.appendChild(weeklyContainer);
   }
+  // Clear any existing weekly tasks/forms before re-rendering
+  weeklyContainer.innerHTML = '';
 
 
   // — Inject CSS once to remove green focus/active backgrounds on buttons

@@ -45,7 +45,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initAuth(uiRefs, async (user) => {
     window.currentUser = user;
 
-    ['goalList', 'completedList', 'dailyTasksList'].forEach(id => {
+    ['goalList', 'completedList', 'dailyTasksList', 'weeklyTasksList'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '';
     });
