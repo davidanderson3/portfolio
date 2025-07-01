@@ -71,13 +71,6 @@ async function renderDailyReport(items, user, db) {
   container.textContent = `Total goals: ${goals.length}. Completed: ${completed}. Pending: ${goals.length - completed}.`;
 }
 
-function renderDailyReport(items) {
-  const container = document.getElementById('dailyReport');
-  if (!container) return;
-  const tasks = items.filter(i => i.type === 'task' && i.recurs === 'daily');
-  container.textContent = `Daily tasks: ${tasks.length}`;
-}
-
 function renderListsReport(lists) {
   const container = document.getElementById('listsReport');
   if (!container) return;
