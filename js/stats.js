@@ -143,7 +143,12 @@ function computeRank(val, allValues, direction) {
 
 /** PERCENTILE & SUMMARY RENDER **/
 function computePercentile(val, allValues) {
-  const sorted = allValues.slice().sort((a, b) => a - b);
+  const numeric = allValues
+    .map(v => typeof v === 'string' ? parseFloat(v) : v)
+    .filter(v => typeof v === 'number' && !isNaN(v));
+  val = typeof val === 'string' ? parseFloat(val) : val;
+  if (isNaN(val) || !numeric.length) return 0;
+  const sorted = numeric.slice().sort((a, b) => a - b);
   const below = sorted.filter(v => v < val).length;
   return Math.round((below / sorted.length) * 100);
 }
@@ -263,18 +268,25 @@ async function renderStatsSummary() {
     const entries = ((allStats[today] || {})[cfg.id]) || [];
     if (entries.some(e => e.extra && e.extra.postponed)) continue;
     visible++;
-    let display = '—', pct = '—', rank = '—';
+    let display = '—', editValue = '', pct = '—', rank = '—';
     if (entries.length) {
       filled++;
       const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
       let val;
       if (cfg.unit === 'time_mmss') {
         const m = Math.floor(latest.value), s = String(Math.round((latest.value - m) * 60)).padStart(2, '0');
-        display = `${m}:${s}`; val = latest.value;
+        display = `${m}:${s}`;
+        editValue = display;
+        val = latest.value;
       } else if (cfg.unit === 'list' && typeof latest.value === 'string') {
-        display = latest.value; val = latest.value.split('\n').filter(l => l.trim()).length;
+        const count = latest.value.split('\n').filter(l => l.trim()).length;
+        display = String(count);
+        editValue = latest.value;
+        val = count;
       } else {
-        display = `${latest.value}`; val = latest.value;
+        display = `${latest.value}`;
+        editValue = display;
+        val = latest.value;
       }
       const allVals = valuesByMetric[cfg.id] || [];
       const raw = computePercentile(val, allVals);
@@ -293,6 +305,7 @@ async function renderStatsSummary() {
     Object.assign(td2.style, { padding: '8px', borderBottom: '1px solid #ddd' });
     const span = document.createElement('span');
     span.textContent = `${display} ${cfg.unitLabel}`;
+    if (cfg.unit === 'list' && editValue) span.title = editValue;
     span.style.marginRight = '8px';
     td2.appendChild(span);
     const valueEdit = document.createElement('span');
@@ -318,7 +331,7 @@ async function renderStatsSummary() {
         inp.type = 'text';
         inp.placeholder = cfg.unitLabel;
       }
-      inp.value = display;
+      inp.value = editValue || display;
       td2.appendChild(inp);
       const saveIcon = document.createElement('span');
       saveIcon.textContent = '💾';
