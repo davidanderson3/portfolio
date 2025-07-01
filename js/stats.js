@@ -138,7 +138,6 @@ async function recordMetric(metricId, value, extra = null) {
   const ref = db
     .collection('users').doc(user.uid)
     .collection('dailyStats').doc(todayKey());
-
   try {
     await ref.set({
       metrics: {
