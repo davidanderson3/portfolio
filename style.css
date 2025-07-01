@@ -886,3 +886,21 @@ h2 {
   border: none    !important;
   cursor: pointer !important;
 }
+
+/* Ensure list tables remain readable on mobile */
+#listsPanel table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#listsPanel th,
+#listsPanel td {
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  #listsContainer {
+    overflow-x: auto;
+  }
+}
