@@ -183,14 +183,53 @@ async function initListsPanel() {
   const persist = debounce(() => saveLists(listsArray), 250);
 
   // ─── 6) Helper: render the tab buttons ──────────────────────
+  let dragTabEl = null;
+
   function renderTabs() {
     tabsContainer.innerHTML = '';
     listsArray.forEach((list, idx) => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'list-tab';
+      btn.draggable = true;
+      btn.dataset.idx = idx;
       btn.textContent = list.name;
       btn.addEventListener('click', () => selectList(idx));
+
+      btn.addEventListener('dragstart', e => {
+        dragTabEl = btn;
+        btn.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      btn.addEventListener('dragend', () => {
+        btn.classList.remove('dragging');
+        dragTabEl = null;
+      });
+
+      btn.addEventListener('dragover', e => {
+        e.preventDefault();
+        btn.classList.add('drag-over');
+      });
+
+      btn.addEventListener('dragleave', () => {
+        btn.classList.remove('drag-over');
+      });
+
+      btn.addEventListener('drop', async e => {
+        e.preventDefault();
+        btn.classList.remove('drag-over');
+        if (dragTabEl && dragTabEl !== btn) {
+          const from = Number(dragTabEl.dataset.idx);
+          const to   = Number(btn.dataset.idx);
+          const [moved] = listsArray.splice(from, 1);
+          listsArray.splice(to, 0, moved);
+          await persist();
+          renderTabs();
+          selectList(to);
+        }
+      });
+
       tabsContainer.append(btn);
     });
   }
@@ -205,8 +244,6 @@ async function initListsPanel() {
     renderSelectedList();
     renderItemForm();
   }
-
-  // Place this _inside_ initListsPanel, immediately after your selectList definition
 
   async function onCreateList() {
     // 1) Read and validate the list name
@@ -245,17 +282,10 @@ async function initListsPanel() {
   document.getElementById('createListBtn')
     .addEventListener('click', onCreateList);
 
-
-  // 3️⃣ Bind it to your button
-  document.getElementById('createListBtn')
-    .addEventListener('click', onCreateList);
-
   // 4️⃣ Finally, do the initial render
   renderTabs();
   if (listsArray.length) selectList(0);
 
-
-  // In js/lists.js:
 
   function renderSelectedList() {
     const list = listsArray[selectedListIndex] || { columns: [], items: [] };
