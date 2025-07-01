@@ -19,6 +19,8 @@ import {
 
 
 const openGoalIds = new Set();
+// Expose for cleanup between sign-ins
+window.openGoalIds = openGoalIds;
 const goalList = document.getElementById('goalList');
 const completedList = document.getElementById('completedList');
 

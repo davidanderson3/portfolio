@@ -28,13 +28,13 @@ export function initAuth({ loginBtn, logoutBtn, userEmail }, onLogin) {
   };
 
   loginBtn.onclick = async () => {
-    const provider = new firebase.auth.GoogleAuthProvider(); // ✅ FIXED
+    const provider = new firebase.auth.GoogleAuthProvider();
     try {
-      const result = await firebase.auth().signInWithPopup(provider); // ✅ call firebase.auth()
+      const result = await firebase.auth().signInWithPopup(provider);
       currentUser = result.user;
       clearDecisionsCache();
       safeSet(userEmail, 'textContent', currentUser.email);
-      onLogin(currentUser);
+      // onAuthStateChanged will trigger onLogin
     } catch (err) {
       console.error('Login failed:', err);
     }
@@ -49,7 +49,7 @@ export function initAuth({ loginBtn, logoutBtn, userEmail }, onLogin) {
     safeSet(userEmail, 'textContent', '');
     safeSet(loginBtn, 'style', 'display: inline-block');
     safeSet(logoutBtn, 'style', 'display: none');
-    onLogin(null);
+    // onAuthStateChanged will trigger onLogin
   };
 
   auth.onAuthStateChanged(user => {
