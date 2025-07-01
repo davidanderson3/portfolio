@@ -159,6 +159,7 @@ async function showMetricGraph(cfg) {
   const allStats = await loadAllStats();
   const labels = [];
   const data = [];
+  // Gather raw metric values by date
   Object.keys(allStats).sort().forEach(date => {
     const entries = (allStats[date][cfg.id] || []).filter(e => !(e.extra && e.extra.postponed));
     if (!entries.length) return;
@@ -171,6 +172,19 @@ async function showMetricGraph(cfg) {
     data.push(val);
   });
 
+  // Calculate 7-day rolling average
+  const rolling = [];
+  for (let i = 0; i < data.length; i++) {
+    const start = Math.max(0, i - 6);
+    const window = data.slice(start, i + 1).filter(v => typeof v === 'number' && !isNaN(v));
+    if (window.length) {
+      const avg = window.reduce((sum, v) => sum + v, 0) / window.length;
+      rolling.push(avg);
+    } else {
+      rolling.push(null);
+    }
+  }
+
   const modal = document.getElementById('metricChartModal');
   const canvas = document.getElementById('metricChartCanvas');
   if (metricChartInstance) metricChartInstance.destroy();
@@ -178,12 +192,21 @@ async function showMetricGraph(cfg) {
     type: 'line',
     data: {
       labels,
-      datasets: [{
-        label: cfg.label,
-        data,
-        fill: false,
-        borderColor: '#3e95cd'
-      }]
+      datasets: [
+        {
+          label: cfg.label,
+          data,
+          fill: false,
+          borderColor: '#3e95cd'
+        },
+        {
+          label: '7-day Avg',
+          data: rolling,
+          fill: false,
+          borderColor: '#e96d06',
+          borderDash: [5, 5]
+        }
+      ]
     },
     options: { responsive: true }
   });
