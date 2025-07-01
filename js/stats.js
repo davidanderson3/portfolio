@@ -138,12 +138,21 @@ async function recordMetric(metricId, value, extra = null) {
   const ref = db
     .collection('users').doc(user.uid)
     .collection('dailyStats').doc(todayKey());
-
-  await ref.set({
-    metrics: {
-      [metricId]: FieldValue.arrayUnion(entry)
-    }
-  }, { merge: true });
+  try {
+    await ref.set({
+      metrics: {
+        [metricId]: FieldValue.arrayUnion(entry)
+      }
+    }, { merge: true });
+  } catch (err) {
+    console.warn('Falling back to local metric cache:', err);
+    const all = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+    const day = todayKey();
+    all[day] = all[day] || {};
+    all[day][metricId] = all[day][metricId] || [];
+    all[day][metricId].push(entry);
+    localStorage.setItem(STATS_KEY, JSON.stringify(all));
+  }
 }
 
 async function loadAllStats() {
@@ -151,13 +160,18 @@ async function loadAllStats() {
   if (!user) {
     return JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
   }
-  const snaps = await db
-    .collection('users').doc(user.uid)
-    .collection('dailyStats')
-    .get();
-  const out = {};
-  snaps.forEach(doc => out[doc.id] = doc.data().metrics || {});
-  return out;
+  try {
+    const snaps = await db
+      .collection('users').doc(user.uid)
+      .collection('dailyStats')
+      .get();
+    const out = {};
+    snaps.forEach(doc => out[doc.id] = doc.data().metrics || {});
+    return out;
+  } catch (err) {
+    console.warn('Failed to load stats from Firestore, using cache:', err);
+    return JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+  }
 }
 
 function computeRank(val, allValues, direction) {
