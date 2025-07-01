@@ -23,15 +23,35 @@ export async function initTabReports(user, db) {
 function renderGoalsReport(items) {
   const container = document.getElementById('goalsReport');
   if (!container) return;
+
+  const now = Date.now();
   const goals = items.filter(i => i.type === 'goal');
-  const completed = goals.filter(g => g.completed).length;
-  const pending = goals.length - completed;
+  const tasks = items.filter(i => i.type === 'task');
+
+  const activeGoals = goals.filter(g => {
+    const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
+    return !g.completed && (!hideUntil || now >= hideUntil);
+  });
+  const hiddenGoals = goals.filter(g => {
+    const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
+    return hideUntil && now < hideUntil;
+  });
+
+  const activeTasks = tasks.filter(t => {
+    const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
+    return !t.completed && (!hideUntil || now >= hideUntil);
+  });
+  const hiddenTasks = tasks.filter(t => {
+    const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
+    return hideUntil && now < hideUntil;
+  });
 
   container.innerHTML = `
-    <h3>Goal Progress</h3>
-    <p>Total goals: ${goals.length}</p>
-    <p>Completed: ${completed}</p>
-    <p>Pending: ${pending}</p>
+    <h3>Goal Status</h3>
+    <p>Active goals: ${activeGoals.length}</p>
+    <p>Active tasks: ${activeTasks.length}</p>
+    <p>Hidden goals: ${hiddenGoals.length}</p>
+    <p>Hidden tasks: ${hiddenTasks.length}</p>
   `;
 }
 
