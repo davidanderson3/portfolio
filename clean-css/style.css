@@ -590,11 +590,11 @@ button:hover {
 
 .tab-button {
   flex: 1;
-  padding: 12px 16px;
+  padding: 14px 20px;
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
-  font-size: 1rem;
+  font-size: 1.1rem;
   cursor: pointer;
   transition: border-color 0.2s;
 }
@@ -669,7 +669,7 @@ body {
   }
 
   .tabs .tab-button {
-    font-size: 0.9rem;
-    padding: 10px;
+    font-size: 1rem;
+    padding: 12px;
   }
 }
