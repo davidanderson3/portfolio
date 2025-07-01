@@ -17,6 +17,8 @@ const skipOptions = [
   { label: '3 months', value: 2160 }
 ];
 
+const COMPLETION_KEY = 'taskCompletions';
+
 export async function renderDailyTasks(currentUser, db) {
   const panel = document.getElementById('dailyPanel');
   if (!panel) return;
@@ -127,8 +129,13 @@ export async function renderDailyTasks(currentUser, db) {
   const monday = new Date(now);
   monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   const weekKey = monday.toISOString().split('T')[0];
-  const snap = await db.collection('taskCompletions').doc(currentUser.uid).get();
-  const completionMap = snap.exists ? snap.data() : {};
+  let completionMap = {};
+  if (currentUser) {
+    const snap = await db.collection('taskCompletions').doc(currentUser.uid).get();
+    completionMap = snap.exists ? snap.data() : {};
+  } else {
+    completionMap = JSON.parse(localStorage.getItem(COMPLETION_KEY) || '{}');
+  }
   const dailyDone = new Set(completionMap[todayKey] || []);
   const weeklyDone = new Set(completionMap[weekKey] || []);
 
@@ -212,7 +219,11 @@ export async function renderDailyTasks(currentUser, db) {
         completionMap[todayKey] = completionMap[todayKey].filter(id => id !== task.id);
         doneSet.delete(task.id);
       }
-      await db.collection('taskCompletions').doc(currentUser.uid).set(completionMap);
+      if (currentUser) {
+        await db.collection('taskCompletions').doc(currentUser.uid).set(completionMap);
+      } else {
+        localStorage.setItem(COMPLETION_KEY, JSON.stringify(completionMap));
+      }
       const rowEl = wrapper.querySelector('.daily-task');
       const labelEl = rowEl.children[1];
       rowEl.style.opacity = cb.checked ? '0.6' : '1';
