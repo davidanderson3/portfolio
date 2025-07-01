@@ -1,15 +1,7 @@
 import { db } from './auth.js';
-import { generateId } from './helpers.js';
-import { SAMPLE_NOTES } from "./sampleData.js";
-let demoNotes = SAMPLE_NOTES.slice();
-
 
 async function loadNotes() {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    return demoNotes;
-  }
-  const uid = user.uid;
+  const uid = firebase.auth().currentUser.uid;
   const snapshot = await db
     .collection('dailyNotes')
     .doc(uid)
@@ -28,13 +20,7 @@ async function loadNotes() {
 }
 
 async function saveNote(text) {
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    const note = { id: generateId(), text, timestamp: new Date().toISOString() };
-    demoNotes.unshift(note);
-    return;
-  }
-  const uid = user.uid;
+  const uid = firebase.auth().currentUser.uid;
   await db
     .collection('dailyNotes')
     .doc(uid)

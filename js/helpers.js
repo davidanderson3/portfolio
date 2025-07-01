@@ -1,8 +1,4 @@
 import { getCurrentUser, db } from './auth.js';
-import { SAMPLE_DECISIONS, SAMPLE_LISTS } from "./sampleData.js";
-
-// Demo data for visitors stored in sampleData.js
-
 
 // Demo data for visitors who aren't signed in
 const SAMPLE_DECISIONS = [
@@ -137,11 +133,7 @@ const LISTS_KEY = 'myLists';
 export async function loadLists() {
   const user = getCurrentUser?.();
   if (!user) {
-    const stored = JSON.parse(localStorage.getItem(LISTS_KEY) || 'null');
-    if (Array.isArray(stored) && stored.length) {
-      return stored; // anonymous → localStorage
-    }
-    return SAMPLE_LISTS.slice();
+    return JSON.parse(localStorage.getItem(LISTS_KEY) || '[]'); // anonymous → localStorage
   }
 
   const doc = await db.collection('lists').doc(user.uid).get();
