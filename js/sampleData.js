@@ -184,7 +184,3 @@ export const SAMPLE_LISTS = [
   }
 ];
 
-export const SAMPLE_NOTES = [
-  { id: 'note1', text: 'Welcome to the notes panel!', timestamp: new Date().toISOString() },
-  { id: 'note2', text: 'Sign up to sync your notes.', timestamp: new Date().toISOString() }
-];

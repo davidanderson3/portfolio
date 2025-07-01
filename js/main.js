@@ -7,10 +7,8 @@ import { initWizard } from './wizard.js';
 import { renderDailyTaskReport } from './report.js';
 import './stats.js';
 import { initTabs } from './tabs.js';
-import { renderNotesPanel } from './notes.js';
 import { initButtonStyles } from './buttonStyles.js';
 
-window.renderNotesPanel = renderNotesPanel;
 window.currentUser = null;
 
 window.addEventListener('DOMContentLoaded', () => {
