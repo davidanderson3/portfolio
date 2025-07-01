@@ -20,7 +20,7 @@ export async function initTabReports(user, db) {
   // Calendar and Metrics tabs currently have no data-driven reports
 }
 
-function renderGoalsReport(items) {
+export function renderGoalsReport(items) {
   const container = document.getElementById('goalsReport');
   if (!container) return;
 
@@ -37,9 +37,14 @@ function renderGoalsReport(items) {
     return hideUntil && now < hideUntil;
   });
 
+  const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
+
   const activeTasks = tasks.filter(t => {
     const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
-    return !t.completed && (!hideUntil || now >= hideUntil);
+    const parent = t.parentGoalId ? goalMap[t.parentGoalId] : null;
+    const parentActive = !parent || (!parent.completed &&
+      (!(parent.hiddenUntil) || now >= (Date.parse(parent.hiddenUntil) || 0)));
+    return !t.completed && parentActive && (!hideUntil || now >= hideUntil);
   });
   const hiddenTasks = tasks.filter(t => {
     const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
