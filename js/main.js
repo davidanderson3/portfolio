@@ -19,6 +19,8 @@ window.addEventListener('DOMContentLoaded', () => {
     logoutBtn: document.getElementById('logoutBtn'),
     userEmail: document.getElementById('userEmail'),
     signupBtn: document.getElementById('signupBtn'),
+    splashLoginBtn: document.getElementById('splashLoginBtn'),
+    previewBtn: document.getElementById('previewBtn'),
     addGoalBtn: document.getElementById('addGoalBtn'),
     wizardContainer: document.getElementById('goalWizard'),
     wizardStep: document.getElementById('wizardStep'),
@@ -31,6 +33,15 @@ window.addEventListener('DOMContentLoaded', () => {
   const goalsView = document.getElementById('goalsView');
 
   uiRefs.signupBtn.addEventListener('click', () => uiRefs.loginBtn.click());
+  if (uiRefs.splashLoginBtn) {
+    uiRefs.splashLoginBtn.addEventListener('click', () => uiRefs.loginBtn.click());
+  }
+  if (uiRefs.previewBtn) {
+    uiRefs.previewBtn.addEventListener('click', () => {
+      splash.style.display = 'none';
+      goalsView.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
 
   initAuth(uiRefs, async (user) => {
     window.currentUser = user;
