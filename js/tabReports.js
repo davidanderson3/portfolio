@@ -40,10 +40,14 @@ export function renderGoalsReport(items) {
   const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
 
   const activeTasks = tasks.filter(t => {
+    if (!t.parentGoalId) return false; // only count tasks linked to a goal
+    const parent = goalMap[t.parentGoalId];
+    if (!parent) return false;
+
     const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
-    const parent = t.parentGoalId ? goalMap[t.parentGoalId] : null;
-    const parentActive = !parent || (!parent.completed &&
-      (!(parent.hiddenUntil) || now >= (Date.parse(parent.hiddenUntil) || 0)));
+    const parentActive =
+      !parent.completed &&
+      (!parent.hiddenUntil || now >= (Date.parse(parent.hiddenUntil) || 0));
     return !t.completed && parentActive && (!hideUntil || now >= hideUntil);
   });
   const hiddenTasks = tasks.filter(t => {
