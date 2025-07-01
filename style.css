@@ -203,7 +203,7 @@ button:hover {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: space-evenly;
 }
 
 /* Other rules remain unchanged below... */
@@ -401,6 +401,7 @@ button:hover {
   .button-row {
     flex-wrap: nowrap;
     gap: 6px;
+    justify-content: space-evenly;
   }
 
   .button-row button {
@@ -498,7 +499,7 @@ button:hover {
   display: flex;
   gap: 6px;
   flex-wrap: nowrap;
-  justify-content: flex-end;
+  justify-content: space-evenly;
   align-items: center;
 }
 
