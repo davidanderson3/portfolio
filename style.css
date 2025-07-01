@@ -886,3 +886,42 @@ h2 {
   border: none    !important;
   cursor: pointer !important;
 }
+
+/* ------------------------------
+   Report Table
+------------------------------ */
+#reportTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#reportTable th,
+#reportTable td {
+  border: 1px solid #d0decf;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+#reportTable th {
+  background: linear-gradient(to right, #d7e8d0, #e3d4c9);
+  color: #2f3e40;
+}
+
+#reportTable td:first-child {
+  text-align: left;
+}
+
+#reportTable tbody tr:nth-child(even) {
+  background-color: #f8f5f0;
+}
+
+.report-panel {
+  background: rgba(255, 255, 255, 0.85);
+  padding: 20px;
+  border: 1px solid #d0decf;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
