@@ -1,4 +1,10 @@
+let tabsInitialized = false;
+
 export function initTabs(currentUser, db) {
+  // Only attach listeners once; handlers reference window.currentUser
+  if (tabsInitialized) return;
+  tabsInitialized = true;
+
   const tabButtons = document.querySelectorAll('.tab-button');
   const panels    = ['goalsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel'];
 
@@ -20,13 +26,13 @@ export function initTabs(currentUser, db) {
 
       // 4) init dynamic content
       if (target === 'dailyPanel') {
-        await window.renderDailyTasks(currentUser, db);
+        await window.renderDailyTasks(window.currentUser, db);
       }
       else if (target === 'metricsPanel') {
         await window.initMetricsUI();
       }
       else if (target === 'listsPanel') {
-        await window.initListsPanel(currentUser, db);
+        await window.initListsPanel(window.currentUser, db);
       }
     });
   });
@@ -50,7 +56,7 @@ export function initTabs(currentUser, db) {
       window.initMetricsUI();
     }
     else if (initial === 'listsPanel') {
-      window.initListsPanel(currentUser, db);
+      window.initListsPanel(window.currentUser, db);
     }
   });
 }
