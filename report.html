@@ -12,14 +12,16 @@
 
 <body>
     <!-- Navbar -->
-    <div class="navbar">
-        <div class="navbar-left">Goal Oriented</div>
-        <div class="navbar-right">
-            <span id="userEmail" class="user-email"></span>
-            <button type="button" id="loginBtn">Sign In</button>
-            <button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
+    <nav class="navbar">
+        <div class="container navbar-inner">
+            <div class="navbar-left">Goal Oriented</div>
+            <div class="navbar-right">
+                <span id="userEmail" class="user-email"></span>
+                <button type="button" id="loginBtn">Sign In</button>
+                <button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
+            </div>
         </div>
-    </div>
+    </nav>
 
     <!-- Daily Log Modal -->
     <div id="appContainer">
@@ -39,18 +41,20 @@
     <!-- Main Layout -->
     <section class="main-layout">
         <div class="left-column">
-            <h2>Daily Task Completion Report</h2>
-            <table id="reportTable">
-                <thead>
-                    <tr id="headerRow">
-                        <th>Task</th>
-                        <!-- Date columns will be injected here -->
-                    </tr>
-                </thead>
-                <tbody id="reportBody">
-                    <!-- Task rows will be injected here -->
-                </tbody>
-            </table>
+            <div class="report-panel">
+                <h2>Daily Task Completion Report</h2>
+                <table id="reportTable">
+                    <thead>
+                        <tr id="headerRow">
+                            <th>Task</th>
+                            <!-- Date columns will be injected here -->
+                        </tr>
+                    </thead>
+                    <tbody id="reportBody">
+                        <!-- Task rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </section>
 
