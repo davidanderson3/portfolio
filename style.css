@@ -879,6 +879,14 @@ h2 {
   color: #333;
 }
 
+#listTabs .list-tab.dragging {
+  opacity: 0.5;
+}
+
+#listTabs .list-tab.drag-over {
+  outline: 2px dashed #aaa;
+}
+
 #listsContainer button,
 #listsPanel button[title="Edit row"],
 #listsPanel button[title="Delete row"] {

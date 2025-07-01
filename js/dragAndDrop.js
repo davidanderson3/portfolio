@@ -9,7 +9,13 @@ let dragSrcEl = null;
 export function initializeGlobalDragHandlers() {
     ['dragover', 'drop', 'dragenter', 'dragstart'].forEach(event => {
         document.addEventListener(event, e => {
-            if (!e.target.closest('.decision') && !e.target.closest('.goal-card') && !e.target.closest('.daily-task-wrapper')) {
+            const allowed =
+                e.target.closest('.decision') ||
+                e.target.closest('.goal-card') ||
+                e.target.closest('.daily-task-wrapper') ||
+                e.target.closest('.list-tab');
+
+            if (!allowed) {
                 e.preventDefault();
                 e.stopPropagation();
             }
