@@ -4,6 +4,7 @@ import { auth, db, getCurrentUser, FieldValue } from './auth.js';
 import { SAMPLE_METRICS } from './sampleData.js';
 
 const METRICS_KEY = 'metricsConfig';
+const STATS_KEY = 'metricsData';
 
 /**
  * Returns today’s date key in YYYY-MM-DD using local time.
@@ -117,18 +118,26 @@ async function safeSaveMetricsConfig(merger) {
  */
 async function recordMetric(metricId, value, extra = null) {
   const user = getCurrentUser();
-  if (!user) return;
-
-  // Use local-date key for grouping
-  const ref = db
-    .collection('users').doc(user.uid)
-    .collection('dailyStats').doc(todayKey());
-
   const entry = {
     timestamp: Date.now(),
     value,
     extra
   };
+
+  if (!user) {
+    const all = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+    const day = todayKey();
+    all[day] = all[day] || {};
+    all[day][metricId] = all[day][metricId] || [];
+    all[day][metricId].push(entry);
+    localStorage.setItem(STATS_KEY, JSON.stringify(all));
+    return;
+  }
+
+  // Use local-date key for grouping
+  const ref = db
+    .collection('users').doc(user.uid)
+    .collection('dailyStats').doc(todayKey());
 
   await ref.set({
     metrics: {
@@ -139,7 +148,9 @@ async function recordMetric(metricId, value, extra = null) {
 
 async function loadAllStats() {
   const user = auth.currentUser;
-  if (!user) return {};
+  if (!user) {
+    return JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+  }
   const snaps = await db
     .collection('users').doc(user.uid)
     .collection('dailyStats')
