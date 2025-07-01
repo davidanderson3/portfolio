@@ -6,7 +6,8 @@ import {
 import {
     loadDecisions,
     saveDecisions,
-    saveGoalOrder
+    saveGoalOrder,
+    makeIconBtn
 } from './helpers.js';
 
 import { db } from './auth.js';
@@ -90,7 +91,7 @@ export function createGoalRow(goal, options = {}) {
 
     const due = document.createElement('div');
     due.className = 'due-column';
-    due.textContent = goal.completed ? goal.dateCompleted : '';
+    due.textContent = goal.completed ? goal.dateCompleted : (goal.scheduled || '');
     right.appendChild(due);
 
     const buttonWrap = document.createElement('div');
@@ -473,6 +474,20 @@ function attachEditButtons(item, buttonWrap) {
             }
         });
     }
+
+    // 📅 Schedule button
+    const calendarBtn = makeIconBtn('📅', 'Add to calendar', async () => {
+        const date = prompt('Schedule date (YYYY-MM-DD):', item.scheduled || new Date().toISOString().slice(0, 10));
+        if (!date) return;
+        const all = await loadDecisions();
+        const idx = all.findIndex(d => d.id === item.id);
+        if (idx !== -1) {
+            all[idx].scheduled = date.trim();
+            await saveDecisions(all);
+            renderGoalsAndSubitems();
+        }
+    });
+    buttonWrap.appendChild(calendarBtn);
 
     // ❌ Delete icon button for goals
     const deleteBtn = document.createElement('button');
