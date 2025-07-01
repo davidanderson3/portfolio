@@ -279,3 +279,90 @@ export const SAMPLE_METRICS = [
   { id: 'screen', label: 'Screen Hours', unit: 'hours', direction: 'lower' },
   { id: 'gratitude', label: 'Gratitude Entries', unit: 'count', direction: 'higher' }
 ];
+
+export const SAMPLE_METRIC_DATA = {
+  '2025-06-14': {
+    mood: [{ timestamp: 1749888000000, value: 6 }],
+    steps: [{ timestamp: 1749888000000, value: 4000 }],
+    sleep: [{ timestamp: 1749888000000, value: 7 }],
+    focus: [{ timestamp: 1749888000000, value: 90 }],
+    water: [{ timestamp: 1749888000000, value: 5 }],
+    reading: [{ timestamp: 1749888000000, value: 20 }],
+    exercise: [{ timestamp: 1749888000000, value: 30 }],
+    snacks: [{ timestamp: 1749888000000, value: 2 }],
+    screen: [{ timestamp: 1749888000000, value: 4 }],
+    gratitude: [{ timestamp: 1749888000000, value: 1 }]
+  },
+  '2025-06-15': {
+    mood: [{ timestamp: 1749974400000, value: 5 }],
+    steps: [{ timestamp: 1749974400000, value: 6000 }],
+    sleep: [{ timestamp: 1749974400000, value: 6 }],
+    focus: [{ timestamp: 1749974400000, value: 120 }],
+    water: [{ timestamp: 1749974400000, value: 6 }],
+    reading: [{ timestamp: 1749974400000, value: 15 }],
+    exercise: [{ timestamp: 1749974400000, value: 25 }],
+    snacks: [{ timestamp: 1749974400000, value: 3 }],
+    screen: [{ timestamp: 1749974400000, value: 5 }],
+    gratitude: [{ timestamp: 1749974400000, value: 2 }]
+  },
+  '2025-06-16': {
+    mood: [{ timestamp: 1750060800000, value: 7 }],
+    steps: [{ timestamp: 1750060800000, value: 5500 }],
+    sleep: [{ timestamp: 1750060800000, value: 8 }],
+    focus: [{ timestamp: 1750060800000, value: 100 }],
+    water: [{ timestamp: 1750060800000, value: 7 }],
+    reading: [{ timestamp: 1750060800000, value: 25 }],
+    exercise: [{ timestamp: 1750060800000, value: 35 }],
+    snacks: [{ timestamp: 1750060800000, value: 1 }],
+    screen: [{ timestamp: 1750060800000, value: 3 }],
+    gratitude: [{ timestamp: 1750060800000, value: 3 }]
+  },
+  '2025-06-17': {
+    mood: [{ timestamp: 1750147200000, value: 8 }],
+    steps: [{ timestamp: 1750147200000, value: 7000 }],
+    sleep: [{ timestamp: 1750147200000, value: 7.5 }],
+    focus: [{ timestamp: 1750147200000, value: 130 }],
+    water: [{ timestamp: 1750147200000, value: 8 }],
+    reading: [{ timestamp: 1750147200000, value: 30 }],
+    exercise: [{ timestamp: 1750147200000, value: 40 }],
+    snacks: [{ timestamp: 1750147200000, value: 0 }],
+    screen: [{ timestamp: 1750147200000, value: 4 }],
+    gratitude: [{ timestamp: 1750147200000, value: 4 }]
+  },
+  '2025-06-18': {
+    mood: [{ timestamp: 1750233600000, value: 6 }],
+    steps: [{ timestamp: 1750233600000, value: 6500 }],
+    sleep: [{ timestamp: 1750233600000, value: 7 }],
+    focus: [{ timestamp: 1750233600000, value: 110 }],
+    water: [{ timestamp: 1750233600000, value: 7 }],
+    reading: [{ timestamp: 1750233600000, value: 35 }],
+    exercise: [{ timestamp: 1750233600000, value: 30 }],
+    snacks: [{ timestamp: 1750233600000, value: 1 }],
+    screen: [{ timestamp: 1750233600000, value: 4.5 }],
+    gratitude: [{ timestamp: 1750233600000, value: 3 }]
+  },
+  '2025-06-19': {
+    mood: [{ timestamp: 1750320000000, value: 7 }],
+    steps: [{ timestamp: 1750320000000, value: 6000 }],
+    sleep: [{ timestamp: 1750320000000, value: 6.5 }],
+    focus: [{ timestamp: 1750320000000, value: 95 }],
+    water: [{ timestamp: 1750320000000, value: 6 }],
+    reading: [{ timestamp: 1750320000000, value: 20 }],
+    exercise: [{ timestamp: 1750320000000, value: 25 }],
+    snacks: [{ timestamp: 1750320000000, value: 2 }],
+    screen: [{ timestamp: 1750320000000, value: 5 }],
+    gratitude: [{ timestamp: 1750320000000, value: 2 }]
+  },
+  '2025-06-20': {
+    mood: [{ timestamp: 1750406400000, value: 6 }],
+    steps: [{ timestamp: 1750406400000, value: 5000 }],
+    sleep: [{ timestamp: 1750406400000, value: 7 }],
+    focus: [{ timestamp: 1750406400000, value: 105 }],
+    water: [{ timestamp: 1750406400000, value: 8 }],
+    reading: [{ timestamp: 1750406400000, value: 40 }],
+    exercise: [{ timestamp: 1750406400000, value: 20 }],
+    snacks: [{ timestamp: 1750406400000, value: 3 }],
+    screen: [{ timestamp: 1750406400000, value: 5.5 }],
+    gratitude: [{ timestamp: 1750406400000, value: 1 }]
+  }
+};
