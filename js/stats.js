@@ -1,7 +1,7 @@
 // File: stats.js
 
 import { auth, db, getCurrentUser, FieldValue } from './auth.js';
-import { SAMPLE_METRICS } from './sampleData.js';
+import { SAMPLE_METRICS, SAMPLE_METRIC_DATA } from './sampleData.js';
 
 const METRICS_KEY = 'metricsConfig';
 const STATS_KEY = 'metricsData';
@@ -158,7 +158,8 @@ async function recordMetric(metricId, value, extra = null) {
 async function loadAllStats() {
   const user = auth.currentUser;
   if (!user) {
-    return JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+    const stored = JSON.parse(localStorage.getItem(STATS_KEY) || 'null');
+    return stored && Object.keys(stored).length ? stored : SAMPLE_METRIC_DATA;
   }
   try {
     const snaps = await db
