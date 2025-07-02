@@ -339,12 +339,13 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
   let visible = 0, filled = 0;
   for (const cfg of config) {
     const entries = ((allStats[today] || {})[cfg.id]) || [];
-    if (entries.some(e => e.extra && e.extra.postponed)) continue;
+    const validEntries = entries.filter(e => !(e.extra && e.extra.postponed));
+    const wasPostponed = entries.some(e => e.extra && e.extra.postponed);
     visible++;
     let display = '—', editValue = '', pct = '—', rank = '—';
-    if (entries.length) {
+    if (validEntries.length) {
       filled++;
-      const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
+      const latest = validEntries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
       let val;
       if (cfg.unit === 'time_mmss') {
         const m = Math.floor(latest.value), s = String(Math.round((latest.value - m) * 60)).padStart(2, '0');
@@ -366,6 +367,8 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       pct = `${cfg.direction === 'lower' ? 100 - raw : raw}th`;
       console.log('Averaging for', cfg.id, 'values:', valuesByMetric[cfg.id]);
       rank = computeRank(val, allVals, cfg.direction);
+    } else if (wasPostponed) {
+      display = 'postponed';
     }
     const row = document.createElement('tr');
     const td1 = document.createElement('td');
