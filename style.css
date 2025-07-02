@@ -953,3 +953,16 @@ h2 {
     overflow-x: auto;
   }
 }
+
+#metricPrevDayBtn,
+#metricNextDayBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+#metricPrevDayBtn:disabled,
+#metricNextDayBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
