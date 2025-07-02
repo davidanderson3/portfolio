@@ -6,6 +6,9 @@ import { SAMPLE_METRICS, SAMPLE_METRIC_DATA } from './sampleData.js';
 const METRICS_KEY = 'metricsConfig';
 const STATS_KEY = 'metricsData';
 
+// Currently selected date for metrics UI
+let activeMetricsDate = todayKey();
+
 /**
  * Returns today’s date key in YYYY-MM-DD using local time.
  */
@@ -116,7 +119,7 @@ async function safeSaveMetricsConfig(merger) {
  * @param {number|string} value
  * @param {any} extra
  */
-async function recordMetric(metricId, value, extra = null) {
+async function recordMetric(metricId, value, extra = null, dayKey = activeMetricsDate) {
   const user = getCurrentUser();
   const entry = {
     timestamp: Date.now(),
@@ -129,7 +132,7 @@ async function recordMetric(metricId, value, extra = null) {
     if (!all || !Object.keys(all).length) {
       all = JSON.parse(JSON.stringify(SAMPLE_METRIC_DATA));
     }
-    const day = todayKey();
+    const day = dayKey;
     all[day] = all[day] || {};
     all[day][metricId] = [entry];
     localStorage.setItem(STATS_KEY, JSON.stringify(all));
@@ -139,7 +142,7 @@ async function recordMetric(metricId, value, extra = null) {
   // Use local-date key for grouping
   const ref = db
     .collection('users').doc(user.uid)
-    .collection('dailyStats').doc(todayKey());
+    .collection('dailyStats').doc(dayKey);
   try {
     await ref.set({
       metrics: {
@@ -149,7 +152,7 @@ async function recordMetric(metricId, value, extra = null) {
   } catch (err) {
     console.warn('Falling back to local metric cache:', err);
     const all = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
-    const day = todayKey();
+    const day = dayKey;
     all[day] = all[day] || {};
     all[day][metricId] = [entry];
     localStorage.setItem(STATS_KEY, JSON.stringify(all));
@@ -217,6 +220,25 @@ function applyUnitLabels(cfg) {
 
 let metricChartInstance = null;
 
+function updateMetricsDateUI() {
+  const lbl = document.getElementById('metricsDateLabel');
+  const prev = document.getElementById('metricPrevDayBtn');
+  const next = document.getElementById('metricNextDayBtn');
+  if (lbl) lbl.textContent = activeMetricsDate;
+  if (prev) prev.disabled = false;
+  if (next) next.disabled = activeMetricsDate === todayKey();
+}
+
+function changeMetricsDate(delta) {
+  const d = new Date(activeMetricsDate);
+  d.setDate(d.getDate() + delta);
+  const newKey = d.toISOString().split('T')[0];
+  if (newKey > todayKey()) return;
+  activeMetricsDate = newKey;
+  updateMetricsDateUI();
+  renderStatsSummary();
+}
+
 async function showMetricGraph(cfg) {
   const allStats = await loadAllStats();
   const labels = [];
@@ -275,7 +297,7 @@ async function showMetricGraph(cfg) {
   modal.style.display = 'flex';
 }
 
-async function renderStatsSummary() {
+async function renderStatsSummary(dayKey = activeMetricsDate) {
   const config = await loadMetricsConfig();
   config.forEach(cfg => {
     if (!('direction' in cfg)) cfg.direction = 'higher';
@@ -303,7 +325,7 @@ async function renderStatsSummary() {
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
   // header row
-  ['Metric', 'Today’s Value', 'Rank', 'Percentile', 'Average', 'Actions'].forEach(text => {
+  ['Metric', `Value (${dayKey})`, 'Rank', 'Percentile', 'Average', 'Actions'].forEach(text => {
     const th = document.createElement('th');
     th.textContent = text;
     Object.assign(th.style, { borderBottom: '2px solid #444', textAlign: 'left', padding: '8px' });
@@ -313,7 +335,7 @@ async function renderStatsSummary() {
   thead.appendChild(headerRow);
   table.appendChild(thead);
   const tbody = document.createElement('tbody');
-  const today = todayKey();
+  const today = dayKey;
   let visible = 0, filled = 0;
   for (const cfg of config) {
     const entries = ((allStats[today] || {})[cfg.id]) || [];
@@ -406,7 +428,7 @@ async function renderStatsSummary() {
           v = parseFloat(raw);
           if (isNaN(v)) return alert('Invalid number');
         }
-        await recordMetric(cfg.id, v, null);
+        await recordMetric(cfg.id, v, null, activeMetricsDate);
         await renderStatsSummary();
       });
       td2.appendChild(saveIcon);
@@ -445,7 +467,7 @@ async function renderStatsSummary() {
     postpone.textContent = '⏭️';
     postpone.style.cursor = 'pointer';
     postpone.addEventListener('click', async () => {
-      await recordMetric(cfg.id, null, { postponed: true });
+      await recordMetric(cfg.id, null, { postponed: true }, activeMetricsDate);
       await renderStatsSummary();
     });
     td6.appendChild(postpone);
@@ -557,6 +579,18 @@ async function renderConfigForm(metricToEdit = null) {
 
 
 export async function initMetricsUI() {
+  activeMetricsDate = todayKey();
+  updateMetricsDateUI();
+  const prev = document.getElementById('metricPrevDayBtn');
+  const next = document.getElementById('metricNextDayBtn');
+  if (prev && !prev.dataset.bound) {
+    prev.addEventListener('click', () => changeMetricsDate(-1));
+    prev.dataset.bound = '1';
+  }
+  if (next && !next.dataset.bound) {
+    next.addEventListener('click', () => changeMetricsDate(1));
+    next.dataset.bound = '1';
+  }
   await ensureMoodConfig();
   await renderStatsSummary();
   await renderConfigForm();
