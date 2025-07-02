@@ -9,6 +9,7 @@ import { initMetricsUI } from './stats.js';
 import { initTabs } from './tabs.js';
 import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
+import { initGoogleCalendar } from './googleCalendar.js';
 
 window.currentUser = null;
 
@@ -85,6 +86,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   initButtonStyles();
+  initGoogleCalendar();
 });
 
 window.loadDecisions = loadDecisions;
