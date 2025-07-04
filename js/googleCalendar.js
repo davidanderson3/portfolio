@@ -3,6 +3,17 @@ export function initGoogleCalendar() {
   const listEl = document.getElementById('googleEvents');
   if (!connectBtn || !listEl) return;
 
+  function loadGapi() {
+    return new Promise((resolve, reject) => {
+      if (window.gapi) return resolve(window.gapi);
+      const script = document.createElement('script');
+      script.src = 'https://apis.google.com/js/api.js';
+      script.onload = () => resolve(window.gapi);
+      script.onerror = () => reject(new Error('Failed to load gapi'));
+      document.head.appendChild(script);
+    });
+  }
+
   const API_KEY = 'AIzaSyBbet_bmwm8h8G5CqvmzrdAnc3AO-0IKa8';
   const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
   const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'];
@@ -39,18 +50,26 @@ export function initGoogleCalendar() {
   }
 
   connectBtn.addEventListener('click', () => {
-    gapi.load('client:auth2', () => {
-      gapi.client.init({
-        apiKey: API_KEY,
-        clientId: CLIENT_ID,
-        discoveryDocs: DISCOVERY_DOCS,
-        scope: SCOPES
-      }).then(() => gapi.auth2.getAuthInstance().signIn())
-        .then(listUpcomingEvents)
-        .catch(err => {
-          console.error('Auth or API error', err);
-          listEl.textContent = 'Unable to connect to Google Calendar';
+    loadGapi()
+      .then(() => {
+        gapi.load('client:auth2', () => {
+          gapi.client.init({
+            apiKey: API_KEY,
+            clientId: CLIENT_ID,
+            discoveryDocs: DISCOVERY_DOCS,
+            scope: SCOPES
+          })
+            .then(() => gapi.auth2.getAuthInstance().signIn())
+            .then(listUpcomingEvents)
+            .catch(err => {
+              console.error('Auth or API error', err);
+              listEl.textContent = 'Unable to connect to Google Calendar';
+            });
         });
-    });
+      })
+      .catch(err => {
+        console.error(err);
+        listEl.textContent = 'Unable to load Google API';
+      });
   });
 }
