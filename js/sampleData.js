@@ -225,6 +225,16 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'daily',
     parentGoalId: null,
+  },
+  {
+    id: 'daily-task-11',
+    type: 'task',
+    text: 'Review monthly goals',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    recurs: 'monthly',
+    parentGoalId: null,
   }
 ];
 
