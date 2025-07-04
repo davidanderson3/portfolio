@@ -4,6 +4,20 @@ import { loadDecisions, saveDecisions, generateId, makeIconBtn } from './helpers
 import { enableTaskDragAndDrop } from './dragAndDrop.js';
 import { createGoalRow } from './goals.js';
 
+// Access the global openGoalIds set defined in goals.js
+const openGoalIds = window.openGoalIds || new Set();
+
+function setupToggle(wrapper, row, childrenContainer, id) {
+    const toggle = row.querySelector('.toggle-triangle');
+    if (!toggle) return;
+    toggle.onclick = () => {
+        const open = childrenContainer.style.display === 'block';
+        toggle.textContent = open ? '▶' : '▼';
+        childrenContainer.style.display = open ? 'none' : 'block';
+        open ? openGoalIds.delete(id) : openGoalIds.add(id);
+    };
+}
+
 /**
  * Attach ↑, ✏️, 🕒, ❌ buttons to a task-row.
  */
@@ -137,16 +151,39 @@ export async function renderChildren(goal, all, container) {
     const now = Date.now();
     const children = all.filter(item => item.parentGoalId === goal.id);
 
-    // Active tasks
-    const active = children.filter(c => {
+    // ── Active sub-goals ──
+    const activeGoals = children.filter(c => {
         const hideUntil = c.hiddenUntil ? Date.parse(c.hiddenUntil) || 0 : 0;
-        return !c.completed && (!hideUntil || now >= hideUntil);
+        return c.type === 'goal' && !c.completed && (!hideUntil || now >= hideUntil);
+    });
+    activeGoals.forEach(g => {
+        const wrap = document.createElement('div');
+        wrap.className = 'decision goal-card indent-1';
+        wrap.dataset.goalId = g.id;
+
+        const row = createGoalRow(g, { hideScheduled: true, stayPut: true });
+        wrap.appendChild(row);
+
+        const childContainer = document.createElement('div');
+        childContainer.className = 'goal-children';
+        childContainer.style.display = openGoalIds.has(g.id) ? 'block' : 'none';
+        wrap.appendChild(childContainer);
+        renderChildren(g, all, childContainer);
+
+        setupToggle(wrap, row, childContainer, g.id);
+        container.appendChild(wrap);
+    });
+
+    // ── Active tasks ──
+    const activeTasks = children.filter(c => {
+        const hideUntil = c.hiddenUntil ? Date.parse(c.hiddenUntil) || 0 : 0;
+        return c.type === 'task' && !c.completed && (!hideUntil || now >= hideUntil);
     });
     const taskList = document.createElement('div');
     taskList.className = 'task-list';
     container.appendChild(taskList);
 
-    active.forEach(task => {
+    activeTasks.forEach(task => {
         const wrapper = document.createElement('div');
         wrapper.className = 'decision indent-1';
         wrapper.dataset.taskId = task.id;
@@ -160,7 +197,6 @@ export async function renderChildren(goal, all, container) {
         // Attach task buttons
         attachTaskButtons(task, row, taskList, all);
 
-        // Wire up the task checkbox to move it into completed section
         const cb = row.querySelector('input[type="checkbox"]');
         cb.addEventListener('change', async () => {
             task.completed = cb.checked;
@@ -222,74 +258,89 @@ export async function renderChildren(goal, all, container) {
     addForm.append(inputText, addBtn);
     container.appendChild(addForm);
 
-    // Completed tasks
+    // Completed items
     const done = children.filter(c => c.completed);
     if (done.length) {
         const doneContainer = document.createElement('div');
         doneContainer.className = 'completed-task-list';
         container.appendChild(doneContainer);
 
-        done.forEach(task => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'decision indent-1 completed-decision-inline';
-            wrapper.dataset.taskId = task.id;
-            wrapper.setAttribute('draggable', 'false');
+        done.forEach(item => {
+            if (item.type === 'task') {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'decision indent-1 completed-decision-inline';
+                wrapper.dataset.taskId = item.id;
+                wrapper.setAttribute('draggable', 'false');
 
-            const row = document.createElement('div');
-            row.className = 'decision-row';
-            Object.assign(row.style, {
-                padding: '4px 8px',
-                fontSize: '0.85em',
-                alignItems: 'center'
-            });
+                const row = document.createElement('div');
+                row.className = 'decision-row';
+                Object.assign(row.style, {
+                    padding: '4px 8px',
+                    fontSize: '0.85em',
+                    alignItems: 'center'
+                });
 
-            const left = document.createElement('div');
-            left.className = 'check-column';
-            const cb = document.createElement('input');
-            cb.type = 'checkbox';
-            cb.checked = true;
-            // allow unchecking to move back to active
-            cb.addEventListener('change', async () => {
-                task.completed = cb.checked;
-                task.dateCompleted = cb.checked ? new Date().toISOString() : '';
-                const idx = all.findIndex(d => d.id === task.id);
-                if (idx !== -1) all[idx] = task;
-                await saveDecisions(all);
-                renderChildren(goal, all, container);
-            });
-            left.appendChild(cb);
+                const left = document.createElement('div');
+                left.className = 'check-column';
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = true;
+                cb.addEventListener('change', async () => {
+                    item.completed = cb.checked;
+                    item.dateCompleted = cb.checked ? new Date().toISOString() : '';
+                    const idx = all.findIndex(d => d.id === item.id);
+                    if (idx !== -1) all[idx] = item;
+                    await saveDecisions(all);
+                    renderChildren(goal, all, container);
+                });
+                left.appendChild(cb);
 
-            const middle = document.createElement('div');
-            middle.className = 'middle-group';
-            Object.assign(middle.style, {
-                display: 'grid',
-                gridTemplateColumns: 'minmax(200px,1fr) minmax(180px,auto)',
-                columnGap: '16px'
-            });
-            const title = document.createElement('div');
-            title.className = 'title-column';
-            title.textContent = task.text;
-            const res = document.createElement('div');
-            res.textContent = task.resolution ? `→ ${task.resolution}` : '';
-            Object.assign(res.style, {
-                fontStyle: 'italic', color: '#666', fontSize: '0.85em'
-            });
-            middle.append(title, res);
+                const middle = document.createElement('div');
+                middle.className = 'middle-group';
+                Object.assign(middle.style, {
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(200px,1fr) minmax(180px,auto)',
+                    columnGap: '16px'
+                });
+                const title = document.createElement('div');
+                title.className = 'title-column';
+                title.textContent = item.text;
+                const res = document.createElement('div');
+                res.textContent = item.resolution ? `→ ${item.resolution}` : '';
+                Object.assign(res.style, {
+                    fontStyle: 'italic', color: '#666', fontSize: '0.85em'
+                });
+                middle.append(title, res);
 
-            const right = document.createElement('div');
-            right.className = 'right-group';
-            right.style.gap = '4px';
-            const due = document.createElement('div');
-            due.className = 'due-column';
-            due.textContent = task.dateCompleted || '';
-            const btnWrap = document.createElement('div');
-            btnWrap.className = 'button-row';
-            attachTaskButtons(task, row, doneContainer, all);
+                const right = document.createElement('div');
+                right.className = 'right-group';
+                right.style.gap = '4px';
+                const due = document.createElement('div');
+                due.className = 'due-column';
+                due.textContent = item.dateCompleted || '';
+                const btnWrap = document.createElement('div');
+                btnWrap.className = 'button-row';
+                attachTaskButtons(item, row, doneContainer, all);
 
-            right.append(due, btnWrap);
-            row.append(left, middle, right);
-            wrapper.append(row);
-            doneContainer.append(wrapper);
+                right.append(due, btnWrap);
+                row.append(left, middle, right);
+                wrapper.append(row);
+                doneContainer.append(wrapper);
+            } else if (item.type === 'goal') {
+                const wrap = document.createElement('div');
+                wrap.className = 'decision indent-1 completed-decision-inline';
+                wrap.dataset.goalId = item.id;
+                wrap.setAttribute('draggable', 'false');
+
+                const row = createGoalRow(item, { hideScheduled: true, stayPut: true });
+                Object.assign(row.style, {
+                    padding: '4px 8px',
+                    fontSize: '0.85em',
+                    alignItems: 'center'
+                });
+                wrap.appendChild(row);
+                doneContainer.appendChild(wrap);
+            }
         });
     }
 }
