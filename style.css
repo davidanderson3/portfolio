@@ -189,9 +189,10 @@ button:hover {
 
 .right-group {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
   min-width: 200px;
   max-width: 260px;
   flex-shrink: 0;
@@ -201,7 +202,7 @@ button:hover {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content: space-evenly;
+  justify-content: flex-end;
 }
 
 /* Other rules remain unchanged below... */
@@ -389,6 +390,7 @@ button:hover {
     flex: 0 0 auto;
     font-size: 0.9em;
     flex-wrap: nowrap;
+    justify-content: flex-end;
   }
 
   .title-column {
@@ -399,7 +401,7 @@ button:hover {
   .button-row {
     flex-wrap: nowrap;
     gap: 6px;
-    justify-content: space-evenly;
+    justify-content: flex-end;
   }
 
   .button-row button {

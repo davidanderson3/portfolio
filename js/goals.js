@@ -544,7 +544,11 @@ function attachEditButtons(item, buttonWrap) {
             scheduledInput.style.width = '140px';
 
             const allItems = await loadDecisions();
-            const goals = allItems.filter(g => g.type === 'goal' && g.id !== item.id);
+            const goals = allItems.filter(g =>
+                g.type === 'goal' &&
+                g.id !== item.id &&
+                !g.completed // only active or hidden
+            );
             const noneOpt = document.createElement('option');
             noneOpt.value = '';
             noneOpt.textContent = '(no parent)';
@@ -557,6 +561,7 @@ function attachEditButtons(item, buttonWrap) {
                 parentSelect.appendChild(opt);
             });
             parentSelect.style.marginLeft = '8px';
+            parentSelect.style.maxWidth = '160px';
 
             middle.innerHTML = '';
             middle.appendChild(textInput);
