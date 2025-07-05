@@ -374,19 +374,42 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
  * @param {HTMLElement} buttonWrap  The .button-row container in the goal’s row
  */
 function attachEditButtons(item, buttonWrap, row) {
-    // ⬆️ Move goal up (top-level only)
-    if (row && !item.parentGoalId) {
     // ⬆️ Move goal up
     if (row) {
         const upBtn = makeIconBtn('⬆️', 'Move goal up', async () => {
             const wrapper = row.closest('.goal-card');
-            const prev = wrapper?.previousElementSibling;
-            if (wrapper && prev?.dataset.goalId) {
-                goalList.insertBefore(wrapper, prev);
+            const container = wrapper?.parentElement;
+            if (!wrapper || !container) return;
+
+            let prev = wrapper.previousElementSibling;
+            while (prev && !prev.dataset.goalId) {
+                prev = prev.previousElementSibling;
+            }
+            if (!prev) return;
+
+            container.insertBefore(wrapper, prev);
+
+            if (!item.parentGoalId) {
                 const newOrder = [...goalList.children]
                     .map(el => el.dataset.goalId)
                     .filter(Boolean);
                 await saveGoalOrder(newOrder);
+            } else {
+                const all = await loadDecisions();
+                const siblings = all.filter(
+                    d => d.parentGoalId === item.parentGoalId && d.type === 'goal' && !d.completed
+                );
+                const other = all.filter(
+                    d => d.parentGoalId !== item.parentGoalId || d.type !== 'goal' || d.completed
+                );
+                const ids = [...container.children]
+                    .filter(el => el.dataset.goalId)
+                    .map(el => el.dataset.goalId);
+                const reordered = ids
+                    .map(id => siblings.find(g => g.id === id))
+                    .filter(Boolean);
+                const updated = [...other, ...reordered];
+                await saveDecisions(updated);
             }
         });
         buttonWrap.appendChild(upBtn);
