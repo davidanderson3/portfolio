@@ -59,6 +59,11 @@ export function createGoalRow(goal, options = {}) {
                 : null;
             await saveDecisions(items);
 
+            if (options.stayPut) {
+                await renderGoalsAndSubitems();
+                return;
+            }
+
             // 2) Move the row in the DOM
             const wrapper = row.closest('.decision.goal-card') || row;
             if (checkbox.checked) {
@@ -529,6 +534,7 @@ function attachEditButtons(item, buttonWrap) {
 
             const textInput = document.createElement('input');
             const scheduledInput = document.createElement('input');
+            const parentSelect = document.createElement('select');
 
             textInput.value = item.text;
             textInput.style.width = '100%';
@@ -537,27 +543,49 @@ function attachEditButtons(item, buttonWrap) {
             scheduledInput.value = item.scheduled || '';
             scheduledInput.style.width = '140px';
 
+            const allItems = await loadDecisions();
+            const goals = allItems.filter(g =>
+                g.type === 'goal' &&
+                g.id !== item.id &&
+                !g.completed // only active or hidden
+            );
+            const noneOpt = document.createElement('option');
+            noneOpt.value = '';
+            noneOpt.textContent = '(no parent)';
+            parentSelect.appendChild(noneOpt);
+            goals.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id;
+                opt.textContent = g.text;
+                if (g.id === item.parentGoalId) opt.selected = true;
+                parentSelect.appendChild(opt);
+            });
+            parentSelect.style.marginLeft = '8px';
+            parentSelect.style.maxWidth = '160px';
+
             middle.innerHTML = '';
             middle.appendChild(textInput);
 
             due.innerHTML = '';
             due.appendChild(scheduledInput);
+            due.appendChild(parentSelect);
 
         } else {
             editing = false;
             const newText = middle.querySelector('input')?.value.trim();
             const newScheduled = due.querySelector('input')?.value.trim();
+            const newParent = due.querySelector('select')?.value || null;
 
             const all = await loadDecisions();
             const idx = all.findIndex(d => d.id === item.id);
             if (idx !== -1) {
                 all[idx].text = newText;
                 all[idx].scheduled = newScheduled;
+                all[idx].parentGoalId = newParent || null;
                 await saveDecisions(all);
-                middle.textContent = newText;
-                due.textContent = newScheduled;
-                editBtn.innerHTML = '✏️';
             }
+            editBtn.innerHTML = '✏️';
+            await renderGoalsAndSubitems();
         }
     });
 }

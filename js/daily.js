@@ -40,8 +40,18 @@ export async function renderDailyTasks(currentUser, db) {
     weeklyContainer.className = 'decision-container';
     panel.appendChild(weeklyContainer);
   }
+  // — ensure our monthly container exists
+  let monthlyContainer = panel.querySelector('#monthlyTasksList');
+  if (!monthlyContainer) {
+    monthlyContainer = document.createElement('div');
+    monthlyContainer.id = 'monthlyTasksList';
+    monthlyContainer.className = 'decision-container';
+    panel.appendChild(monthlyContainer);
+  }
   // Clear any existing weekly tasks/forms before re-rendering
   weeklyContainer.innerHTML = '';
+  // Clear any existing monthly tasks/forms before re-rendering
+  monthlyContainer.innerHTML = '';
 
 
   // — Inject CSS once to remove green focus/active backgrounds on buttons
@@ -132,6 +142,8 @@ export async function renderDailyTasks(currentUser, db) {
   const monday = new Date(now);
   monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   const weekKey = monday.toISOString().split('T')[0];
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthKey = monthStart.toISOString().split('T')[0];
   let completionMap = {};
   if (currentUser) {
     const snap = await db.collection('taskCompletions').doc(currentUser.uid).get();
@@ -141,6 +153,7 @@ export async function renderDailyTasks(currentUser, db) {
   }
   const dailyDone = new Set(completionMap[todayKey] || []);
   const weeklyDone = new Set(completionMap[weekKey] || []);
+  const monthlyDone = new Set(completionMap[monthKey] || []);
 
   // — Add-new WEEKLY form
   (function () {
@@ -187,6 +200,51 @@ export async function renderDailyTasks(currentUser, db) {
     weeklyContainer.appendChild(form);
   })();
 
+  // — Add-new MONTHLY form
+  (function () {
+    const form = document.createElement('div');
+    form.style = 'display:flex;gap:8px;margin-bottom:12px';
+
+    const input = document.createElement('input');
+    Object.assign(input, { type: 'text', placeholder: 'New monthly task…' });
+    Object.assign(input.style, { flex: '1', padding: '6px', borderRadius: '6px', border: '1px solid #ccc' });
+
+    const btn = document.createElement('button');
+    btn.textContent = '+';
+    Object.assign(btn.style, { padding: '0 14px', borderRadius: '6px', fontWeight: 'bold', background: 'none', border: 'none' });
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); btn.click(); }
+    });
+
+    btn.onclick = async () => {
+      const text = input.value.trim();
+      if (!text) return;
+      const task = {
+        id: generateId(),
+        type: 'task',
+        text: `${text}`,
+        recurs: 'monthly',
+        parentGoalId: null,
+        completed: false,
+        dateCompleted: '',
+        resolution: '',
+        dependencies: [],
+        skipUntil: null
+      };
+      const updated = [...await loadDecisions(), task];
+      await saveDecisions(updated);
+      input.value = '';
+      const wrap = makeTaskElement(task);
+      wrap.classList.add('flash');
+      wrap.addEventListener('animationend', () => wrap.classList.remove('flash'), { once: true });
+      monthlyContainer.appendChild(wrap);
+    };
+
+    form.append(input, btn);
+    monthlyContainer.appendChild(form);
+  })();
+
   const doneSet = new Set(completionMap[todayKey] || []);
 
   // — Prepare and split lists
@@ -208,6 +266,12 @@ export async function renderDailyTasks(currentUser, db) {
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
   for (const t of weeklyList) weeklyContainer.appendChild(makeTaskElement(t));
+  const monthlyList = all.filter(t =>
+    t.type === 'task' &&
+    t.recurs === 'monthly' &&
+    (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
+  );
+  for (const t of monthlyList) monthlyContainer.appendChild(makeTaskElement(t));
 
 
   // ——— Helpers —————————————————————————
