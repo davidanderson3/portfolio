@@ -19,7 +19,7 @@ export async function initTravelPanel() {
 
   travelData = JSON.parse(localStorage.getItem('travelData') || 'null');
   if (!travelData) {
-    const res = await fetch('assets/travel/doc.xml');
+    const res = await fetch('assets/travel/doc.kml');
     const text = await res.text();
     travelData = parseKml(text);
     localStorage.setItem('travelData', JSON.stringify(travelData));
