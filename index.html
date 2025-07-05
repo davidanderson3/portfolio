@@ -81,6 +81,7 @@
       <button class="tab-button" data-target="dailyPanel">Recurring</button>
       <button class="tab-button" data-target="metricsPanel">Metrics</button>
       <button class="tab-button" data-target="listsPanel">Lists</button>
+      <button class="tab-button" data-target="travelPanel">Travel</button>
     </div>
 
     <!-- TABS CONTENT PANELS -->
@@ -176,11 +177,21 @@
         <div id="listsReport" class="report-panel"></div>
       </div>
     </div>
+
+    <!-- TRAVEL PANEL -->
+    <div id="travelPanel" class="main-layout" style="display:none">
+      <div class="full-column">
+        <h2>Travel <button id="addPlaceBtn" type="button">+ Add Place</button></h2>
+        <canvas id="travelMap" width="720" height="360" style="border:1px solid #ccc; max-width:100%; height:auto;"></canvas>
+        <ul id="travelList"></ul>
+      </div>
+    </div>
   </section>
 
   <script src="https://apis.google.com/js/api.js"></script>
   <script type="module" src="js/main.js"></script>
   <script type="module" src="js/lists.js"></script>
+  <script type="module" src="js/travel.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
