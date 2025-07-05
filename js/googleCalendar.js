@@ -3,10 +3,16 @@ export function initGoogleCalendar() {
   const listEl = document.getElementById('googleEvents');
   if (!connectBtn || !listEl) return;
 
+  connectBtn.disabled = true;
+
   const API_KEY = 'AIzaSyBbet_bmwm8h8G5CqvmzrdAnc3AO-0IKa8';
-  const CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+  const CLIENT_ID = '727689864651-cb1fvhhbe47usbu6rqmnkjmp9g8sjo6j.apps.googleusercontent.com';
   const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'];
   const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+
+  let tokenClient;
+  let gapiInited = false;
+  let gisInited = false;
 
   function showEvents(events) {
     listEl.innerHTML = '';
@@ -17,40 +23,78 @@ export function initGoogleCalendar() {
     events.forEach(ev => {
       const li = document.createElement('li');
       const start = ev.start.dateTime || ev.start.date || '';
-      li.textContent = `${start.slice(0,16)} - ${ev.summary}`;
+      li.textContent = `${start.slice(0, 16)} - ${ev.summary}`;
       listEl.appendChild(li);
     });
   }
 
-  function listUpcomingEvents() {
-    gapi.client.calendar.events.list({
-      calendarId: 'primary',
-      timeMin: new Date().toISOString(),
-      showDeleted: false,
-      singleEvents: true,
-      maxResults: 10,
-      orderBy: 'startTime'
-    }).then(res => {
+  async function listUpcomingEvents() {
+    try {
+      const res = await gapi.client.calendar.events.list({
+        calendarId: 'primary',
+        timeMin: new Date().toISOString(),
+        showDeleted: false,
+        singleEvents: true,
+        maxResults: 10,
+        orderBy: 'startTime'
+      });
       showEvents(res.result.items);
-    }, err => {
+    } catch (err) {
       console.error('Calendar API error', err);
       listEl.textContent = 'Failed to load events';
+    }
+  }
+
+  function maybeEnableButton() {
+    if (gapiInited && gisInited) {
+      connectBtn.disabled = false;
+    }
+  }
+
+  function handleAuthClick() {
+    tokenClient.callback = async (response) => {
+      if (response.error) {
+        console.error('Token error', response);
+        listEl.textContent = 'Failed to authorize';
+        return;
+      }
+      await listUpcomingEvents();
+    };
+
+    if (!gapi.client.getToken()) {
+      tokenClient.requestAccessToken({ prompt: 'consent' });
+    } else {
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+  }
+
+  function gapiLoaded() {
+    gapi.load('client', async () => {
+      await gapi.client.init({ apiKey: API_KEY, discoveryDocs: DISCOVERY_DOCS });
+      gapiInited = true;
+      maybeEnableButton();
     });
   }
 
-  connectBtn.addEventListener('click', () => {
-    gapi.load('client:auth2', () => {
-      gapi.client.init({
-        apiKey: API_KEY,
-        clientId: CLIENT_ID,
-        discoveryDocs: DISCOVERY_DOCS,
-        scope: SCOPES
-      }).then(() => gapi.auth2.getAuthInstance().signIn())
-        .then(listUpcomingEvents)
-        .catch(err => {
-          console.error('Auth or API error', err);
-          listEl.textContent = 'Unable to connect to Google Calendar';
-        });
+  function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: ''
     });
-  });
+    gisInited = true;
+    maybeEnableButton();
+  }
+
+  const scriptGapi = document.createElement('script');
+  scriptGapi.src = 'https://apis.google.com/js/api.js';
+  scriptGapi.onload = gapiLoaded;
+  document.head.appendChild(scriptGapi);
+
+  const scriptGis = document.createElement('script');
+  scriptGis.src = 'https://accounts.google.com/gsi/client';
+  scriptGis.onload = gisLoaded;
+  document.head.appendChild(scriptGis);
+
+  connectBtn.addEventListener('click', handleAuthClick);
 }
