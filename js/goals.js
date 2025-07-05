@@ -376,6 +376,8 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
 function attachEditButtons(item, buttonWrap, row) {
     // ⬆️ Move goal up (top-level only)
     if (row && !item.parentGoalId) {
+    // ⬆️ Move goal up
+    if (row) {
         const upBtn = makeIconBtn('⬆️', 'Move goal up', async () => {
             const wrapper = row.closest('.goal-card');
             const prev = wrapper?.previousElementSibling;
