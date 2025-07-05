@@ -200,9 +200,10 @@ button:hover {
 
 .button-row {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 /* Other rules remain unchanged below... */
@@ -423,6 +424,9 @@ button:hover {
     margin: 0;
     height: 30px;
     font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
 
@@ -505,7 +509,9 @@ button:hover {
   border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 
@@ -513,7 +519,7 @@ button:hover {
   display: flex;
   gap: 6px;
   flex-wrap: nowrap;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   align-items: center;
 }
 
