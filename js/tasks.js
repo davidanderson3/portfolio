@@ -232,7 +232,7 @@ export async function renderChildren(goal, all, container) {
     });
 
     const inputText = document.createElement('input');
-    inputText.placeholder = 'New task…';
+    inputText.placeholder = 'New goal…';
     Object.assign(inputText.style, {
         width: '500px', fontSize: '0.95em',
         padding: '6px 10px', height: '32px',
@@ -245,7 +245,7 @@ export async function renderChildren(goal, all, container) {
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.textContent = '+';
-    addBtn.title = 'Add task';
+    addBtn.title = 'Add goal';
     Object.assign(addBtn.style, {
         height: '32px', lineHeight: '32px',
         padding: '0 12px', fontSize: '1em',
@@ -254,17 +254,17 @@ export async function renderChildren(goal, all, container) {
     });
     addBtn.addEventListener('click', async () => {
         const text = inputText.value.trim();
-        if (!text) return alert('Please enter task text.');
-        const newTask = {
+        if (!text) return alert('Please enter goal text.');
+        const newGoal = {
             id: generateId(),
             text,
             notes: '',
             completed: false,
             dateCompleted: '',
             parentGoalId: goal.id,
-            type: 'task'
+            type: 'goal'
         };
-        all.push(newTask);
+        all.push(newGoal);
         await saveDecisions(all);
         inputText.value = '';
         renderChildren(goal, all, container);
