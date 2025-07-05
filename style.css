@@ -200,7 +200,7 @@ button:hover {
 
 .button-row {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: nowrap;
   justify-content: flex-start;
   align-items: center;
@@ -415,12 +415,12 @@ button:hover {
 
   .button-row {
     flex-wrap: nowrap;
-    gap: 6px;
+    gap: 4px;
     justify-content: flex-end;
   }
 
   .button-row button {
-    padding: 4px 10px;
+    padding: 4px 8px;
     margin: 0;
     height: 30px;
     font-size: 0.9em;
@@ -502,7 +502,7 @@ button:hover {
 }
 
 .button-row button {
-  padding: 4px 10px;
+  padding: 4px 8px;
   margin: 0;
   height: 30px;
   font-size: 0.9em;
@@ -517,7 +517,7 @@ button:hover {
 
 .button-row {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: nowrap;
   justify-content: flex-start;
   align-items: center;
