@@ -1,34 +1,20 @@
 const fs = require('fs');
-const firebase = require('firebase/compat/app');
-require('firebase/compat/auth');
-require('firebase/compat/firestore');
+const admin = require('firebase-admin');
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBbet_bmwm8h8G5CqvmzrdAnc3AO-0IKa8",
-  authDomain: "decision-maker-4e1d3.firebaseapp.com",
-  projectId: "decision-maker-4e1d3",
-  storageBucket: "decision-maker-4e1d3.firebasestorage.app",
-  messagingSenderId: "727689864651",
-  appId: "1:727689864651:web:0100c3894790b8c188c24e",
-  measurementId: "G-7EJVQN0WT3"
-};
+const serviceAccount = require('./serviceAccountKey.json');
 
-firebase.initializeApp(firebaseConfig);
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
 
 async function main() {
-  const email = process.env.FIREBASE_EMAIL;
-  const password = process.env.FIREBASE_PASSWORD;
-  if (!email || !password) {
-    console.error('FIREBASE_EMAIL and FIREBASE_PASSWORD env vars required');
-    process.exit(1);
-  }
-  await firebase.auth().signInWithEmailAndPassword(email, password);
-  const db = firebase.firestore();
-
   const text = fs.readFileSync('assets/travel/doc.kml', 'utf8');
   const regex = /<Placemark>([\s\S]*?)<\/Placemark>/g;
   const places = [];
   let m;
+
   while ((m = regex.exec(text))) {
     const block = m[1];
     const name = /<name>([\s\S]*?)<\/name>/.exec(block)?.[1].trim() || 'Unknown';
@@ -45,6 +31,7 @@ async function main() {
     const ref = db.collection('travel').doc();
     batch.set(ref, p);
   });
+
   await batch.commit();
   console.log(`Imported ${places.length} places`);
   process.exit(0);
