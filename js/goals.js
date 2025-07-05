@@ -374,6 +374,8 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
  * @param {HTMLElement} buttonWrap  The .button-row container in the goal’s row
  */
 function attachEditButtons(item, buttonWrap, row) {
+    // ⬆️ Move goal up (top-level only)
+    if (row && !item.parentGoalId) {
     // ⬆️ Move goal up
     if (row) {
         const upBtn = makeIconBtn('⬆️', 'Move goal up', async () => {
