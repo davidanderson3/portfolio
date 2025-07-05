@@ -1,3 +1,5 @@
+import { db } from './auth.js';
+
 let mapInitialized = false;
 let travelData = [];
 
@@ -17,8 +19,15 @@ export async function initTravelPanel() {
   const list = document.getElementById('travelList');
   const ctx = canvas.getContext('2d');
 
-  travelData = JSON.parse(localStorage.getItem('travelData') || 'null');
-  if (!travelData) {
+  try {
+    const snap = await db.collection('travel').get();
+    travelData = snap.docs.map(doc => doc.data());
+    if (!travelData.length) {
+      throw new Error('No travel docs');
+    }
+    localStorage.setItem('travelData', JSON.stringify(travelData));
+  } catch (err) {
+    console.warn('Falling back to local KML', err);
     const res = await fetch('assets/travel/doc.kml');
     const text = await res.text();
     travelData = parseKml(text);
@@ -40,13 +49,19 @@ export async function initTravelPanel() {
     });
   }
 
-  document.getElementById('addPlaceBtn').addEventListener('click', () => {
+  document.getElementById('addPlaceBtn').addEventListener('click', async () => {
     const name = prompt('Place name:');
     const lat = parseFloat(prompt('Latitude:'));
     const lon = parseFloat(prompt('Longitude:'));
     if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
-    travelData.push({ name, lat, lon });
+    const place = { name, lat, lon };
+    travelData.push(place);
     localStorage.setItem('travelData', JSON.stringify(travelData));
+    try {
+      await db.collection('travel').add(place);
+    } catch (err) {
+      console.error('Failed to save place to Firestore', err);
+    }
     render();
   });
 
