@@ -112,6 +112,7 @@ export async function renderDailyTasks(currentUser, db) {
       id: generateId(),
       type: 'task',
       text: `${text}`,
+      notes: '',
       recurs: 'daily',
       parentGoalId: null,
       completed: false,
@@ -179,6 +180,7 @@ export async function renderDailyTasks(currentUser, db) {
         id: generateId(),
         type: 'task',
         text: `${text}`,
+        notes: '',
         recurs: 'weekly',
         parentGoalId: null,
         completed: false,
@@ -224,6 +226,7 @@ export async function renderDailyTasks(currentUser, db) {
         id: generateId(),
         type: 'task',
         text: `${text}`,
+        notes: '',
         recurs: 'monthly',
         parentGoalId: null,
         completed: false,
@@ -356,7 +359,15 @@ export async function renderDailyTasks(currentUser, db) {
     );
 
     const label = document.createElement('div');
-    label.textContent = task.text.replace(/^\[Daily\]\s*/, '');
+    const titleSpan = document.createElement('div');
+    titleSpan.textContent = task.text.replace(/^\[Daily\]\s*/, '');
+    label.appendChild(titleSpan);
+    if (task.notes) {
+      const noteSpan = document.createElement('div');
+      noteSpan.className = 'note-text';
+      noteSpan.textContent = task.notes;
+      label.appendChild(noteSpan);
+    }
     if (isDone) {
       Object.assign(label.style, { textDecoration: 'line-through', color: '#777' });
     }
@@ -384,15 +395,27 @@ export async function renderDailyTasks(currentUser, db) {
     btns.append(makeIconBtn('✏️', 'Edit', async () => {
       const original = task.text.replace(/^\[Daily\]\s*/, '');
       const edited = prompt('Edit task:', original);
-      if (!edited || edited.trim() === original) return;
+      if (edited === null) return;
+      const noteInput = prompt('Task notes:', task.notes || '');
       try {
         const allDecs = await loadDecisions();
         const idx = allDecs.findIndex(t => t.id === task.id);
         if (idx === -1) return;
         allDecs[idx].text = `[Daily] ${edited.trim()}`;
+        if (noteInput !== null) allDecs[idx].notes = noteInput.trim();
         await saveDecisions(allDecs);
         task.text = allDecs[idx].text;
-        label.textContent = edited.trim();
+        task.notes = allDecs[idx].notes;
+        label.innerHTML = '';
+        const tSpan = document.createElement('div');
+        tSpan.textContent = edited.trim();
+        label.appendChild(tSpan);
+        if (task.notes) {
+          const nSpan = document.createElement('div');
+          nSpan.className = 'note-text';
+          nSpan.textContent = task.notes;
+          label.appendChild(nSpan);
+        }
       } catch {
         alert('⚠️ Could not save edit.');
       }

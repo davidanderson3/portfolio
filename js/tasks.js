@@ -43,12 +43,26 @@ export function attachTaskButtons(item, row, listContainer, allDecisions) {
 
     // Edit
     const editBtn = makeIconBtn('✏️', 'Edit task', async () => {
-        const newText = prompt('Edit task:', item.text)?.trim();
-        if (newText && newText !== item.text) {
-            const idx = allDecisions.findIndex(d => d.id === item.id);
-            allDecisions[idx].text = newText;
-            await saveDecisions(allDecisions);
-            row.querySelector('.middle-group').textContent = newText;
+        const newText = prompt('Edit task:', item.text);
+        if (newText === null) return;
+        const newNotes = prompt('Task notes:', item.notes || '');
+        const idx = allDecisions.findIndex(d => d.id === item.id);
+        if (idx === -1) return;
+        if (typeof newText === 'string') allDecisions[idx].text = newText.trim();
+        if (newNotes !== null) allDecisions[idx].notes = newNotes.trim();
+        await saveDecisions(allDecisions);
+        const middle = row.querySelector('.middle-group');
+        if (middle) {
+            middle.innerHTML = '';
+            const tDiv = document.createElement('div');
+            tDiv.textContent = allDecisions[idx].text;
+            middle.appendChild(tDiv);
+            if (allDecisions[idx].notes) {
+                const nDiv = document.createElement('div');
+                nDiv.className = 'note-text';
+                nDiv.textContent = allDecisions[idx].notes;
+                middle.appendChild(nDiv);
+            }
         }
     });
 
@@ -244,6 +258,7 @@ export async function renderChildren(goal, all, container) {
         const newTask = {
             id: generateId(),
             text,
+            notes: '',
             completed: false,
             dateCompleted: '',
             parentGoalId: goal.id,
@@ -305,6 +320,12 @@ export async function renderChildren(goal, all, container) {
                 const title = document.createElement('div');
                 title.className = 'title-column';
                 title.textContent = item.text;
+                if (item.notes) {
+                    const n = document.createElement('div');
+                    n.className = 'note-text';
+                    n.textContent = item.notes;
+                    title.appendChild(n);
+                }
                 const res = document.createElement('div');
                 res.textContent = item.resolution ? `→ ${item.resolution}` : '';
                 Object.assign(res.style, {
