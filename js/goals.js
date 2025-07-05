@@ -107,7 +107,7 @@ export function createGoalRow(goal, options = {}) {
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
     if (goal.type === 'goal') {
-        attachEditButtons(goal, buttonWrap);
+        attachEditButtons(goal, buttonWrap, row);
     }
     right.appendChild(buttonWrap);
 
@@ -373,7 +373,23 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
  * @param {Object} item         The goal object
  * @param {HTMLElement} buttonWrap  The .button-row container in the goal’s row
  */
-function attachEditButtons(item, buttonWrap) {
+function attachEditButtons(item, buttonWrap, row) {
+    // ⬆️ Move goal up (top-level only)
+    if (row && !item.parentGoalId) {
+        const upBtn = makeIconBtn('⬆️', 'Move goal up', async () => {
+            const wrapper = row.closest('.goal-card');
+            const prev = wrapper?.previousElementSibling;
+            if (wrapper && prev?.dataset.goalId) {
+                goalList.insertBefore(wrapper, prev);
+                const newOrder = [...goalList.children]
+                    .map(el => el.dataset.goalId)
+                    .filter(Boolean);
+                await saveGoalOrder(newOrder);
+            }
+        });
+        buttonWrap.appendChild(upBtn);
+    }
+
     // ✏️ Edit icon button
     const editBtn = document.createElement('button');
     editBtn.type = 'button';
