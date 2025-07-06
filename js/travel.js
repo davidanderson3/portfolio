@@ -7,6 +7,8 @@ let travelData = [];
 let currentSearch = '';
 let rowMarkerMap = new Map();
 let selectedRow = null;
+let allTags = [];
+let selectedTags = [];
 
 export async function initTravelPanel() {
   const panel = document.getElementById('travelPanel');
@@ -16,6 +18,7 @@ export async function initTravelPanel() {
   const mapEl = document.getElementById('travelMap');
   const tableBody = document.querySelector('#travelTable tbody');
   const searchInput = document.getElementById('travelSearch');
+  const tagFiltersDiv = document.getElementById('travelTagFilters');
   map = L.map(mapEl).setView([20, 0], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
@@ -34,13 +37,41 @@ export async function initTravelPanel() {
     travelData = cached ? JSON.parse(cached) : [];
   }
 
+  allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
+
+  const renderTagFilters = () => {
+    if (!tagFiltersDiv) return;
+    tagFiltersDiv.innerHTML = '';
+    allTags.forEach(tag => {
+      const label = document.createElement('label');
+      label.style.marginRight = '8px';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = tag;
+      cb.addEventListener('change', () => {
+        if (cb.checked) {
+          selectedTags.push(tag);
+        } else {
+          selectedTags = selectedTags.filter(t => t !== tag);
+        }
+        renderList(currentSearch);
+      });
+      label.append(cb, ' ', tag);
+    tagFiltersDiv.append(label);
+  });
+  };
+
+  renderTagFilters();
+
   const renderList = (term = '') => {
     tableBody.innerHTML = '';
     markers.forEach(m => m.remove());
     markers = [];
     rowMarkerMap.clear();
     const items = travelData.filter(p =>
-      p.name.toLowerCase().includes(term.toLowerCase())
+      p.name.toLowerCase().includes(term.toLowerCase()) &&
+      (selectedTags.length === 0 ||
+        (Array.isArray(p.tags) && selectedTags.every(t => p.tags.includes(t))))
     );
 
     items.forEach((p, index) => {
@@ -126,6 +157,8 @@ export async function initTravelPanel() {
           } catch (err) {
             console.error('Failed to update place', err);
           }
+          allTags = Array.from(new Set(travelData.flatMap(pl => pl.tags || []))).sort();
+          renderTagFilters();
           renderList(currentSearch);
         });
         cancelBtn.addEventListener('click', e2 => {
@@ -151,6 +184,8 @@ export async function initTravelPanel() {
         }
         travelData.splice(travelData.indexOf(p), 1);
         localStorage.setItem('travelData', JSON.stringify(travelData));
+        allTags = Array.from(new Set(travelData.flatMap(pl => pl.tags || []))).sort();
+        renderTagFilters();
         renderList(currentSearch);
       });
       actionsTd.append(delBtn);
@@ -204,6 +239,8 @@ export async function initTravelPanel() {
     }
     travelData.push(place);
     localStorage.setItem('travelData', JSON.stringify(travelData));
+    allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
+    renderTagFilters();
     renderList(currentSearch);
   });
 }
