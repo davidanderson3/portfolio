@@ -53,8 +53,9 @@ export function initTabs(currentUser, db) {
     el.style.display = (id === initial) ? 'flex' : 'none';
   });
 
-  // on load, fire any needed init
-  document.addEventListener('DOMContentLoaded', () => {
+  // on load, fire any needed init. If DOMContentLoaded already fired,
+  // run immediately instead of waiting for the event.
+  const runInitial = () => {
     if (initial === 'metricsPanel') {
       window.initMetricsUI();
     }
@@ -64,5 +65,11 @@ export function initTabs(currentUser, db) {
     else if (initial === 'travelPanel') {
       window.initTravelPanel();
     }
-  });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', runInitial);
+  } else {
+    runInitial();
+  }
 }
