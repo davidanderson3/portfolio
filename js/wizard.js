@@ -1,6 +1,6 @@
-import { parseNaturalDate } from './helpers.js';
-import { generateId, loadDecisions, saveDecisions, saveGoalOrder } from './helpers.js';
+import { parseNaturalDate, generateId, loadDecisions, saveDecisions, saveGoalOrder } from './helpers.js';
 import { renderGoalsAndSubitems } from './goals.js';
+import { createCalendarEvent } from './googleCalendar.js';
 import { getCurrentUser } from './auth.js';
 
 const db = firebase.firestore();
@@ -8,8 +8,8 @@ const db = firebase.firestore();
 export const wizardState = {
   step: 0,
   goalText: '',
-  deadline: '',
-  subtasks: [],
+  calendarDate: '',
+  subgoals: [],
   editingGoalId: null
 };
 
@@ -32,8 +32,8 @@ export function initWizard(uiRefs) {
     Object.assign(wizardState, {
       step: 0,
       goalText: '',
-      deadline: '',
-      subtasks: [],
+      calendarDate: '',
+      subgoals: [],
       editingGoalId: null
     });
     wizardContainer.style.display = 'block';
@@ -73,8 +73,14 @@ export function initWizard(uiRefs) {
           renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
           return;
         }
-        wizardState.subtasks = textarea.value
+        wizardState.subgoals = textarea.value
           .split('\n').map(t => t.trim()).filter(Boolean);
+      } else if (wizardState.step === 2) {
+        const dateInput = document.getElementById('goalDateInput');
+        if (dateInput) {
+          const val = dateInput.value.trim();
+          wizardState.calendarDate = parseNaturalDate(val) || val;
+        }
         await saveGoalWizard();
         return;
       }
@@ -96,10 +102,15 @@ function renderWizardStep(container, backBtn) {
       <label for="goalTextInput"><strong>Goal:</strong></label>
       <input id="goalTextInput" value="${wizardState.goalText}" style="margin-left:8px; width: 80%;" />
     `;
+  } else if (wizardState.step === 1) {
+    container.innerHTML = `
+      <label>Subgoals (optional):</label>
+      <textarea id="taskList" rows="4" placeholder="One per line">${wizardState.subgoals.join('\n')}</textarea>
+    `;
   } else {
     container.innerHTML = `
-      <label>Subtasks (optional):</label>
-      <textarea id="taskList" rows="4" placeholder="One per line">${wizardState.subtasks.join('\n')}</textarea>
+      <label for="goalDateInput">Schedule date (optional):</label>
+      <input id="goalDateInput" value="${wizardState.calendarDate}" style="margin-left:8px;" placeholder="YYYY-MM-DD" />
     `;
   }
 }
@@ -119,22 +130,24 @@ async function saveGoalWizard() {
     resolution: '',
     dateCompleted: '',
     parentGoalId: null,
-    hiddenUntil: null
+    hiddenUntil: null,
+    scheduled: wizardState.calendarDate || ''
   };
 
   const newItems = [newGoal];
 
-  wizardState.subtasks.forEach(taskText => {
+  wizardState.subgoals.forEach(goalText => {
     newItems.push({
       id: generateId(),
-      type: 'task',
-      text: taskText,
+      type: 'goal',
+      text: goalText,
       notes: '',
       completed: false,
       resolution: '',
       dateCompleted: '',
       parentGoalId: goalId,
-      hiddenUntil: null
+      hiddenUntil: null,
+      scheduled: ''
     });
   });
 
@@ -143,6 +156,14 @@ async function saveGoalWizard() {
     : all;
 
   await saveDecisions([...updatedItems, ...newItems]);
+
+  if (wizardState.calendarDate) {
+    try {
+      await createCalendarEvent(newGoal.text, wizardState.calendarDate);
+    } catch (err) {
+      console.error('Failed to create calendar event', err);
+    }
+  }
 
   const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
   const currentGoalOrder = snap.data()?.goalOrder || [];
