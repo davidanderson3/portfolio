@@ -267,8 +267,13 @@ function renderCalendarSection(all, calendarContent) {
     }
 
     const dateKeys = Object.keys(byDate).sort();
-    let start = dateKeys.length ? parseKey(dateKeys[0]) : new Date();
+    let start = new Date();
     start.setHours(0, 0, 0, 0);
+    if (dateKeys.length) {
+        const first = parseKey(dateKeys[0]);
+        first.setHours(0, 0, 0, 0);
+        if (first < start) start = first;
+    }
 
     let end = dateKeys.length ? parseKey(dateKeys[dateKeys.length - 1]) : new Date(start);
     const extendEnd = new Date(start);
