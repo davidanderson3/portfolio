@@ -84,6 +84,8 @@ export async function initTravelPanel() {
       const tr = document.createElement('tr');
       const nameTd = document.createElement('td');
       nameTd.textContent = p.name;
+      const descTd = document.createElement('td');
+      descTd.textContent = p.description || '';
       const tagsTd = document.createElement('td');
       tagsTd.textContent = Array.isArray(p.tags) ? p.tags.join(', ') : '';
       const ratingTd = document.createElement('td');
@@ -107,11 +109,14 @@ export async function initTravelPanel() {
         form.style.flexWrap = 'wrap';
         form.style.gap = '4px';
         const td = document.createElement('td');
-        td.colSpan = 6;
+        td.colSpan = 7;
 
         const nameInput = document.createElement('input');
         nameInput.value = p.name || '';
         nameInput.placeholder = 'name';
+        const descInput = document.createElement('input');
+        descInput.value = p.description || '';
+        descInput.placeholder = 'description';
         const tagsInput = document.createElement('input');
         tagsInput.value = Array.isArray(p.tags) ? p.tags.join(', ') : '';
         tagsInput.placeholder = 'tags';
@@ -134,6 +139,7 @@ export async function initTravelPanel() {
 
         form.append(
           nameInput,
+          descInput,
           tagsInput,
           ratingInput,
           dateInput,
@@ -147,6 +153,7 @@ export async function initTravelPanel() {
         form.addEventListener('submit', async ev => {
           ev.preventDefault();
           p.name = nameInput.value.trim();
+          p.description = descInput.value.trim();
           p.tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
           p.Rating = ratingInput.value.trim();
           p.Date = dateInput.value.trim();
@@ -190,7 +197,7 @@ export async function initTravelPanel() {
       });
       actionsTd.append(delBtn);
 
-      tr.append(nameTd, tagsTd, ratingTd, dateTd, visitedTd, actionsTd);
+      tr.append(nameTd, descTd, tagsTd, ratingTd, dateTd, visitedTd, actionsTd);
       tableBody.append(tr);
       rowMarkerMap.set(tr, m);
 
@@ -236,6 +243,7 @@ export async function initTravelPanel() {
 
   document.getElementById('addPlaceBtn').addEventListener('click', async () => {
     const name = prompt('Place name:');
+    const description = prompt('Description:');
     const tags = prompt('Tags (comma separated):');
     const rating = prompt('Rating:');
     const date = prompt('Date:');
@@ -245,6 +253,7 @@ export async function initTravelPanel() {
     if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
     const place = {
       name,
+      description: description || '',
       lat,
       lon,
       tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
@@ -272,9 +281,13 @@ export function parseKml(text) {
   const placemarks = Array.from(doc.querySelectorAll('Placemark'));
   return placemarks.map(pm => {
     const name = pm.querySelector('name')?.textContent || 'Unknown';
+    const description =
+      pm.querySelector('ExtendedData Data[name="description"] value')?.textContent ||
+      pm.querySelector('description')?.textContent ||
+      '';
     const coords = pm.querySelector('coordinates')?.textContent.trim() || '0,0,0';
     const [lon, lat] = coords.split(',').map(parseFloat);
-    return { name, lat, lon };
+    return { name, description, lat, lon };
   });
 }
 
