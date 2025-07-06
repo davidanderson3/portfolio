@@ -8,7 +8,7 @@ export function initGoogleCalendar() {
   const API_KEY = 'AIzaSyBbet_bmwm8h8G5CqvmzrdAnc3AO-0IKa8';
   const CLIENT_ID = '727689864651-cb1fvhhbe47usbu6rqmnkjmp9g8sjo6j.apps.googleusercontent.com';
   const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'];
-  const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+  const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
   let tokenClient;
   let gapiInited = false;
@@ -97,4 +97,23 @@ export function initGoogleCalendar() {
   document.head.appendChild(scriptGis);
 
   connectBtn.addEventListener('click', handleAuthClick);
+}
+
+export async function createCalendarEvent(summary, date) {
+  if (!window.gapi?.client || !gapi.client.getToken()) {
+    console.warn('Google Calendar not connected');
+    return;
+  }
+  try {
+    await gapi.client.calendar.events.insert({
+      calendarId: 'primary',
+      resource: {
+        summary,
+        start: { date },
+        end: { date }
+      }
+    });
+  } catch (err) {
+    console.error('Failed to create calendar event', err);
+  }
 }

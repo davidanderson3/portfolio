@@ -39,20 +39,31 @@ export function renderGoalsReport(items) {
 
   const goalMap = Object.fromEntries(items.filter(i => i.type === 'goal').map(g => [g.id, g]));
 
+  function parentHidden(item) {
+    let pid = item.parentGoalId;
+    while (pid) {
+      const p = goalMap[pid];
+      if (!p) break;
+      const h = p.hiddenUntil ? Date.parse(p.hiddenUntil) || 0 : 0;
+      if (h && now < h) return true;
+      pid = p.parentGoalId;
+    }
+    return false;
+  }
+
   const activeTasks = tasks.filter(t => {
     if (!t.parentGoalId) return false; // only count tasks linked to a goal
     const parent = goalMap[t.parentGoalId];
-    if (!parent) return false;
+    if (!parent || parent.completed) return false;
 
     const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
-    const parentActive =
-      !parent.completed &&
-      (!parent.hiddenUntil || now >= (Date.parse(parent.hiddenUntil) || 0));
-    return !t.completed && parentActive && (!hideUntil || now >= hideUntil);
+    const hidden =
+      (hideUntil && now < hideUntil) || parentHidden(t) || parentHidden(parent);
+    return !t.completed && !hidden;
   });
   const hiddenTasks = tasks.filter(t => {
     const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
-    return hideUntil && now < hideUntil;
+    return (hideUntil && now < hideUntil) || parentHidden(t);
   });
 
   container.innerHTML = `

@@ -125,7 +125,7 @@ export async function renderDailyTasks(currentUser, db) {
       const updated = [...await loadDecisions(), newTask];
       await saveDecisions(updated);
       input.value = '';
-      const wrapper = makeTaskElement(newTask);
+      const wrapper = makeTaskElement(newTask, 'daily');
       wrapper.classList.add('flash');
       wrapper.addEventListener('animationend', () => wrapper.classList.remove('flash'), { once: true });
       container.insertBefore(wrapper, addForm.nextSibling);
@@ -192,7 +192,7 @@ export async function renderDailyTasks(currentUser, db) {
       const updated = [...await loadDecisions(), task];
       await saveDecisions(updated);
       input.value = '';
-      const wrap = makeTaskElement(task, weekKey, weeklyDone, completionMap, weeklyContainer);
+      const wrap = makeTaskElement(task, 'weekly');
       wrap.classList.add('flash');
       wrap.addEventListener('animationend', () => wrap.classList.remove('flash'), { once: true });
       weeklyContainer.appendChild(wrap);
@@ -238,7 +238,7 @@ export async function renderDailyTasks(currentUser, db) {
       const updated = [...await loadDecisions(), task];
       await saveDecisions(updated);
       input.value = '';
-      const wrap = makeTaskElement(task);
+      const wrap = makeTaskElement(task, 'monthly');
       wrap.classList.add('flash');
       wrap.addEventListener('animationend', () => wrap.classList.remove('flash'), { once: true });
       monthlyContainer.appendChild(wrap);
@@ -248,7 +248,10 @@ export async function renderDailyTasks(currentUser, db) {
     monthlyContainer.appendChild(form);
   })();
 
-  const doneSet = new Set(completionMap[todayKey] || []);
+  // Track completions for each recurrence period
+  const doneDaily = new Set(completionMap[todayKey] || []);
+  const doneWeekly = new Set(completionMap[weekKey] || []);
+  const doneMonthly = new Set(completionMap[monthKey] || []);
 
   // — Prepare and split lists
   const nowMs = Date.now();
@@ -257,37 +260,37 @@ export async function renderDailyTasks(currentUser, db) {
     t.recurs === 'daily' &&
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
-  const activeList = dailyAll.filter(t => !doneSet.has(t.id));
-  const doneList = dailyAll.filter(t => doneSet.has(t.id));
+  const activeList = dailyAll.filter(t => !doneDaily.has(t.id));
+  const doneList = dailyAll.filter(t => doneDaily.has(t.id));
 
   // — Render active then done
-  for (const t of activeList) container.appendChild(makeTaskElement(t));
-  for (const t of doneList) container.appendChild(makeTaskElement(t));
+  for (const t of activeList) container.appendChild(makeTaskElement(t, 'daily'));
+  for (const t of doneList) container.appendChild(makeTaskElement(t, 'daily'));
   const weeklyList = all.filter(t =>
     t.type === "task" &&
     t.recurs === "weekly" &&
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
-  for (const t of weeklyList) weeklyContainer.appendChild(makeTaskElement(t));
+  for (const t of weeklyList) weeklyContainer.appendChild(makeTaskElement(t, 'weekly'));
   const monthlyList = all.filter(t =>
     t.type === 'task' &&
     t.recurs === 'monthly' &&
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
-  for (const t of monthlyList) monthlyContainer.appendChild(makeTaskElement(t));
+  for (const t of monthlyList) monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
 
 
   // ——— Helpers —————————————————————————
 
-  async function onToggleTaskCompletion(task, cb, wrapper) {
+  async function onToggleTaskCompletion(task, cb, wrapper, listEl, setRef, key) {
     try {
-      completionMap[todayKey] = completionMap[todayKey] || [];
+      completionMap[key] = completionMap[key] || [];
       if (cb.checked) {
-        completionMap[todayKey].push(task.id);
-        doneSet.add(task.id);
+        completionMap[key].push(task.id);
+        setRef.add(task.id);
       } else {
-        completionMap[todayKey] = completionMap[todayKey].filter(id => id !== task.id);
-        doneSet.delete(task.id);
+        completionMap[key] = completionMap[key].filter(id => id !== task.id);
+        setRef.delete(task.id);
       }
       if (currentUser) {
         await db.collection('taskCompletions').doc(currentUser.uid).set(completionMap);
@@ -305,13 +308,14 @@ export async function renderDailyTasks(currentUser, db) {
         labelEl.style.color = '';
       }
       if (cb.checked) {
-        container.appendChild(wrapper);
+        listEl.appendChild(wrapper);
       } else {
-        const allWrappers = Array.from(container.querySelectorAll('.daily-task-wrapper'));
+        const allWrappers = Array.from(listEl.querySelectorAll('.daily-task-wrapper'));
         const firstDone = allWrappers.find(el =>
           el.querySelector('input[type="checkbox"]').checked
         );
-        container.insertBefore(wrapper, firstDone || addForm.nextSibling);
+        const addFormEl = listEl.firstElementChild;
+        listEl.insertBefore(wrapper, firstDone || addFormEl.nextSibling);
       }
     } catch (err) {
       console.error(err);
@@ -320,8 +324,14 @@ export async function renderDailyTasks(currentUser, db) {
     }
   }
 
-  function makeTaskElement(task) {
-    const isDone = doneSet.has(task.id);
+  function makeTaskElement(task, period = 'daily') {
+    const config = {
+      daily: { set: doneDaily, key: todayKey, container: container },
+      weekly: { set: doneWeekly, key: weekKey, container: weeklyContainer },
+      monthly: { set: doneMonthly, key: monthKey, container: monthlyContainer }
+    };
+    const { set, key, container: listEl } = config[period];
+    const isDone = set.has(task.id);
     const wrapper = document.createElement('div');
     wrapper.className = 'daily-task-wrapper';
     wrapper.draggable = true;
@@ -355,7 +365,7 @@ export async function renderDailyTasks(currentUser, db) {
     cb.type = 'checkbox';
     cb.checked = isDone;
     cb.addEventListener('change', () =>
-      onToggleTaskCompletion(task, cb, wrapper)
+      onToggleTaskCompletion(task, cb, wrapper, listEl, set, key)
     );
 
     const label = document.createElement('div');
@@ -385,9 +395,11 @@ export async function renderDailyTasks(currentUser, db) {
     btns.append(makeIconBtn('⬆️', 'Move up', async () => {
       const prev = wrapper.previousElementSibling;
       if (prev && prev.classList.contains('daily-task-wrapper')) {
-        container.insertBefore(wrapper, prev);
-        try { await persistReorder(); }
-        catch { alert('⚠️ Could not save new order.'); }
+        listEl.insertBefore(wrapper, prev);
+        if (period === 'daily') {
+          try { await persistReorder(); }
+          catch { alert('⚠️ Could not save new order.'); }
+        }
       }
     }));
 
