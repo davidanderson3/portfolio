@@ -245,28 +245,44 @@ function renderCalendarSection(all, calendarContent) {
     const scheduled = all
         .filter(
             g =>
-                g.scheduled && // has a scheduled date
+                g.scheduled &&
                 !g.completed &&
                 !isNaN(Date.parse(g.scheduled))
         )
         .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
 
     const byDate = scheduled.reduce((groups, goal) => {
-        const key = goal.scheduled.slice(0, 10); // "YYYY-MM-DD"
+        const key = goal.scheduled.slice(0, 10);
         (groups[key] = groups[key] || []).push(goal);
         return groups;
     }, {});
 
-    const dateKeys = Object.keys(byDate).sort();
-    for (let i = 0; i < dateKeys.length; i++) {
-        const dateKey = dateKeys[i];
-        const dt = new Date(dateKey);
-        const dow = dt.getDay();
+    function parseKey(key) {
+        const [y, m, d] = key.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
 
-        if (dow === 6) { // Saturday → weekend section
-            const sat = dt;
-            const sun = new Date(dt); sun.setDate(dt.getDate() + 1);
-            const sunKey = sun.toISOString().slice(0, 10);
+    function keyFromDate(date) {
+        return date.toISOString().slice(0, 10);
+    }
+
+    const dateKeys = Object.keys(byDate).sort();
+    let start = dateKeys.length ? parseKey(dateKeys[0]) : new Date();
+    start.setHours(0, 0, 0, 0);
+
+    let end = dateKeys.length ? parseKey(dateKeys[dateKeys.length - 1]) : new Date(start);
+    const extendEnd = new Date(start);
+    extendEnd.setMonth(extendEnd.getMonth() + 6);
+    if (extendEnd > end) end = extendEnd;
+
+    for (let d = new Date(start); d <= end;) {
+        const key = keyFromDate(d);
+        const dow = d.getDay();
+
+        if (dow === 6) {
+            const sat = new Date(d);
+            const sun = new Date(d); sun.setDate(d.getDate() + 1);
+            const sunKey = keyFromDate(sun);
 
             const section = document.createElement('div');
             section.className = 'weekend-section';
@@ -274,12 +290,12 @@ function renderCalendarSection(all, calendarContent) {
             const hdr = document.createElement('h3');
             const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             const sunLabel = sun.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-            const daysText = formatDaysUntil(dateKey);
+            const daysText = formatDaysUntil(key);
             hdr.textContent = `Weekend: ${satLabel} - ${sunLabel} (${daysText})`;
             section.appendChild(hdr);
 
-            [dateKey, sunKey].forEach(key => {
-                (byDate[key] || []).forEach(goal => {
+            [key, sunKey].forEach(k => {
+                (byDate[k] || []).forEach(goal => {
                     const wrapper = makeGoalWrapper(goal);
                     const row = createGoalRow(goal, { hideScheduled: true });
                     wrapper.appendChild(row);
@@ -293,67 +309,71 @@ function renderCalendarSection(all, calendarContent) {
                     setupToggle(wrapper, row, childrenContainer, goal.id);
                     section.appendChild(wrapper);
                 });
-                delete byDate[key];
+                delete byDate[k];
             });
 
             calendarContent.appendChild(section);
+            d.setDate(d.getDate() + 2);
+        } else if (dow === 0) {
+            const sat = new Date(d); sat.setDate(d.getDate() - 1);
+            const satKey = keyFromDate(sat);
 
-            if (dateKeys[i + 1] === sunKey) {
-                i++; // skip the Sunday key we just processed
-            }
-        } else if (dow === 0 && (i === 0 || new Date(dateKeys[i - 1]).getDay() !== 6)) {
-            // Sunday with no Saturday in list
-            const sat = new Date(dt); sat.setDate(dt.getDate() - 1);
             const section = document.createElement('div');
             section.className = 'weekend-section';
 
             const hdr = document.createElement('h3');
             const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            const sunLabel = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-            const daysText = formatDaysUntil(sat.toISOString().slice(0,10));
+            const sunLabel = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            const daysText = formatDaysUntil(satKey);
             hdr.textContent = `Weekend: ${satLabel} - ${sunLabel} (${daysText})`;
             section.appendChild(hdr);
 
-            (byDate[dateKey] || []).forEach(goal => {
-                const wrapper = makeGoalWrapper(goal);
-                const row = createGoalRow(goal, { hideScheduled: true });
-                wrapper.appendChild(row);
+            [satKey, key].forEach(k => {
+                (byDate[k] || []).forEach(goal => {
+                    const wrapper = makeGoalWrapper(goal);
+                    const row = createGoalRow(goal, { hideScheduled: true });
+                    wrapper.appendChild(row);
 
-                const childrenContainer = document.createElement('div');
-                childrenContainer.className = 'goal-children';
-                childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
-                wrapper.appendChild(childrenContainer);
-                renderChildren(goal, all, childrenContainer);
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'goal-children';
+                    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                    wrapper.appendChild(childrenContainer);
+                    renderChildren(goal, all, childrenContainer);
 
-                setupToggle(wrapper, row, childrenContainer, goal.id);
-                section.appendChild(wrapper);
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    section.appendChild(wrapper);
+                });
+                delete byDate[k];
             });
-            delete byDate[dateKey];
 
             calendarContent.appendChild(section);
+            d.setDate(d.getDate() + 1);
         } else {
-            const header = document.createElement('h3');
-            const dowLabel = dt.toLocaleDateString(undefined, { weekday: 'short' });
-            const dateStr = dt.toLocaleDateString();
-            const daysText = formatDaysUntil(dateKey);
-            header.textContent = `${dowLabel} ${dateStr} (${daysText})`;
-            calendarContent.appendChild(header);
+            if (byDate[key]) {
+                const header = document.createElement('h3');
+                const dowLabel = d.toLocaleDateString(undefined, { weekday: 'short' });
+                const dateStr = d.toLocaleDateString();
+                const daysText = formatDaysUntil(key);
+                header.textContent = `${dowLabel} ${dateStr} (${daysText})`;
+                calendarContent.appendChild(header);
 
-            byDate[dateKey].forEach(goal => {
-                const wrapper = makeGoalWrapper(goal);
-                const row = createGoalRow(goal, { hideScheduled: true });
-                wrapper.appendChild(row);
+                byDate[key].forEach(goal => {
+                    const wrapper = makeGoalWrapper(goal);
+                    const row = createGoalRow(goal, { hideScheduled: true });
+                    wrapper.appendChild(row);
 
-                const childrenContainer = document.createElement('div');
-                childrenContainer.className = 'goal-children';
-                childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
-                wrapper.appendChild(childrenContainer);
-                renderChildren(goal, all, childrenContainer);
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'goal-children';
+                    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                    wrapper.appendChild(childrenContainer);
+                    renderChildren(goal, all, childrenContainer);
 
-                setupToggle(wrapper, row, childrenContainer, goal.id);
-                calendarContent.appendChild(wrapper);
-            });
-            delete byDate[dateKey];
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    calendarContent.appendChild(wrapper);
+                });
+                delete byDate[key];
+            }
+            d.setDate(d.getDate() + 1);
         }
     }
 }
