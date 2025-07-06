@@ -19,6 +19,7 @@ export async function initTravelPanel() {
   const tableBody = document.querySelector('#travelTable tbody');
   const searchInput = document.getElementById('travelSearch');
   const placeInput = document.getElementById('placeSearch');
+  const tagFiltersDiv = document.getElementById('travelTagFilters');
   map = L.map(mapEl).setView([20, 0], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
