@@ -988,3 +988,11 @@ h2 {
   opacity: 0.5;
   cursor: default;
 }
+
+/* Weekend calendar sections */
+.weekend-section {
+  border: 2px dashed #7aa68c;
+  padding: 8px;
+  margin-bottom: 20px;
+  border-radius: 6px;
+}

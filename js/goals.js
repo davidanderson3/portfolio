@@ -245,8 +245,8 @@ function renderCalendarSection(all, calendarContent) {
     const scheduled = all
         .filter(
             g =>
-                g.scheduled &&                 // has a scheduled date
-                !g.completed &&                // NEW: ignore completed items
+                g.scheduled && // has a scheduled date
+                !g.completed &&
                 !isNaN(Date.parse(g.scheduled))
         )
         .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
@@ -257,25 +257,71 @@ function renderCalendarSection(all, calendarContent) {
         return groups;
     }, {});
 
+    const start = new Date();
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 6);
+    const firstSat = new Date(start);
+    firstSat.setDate(start.getDate() + ((6 - start.getDay() + 7) % 7));
+
+    const weekendDates = new Set();
+    for (let d = new Date(firstSat); d <= end; d.setDate(d.getDate() + 7)) {
+        const sat = new Date(d);
+        const sun = new Date(d); sun.setDate(d.getDate() + 1);
+        weekendDates.add(sat.toISOString().slice(0,10));
+        weekendDates.add(sun.toISOString().slice(0,10));
+
+        const section = document.createElement('div');
+        section.className = 'weekend-section';
+
+        const hdr = document.createElement('h3');
+        const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        const sunLabel = sun.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        const daysText = formatDaysUntil(sat.toISOString().slice(0,10));
+        hdr.textContent = `Weekend: ${satLabel} - ${sunLabel} (${daysText})`;
+        section.appendChild(hdr);
+
+        [sat, sun].forEach(date => {
+            const key = date.toISOString().slice(0,10);
+            const items = byDate[key] || [];
+            items.forEach(goal => {
+                const wrapper = makeGoalWrapper(goal);
+                const row = createGoalRow(goal, { hideScheduled: true });
+                wrapper.appendChild(row);
+
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'goal-children';
+                childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                wrapper.appendChild(childrenContainer);
+                renderChildren(goal, all, childrenContainer);
+
+                setupToggle(wrapper, row, childrenContainer, goal.id);
+                section.appendChild(wrapper);
+            });
+            delete byDate[key];
+        });
+
+        calendarContent.appendChild(section);
+    }
+
     Object.keys(byDate)
         .sort()
         .forEach(dateKey => {
             const [y, m, d] = dateKey.split('-').map(Number);
-            const header    = document.createElement('h3');
-            const dt        = new Date(y, m - 1, d);
-            const dow       = dt.toLocaleDateString(undefined, { weekday: 'short' });
-            const dateStr   = dt.toLocaleDateString();
-            const daysText  = formatDaysUntil(dateKey);
+            const header = document.createElement('h3');
+            const dt = new Date(y, m - 1, d);
+            const dow = dt.toLocaleDateString(undefined, { weekday: 'short' });
+            const dateStr = dt.toLocaleDateString();
+            const daysText = formatDaysUntil(dateKey);
             header.textContent = `${dow} ${dateStr} (${daysText})`;
             calendarContent.appendChild(header);
 
             byDate[dateKey].forEach(goal => {
-                const wrapper           = makeGoalWrapper(goal);
-                const row               = createGoalRow(goal, { hideScheduled: true });
+                const wrapper = makeGoalWrapper(goal);
+                const row = createGoalRow(goal, { hideScheduled: true });
                 wrapper.appendChild(row);
 
                 const childrenContainer = document.createElement('div');
-                childrenContainer.className   = 'goal-children';
+                childrenContainer.className = 'goal-children';
                 childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
                 wrapper.appendChild(childrenContainer);
                 renderChildren(goal, all, childrenContainer);
