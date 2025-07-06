@@ -2,12 +2,70 @@ import { db } from './auth.js';
 
 let mapInitialized = false;
 let travelData = [];
+let rotationX = 0;
+let rotationY = 0;
+let canvas, ctx;
 
-function latLngToPoint(lat, lon, width, height) {
-  // Equirectangular projection for simple canvas map
-  const x = (lon + 180) * (width / 360);
-  const y = (90 - lat) * (height / 180);
-  return { x, y };
+function latLonToCartesian(lat, lon, r) {
+  const phi = (90 - lat) * Math.PI / 180;
+  const theta = (lon + 180) * Math.PI / 180;
+  const x = r * Math.sin(phi) * Math.cos(theta);
+  const y = r * Math.cos(phi);
+  const z = r * Math.sin(phi) * Math.sin(theta);
+  return { x, y, z };
+}
+
+function project({ x, y, z }) {
+  const cosY = Math.cos(rotationY);
+  const sinY = Math.sin(rotationY);
+  let nx = x * cosY + z * sinY;
+  let nz = -x * sinY + z * cosY;
+
+  const cosX = Math.cos(rotationX);
+  const sinX = Math.sin(rotationX);
+  let ny = y * cosX - nz * sinX;
+  nz = y * sinX + nz * cosX;
+
+  const fov = canvas.width / 2;
+  const scale = fov / (fov + nz);
+  return {
+    x: nx * scale + canvas.width / 2,
+    y: ny * scale + canvas.height / 2,
+    z: nz
+  };
+}
+
+function drawGraticule() {
+  ctx.strokeStyle = '#444';
+  ctx.lineWidth = 0.5;
+  for (let lat = -80; lat <= 80; lat += 20) {
+    ctx.beginPath();
+    for (let lon = -180; lon <= 180; lon += 5) {
+      const { x, y } = project(latLonToCartesian(lat, lon, 1));
+      if (lon === -180) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  for (let lon = -180; lon <= 180; lon += 20) {
+    ctx.beginPath();
+    for (let lat = -90; lat <= 90; lat += 5) {
+      const { x, y } = project(latLonToCartesian(lat, lon, 1));
+      if (lat === -90) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+}
+
+function drawPoints() {
+  ctx.fillStyle = 'red';
+  travelData.forEach(p => {
+    const pt = project(latLonToCartesian(p.lat, p.lon, 1));
+    if (pt.z > -1) {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 4, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  });
 }
 
 export async function initTravelPanel() {
@@ -15,9 +73,9 @@ export async function initTravelPanel() {
   if (!panel || mapInitialized) return;
   mapInitialized = true;
 
-  const canvas = document.getElementById('travelMap');
+  canvas = document.getElementById('travelMap');
+  ctx = canvas.getContext('2d');
   const list = document.getElementById('travelList');
-  const ctx = canvas.getContext('2d');
 
   try {
     const snap = await db.collection('travel').get();
@@ -27,27 +85,24 @@ export async function initTravelPanel() {
     }
     localStorage.setItem('travelData', JSON.stringify(travelData));
   } catch (err) {
-    console.warn('Falling back to local KML', err);
-    const res = await fetch('assets/travel/doc.kml');
-    const text = await res.text();
-    travelData = parseKml(text);
-    localStorage.setItem('travelData', JSON.stringify(travelData));
+    console.error('Failed to load travel data', err);
+    const cached = localStorage.getItem('travelData');
+    travelData = cached ? JSON.parse(cached) : [];
   }
 
-  function render() {
+  function renderFrame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    list.innerHTML = '';
-    travelData.forEach(p => {
-      const { x, y } = latLngToPoint(p.lat, p.lon, canvas.width, canvas.height);
-      ctx.fillStyle = 'red';
-      ctx.beginPath();
-      ctx.arc(x, y, 4, 0, 2 * Math.PI);
-      ctx.fill();
-      const li = document.createElement('li');
-      li.textContent = `${p.name} (${p.lat.toFixed(4)}, ${p.lon.toFixed(4)})`;
-      list.append(li);
-    });
+    drawGraticule();
+    drawPoints();
+    requestAnimationFrame(renderFrame);
   }
+
+  list.innerHTML = '';
+  travelData.forEach(p => {
+    const li = document.createElement('li');
+    li.textContent = `${p.name} (${p.lat.toFixed(4)}, ${p.lon.toFixed(4)})`;
+    list.append(li);
+  });
 
   document.getElementById('addPlaceBtn').addEventListener('click', async () => {
     const name = prompt('Place name:');
@@ -62,12 +117,38 @@ export async function initTravelPanel() {
     } catch (err) {
       console.error('Failed to save place to Firestore', err);
     }
-    render();
+    list.innerHTML = '';
+    travelData.forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = `${p.name} (${p.lat.toFixed(4)}, ${p.lon.toFixed(4)})`;
+      list.append(li);
+    });
   });
 
-  render();
+  let dragging = false;
+  let lastX = 0;
+  let lastY = 0;
+  canvas.addEventListener('mousedown', e => {
+    dragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  canvas.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    rotationY += dx * 0.005;
+    rotationX += dy * 0.005;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+  canvas.addEventListener('mouseup', () => { dragging = false; });
+  canvas.addEventListener('mouseleave', () => { dragging = false; });
+
+  renderFrame();
 }
 
+// legacy parser kept for potential future imports
 function parseKml(text) {
   const doc = new DOMParser().parseFromString(text, 'application/xml');
   const placemarks = Array.from(doc.querySelectorAll('Placemark'));
