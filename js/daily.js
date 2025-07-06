@@ -266,18 +266,31 @@ export async function renderDailyTasks(currentUser, db) {
   // — Render active then done
   for (const t of activeList) container.appendChild(makeTaskElement(t, 'daily'));
   for (const t of doneList) container.appendChild(makeTaskElement(t, 'daily'));
-  const weeklyList = all.filter(t =>
-    t.type === "task" &&
-    t.recurs === "weekly" &&
+  const weeklyAll = all.filter(t =>
+    t.type === 'task' &&
+    t.recurs === 'weekly' &&
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
-  for (const t of weeklyList) weeklyContainer.appendChild(makeTaskElement(t, 'weekly'));
-  const monthlyList = all.filter(t =>
+  const weeklyActive = weeklyAll.filter(t => !doneWeekly.has(t.id));
+  const weeklyDoneList = weeklyAll.filter(t => doneWeekly.has(t.id));
+
+  for (const t of weeklyActive)
+    weeklyContainer.appendChild(makeTaskElement(t, 'weekly'));
+  for (const t of weeklyDoneList)
+    weeklyContainer.appendChild(makeTaskElement(t, 'weekly'));
+
+  const monthlyAll = all.filter(t =>
     t.type === 'task' &&
     t.recurs === 'monthly' &&
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
-  for (const t of monthlyList) monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
+  const monthlyActive = monthlyAll.filter(t => !doneMonthly.has(t.id));
+  const monthlyDoneList = monthlyAll.filter(t => doneMonthly.has(t.id));
+
+  for (const t of monthlyActive)
+    monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
+  for (const t of monthlyDoneList)
+    monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
 
 
   // ——— Helpers —————————————————————————
