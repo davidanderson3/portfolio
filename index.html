@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
 </head>
 
 <body>
@@ -181,13 +185,14 @@
     <div id="travelPanel" class="main-layout" style="display:none">
       <div class="full-column">
         <h2>Travel <button id="addPlaceBtn" type="button">+ Add Place</button></h2>
-        <canvas id="travelMap" width="720" height="360" style="border:1px solid #ccc; max-width:100%; height:auto;"></canvas>
+        <div id="travelMap" style="height:360px; max-width:100%; border:1px solid #ccc;"></div>
         <ul id="travelList"></ul>
       </div>
     </div>
   </section>
 
   <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module" src="js/main.js"></script>
   <script type="module" src="js/lists.js"></script>
   <script type="module" src="js/travel.js"></script>
