@@ -1024,3 +1024,20 @@ h2 {
   margin-bottom: 20px;
   border-radius: 6px;
 }
+
+/* Tag filter buttons */
+.tag-filter-button {
+  background: #eee;
+  border: 1px solid #ccc;
+  color: #333;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0 6px 6px 0;
+  font-size: 0.9rem;
+}
+.tag-filter-button.active {
+  background: #7aa68c;
+  color: #fff;
+  border-color: #7aa68c;
+}

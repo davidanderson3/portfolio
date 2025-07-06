@@ -43,22 +43,22 @@ export async function initTravelPanel() {
     if (!tagFiltersDiv) return;
     tagFiltersDiv.innerHTML = '';
     allTags.forEach(tag => {
-      const label = document.createElement('label');
-      label.style.marginRight = '8px';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.value = tag;
-      cb.addEventListener('change', () => {
-        if (cb.checked) {
-          selectedTags.push(tag);
-        } else {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = tag;
+      btn.className = 'tag-filter-button';
+      if (selectedTags.includes(tag)) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        if (selectedTags.includes(tag)) {
           selectedTags = selectedTags.filter(t => t !== tag);
+        } else {
+          selectedTags.push(tag);
         }
+        renderTagFilters();
         renderList(currentSearch);
       });
-      label.append(cb, ' ', tag);
-    tagFiltersDiv.append(label);
-  });
+      tagFiltersDiv.append(btn);
+    });
   };
 
   renderTagFilters();
