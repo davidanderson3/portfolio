@@ -7,6 +7,8 @@ let travelData = [];
 let currentSearch = '';
 let rowMarkerMap = new Map();
 let selectedRow = null;
+let allTags = [];
+let selectedTags = [];
 
 export async function initTravelPanel() {
   const panel = document.getElementById('travelPanel');
@@ -35,13 +37,41 @@ export async function initTravelPanel() {
     travelData = cached ? JSON.parse(cached) : [];
   }
 
+  allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
+
+  const renderTagFilters = () => {
+    if (!tagFiltersDiv) return;
+    tagFiltersDiv.innerHTML = '';
+    allTags.forEach(tag => {
+      const label = document.createElement('label');
+      label.style.marginRight = '8px';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = tag;
+      cb.addEventListener('change', () => {
+        if (cb.checked) {
+          selectedTags.push(tag);
+        } else {
+          selectedTags = selectedTags.filter(t => t !== tag);
+        }
+        renderList(currentSearch);
+      });
+      label.append(cb, ' ', tag);
+    tagFiltersDiv.append(label);
+  });
+  };
+
+  renderTagFilters();
+
   const renderList = (term = '') => {
     tableBody.innerHTML = '';
     markers.forEach(m => m.remove());
     markers = [];
     rowMarkerMap.clear();
     const items = travelData.filter(p =>
-      p.name.toLowerCase().includes(term.toLowerCase())
+      p.name.toLowerCase().includes(term.toLowerCase()) &&
+      (selectedTags.length === 0 ||
+        (Array.isArray(p.tags) && selectedTags.every(t => p.tags.includes(t))))
     );
 
     items.forEach((p, index) => {
@@ -56,6 +86,10 @@ export async function initTravelPanel() {
       nameTd.textContent = p.name;
       const tagsTd = document.createElement('td');
       tagsTd.textContent = Array.isArray(p.tags) ? p.tags.join(', ') : '';
+      const ratingTd = document.createElement('td');
+      ratingTd.textContent = p.Rating || '';
+      const dateTd = document.createElement('td');
+      dateTd.textContent = p.Date || '';
       const visitedTd = document.createElement('td');
       visitedTd.textContent = p.visited ? '✅' : '';
       const actionsTd = document.createElement('td');
@@ -73,7 +107,7 @@ export async function initTravelPanel() {
         form.style.flexWrap = 'wrap';
         form.style.gap = '4px';
         const td = document.createElement('td');
-        td.colSpan = 4;
+        td.colSpan = 6;
 
         const nameInput = document.createElement('input');
         nameInput.value = p.name || '';
@@ -81,6 +115,12 @@ export async function initTravelPanel() {
         const tagsInput = document.createElement('input');
         tagsInput.value = Array.isArray(p.tags) ? p.tags.join(', ') : '';
         tagsInput.placeholder = 'tags';
+        const ratingInput = document.createElement('input');
+        ratingInput.value = p.Rating || '';
+        ratingInput.placeholder = 'rating';
+        const dateInput = document.createElement('input');
+        dateInput.value = p.Date || '';
+        dateInput.placeholder = 'date';
         const visitedInput = document.createElement('input');
         visitedInput.type = 'checkbox';
         visitedInput.checked = !!p.visited;
@@ -92,7 +132,15 @@ export async function initTravelPanel() {
         cancelBtn.textContent = 'Cancel';
         [saveBtn, cancelBtn].forEach(b => Object.assign(b.style, { background: 'none', border: '1px solid #999', padding: '2px 6px' }));
 
-        form.append(nameInput, tagsInput, visitedInput, saveBtn, cancelBtn);
+        form.append(
+          nameInput,
+          tagsInput,
+          ratingInput,
+          dateInput,
+          visitedInput,
+          saveBtn,
+          cancelBtn
+        );
         td.append(form);
         tr.append(td);
 
@@ -100,6 +148,8 @@ export async function initTravelPanel() {
           ev.preventDefault();
           p.name = nameInput.value.trim();
           p.tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
+          p.Rating = ratingInput.value.trim();
+          p.Date = dateInput.value.trim();
           p.visited = visitedInput.checked;
           localStorage.setItem('travelData', JSON.stringify(travelData));
           try {
@@ -107,6 +157,8 @@ export async function initTravelPanel() {
           } catch (err) {
             console.error('Failed to update place', err);
           }
+          allTags = Array.from(new Set(travelData.flatMap(pl => pl.tags || []))).sort();
+          renderTagFilters();
           renderList(currentSearch);
         });
         cancelBtn.addEventListener('click', e2 => {
@@ -132,11 +184,13 @@ export async function initTravelPanel() {
         }
         travelData.splice(travelData.indexOf(p), 1);
         localStorage.setItem('travelData', JSON.stringify(travelData));
+        allTags = Array.from(new Set(travelData.flatMap(pl => pl.tags || []))).sort();
+        renderTagFilters();
         renderList(currentSearch);
       });
       actionsTd.append(delBtn);
 
-      tr.append(nameTd, tagsTd, visitedTd, actionsTd);
+      tr.append(nameTd, tagsTd, ratingTd, dateTd, visitedTd, actionsTd);
       tableBody.append(tr);
       rowMarkerMap.set(tr, m);
 
@@ -183,11 +237,21 @@ export async function initTravelPanel() {
   document.getElementById('addPlaceBtn').addEventListener('click', async () => {
     const name = prompt('Place name:');
     const tags = prompt('Tags (comma separated):');
+    const rating = prompt('Rating:');
+    const date = prompt('Date:');
     const visited = confirm('Visited?');
     const lat = parseFloat(prompt('Latitude:'));
     const lon = parseFloat(prompt('Longitude:'));
     if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
-    const place = { name, lat, lon, tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [], visited };
+    const place = {
+      name,
+      lat,
+      lon,
+      tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      Rating: rating || '',
+      Date: date || '',
+      visited
+    };
     try {
       const docRef = await db.collection('travel').add(place);
       place.id = docRef.id;
@@ -196,6 +260,8 @@ export async function initTravelPanel() {
     }
     travelData.push(place);
     localStorage.setItem('travelData', JSON.stringify(travelData));
+    allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
+    renderTagFilters();
     renderList(currentSearch);
   });
 }

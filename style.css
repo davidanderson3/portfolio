@@ -988,6 +988,11 @@ h2 {
   background-color: #fff8b3;
 }
 
+#travelTagFilters label {
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
 @media (max-width: 600px) {
   #listsContainer {
     overflow-x: auto;
