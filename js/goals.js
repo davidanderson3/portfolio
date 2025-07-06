@@ -290,13 +290,14 @@ function renderCalendarSection(all, calendarContent) {
         if (dow === 6) {
             const sat = new Date(d);
             const sun = new Date(d); sun.setDate(d.getDate() + 1);
-            if (sun < today) {
+            const sunKey = keyFromDate(sun);
+            const hasGoals = (byDate[key] && byDate[key].length) || (byDate[sunKey] && byDate[sunKey].length);
+            if (sun < today || !hasGoals) {
                 delete byDate[key];
-                delete byDate[keyFromDate(sun)];
+                delete byDate[sunKey];
                 d.setDate(d.getDate() + 2);
                 continue;
             }
-            const sunKey = keyFromDate(sun);
 
             const section = document.createElement('div');
             section.className = 'weekend-section';
@@ -330,13 +331,14 @@ function renderCalendarSection(all, calendarContent) {
             d.setDate(d.getDate() + 2);
         } else if (dow === 0) {
             const sat = new Date(d); sat.setDate(d.getDate() - 1);
-            if (d < today) {
-                delete byDate[keyFromDate(sat)];
+            const satKey = keyFromDate(sat);
+            const hasGoals = (byDate[satKey] && byDate[satKey].length) || (byDate[key] && byDate[key].length);
+            if (d < today || !hasGoals) {
+                delete byDate[satKey];
                 delete byDate[key];
                 d.setDate(d.getDate() + 1);
                 continue;
             }
-            const satKey = keyFromDate(sat);
 
             const section = document.createElement('div');
             section.className = 'weekend-section';
