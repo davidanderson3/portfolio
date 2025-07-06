@@ -2,6 +2,7 @@ import { db } from './auth.js';
 
 let mapInitialized = false;
 let map;
+let markers = [];
 let travelData = [];
 
 export async function initTravelPanel() {
@@ -18,7 +19,7 @@ export async function initTravelPanel() {
 
   try {
     const snap = await db.collection('travel').get();
-    travelData = snap.docs.map(doc => doc.data());
+    travelData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     if (!travelData.length) {
       throw new Error('No travel docs');
     }
@@ -29,17 +30,60 @@ export async function initTravelPanel() {
     travelData = cached ? JSON.parse(cached) : [];
   }
 
-  const addMarker = (p) => {
-    L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.name);
+  const renderList = () => {
+    list.innerHTML = '';
+    markers.forEach(m => m.remove());
+    markers = [];
+    travelData.forEach((p, idx) => {
+      const m = L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.name);
+      markers.push(m);
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.textContent = `${p.name} (${p.lat.toFixed(4)}, ${p.lon.toFixed(4)})`;
+      li.append(span);
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = '✏️';
+      editBtn.title = 'Edit';
+      editBtn.addEventListener('click', async () => {
+        const name = prompt('Place name:', p.name);
+        const lat = parseFloat(prompt('Latitude:', p.lat));
+        const lon = parseFloat(prompt('Longitude:', p.lon));
+        if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
+        Object.assign(p, { name, lat, lon });
+        localStorage.setItem('travelData', JSON.stringify(travelData));
+        try {
+          if (p.id) await db.collection('travel').doc(p.id).set({ name, lat, lon });
+        } catch (err) {
+          console.error('Failed to update place', err);
+        }
+        renderList();
+      });
+      li.append(editBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '❌';
+      delBtn.title = 'Delete';
+      delBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this place?')) return;
+        if (p.id) {
+          try {
+            await db.collection('travel').doc(p.id).delete();
+          } catch (err) {
+            console.error('Failed to delete place', err);
+          }
+        }
+        travelData.splice(idx, 1);
+        localStorage.setItem('travelData', JSON.stringify(travelData));
+        renderList();
+      });
+      li.append(delBtn);
+
+      list.append(li);
+    });
   };
 
-  list.innerHTML = '';
-  travelData.forEach(p => {
-    addMarker(p);
-    const li = document.createElement('li');
-    li.textContent = `${p.name} (${p.lat.toFixed(4)}, ${p.lon.toFixed(4)})`;
-    list.append(li);
-  });
+  renderList();
 
   document.getElementById('addPlaceBtn').addEventListener('click', async () => {
     const name = prompt('Place name:');
@@ -47,17 +91,15 @@ export async function initTravelPanel() {
     const lon = parseFloat(prompt('Longitude:'));
     if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
     const place = { name, lat, lon };
-    travelData.push(place);
-    localStorage.setItem('travelData', JSON.stringify(travelData));
     try {
-      await db.collection('travel').add(place);
+      const docRef = await db.collection('travel').add(place);
+      place.id = docRef.id;
     } catch (err) {
       console.error('Failed to save place to Firestore', err);
     }
-    addMarker(place);
-    const li = document.createElement('li');
-    li.textContent = `${place.name} (${place.lat.toFixed(4)}, ${place.lon.toFixed(4)})`;
-    list.append(li);
+    travelData.push(place);
+    localStorage.setItem('travelData', JSON.stringify(travelData));
+    renderList();
   });
 }
 
