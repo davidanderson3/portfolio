@@ -280,6 +280,9 @@ function renderCalendarSection(all, calendarContent) {
     extendEnd.setMonth(extendEnd.getMonth() + 6);
     if (extendEnd > end) end = extendEnd;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     for (let d = new Date(start); d <= end;) {
         const key = keyFromDate(d);
         const dow = d.getDay();
@@ -287,6 +290,12 @@ function renderCalendarSection(all, calendarContent) {
         if (dow === 6) {
             const sat = new Date(d);
             const sun = new Date(d); sun.setDate(d.getDate() + 1);
+            if (sun < today) {
+                delete byDate[key];
+                delete byDate[keyFromDate(sun)];
+                d.setDate(d.getDate() + 2);
+                continue;
+            }
             const sunKey = keyFromDate(sun);
 
             const section = document.createElement('div');
@@ -321,6 +330,12 @@ function renderCalendarSection(all, calendarContent) {
             d.setDate(d.getDate() + 2);
         } else if (dow === 0) {
             const sat = new Date(d); sat.setDate(d.getDate() - 1);
+            if (d < today) {
+                delete byDate[keyFromDate(sat)];
+                delete byDate[key];
+                d.setDate(d.getDate() + 1);
+                continue;
+            }
             const satKey = keyFromDate(sat);
 
             const section = document.createElement('div');
