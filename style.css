@@ -965,6 +965,29 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+#travelPanel table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+#travelPanel th,
+#travelPanel td {
+  border: 1px solid #d0decf;
+  padding: 6px;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+#travelPanel tbody tr:nth-child(even) {
+  background-color: #f8f5f0;
+}
+
+#travelPanel tr.selected-row {
+  background-color: #fff8b3;
+}
+
 @media (max-width: 600px) {
   #listsContainer {
     overflow-x: auto;
