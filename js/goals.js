@@ -7,7 +7,8 @@ import {
     loadDecisions,
     saveDecisions,
     saveGoalOrder,
-    makeIconBtn
+    makeIconBtn,
+    formatDaysUntil
 } from './helpers.js';
 
 import { db } from './auth.js';
@@ -260,7 +261,11 @@ function renderCalendarSection(all, calendarContent) {
         .forEach(dateKey => {
             const [y, m, d] = dateKey.split('-').map(Number);
             const header    = document.createElement('h3');
-            header.textContent = new Date(y, m - 1, d).toLocaleDateString();
+            const dt        = new Date(y, m - 1, d);
+            const dow       = dt.toLocaleDateString(undefined, { weekday: 'short' });
+            const dateStr   = dt.toLocaleDateString();
+            const daysText  = formatDaysUntil(dateKey);
+            header.textContent = `${dow} ${dateStr} (${daysText})`;
             calendarContent.appendChild(header);
 
             byDate[dateKey].forEach(goal => {
