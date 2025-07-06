@@ -245,91 +245,137 @@ function renderCalendarSection(all, calendarContent) {
     const scheduled = all
         .filter(
             g =>
-                g.scheduled && // has a scheduled date
+                g.scheduled &&
                 !g.completed &&
                 !isNaN(Date.parse(g.scheduled))
         )
         .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
 
     const byDate = scheduled.reduce((groups, goal) => {
-        const key = goal.scheduled.slice(0, 10); // "YYYY-MM-DD"
+        const key = goal.scheduled.slice(0, 10);
         (groups[key] = groups[key] || []).push(goal);
         return groups;
     }, {});
 
-    const start = new Date();
-    const end = new Date(start);
-    end.setMonth(end.getMonth() + 6);
-    const firstSat = new Date(start);
-    firstSat.setDate(start.getDate() + ((6 - start.getDay() + 7) % 7));
-
-    const weekendDates = new Set();
-    for (let d = new Date(firstSat); d <= end; d.setDate(d.getDate() + 7)) {
-        const sat = new Date(d);
-        const sun = new Date(d); sun.setDate(d.getDate() + 1);
-        weekendDates.add(sat.toISOString().slice(0,10));
-        weekendDates.add(sun.toISOString().slice(0,10));
-
-        const section = document.createElement('div');
-        section.className = 'weekend-section';
-
-        const hdr = document.createElement('h3');
-        const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        const sunLabel = sun.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-        const daysText = formatDaysUntil(sat.toISOString().slice(0,10));
-        hdr.textContent = `Weekend: ${satLabel} - ${sunLabel} (${daysText})`;
-        section.appendChild(hdr);
-
-        [sat, sun].forEach(date => {
-            const key = date.toISOString().slice(0,10);
-            const items = byDate[key] || [];
-            items.forEach(goal => {
-                const wrapper = makeGoalWrapper(goal);
-                const row = createGoalRow(goal, { hideScheduled: true });
-                wrapper.appendChild(row);
-
-                const childrenContainer = document.createElement('div');
-                childrenContainer.className = 'goal-children';
-                childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
-                wrapper.appendChild(childrenContainer);
-                renderChildren(goal, all, childrenContainer);
-
-                setupToggle(wrapper, row, childrenContainer, goal.id);
-                section.appendChild(wrapper);
-            });
-            delete byDate[key];
-        });
-
-        calendarContent.appendChild(section);
+    function parseKey(key) {
+        const [y, m, d] = key.split('-').map(Number);
+        return new Date(y, m - 1, d);
     }
 
-    Object.keys(byDate)
-        .sort()
-        .forEach(dateKey => {
-            const [y, m, d] = dateKey.split('-').map(Number);
-            const header = document.createElement('h3');
-            const dt = new Date(y, m - 1, d);
-            const dow = dt.toLocaleDateString(undefined, { weekday: 'short' });
-            const dateStr = dt.toLocaleDateString();
-            const daysText = formatDaysUntil(dateKey);
-            header.textContent = `${dow} ${dateStr} (${daysText})`;
-            calendarContent.appendChild(header);
+    function keyFromDate(date) {
+        return date.toISOString().slice(0, 10);
+    }
 
-            byDate[dateKey].forEach(goal => {
-                const wrapper = makeGoalWrapper(goal);
-                const row = createGoalRow(goal, { hideScheduled: true });
-                wrapper.appendChild(row);
+    const dateKeys = Object.keys(byDate).sort();
+    let start = dateKeys.length ? parseKey(dateKeys[0]) : new Date();
+    start.setHours(0, 0, 0, 0);
 
-                const childrenContainer = document.createElement('div');
-                childrenContainer.className = 'goal-children';
-                childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
-                wrapper.appendChild(childrenContainer);
-                renderChildren(goal, all, childrenContainer);
+    let end = dateKeys.length ? parseKey(dateKeys[dateKeys.length - 1]) : new Date(start);
+    const extendEnd = new Date(start);
+    extendEnd.setMonth(extendEnd.getMonth() + 6);
+    if (extendEnd > end) end = extendEnd;
 
-                setupToggle(wrapper, row, childrenContainer, goal.id);
-                calendarContent.appendChild(wrapper);
+    for (let d = new Date(start); d <= end;) {
+        const key = keyFromDate(d);
+        const dow = d.getDay();
+
+        if (dow === 6) {
+            const sat = new Date(d);
+            const sun = new Date(d); sun.setDate(d.getDate() + 1);
+            const sunKey = keyFromDate(sun);
+
+            const section = document.createElement('div');
+            section.className = 'weekend-section';
+
+            const hdr = document.createElement('h3');
+            const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            const sunLabel = sun.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            const daysText = formatDaysUntil(key);
+            hdr.textContent = `Weekend: ${satLabel} - ${sunLabel} (${daysText})`;
+            section.appendChild(hdr);
+
+            [key, sunKey].forEach(k => {
+                (byDate[k] || []).forEach(goal => {
+                    const wrapper = makeGoalWrapper(goal);
+                    const row = createGoalRow(goal, { hideScheduled: true });
+                    wrapper.appendChild(row);
+
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'goal-children';
+                    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                    wrapper.appendChild(childrenContainer);
+                    renderChildren(goal, all, childrenContainer);
+
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    section.appendChild(wrapper);
+                });
+                delete byDate[k];
             });
-        });
+
+            calendarContent.appendChild(section);
+            d.setDate(d.getDate() + 2);
+        } else if (dow === 0) {
+            const sat = new Date(d); sat.setDate(d.getDate() - 1);
+            const satKey = keyFromDate(sat);
+
+            const section = document.createElement('div');
+            section.className = 'weekend-section';
+
+            const hdr = document.createElement('h3');
+            const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            const sunLabel = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            const daysText = formatDaysUntil(satKey);
+            hdr.textContent = `Weekend: ${satLabel} - ${sunLabel} (${daysText})`;
+            section.appendChild(hdr);
+
+            [satKey, key].forEach(k => {
+                (byDate[k] || []).forEach(goal => {
+                    const wrapper = makeGoalWrapper(goal);
+                    const row = createGoalRow(goal, { hideScheduled: true });
+                    wrapper.appendChild(row);
+
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'goal-children';
+                    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                    wrapper.appendChild(childrenContainer);
+                    renderChildren(goal, all, childrenContainer);
+
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    section.appendChild(wrapper);
+                });
+                delete byDate[k];
+            });
+
+            calendarContent.appendChild(section);
+            d.setDate(d.getDate() + 1);
+        } else {
+            if (byDate[key]) {
+                const header = document.createElement('h3');
+                const dowLabel = d.toLocaleDateString(undefined, { weekday: 'short' });
+                const dateStr = d.toLocaleDateString();
+                const daysText = formatDaysUntil(key);
+                header.textContent = `${dowLabel} ${dateStr} (${daysText})`;
+                calendarContent.appendChild(header);
+
+                byDate[key].forEach(goal => {
+                    const wrapper = makeGoalWrapper(goal);
+                    const row = createGoalRow(goal, { hideScheduled: true });
+                    wrapper.appendChild(row);
+
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'goal-children';
+                    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                    wrapper.appendChild(childrenContainer);
+                    renderChildren(goal, all, childrenContainer);
+
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    calendarContent.appendChild(wrapper);
+                });
+                delete byDate[key];
+            }
+            d.setDate(d.getDate() + 1);
+        }
+    }
 }
 
 
