@@ -27,4 +27,22 @@ describe('renderGoalsReport', () => {
     expect(container.innerHTML).toContain('Active goals: 1');
     expect(container.innerHTML).toContain('Active tasks: 1');
   });
+
+  it('ignores child goals when reporting status', () => {
+    const container = { innerHTML: '', textContent: '' };
+    global.document = {
+      getElementById: (id) => (id === 'goalsReport' ? container : null)
+    };
+    const future = new Date(Date.now() + 3600 * 1000).toISOString();
+    const items = [
+      { id: 'g1', type: 'goal', completed: false },
+      { id: 'cg1', type: 'goal', parentGoalId: 'g1', completed: false },
+      { id: 'cg2', type: 'goal', parentGoalId: 'g1', completed: false, hiddenUntil: future }
+    ];
+
+    renderGoalsReport(items);
+
+    expect(container.innerHTML).toContain('Active goals: 1');
+    expect(container.innerHTML).toContain('Hidden goals: 0');
+  });
 });
