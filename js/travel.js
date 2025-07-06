@@ -5,6 +5,7 @@ let travelData = [];
 let rotationX = 0;
 let rotationY = 0;
 let canvas, ctx;
+let radius = 1;
 
 function latLonToCartesian(lat, lon, r) {
   const phi = (90 - lat) * Math.PI / 180;
@@ -41,7 +42,7 @@ function drawGraticule() {
   for (let lat = -80; lat <= 80; lat += 20) {
     ctx.beginPath();
     for (let lon = -180; lon <= 180; lon += 5) {
-      const { x, y } = project(latLonToCartesian(lat, lon, 1));
+      const { x, y } = project(latLonToCartesian(lat, lon, radius));
       if (lon === -180) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
@@ -49,7 +50,7 @@ function drawGraticule() {
   for (let lon = -180; lon <= 180; lon += 20) {
     ctx.beginPath();
     for (let lat = -90; lat <= 90; lat += 5) {
-      const { x, y } = project(latLonToCartesian(lat, lon, 1));
+      const { x, y } = project(latLonToCartesian(lat, lon, radius));
       if (lat === -90) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
@@ -59,7 +60,7 @@ function drawGraticule() {
 function drawPoints() {
   ctx.fillStyle = 'red';
   travelData.forEach(p => {
-    const pt = project(latLonToCartesian(p.lat, p.lon, 1));
+    const pt = project(latLonToCartesian(p.lat, p.lon, radius));
     if (pt.z > -1) {
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 4, 0, 2 * Math.PI);
@@ -75,6 +76,7 @@ export async function initTravelPanel() {
 
   canvas = document.getElementById('travelMap');
   ctx = canvas.getContext('2d');
+  radius = Math.min(canvas.width, canvas.height) / 2 - 20;
   const list = document.getElementById('travelList');
 
   try {
