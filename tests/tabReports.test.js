@@ -45,4 +45,21 @@ describe('renderGoalsReport', () => {
     expect(container.innerHTML).toContain('Active goals: 1');
     expect(container.innerHTML).toContain('Hidden goals: 0');
   });
+
+  it('counts tasks under hidden goals as hidden', () => {
+    const container = { innerHTML: '', textContent: '' };
+    global.document = {
+      getElementById: (id) => (id === 'goalsReport' ? container : null)
+    };
+    const future = new Date(Date.now() + 3600 * 1000).toISOString();
+    const items = [
+      { id: 'g1', type: 'goal', completed: false, hiddenUntil: future },
+      { id: 't1', type: 'task', parentGoalId: 'g1', completed: false }
+    ];
+
+    renderGoalsReport(items);
+
+    expect(container.innerHTML).toContain('Active tasks: 0');
+    expect(container.innerHTML).toContain('Hidden tasks: 1');
+  });
 });
