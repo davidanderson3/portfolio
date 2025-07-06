@@ -25,19 +25,19 @@ export function renderGoalsReport(items) {
   if (!container) return;
 
   const now = Date.now();
-  const goals = items.filter(i => i.type === 'goal');
+  const rootGoals = items.filter(i => i.type === 'goal' && !i.parentGoalId);
   const tasks = items.filter(i => i.type === 'task');
 
-  const activeGoals = goals.filter(g => {
+  const activeGoals = rootGoals.filter(g => {
     const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
     return !g.completed && (!hideUntil || now >= hideUntil);
   });
-  const hiddenGoals = goals.filter(g => {
+  const hiddenGoals = rootGoals.filter(g => {
     const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
     return hideUntil && now < hideUntil;
   });
 
-  const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
+  const goalMap = Object.fromEntries(items.filter(i => i.type === 'goal').map(g => [g.id, g]));
 
   const activeTasks = tasks.filter(t => {
     if (!t.parentGoalId) return false; // only count tasks linked to a goal
