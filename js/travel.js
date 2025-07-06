@@ -5,6 +5,8 @@ let map;
 let markers = [];
 let travelData = [];
 let currentSearch = '';
+let rowMarkerMap = new Map();
+let selectedRow = null;
 
 export async function initTravelPanel() {
   const panel = document.getElementById('travelPanel');
@@ -12,7 +14,7 @@ export async function initTravelPanel() {
   mapInitialized = true;
 
   const mapEl = document.getElementById('travelMap');
-  const list = document.getElementById('travelList');
+  const tableBody = document.querySelector('#travelTable tbody');
   const searchInput = document.getElementById('travelSearch');
   map = L.map(mapEl).setView([20, 0], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -33,22 +35,13 @@ export async function initTravelPanel() {
   }
 
   const renderList = (term = '') => {
-    list.innerHTML = '';
+    tableBody.innerHTML = '';
     markers.forEach(m => m.remove());
     markers = [];
-    const items = travelData.filter(p => {
-      if (!term) return true;
-      const str = Object.values(p).join(' ').toLowerCase();
-      return str.includes(term.toLowerCase());
-    });
-    const formatPlace = pl =>
-      Object.entries(pl)
-        .filter(([k]) => k !== 'id')
-        .map(([k, v]) => {
-          if (k === 'lat' || k === 'lon') return `${k}: ${Number(v).toFixed(4)}`;
-          return `${k}: ${v}`;
-        })
-        .join(', ');
+    rowMarkerMap.clear();
+    const items = travelData.filter(p =>
+      p.name.toLowerCase().includes(term.toLowerCase())
+    );
 
     items.forEach((p, index) => {
       const m = L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.name);
@@ -57,41 +50,56 @@ export async function initTravelPanel() {
         map.setView([p.lat, p.lon], 8);
         m.openPopup();
       }
-      const li = document.createElement('li');
-      const infoSpan = document.createElement('span');
-      infoSpan.textContent = formatPlace(p);
-      li.append(infoSpan);
+      const tr = document.createElement('tr');
+      const nameTd = document.createElement('td');
+      nameTd.textContent = p.name;
+      const tagsTd = document.createElement('td');
+      tagsTd.textContent = Array.isArray(p.tags) ? p.tags.join(', ') : '';
+      const visitedTd = document.createElement('td');
+      visitedTd.textContent = p.visited ? '✅' : '';
+      const actionsTd = document.createElement('td');
+      actionsTd.style.whiteSpace = 'nowrap';
 
       const editBtn = document.createElement('button');
       editBtn.textContent = '✏️';
       editBtn.title = 'Edit';
       Object.assign(editBtn.style, { background: 'none', border: 'none', cursor: 'pointer' });
-      editBtn.addEventListener('click', () => {
-        li.innerHTML = '';
+      editBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        tr.innerHTML = '';
         const form = document.createElement('form');
-        const inputs = {};
-        Object.entries(p).forEach(([k, v]) => {
-          if (['id', 'lat', 'lon'].includes(k)) return;
-          const input = document.createElement('input');
-          input.value = v ?? '';
-          input.placeholder = k;
-          input.style.marginRight = '4px';
-          form.append(input);
-          inputs[k] = input;
-        });
+        form.style.display = 'flex';
+        form.style.flexWrap = 'wrap';
+        form.style.gap = '4px';
+        const td = document.createElement('td');
+        td.colSpan = 4;
+
+        const nameInput = document.createElement('input');
+        nameInput.value = p.name || '';
+        nameInput.placeholder = 'name';
+        const tagsInput = document.createElement('input');
+        tagsInput.value = Array.isArray(p.tags) ? p.tags.join(', ') : '';
+        tagsInput.placeholder = 'tags';
+        const visitedInput = document.createElement('input');
+        visitedInput.type = 'checkbox';
+        visitedInput.checked = !!p.visited;
+        visitedInput.title = 'Visited';
+
         const saveBtn = document.createElement('button');
         saveBtn.textContent = 'Save';
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = 'Cancel';
-        [saveBtn, cancelBtn].forEach(b => Object.assign(b.style, { background: 'none', border: '1px solid #999', padding: '2px 6px', marginLeft: '4px' }));
-        form.append(saveBtn, cancelBtn);
-        li.append(form);
+        [saveBtn, cancelBtn].forEach(b => Object.assign(b.style, { background: 'none', border: '1px solid #999', padding: '2px 6px' }));
 
-        form.addEventListener('submit', async e => {
-          e.preventDefault();
-          Object.keys(inputs).forEach(key => {
-            p[key] = inputs[key].value;
-          });
+        form.append(nameInput, tagsInput, visitedInput, saveBtn, cancelBtn);
+        td.append(form);
+        tr.append(td);
+
+        form.addEventListener('submit', async ev => {
+          ev.preventDefault();
+          p.name = nameInput.value.trim();
+          p.tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
+          p.visited = visitedInput.checked;
           localStorage.setItem('travelData', JSON.stringify(travelData));
           try {
             if (p.id) await db.collection('travel').doc(p.id).set(p);
@@ -100,18 +108,19 @@ export async function initTravelPanel() {
           }
           renderList(currentSearch);
         });
-        cancelBtn.addEventListener('click', e => {
-          e.preventDefault();
+        cancelBtn.addEventListener('click', e2 => {
+          e2.preventDefault();
           renderList(currentSearch);
         });
       });
-      li.append(editBtn);
+      actionsTd.append(editBtn);
 
       const delBtn = document.createElement('button');
       delBtn.textContent = '❌';
       delBtn.title = 'Delete';
       Object.assign(delBtn.style, { background: 'none', border: 'none', cursor: 'pointer' });
-      delBtn.addEventListener('click', async () => {
+      delBtn.addEventListener('click', async e => {
+        e.stopPropagation();
         if (!confirm('Delete this place?')) return;
         if (p.id) {
           try {
@@ -124,9 +133,19 @@ export async function initTravelPanel() {
         localStorage.setItem('travelData', JSON.stringify(travelData));
         renderList(currentSearch);
       });
-      li.append(delBtn);
+      actionsTd.append(delBtn);
 
-      list.append(li);
+      tr.append(nameTd, tagsTd, visitedTd, actionsTd);
+      tableBody.append(tr);
+      rowMarkerMap.set(tr, m);
+
+      tr.addEventListener('click', () => {
+        if (selectedRow) selectedRow.classList.remove('selected-row');
+        selectedRow = tr;
+        tr.classList.add('selected-row');
+        map.setView([p.lat, p.lon], 8);
+        m.openPopup();
+      });
     });
   };
 
@@ -141,10 +160,12 @@ export async function initTravelPanel() {
 
   document.getElementById('addPlaceBtn').addEventListener('click', async () => {
     const name = prompt('Place name:');
+    const tags = prompt('Tags (comma separated):');
+    const visited = confirm('Visited?');
     const lat = parseFloat(prompt('Latitude:'));
     const lon = parseFloat(prompt('Longitude:'));
     if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
-    const place = { name, lat, lon };
+    const place = { name, lat, lon, tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [], visited };
     try {
       const docRef = await db.collection('travel').add(place);
       place.id = docRef.id;
