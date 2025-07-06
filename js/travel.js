@@ -71,6 +71,8 @@ export async function initTravelPanel() {
         form.style.display = 'flex';
         form.style.flexWrap = 'wrap';
         form.style.gap = '4px';
+        const td = document.createElement('td');
+        td.colSpan = 4;
 
         const nameInput = document.createElement('input');
         nameInput.value = p.name || '';
@@ -90,7 +92,8 @@ export async function initTravelPanel() {
         [saveBtn, cancelBtn].forEach(b => Object.assign(b.style, { background: 'none', border: '1px solid #999', padding: '2px 6px' }));
 
         form.append(nameInput, tagsInput, visitedInput, saveBtn, cancelBtn);
-        tr.append(form);
+        td.append(form);
+        tr.append(td);
 
         form.addEventListener('submit', async ev => {
           ev.preventDefault();
