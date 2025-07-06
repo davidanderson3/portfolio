@@ -17,6 +17,7 @@ import {
     attachTaskButtons,
     renderChildren
 } from './tasks.js';
+import { createCalendarEvent } from './googleCalendar.js';
 
 
 const openGoalIds = new Set();
@@ -540,6 +541,11 @@ function attachEditButtons(item, buttonWrap, row) {
         if (idx !== -1) {
             all[idx].scheduled = date.trim();
             await saveDecisions(all);
+            try {
+                await createCalendarEvent(item.text, date.trim());
+            } catch (err) {
+                console.error('Failed to sync with Google Calendar', err);
+            }
             renderGoalsAndSubitems();
         }
     });
