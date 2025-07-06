@@ -16,6 +16,7 @@ export async function initTravelPanel() {
   const mapEl = document.getElementById('travelMap');
   const tableBody = document.querySelector('#travelTable tbody');
   const searchInput = document.getElementById('travelSearch');
+  const placeInput = document.getElementById('placeSearch');
   map = L.map(mapEl).setView([20, 0], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
@@ -155,6 +156,27 @@ export async function initTravelPanel() {
     searchInput.addEventListener('input', e => {
       currentSearch = e.target.value;
       renderList(currentSearch);
+    });
+  }
+
+  if (placeInput) {
+    placeInput.addEventListener('keydown', async e => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      const term = placeInput.value.trim();
+      if (!term) return;
+      try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}`);
+        const data = await resp.json();
+        if (data && data.length) {
+          const { lat, lon } = data[0];
+          map.setView([parseFloat(lat), parseFloat(lon)], 8);
+        } else {
+          alert('Place not found');
+        }
+      } catch (err) {
+        console.error('Error searching place', err);
+      }
     });
   }
 
