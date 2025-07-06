@@ -4,6 +4,7 @@ let mapInitialized = false;
 let map;
 let markers = [];
 let travelData = [];
+let currentSearch = '';
 
 export async function initTravelPanel() {
   const panel = document.getElementById('travelPanel');
@@ -12,6 +13,7 @@ export async function initTravelPanel() {
 
   const mapEl = document.getElementById('travelMap');
   const list = document.getElementById('travelList');
+  const searchInput = document.getElementById('travelSearch');
   map = L.map(mapEl).setView([20, 0], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
@@ -30,40 +32,85 @@ export async function initTravelPanel() {
     travelData = cached ? JSON.parse(cached) : [];
   }
 
-  const renderList = () => {
+  const renderList = (term = '') => {
     list.innerHTML = '';
     markers.forEach(m => m.remove());
     markers = [];
-    travelData.forEach((p, idx) => {
+    const items = travelData.filter(p => {
+      if (!term) return true;
+      const str = Object.values(p).join(' ').toLowerCase();
+      return str.includes(term.toLowerCase());
+    });
+    const formatPlace = pl =>
+      Object.entries(pl)
+        .filter(([k]) => k !== 'id')
+        .map(([k, v]) => {
+          if (k === 'lat' || k === 'lon') return `${k}: ${Number(v).toFixed(4)}`;
+          return `${k}: ${v}`;
+        })
+        .join(', ');
+
+    items.forEach((p, index) => {
       const m = L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.name);
       markers.push(m);
+      if (term && items.length === 1 && index === 0) {
+        map.setView([p.lat, p.lon], 8);
+        m.openPopup();
+      }
       const li = document.createElement('li');
-      const span = document.createElement('span');
-      span.textContent = `${p.name} (${p.lat.toFixed(4)}, ${p.lon.toFixed(4)})`;
-      li.append(span);
+      const infoSpan = document.createElement('span');
+      infoSpan.textContent = formatPlace(p);
+      li.append(infoSpan);
 
       const editBtn = document.createElement('button');
       editBtn.textContent = '✏️';
       editBtn.title = 'Edit';
-      editBtn.addEventListener('click', async () => {
-        const name = prompt('Place name:', p.name);
-        const lat = parseFloat(prompt('Latitude:', p.lat));
-        const lon = parseFloat(prompt('Longitude:', p.lon));
-        if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
-        Object.assign(p, { name, lat, lon });
-        localStorage.setItem('travelData', JSON.stringify(travelData));
-        try {
-          if (p.id) await db.collection('travel').doc(p.id).set({ name, lat, lon });
-        } catch (err) {
-          console.error('Failed to update place', err);
-        }
-        renderList();
+      Object.assign(editBtn.style, { background: 'none', border: 'none', cursor: 'pointer' });
+      editBtn.addEventListener('click', () => {
+        li.innerHTML = '';
+        const form = document.createElement('form');
+        const inputs = {};
+        Object.entries(p).forEach(([k, v]) => {
+          if (['id', 'lat', 'lon'].includes(k)) return;
+          const input = document.createElement('input');
+          input.value = v ?? '';
+          input.placeholder = k;
+          input.style.marginRight = '4px';
+          form.append(input);
+          inputs[k] = input;
+        });
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        [saveBtn, cancelBtn].forEach(b => Object.assign(b.style, { background: 'none', border: '1px solid #999', padding: '2px 6px', marginLeft: '4px' }));
+        form.append(saveBtn, cancelBtn);
+        li.append(form);
+
+        form.addEventListener('submit', async e => {
+          e.preventDefault();
+          Object.keys(inputs).forEach(key => {
+            p[key] = inputs[key].value;
+          });
+          localStorage.setItem('travelData', JSON.stringify(travelData));
+          try {
+            if (p.id) await db.collection('travel').doc(p.id).set(p);
+          } catch (err) {
+            console.error('Failed to update place', err);
+          }
+          renderList(currentSearch);
+        });
+        cancelBtn.addEventListener('click', e => {
+          e.preventDefault();
+          renderList(currentSearch);
+        });
       });
       li.append(editBtn);
 
       const delBtn = document.createElement('button');
       delBtn.textContent = '❌';
       delBtn.title = 'Delete';
+      Object.assign(delBtn.style, { background: 'none', border: 'none', cursor: 'pointer' });
       delBtn.addEventListener('click', async () => {
         if (!confirm('Delete this place?')) return;
         if (p.id) {
@@ -73,9 +120,9 @@ export async function initTravelPanel() {
             console.error('Failed to delete place', err);
           }
         }
-        travelData.splice(idx, 1);
+        travelData.splice(travelData.indexOf(p), 1);
         localStorage.setItem('travelData', JSON.stringify(travelData));
-        renderList();
+        renderList(currentSearch);
       });
       li.append(delBtn);
 
@@ -83,7 +130,14 @@ export async function initTravelPanel() {
     });
   };
 
-  renderList();
+  renderList(currentSearch);
+
+  if (searchInput) {
+    searchInput.addEventListener('input', e => {
+      currentSearch = e.target.value;
+      renderList(currentSearch);
+    });
+  }
 
   document.getElementById('addPlaceBtn').addEventListener('click', async () => {
     const name = prompt('Place name:');
@@ -99,7 +153,7 @@ export async function initTravelPanel() {
     }
     travelData.push(place);
     localStorage.setItem('travelData', JSON.stringify(travelData));
-    renderList();
+    renderList(currentSearch);
   });
 }
 
