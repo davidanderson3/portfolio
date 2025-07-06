@@ -341,6 +341,12 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     const entries = ((allStats[today] || {})[cfg.id]) || [];
     const validEntries = entries.filter(e => !(e.extra && e.extra.postponed));
     const wasPostponed = entries.some(e => e.extra && e.extra.postponed);
+
+    // Hide metrics that were postponed for today until the next day
+    if (today === todayKey() && wasPostponed && !validEntries.length) {
+      continue;
+    }
+
     visible++;
     let display = '—', editValue = '', pct = '—', rank = '—';
     if (validEntries.length) {
