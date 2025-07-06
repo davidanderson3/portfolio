@@ -291,6 +291,8 @@ function renderCalendarSection(all, calendarContent) {
             const sat = new Date(d);
             const sun = new Date(d); sun.setDate(d.getDate() + 1);
             if (sun < today) {
+                delete byDate[key];
+                delete byDate[keyFromDate(sun)];
                 d.setDate(d.getDate() + 2);
                 continue;
             }
@@ -329,6 +331,8 @@ function renderCalendarSection(all, calendarContent) {
         } else if (dow === 0) {
             const sat = new Date(d); sat.setDate(d.getDate() - 1);
             if (d < today) {
+                delete byDate[keyFromDate(sat)];
+                delete byDate[key];
                 d.setDate(d.getDate() + 1);
                 continue;
             }
