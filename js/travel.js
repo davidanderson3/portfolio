@@ -1,4 +1,16 @@
-import { db } from './auth.js';
+import { db, getCurrentUser, auth } from './auth.js';
+
+const BASE_KEY = 'travelData';
+
+function storageKey() {
+  const user = getCurrentUser?.();
+  return user ? `${BASE_KEY}-${user.uid}` : BASE_KEY;
+}
+
+auth.onAuthStateChanged(() => {
+  mapInitialized = false;
+  travelData = [];
+});
 
 let mapInitialized = false;
 let map;
@@ -25,16 +37,22 @@ export async function initTravelPanel() {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
+  const user = getCurrentUser?.();
   try {
-    const snap = await db.collection('travel').get();
-    travelData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    if (!travelData.length) {
-      throw new Error('No travel docs');
+    if (user) {
+      const snap = await db
+        .collection('users')
+        .doc(user.uid)
+        .collection('travel')
+        .get();
+      travelData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } else {
+      travelData = [];
     }
-    localStorage.setItem('travelData', JSON.stringify(travelData));
+    localStorage.setItem(storageKey(), JSON.stringify(travelData));
   } catch (err) {
     console.error('Failed to load travel data', err);
-    const cached = localStorage.getItem('travelData');
+    const cached = localStorage.getItem(storageKey());
     travelData = cached ? JSON.parse(cached) : [];
   }
 
@@ -159,9 +177,11 @@ export async function initTravelPanel() {
           p.Rating = ratingInput.value.trim();
           p.Date = dateInput.value.trim();
           p.visited = visitedInput.checked;
-          localStorage.setItem('travelData', JSON.stringify(travelData));
+          localStorage.setItem(storageKey(), JSON.stringify(travelData));
           try {
-            if (p.id) await db.collection('travel').doc(p.id).set(p);
+            const user = getCurrentUser?.();
+            if (user && p.id)
+              await db.collection('users').doc(user.uid).collection('travel').doc(p.id).set(p);
           } catch (err) {
             console.error('Failed to update place', err);
           }
@@ -185,13 +205,15 @@ export async function initTravelPanel() {
         if (!confirm('Delete this place?')) return;
         if (p.id) {
           try {
-            await db.collection('travel').doc(p.id).delete();
+            const user = getCurrentUser?.();
+            if (user)
+              await db.collection('users').doc(user.uid).collection('travel').doc(p.id).delete();
           } catch (err) {
             console.error('Failed to delete place', err);
           }
         }
         travelData.splice(travelData.indexOf(p), 1);
-        localStorage.setItem('travelData', JSON.stringify(travelData));
+        localStorage.setItem(storageKey(), JSON.stringify(travelData));
         allTags = Array.from(new Set(travelData.flatMap(pl => pl.tags || []))).sort();
         renderTagFilters();
         renderList(currentSearch);
@@ -263,13 +285,20 @@ export async function initTravelPanel() {
       visited
     };
     try {
-      const docRef = await db.collection('travel').add(place);
-      place.id = docRef.id;
+      const user = getCurrentUser?.();
+      if (user) {
+        const docRef = await db
+          .collection('users')
+          .doc(user.uid)
+          .collection('travel')
+          .add(place);
+        place.id = docRef.id;
+      }
     } catch (err) {
       console.error('Failed to save place to Firestore', err);
     }
     travelData.push(place);
-    localStorage.setItem('travelData', JSON.stringify(travelData));
+    localStorage.setItem(storageKey(), JSON.stringify(travelData));
     allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
     renderTagFilters();
     renderList(currentSearch);
