@@ -8,7 +8,8 @@ import {
     saveDecisions,
     saveGoalOrder,
     makeIconBtn,
-    formatDaysUntil
+    formatDaysUntil,
+    linkify
 } from './helpers.js';
 
 import { db } from './auth.js';
@@ -83,12 +84,12 @@ export function createGoalRow(goal, options = {}) {
     const middle = document.createElement('div');
     middle.className = 'middle-group';
     const titleDiv = document.createElement('div');
-    titleDiv.textContent = goal.text;
+    titleDiv.innerHTML = linkify(goal.text);
     middle.appendChild(titleDiv);
     if (goal.notes) {
         const noteDiv = document.createElement('div');
         noteDiv.className = 'note-text';
-        noteDiv.textContent = goal.notes;
+        noteDiv.innerHTML = linkify(goal.notes);
         middle.appendChild(noteDiv);
     }
     row.appendChild(middle);

@@ -1,4 +1,4 @@
-import { loadDecisions, saveDecisions, generateId, makeIconBtn } from './helpers.js';
+import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify } from './helpers.js';
 import { db } from './auth.js';
 
 // Shared skip intervals (same as goals)
@@ -383,12 +383,12 @@ export async function renderDailyTasks(currentUser, db) {
 
     const label = document.createElement('div');
     const titleSpan = document.createElement('div');
-    titleSpan.textContent = task.text.replace(/^\[Daily\]\s*/, '');
+    titleSpan.innerHTML = linkify(task.text.replace(/^\[Daily\]\s*/, ''));
     label.appendChild(titleSpan);
     if (task.notes) {
       const noteSpan = document.createElement('div');
       noteSpan.className = 'note-text';
-      noteSpan.textContent = task.notes;
+      noteSpan.innerHTML = linkify(task.notes);
       label.appendChild(noteSpan);
     }
     if (isDone) {
@@ -433,12 +433,12 @@ export async function renderDailyTasks(currentUser, db) {
         task.notes = allDecs[idx].notes;
         label.innerHTML = '';
         const tSpan = document.createElement('div');
-        tSpan.textContent = edited.trim();
+        tSpan.innerHTML = linkify(edited.trim());
         label.appendChild(tSpan);
         if (task.notes) {
           const nSpan = document.createElement('div');
           nSpan.className = 'note-text';
-          nSpan.textContent = task.notes;
+          nSpan.innerHTML = linkify(task.notes);
           label.appendChild(nSpan);
         }
       } catch {
