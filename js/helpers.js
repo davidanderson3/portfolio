@@ -137,6 +137,17 @@ export async function saveLists(lists) {
           .set({ lists: sanitized }, { merge: true });
 }
 
+// Convert plain text containing URLs into clickable links
+export function linkify(text = '') {
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return escaped.replace(urlRegex,
+    url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+}
+
 // Reusable icon-style button factory
 export function makeIconBtn(symbol, title, fn) {
   const b = document.createElement('button');

@@ -6,7 +6,7 @@ vi.mock('../js/auth.js', () => ({
   db: {}
 }));
 
-import { parseNaturalDate, formatDaysUntil, generateId } from '../js/helpers.js';
+import { parseNaturalDate, formatDaysUntil, generateId, linkify } from '../js/helpers.js';
 
 describe('parseNaturalDate', () => {
   it('returns today\'s date string for "today" input', () => {
@@ -48,5 +48,13 @@ describe('generateId', () => {
     const b = generateId();
     expect(a).not.toBe(b);
     expect(a).toMatch(/^_[a-z0-9]{9}$/);
+  });
+});
+
+describe('linkify', () => {
+  it('wraps URLs in anchor tags', () => {
+    const input = 'see https://example.com for details';
+    const out = linkify(input);
+    expect(out).toBe('see <a href="https://example.com" target="_blank" rel="noopener noreferrer">https://example.com</a> for details');
   });
 });

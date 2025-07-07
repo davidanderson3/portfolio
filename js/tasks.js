@@ -1,6 +1,6 @@
 // ── tasks.js ──
 
-import { loadDecisions, saveDecisions, generateId, makeIconBtn } from './helpers.js';
+import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify } from './helpers.js';
 import { enableTaskDragAndDrop } from './dragAndDrop.js';
 import { createGoalRow } from './goals.js';
 
@@ -55,12 +55,12 @@ export function attachTaskButtons(item, row, listContainer, allDecisions) {
         if (middle) {
             middle.innerHTML = '';
             const tDiv = document.createElement('div');
-            tDiv.textContent = allDecisions[idx].text;
+            tDiv.innerHTML = linkify(allDecisions[idx].text);
             middle.appendChild(tDiv);
             if (allDecisions[idx].notes) {
                 const nDiv = document.createElement('div');
                 nDiv.className = 'note-text';
-                nDiv.textContent = allDecisions[idx].notes;
+                nDiv.innerHTML = linkify(allDecisions[idx].notes);
                 middle.appendChild(nDiv);
             }
         }
@@ -319,11 +319,11 @@ export async function renderChildren(goal, all, container) {
                 });
                 const title = document.createElement('div');
                 title.className = 'title-column';
-                title.textContent = item.text;
+                title.innerHTML = linkify(item.text);
                 if (item.notes) {
                     const n = document.createElement('div');
                     n.className = 'note-text';
-                    n.textContent = item.notes;
+                    n.innerHTML = linkify(item.notes);
                     title.appendChild(n);
                 }
                 const res = document.createElement('div');
