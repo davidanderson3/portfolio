@@ -305,20 +305,5 @@ export async function initTravelPanel() {
   });
 }
 
-// legacy parser kept for potential future imports
-export function parseKml(text) {
-  const doc = new DOMParser().parseFromString(text, 'application/xml');
-  const placemarks = Array.from(doc.querySelectorAll('Placemark'));
-  return placemarks.map(pm => {
-    const name = pm.querySelector('name')?.textContent || 'Unknown';
-    const description =
-      pm.querySelector('ExtendedData Data[name="description"] value')?.textContent ||
-      pm.querySelector('description')?.textContent ||
-      '';
-    const coords = pm.querySelector('coordinates')?.textContent.trim() || '0,0,0';
-    const [lon, lat] = coords.split(',').map(parseFloat);
-    return { name, description, lat, lon };
-  });
-}
 
 window.initTravelPanel = initTravelPanel;
