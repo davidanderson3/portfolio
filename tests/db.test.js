@@ -103,4 +103,14 @@ describe('database helpers', () => {
     await saveAnon([{ name: 'test' }]);
     expect(JSON.parse(localStorage.getItem('myLists'))).toEqual([{ name: 'test' }]);
   });
+
+  it('returns sample decisions for anonymous users', async () => {
+    const dbMock = { collection: vi.fn() };
+    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: dbMock }));
+    const { loadDecisions } = await import('../js/helpers.js');
+    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
+    const result = await loadDecisions(true);
+    expect(result).toEqual(SAMPLE_DECISIONS);
+    expect(dbMock.collection).not.toHaveBeenCalled();
+  });
 });
