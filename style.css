@@ -769,40 +769,35 @@ body {
 /* ─────────────────────────────────────────────────────────────────────────────
    3) Tabs pulled left & higher contrast
 ───────────────────────────────────────────────────────────────────────────── */
-#goalsView .tabs {
-  margin: 0;
-  padding: 8px 0 0 0;
+#goalsView .navbar .tabs {
+  flex: 1;
+  margin: 0 40px;
+  padding: 0;
   display: flex;
-  justify-content: flex-start;
-  background-color: #ffffff;
-  border-bottom: 1px solid #cccccc;
+  justify-content: center;
+  gap: 24px;
+  background: transparent;
+  border: none;
 }
 
-#goalsView .tabs button {
-  margin-right: 0;
-  padding: 12px 24px;
-  font-size: 1.1rem;
-  background: #ffffff;
-  color: #000000;
-  border-radius: 4px 4px 0 0;
-  border: 1px solid #cccccc;
+#goalsView .navbar .tabs button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px 0;
+  font-size: 1rem;
+  color: #000;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out;
+  transition: border-color 0.2s, background-color 0.2s;
 }
 
-#goalsView .tabs button.active {
-  background: #ffffff;
-  color: #000000;
-  border-bottom: 2px solid #000000;
-  border-color: #000000;
+#goalsView .navbar .tabs button.active {
+  border-color: #000;
+  font-weight: 600;
 }
 
-#goalsView .tabs button:hover:not(.active) {
-  background: #f2f2f2;
-}
-
-#goalsView .tabs .container {
-  justify-content: flex-start !important;
+#goalsView .navbar .tabs button:hover:not(.active) {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 

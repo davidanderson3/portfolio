@@ -70,6 +70,14 @@
     <nav class="navbar">
       <div class="container navbar-inner">
         <div class="navbar-left">Goal Oriented</div>
+        <div class="tabs">
+          <button class="tab-button active" data-target="goalsPanel">Goals</button>
+          <button class="tab-button" data-target="calendarPanel">Calendar</button>
+          <button class="tab-button" data-target="dailyPanel">Recurring</button>
+          <button class="tab-button" data-target="metricsPanel">Metrics</button>
+          <button class="tab-button" data-target="listsPanel">Lists</button>
+          <button class="tab-button" data-target="travelPanel">Travel</button>
+        </div>
         <div class="navbar-right">
           <span id="userEmail" class="user-email"></span>
           <button type="button" id="loginBtn">Sign In</button>
@@ -77,16 +85,6 @@
         </div>
       </div>
     </nav>
-
-    <!-- TABS BAR -->
-    <div class="tabs">
-      <button class="tab-button active" data-target="goalsPanel">Goals</button>
-      <button class="tab-button" data-target="calendarPanel">Calendar</button>
-      <button class="tab-button" data-target="dailyPanel">Recurring</button>
-      <button class="tab-button" data-target="metricsPanel">Metrics</button>
-      <button class="tab-button" data-target="listsPanel">Lists</button>
-      <button class="tab-button" data-target="travelPanel">Travel</button>
-    </div>
 
     <!-- TABS CONTENT PANELS -->
     <div id="goalsPanel" class="main-layout">
