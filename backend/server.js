@@ -12,7 +12,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`✅ Serving static files at http://localhost:${PORT}`);
 });
+
+module.exports = server;
 
