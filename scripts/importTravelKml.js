@@ -10,6 +10,9 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+// User that will own all imported placemarks
+const DEFAULT_USER_ID = '6hWB9QquC1fV2XlX0ixm3Fnq0Sj2';
+
 function parseKml(text) {
   const parser = new XMLParser({ ignoreAttributes: false });
   const obj = parser.parse(text);
@@ -45,7 +48,11 @@ async function importPlaces(places) {
   let batch = db.batch();
   let count = 0;
   for (const place of places) {
-    const ref = db.collection('travel').doc();
+    const ref = db
+      .collection('users')
+      .doc(DEFAULT_USER_ID)
+      .collection('travel')
+      .doc();
     batch.set(ref, place);
     count++;
     if (count % batchSize === 0) {
@@ -62,7 +69,9 @@ async function main() {
   const text = fs.readFileSync('assets/travel/doc.kml', 'utf8');
   const places = parseKml(text);
 
-  await clearCollection(db.collection('travel'));
+  await clearCollection(
+    db.collection('users').doc(DEFAULT_USER_ID).collection('travel')
+  );
   await importPlaces(places);
 
   console.log(`Imported ${places.length} places`);
