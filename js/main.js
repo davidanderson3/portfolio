@@ -89,6 +89,5 @@ window.addEventListener('DOMContentLoaded', () => {
   initGoogleCalendar();
 });
 
-window.loadDecisions = loadDecisions;
 window.renderDailyTasks = renderDailyTasks;
 window.initMetricsUI = initMetricsUI;
