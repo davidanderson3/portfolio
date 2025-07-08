@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { JSDOM } from 'jsdom';
 
 // Mock auth.js to avoid loading Firebase scripts during tests
 vi.mock('../js/auth.js', () => ({
@@ -56,5 +57,20 @@ describe('linkify', () => {
     const input = 'see https://example.com for details';
     const out = linkify(input);
     expect(out).toBe('see <a href="https://example.com" target="_blank" rel="noopener noreferrer">https://example.com</a> for details');
+  });
+
+  it('escapes HTML to prevent injection', () => {
+    const input = "<script>alert('x')</script>";
+    const out = linkify(input);
+    expect(out).toBe("&lt;script&gt;alert('x')&lt;/script&gt;");
+  });
+
+  it('renders escaped output safely in the DOM', () => {
+    const input = "<script>alert('x')</script>";
+    const dom = new JSDOM('<div id="c"></div>');
+    const container = dom.window.document.getElementById('c');
+    container.innerHTML = linkify(input);
+    expect(container.textContent).toBe("<script>alert('x')</script>");
+    expect(container.querySelector('script')).toBeNull();
   });
 });

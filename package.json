@@ -21,5 +21,6 @@
     "purgecss": "^7.0.2",
     "supertest": "^7.1.3",
     "vitest": "^3.2.4"
+    "jsdom": "^26.1.0"
   }
 }
