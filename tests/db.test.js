@@ -67,6 +67,24 @@ describe('database helpers', () => {
     expect(updateMock).toHaveBeenCalledWith({ goalOrder: ['a', 'b'] });
   });
 
+  it('alerts when saveDecisions fails', async () => {
+    setMock.mockRejectedValueOnce(new Error('fail'));
+    const alertSpy = vi.fn();
+    global.alert = alertSpy;
+    const { saveDecisions } = await import('../js/helpers.js');
+    await saveDecisions([{ id: 'a', text: 'b' }]);
+    expect(alertSpy).toHaveBeenCalled();
+  });
+
+  it('alerts when saveGoalOrder fails', async () => {
+    updateMock.mockRejectedValueOnce(new Error('fail'));
+    const alertSpy = vi.fn();
+    global.alert = alertSpy;
+    const { saveGoalOrder } = await import('../js/helpers.js');
+    await saveGoalOrder(['a']);
+    expect(alertSpy).toHaveBeenCalled();
+  });
+
   it('saves lists for anonymous users to localStorage', async () => {
     // Remock getCurrentUser to return null
     vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
