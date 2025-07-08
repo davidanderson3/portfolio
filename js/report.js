@@ -23,15 +23,12 @@ function isDailyTask(item) {
 
 
 export async function renderDailyTaskReport(user, db) {
-    console.log("📋 DAILY TASK REPORT");
 
     const [decisions, completionsSnap] = await Promise.all([
         loadDecisions(user, db),
         db.collection('taskCompletions').doc(user.uid).get()
     ]);
 
-    console.log("📄 All decisions:", decisions);
-    console.log("📅 Firestore completions:", completionsSnap.data());
 
 
     const completionMap = completionsSnap.exists ? completionsSnap.data() : {};
@@ -42,12 +39,10 @@ export async function renderDailyTaskReport(user, db) {
 
     for (const date of dates) {
         const completedIds = completionMap[date] || [];
-        console.log(`🗓️ ${date} completed IDs:`, completedIds);
     }
 
     const tasks = decisions.filter(t => t.type === 'task' && t.text.startsWith('[Daily]'));
 
-    console.log("✅ Daily tasks with IDs:", tasks.map(t => t.id));
 
 
     for (const task of tasks) {
