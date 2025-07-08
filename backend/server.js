@@ -16,5 +16,3 @@ app.listen(PORT, () => {
   console.log(`✅ Serving static files at http://localhost:${PORT}`);
 });
 
-// 👇 Prevent Node from exiting
-setInterval(() => { }, 1000);
