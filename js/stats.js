@@ -1,6 +1,6 @@
 // File: stats.js
 
-import { auth, db, getCurrentUser, FieldValue } from './auth.js';
+import { auth, db, getCurrentUser } from './auth.js';
 import { SAMPLE_METRICS, SAMPLE_METRIC_DATA } from './sampleData.js';
 
 const METRICS_KEY = 'metricsConfig';
