@@ -781,20 +781,20 @@ body {
 }
 
 #goalsView .navbar .tabs button {
-  background: #ffffff;
+  background: #ffffff !important;
   border: 1px solid #cccccc;
   border-bottom: 2px solid transparent;
   border-radius: 4px 4px 0 0;
   padding: 12px 24px;
   font-size: 1rem;
-  color: #000000;
+  color: #000000 !important;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out, border-color 0.2s;
 }
 
 #goalsView .navbar .tabs button.active {
-  background: #ffffff;
-  color: #000000;
+  background: #ffffff !important;
+  color: #000000 !important;
   border-color: #000000;
   border-bottom-width: 2px;
   font-weight: 600;
