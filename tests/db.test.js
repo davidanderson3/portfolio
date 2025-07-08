@@ -78,6 +78,33 @@ describe('database helpers', () => {
     expect(updateMock).toHaveBeenCalledWith({ goalOrder: ['a', 'b'] });
   });
 
+  it('ignores empty decisions array', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { saveDecisions } = await import('../js/helpers.js');
+    await saveDecisions([]);
+    expect(setMock).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it('ignores invalid decision objects', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { saveDecisions } = await import('../js/helpers.js');
+    await saveDecisions([{ foo: 'bar' }]);
+    expect(setMock).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it('ignores empty goal order', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { saveGoalOrder } = await import('../js/helpers.js');
+    await saveGoalOrder([]);
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
   it('alerts when saveDecisions fails', async () => {
     setMock.mockRejectedValueOnce(new Error('fail'));
     const alertSpy = vi.fn();
