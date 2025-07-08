@@ -78,7 +78,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const backupData = await loadDecisions();
     const backupKey = `backup-${new Date().toISOString().slice(0, 10)}`;
     localStorage.setItem(backupKey, JSON.stringify(backupData));
-    console.log('⚡ backup saved to localStorage');
   });
 
   if (uiRefs.wizardContainer && uiRefs.wizardStep) {

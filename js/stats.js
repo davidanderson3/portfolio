@@ -371,7 +371,6 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       const allVals = valuesByMetric[cfg.id] || [];
       const raw = computePercentile(val, allVals);
       pct = `${cfg.direction === 'lower' ? 100 - raw : raw}th`;
-      console.log('Averaging for', cfg.id, 'values:', valuesByMetric[cfg.id]);
       rank = computeRank(val, allVals, cfg.direction);
     } else if (wasPostponed) {
       display = 'postponed';
