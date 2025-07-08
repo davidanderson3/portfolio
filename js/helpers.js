@@ -27,7 +27,13 @@ export async function loadDecisions(forceRefresh = false) {
   }
   const snap = await db.collection('decisions').doc(currentUser.uid).get();
   const data = snap.data();
-  decisionsCache = data && Array.isArray(data.items) ? data.items : [];
+  const rawItems = data && Array.isArray(data.items) ? data.items : [];
+  decisionsCache = rawItems.map(it => {
+    if (it && it.hiddenUntil && typeof it.hiddenUntil.toDate === 'function') {
+      return { ...it, hiddenUntil: it.hiddenUntil.toDate().toISOString() };
+    }
+    return it;
+  });
   return decisionsCache;
 }
 
