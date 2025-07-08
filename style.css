@@ -71,6 +71,11 @@ body {
   font-size: 1.8em;
 }
 
+.user-email {
+  font-size: 0.8em;
+  margin-right: 8px;
+}
+
 .navbar-right button {
   margin-left: 10px;
   background-color: #ffffff;
