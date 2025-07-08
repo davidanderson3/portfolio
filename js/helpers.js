@@ -85,7 +85,8 @@ export function parseNaturalDate(input) {
 export function formatDaysUntil(dateStr) {
   if (!dateStr) return '';
   const now = new Date();
-  const target = new Date(dateStr);
+  // Parse as local date rather than UTC
+  const target = new Date(dateStr + 'T00:00:00');
   now.setHours(0, 0, 0, 0);
   target.setHours(0, 0, 0, 0);
   const diffDays = Math.round((target - now) / (1000 * 60 * 60 * 24));
