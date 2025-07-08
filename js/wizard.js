@@ -174,3 +174,5 @@ async function saveGoalWizard() {
   addGoalBtn.style.display = 'inline-block';
   renderGoalsAndSubitems();
 }
+
+export { saveGoalWizard };
