@@ -965,6 +965,18 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+/* Metrics summary table */
+#genericStatsSummary table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#genericStatsSummary th,
+#genericStatsSummary td {
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
 #travelPanel table {
   width: 100%;
   table-layout: fixed;
