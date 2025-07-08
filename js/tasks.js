@@ -276,9 +276,29 @@ export async function renderChildren(goal, all, container) {
     // Completed items
     const done = children.filter(c => c.completed);
     if (done.length) {
+        const doneSection = document.createElement('div');
+        doneSection.className = 'completed-subgoal-section';
+
+        const hdr = document.createElement('div');
+        hdr.className = 'completed-header';
+        const toggle = document.createElement('span');
+        toggle.textContent = '▶';
+        toggle.style.cursor = 'pointer';
+        hdr.appendChild(toggle);
+        hdr.append(' Completed');
+
         const doneContainer = document.createElement('div');
         doneContainer.className = 'completed-task-list';
-        container.appendChild(doneContainer);
+        doneContainer.style.display = 'none';
+
+        toggle.onclick = () => {
+            const open = doneContainer.style.display === 'block';
+            toggle.textContent = open ? '▶' : '▼';
+            doneContainer.style.display = open ? 'none' : 'block';
+        };
+
+        doneSection.append(hdr, doneContainer);
+        container.appendChild(doneSection);
 
         done.forEach(item => {
             if (item.type === 'task') {

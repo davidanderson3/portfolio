@@ -1041,3 +1041,14 @@ h2 {
   color: #fff;
   border-color: #7aa68c;
 }
+
+/* Completed subgoal section */
+.completed-subgoal-section {
+  margin-top: 8px;
+}
+
+.completed-subgoal-section .completed-header {
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
