@@ -40,14 +40,19 @@ export async function saveDecisions(items) {
     return;
   }
 
-  // merge in the items array without overwriting other fields
-  await db
-    .collection('decisions')
-    .doc(currentUser.uid)
-    .set({ items }, { merge: true });
+  try {
+    // merge in the items array without overwriting other fields
+    await db
+      .collection('decisions')
+      .doc(currentUser.uid)
+      .set({ items }, { merge: true });
 
-  // Update in-memory cache after successful save
-  decisionsCache = items;
+    // Update in-memory cache after successful save
+    decisionsCache = items;
+  } catch (err) {
+    console.error('Failed to save decisions:', err);
+    alert('⚠️ Failed to save changes.');
+  }
 }
 
 export async function saveGoalOrder(order) {
@@ -57,10 +62,15 @@ export async function saveGoalOrder(order) {
     return;
   }
 
-  await db
-    .collection('decisions')
-    .doc(currentUser.uid)
-    .update({ goalOrder: order });
+  try {
+    await db
+      .collection('decisions')
+      .doc(currentUser.uid)
+      .update({ goalOrder: order });
+  } catch (err) {
+    console.error('Failed to save goal order:', err);
+    alert('⚠️ Failed to save changes.');
+  }
 }
 
 export function parseNaturalDate(input) {
