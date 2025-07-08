@@ -1,7 +1,6 @@
 import { parseNaturalDate, generateId, loadDecisions, saveDecisions, saveGoalOrder } from './helpers.js';
 import { renderGoalsAndSubitems } from './goals.js';
 import { createCalendarEvent } from './googleCalendar.js';
-import { getCurrentUser } from './auth.js';
 
 const db = firebase.firestore();
 
