@@ -54,6 +54,17 @@ describe('database helpers', () => {
     expect(getMock).toHaveBeenCalled();
   });
 
+  it('converts Timestamp hiddenUntil values to strings', async () => {
+    const future = new Date(Date.now() + 3600 * 1000);
+    const tsObj = { toDate: () => future };
+    getMock.mockResolvedValue({ data: () => ({ items: [{ id: 'g1', text: 't', hiddenUntil: tsObj }] }) });
+    const { loadDecisions } = await import('../js/helpers.js');
+    const result = await loadDecisions(true);
+    expect(typeof result[0].hiddenUntil).toBe('string');
+    const hideUntil = Date.parse(result[0].hiddenUntil) || 0;
+    expect(hideUntil).toBeGreaterThan(Date.now());
+  });
+
   it('saves decisions to Firestore', async () => {
     const items = [{ id: 'a', text: 'b' }];
     const { saveDecisions } = await import('../js/helpers.js');
