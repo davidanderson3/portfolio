@@ -264,19 +264,6 @@ export const SAMPLE_LISTS = [
   }
 ];
 
-export const SAMPLE_NOTES = [
-  { id: 'note1', text: 'Welcome to the notes panel!', timestamp: new Date().toISOString() },
-  { id: 'note2', text: 'Sign up to sync your notes.', timestamp: new Date().toISOString() },
-  { id: 'note3', text: 'Jot down quick ideas here.', timestamp: new Date().toISOString() },
-  { id: 'note4', text: 'Notes are saved locally when logged out.', timestamp: new Date().toISOString() },
-  { id: 'note5', text: 'Use markdown for formatting.', timestamp: new Date().toISOString() },
-  { id: 'note6', text: 'Double-click a note to edit.', timestamp: new Date().toISOString() },
-  { id: 'note7', text: 'Pin important reminders.', timestamp: new Date().toISOString() },
-  { id: 'note8', text: 'Delete notes you no longer need.', timestamp: new Date().toISOString() },
-  { id: 'note9', text: 'Everything here is temporary.', timestamp: new Date().toISOString() },
-  { id: 'note10', text: 'Create an account to sync across devices.', timestamp: new Date().toISOString() }
-];
-
 export const SAMPLE_METRICS = [
   { id: 'mood', label: 'Mood Rating', unit: 'rating', direction: 'higher' },
   { id: 'steps', label: 'Steps Walked', unit: 'count', direction: 'higher' },
