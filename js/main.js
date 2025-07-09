@@ -10,7 +10,6 @@ import { initTabs } from './tabs.js';
 import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
 import { initGoogleCalendar } from './googleCalendar.js';
-import { initNavbarToggle } from './navbarToggle.js';
 
 window.currentUser = null;
 
@@ -44,7 +43,6 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  initNavbarToggle();
 
   initAuth(uiRefs, async (user) => {
     window.currentUser = user;
