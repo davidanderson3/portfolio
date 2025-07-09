@@ -95,11 +95,21 @@ body {
 
 @media (max-width: 600px) {
   .navbar-inner {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
   }
+
   #goalsView .navbar .tabs {
-    flex-wrap: wrap;
-    margin: 0;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 4px;
+    margin: 8px 0 0 0;
+  }
+
+  #goalsView .navbar .tabs button {
+    padding: 8px 0;
+    font-size: 0.9rem;
   }
 }
 
