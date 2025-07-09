@@ -103,17 +103,24 @@ export async function initTravelPanel() {
       const tr = document.createElement('tr');
       const nameTd = document.createElement('td');
       nameTd.textContent = p.name;
+      nameTd.dataset.label = 'Name';
       const descTd = document.createElement('td');
       descTd.textContent = p.description || '';
+      descTd.dataset.label = 'Description';
       const tagsTd = document.createElement('td');
       tagsTd.textContent = Array.isArray(p.tags) ? p.tags.join(', ') : '';
+      tagsTd.dataset.label = 'Tags';
       const ratingTd = document.createElement('td');
       ratingTd.textContent = p.Rating || '';
+      ratingTd.dataset.label = 'Rating';
       const dateTd = document.createElement('td');
       dateTd.textContent = p.Date || '';
+      dateTd.dataset.label = 'Date';
       const visitedTd = document.createElement('td');
       visitedTd.textContent = p.visited ? '✅' : '';
+      visitedTd.dataset.label = 'Visited';
       const actionsTd = document.createElement('td');
+      actionsTd.dataset.label = 'Actions';
       actionsTd.style.whiteSpace = 'nowrap';
 
       const editBtn = document.createElement('button');

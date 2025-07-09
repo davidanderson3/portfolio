@@ -1096,6 +1096,40 @@ h2 {
     display: inline-block;
     width: 45%;
   }
+
+  #travelTable,
+  #travelTable thead,
+  #travelTable tbody,
+  #travelTable tr,
+  #travelTable th,
+  #travelTable td {
+    display: block;
+    width: 100%;
+  }
+
+  #travelTable thead {
+    display: none;
+  }
+
+  #travelTable tr {
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 4px;
+  }
+
+  #travelTable td {
+    border: none;
+    padding: 4px 8px;
+    position: relative;
+  }
+
+  #travelTable td::before {
+    content: attr(data-label) ": ";
+    font-weight: bold;
+    display: inline-block;
+    width: 45%;
+  }
 }
 
 #metricPrevDayBtn,
