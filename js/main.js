@@ -10,6 +10,7 @@ import { initTabs } from './tabs.js';
 import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
 import { initGoogleCalendar } from './googleCalendar.js';
+import { initSettings, loadHiddenTabs, applyHiddenTabs } from './settings.js';
 
 window.currentUser = null;
 
@@ -18,6 +19,8 @@ window.addEventListener('DOMContentLoaded', () => {
     loginBtn: document.getElementById('loginBtn'),
     logoutBtn: document.getElementById('logoutBtn'),
     userEmail: document.getElementById('userEmail'),
+    settingsBtn: document.getElementById('settingsBtn'),
+    settingsModal: document.getElementById('settingsModal'),
     signupBtn: document.getElementById('signupBtn'),
     splashLoginBtn: document.getElementById('splashLoginBtn'),
     previewBtn: document.getElementById('previewBtn'),
@@ -58,6 +61,8 @@ window.addEventListener('DOMContentLoaded', () => {
       splash.style.display = 'flex';
       goalsView.style.display = '';
       initTabs(null, db);
+      const hidden = await loadHiddenTabs();
+      applyHiddenTabs(hidden);
       renderGoalsAndSubitems();
       renderDailyTasks(null, db);
       initTabReports(null, db);
@@ -68,6 +73,8 @@ window.addEventListener('DOMContentLoaded', () => {
     goalsView.style.display = '';
 
     initTabs(user, db);
+    const hidden = await loadHiddenTabs();
+    applyHiddenTabs(hidden);
     renderGoalsAndSubitems(user, db);
     renderDailyTasks(user, db);
     initTabReports(user, db);
@@ -87,6 +94,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   initButtonStyles();
   initGoogleCalendar();
+  initSettings(uiRefs);
 });
 
 window.renderDailyTasks = renderDailyTasks;

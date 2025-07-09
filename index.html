@@ -86,6 +86,7 @@
         </div>
         <div class="navbar-right">
           <span id="userEmail" class="user-email"></span>
+          <button type="button" id="settingsBtn">Settings</button>
           <button type="button" id="loginBtn">Sign In</button>
           <button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
         </div>
@@ -209,6 +210,18 @@
         </table>
       </div>
     </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <h3>Tab Visibility</h3>
+        <div id="settingsTabsList"></div>
+        <div class="modal-actions">
+          <button type="button" id="settingsCancelBtn">Cancel</button>
+          <button type="button" id="settingsSaveBtn">Save</button>
+        </div>
+      </div>
+    </div>
   </section>
 
   <script src="https://apis.google.com/js/api.js"></script>
@@ -216,8 +229,8 @@
   <script type="module" src="js/main.js"></script>
   <script type="module" src="js/lists.js"></script>
   <script type="module" src="js/travel.js"></script>
+  <script type="module" src="js/settings.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
-
 </html>
