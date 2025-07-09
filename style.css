@@ -114,9 +114,10 @@ body {
   }
 
   #goalsView .navbar .tabs button {
-    padding: 6px 0;
+    padding: 4px 0; /* slightly tighter vertical spacing */
     font-size: 0.9rem;
     width: 100%;
+    line-height: 1.1; /* keep text compact without squeezing */
   }
 
   .navbar-right {
