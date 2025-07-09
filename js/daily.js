@@ -1,5 +1,6 @@
 import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify } from './helpers.js';
 import { db } from './auth.js';
+import { createCalendarEvent } from './googleCalendar.js';
 
 // Shared skip intervals (same as goals)
 const skipOptions = [
@@ -496,6 +497,19 @@ export async function renderDailyTasks(currentUser, db) {
         wrapper.remove();
       } catch { alert('⚠️ Could not skip task.'); }
     }));
+
+    // Add to calendar for weekly tasks
+    if (period === 'weekly') {
+      btns.append(makeIconBtn('📅', 'Add to calendar', async () => {
+        const date = prompt('Schedule date (YYYY-MM-DD):', new Date().toISOString().slice(0, 10));
+        if (!date) return;
+        try {
+          await createCalendarEvent(task.text, date.trim());
+        } catch (err) {
+          console.error('Failed to create calendar event', err);
+        }
+      }));
+    }
 
     // Delete
     btns.append(makeIconBtn('❌', 'Delete', async () => {
