@@ -68,7 +68,7 @@ body {
 
 .navbar-left {
   font-weight: bold;
-  font-size: 1.8em;
+  font-size: 1.3em;
 }
 
 .user-email {
@@ -114,10 +114,12 @@ body {
   }
 
   #goalsView .navbar .tabs button {
-    padding: 4px 0; /* slightly tighter vertical spacing */
+    padding: 4px 0;
+    /* slightly tighter vertical spacing */
     font-size: 0.9rem;
     width: 100%;
-    line-height: 1.1; /* keep text compact without squeezing */
+    line-height: 1.1;
+    /* keep text compact without squeezing */
   }
 
   .navbar-right {
@@ -674,10 +676,6 @@ button:hover {
   /* vertical padding only (horizontal comes from .container) */
 }
 
-.navbar-left {
-  font-weight: bold;
-  font-size: 1.8em;
-}
 
 .navbar-right button {
   margin-left: 10px;
@@ -830,7 +828,7 @@ body {
   border: 1px solid #cccccc;
   border-bottom: 2px solid transparent;
   border-radius: 4px 4px 0 0;
-  padding: 12px 24px;
+  padding: 0px 24px;
   font-size: 1rem;
   color: #000000 !important;
   cursor: pointer;
@@ -904,7 +902,8 @@ h2 {
 /* Minimalist list-selector tabs */
 #listTabs {
   display: flex;
-  gap: 0; /* we'll rely on borders instead of space */
+  gap: 0;
+  /* we'll rely on borders instead of space */
 }
 
 #listTabs .list-tab {
@@ -948,7 +947,7 @@ h2 {
 #listsPanel button[title="Edit row"],
 #listsPanel button[title="Delete row"] {
   background: none !important;
-  border: none    !important;
+  border: none !important;
   cursor: pointer !important;
 }
 
@@ -989,7 +988,8 @@ h2 {
   border: 1px solid #d0decf;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  overflow-x: auto; /* allow wide tables to scroll */
+  overflow-x: auto;
+  /* allow wide tables to scroll */
 }
 
 .report-panel canvas {
@@ -1053,13 +1053,16 @@ h2 {
   #listsContainer {
     overflow-x: auto;
   }
+
   /* tables inside report panels and stats summary should scroll */
   .report-panel {
     overflow-x: auto;
   }
+
   #genericStatsSummary {
     overflow-x: visible;
   }
+
   #genericStatsSummary table,
   #genericStatsSummary thead,
   #genericStatsSummary tbody,
@@ -1069,20 +1072,24 @@ h2 {
     display: block;
     width: 100%;
   }
+
   #genericStatsSummary thead {
     display: none;
   }
+
   #genericStatsSummary tr {
     margin-bottom: 12px;
     border: 1px solid #ccc;
     padding: 8px;
     border-radius: 4px;
   }
+
   #genericStatsSummary td {
     border: none;
     padding: 4px 8px;
     position: relative;
   }
+
   #genericStatsSummary td::before {
     content: attr(data-label) ": ";
     font-weight: bold;
@@ -1123,6 +1130,7 @@ h2 {
   margin: 0 6px 6px 0;
   font-size: 0.9rem;
 }
+
 .tag-filter-button.active {
   background: #7aa68c;
   color: #fff;
@@ -1145,18 +1153,22 @@ h2 {
   #goalsView {
     padding: 0;
   }
+
   #goalsView .left-column,
   #goalsView .right-column,
   #goalsView .full-column {
     padding: 0;
   }
+
   .navbar {
     align-items: center;
   }
+
   .navbar-right {
     justify-content: center;
     align-items: center;
   }
+
   .main-layout {
     padding: 0;
   }
