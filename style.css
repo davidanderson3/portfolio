@@ -93,6 +93,38 @@ body {
   border-color: #999999;
 }
 
+/* Hamburger toggle (hidden on desktop) */
+.navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .navbar-inner {
+    flex-wrap: wrap;
+  }
+
+  .navbar-toggle {
+    display: block;
+  }
+
+  .navbar:not(.expanded) .tabs,
+  .navbar:not(.expanded) .navbar-right {
+    display: none;
+    width: 100%;
+  }
+
+  .navbar.expanded .tabs,
+  .navbar.expanded .navbar-right {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
 /* ------------------------------
    Content Containers
 ------------------------------ */
