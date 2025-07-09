@@ -649,15 +649,22 @@ function attachEditButtons(item, buttonWrap, row) {
 
     // 📅 Schedule button
     const calendarBtn = makeIconBtn('📅', 'Add to calendar', async () => {
-        const date = prompt('Schedule date (YYYY-MM-DD):', item.scheduled || new Date().toISOString().slice(0, 10));
+        const date = prompt(
+            'Schedule date (YYYY-MM-DD):',
+            item.scheduled || new Date().toISOString().slice(0, 10)
+        );
         if (!date) return;
+        const recurrence = prompt(
+            'Repeat how often? (daily/weekly/monthly or blank for none):',
+            ''
+        ) || '';
         const all = await loadDecisions();
         const idx = all.findIndex(d => d.id === item.id);
         if (idx !== -1) {
             all[idx].scheduled = date.trim();
             await saveDecisions(all);
             try {
-                await createCalendarEvent(item.text, date.trim());
+                await createCalendarEvent(item.text, date.trim(), recurrence);
             } catch (err) {
                 console.error('Failed to sync with Google Calendar', err);
             }

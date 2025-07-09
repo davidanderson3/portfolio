@@ -157,8 +157,12 @@ async function saveGoalWizard() {
   await saveDecisions([...updatedItems, ...newItems]);
 
   if (wizardState.calendarDate) {
+    const recur = prompt(
+      'Repeat how often? (daily/weekly/monthly or blank for none):',
+      ''
+    ) || '';
     try {
-      await createCalendarEvent(newGoal.text, wizardState.calendarDate);
+      await createCalendarEvent(newGoal.text, wizardState.calendarDate, recur);
     } catch (err) {
       console.error('Failed to create calendar event', err);
     }
