@@ -99,19 +99,30 @@ export function initGoogleCalendar() {
   connectBtn.addEventListener('click', handleAuthClick);
 }
 
-export async function createCalendarEvent(summary, date) {
+export async function createCalendarEvent(summary, date, recurrence = '') {
   if (!window.gapi?.client || !gapi.client.getToken()) {
     console.warn('Google Calendar not connected');
     return;
   }
   try {
+    const resource = {
+      summary,
+      start: { date },
+      end: { date }
+    };
+    if (recurrence) {
+      let rule = recurrence.trim().toUpperCase();
+      if (!rule.startsWith('RRULE:')) {
+        if (!rule.startsWith('FREQ=')) {
+          rule = `FREQ=${rule}`;
+        }
+        rule = `RRULE:${rule}`;
+      }
+      resource.recurrence = [rule];
+    }
     await gapi.client.calendar.events.insert({
       calendarId: 'primary',
-      resource: {
-        summary,
-        start: { date },
-        end: { date }
-      }
+      resource
     });
   } catch (err) {
     console.error('Failed to create calendar event', err);

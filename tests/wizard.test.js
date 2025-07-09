@@ -28,6 +28,7 @@ beforeEach(() => {
     auth: () => ({ currentUser: { uid: 'user1' } })
   };
   getMock.mockResolvedValue({ data: () => ({ goalOrder: [] }) });
+  global.prompt = vi.fn(() => '');
 });
 
 describe('saveGoalWizard', () => {
@@ -51,6 +52,6 @@ describe('saveGoalWizard', () => {
     });
 
     await saveGoalWizard();
-    expect(createEventMock).toHaveBeenCalledWith('My goal', '2024-01-02');
+    expect(createEventMock).toHaveBeenCalledWith('My goal', '2024-01-02', '');
   });
 });
