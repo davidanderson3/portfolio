@@ -96,20 +96,37 @@ body {
 @media (max-width: 600px) {
   .navbar-inner {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+  }
+
+  .navbar-left {
+    text-align: center;
+    width: 100%;
   }
 
   #goalsView .navbar .tabs {
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 4px;
-    margin: 8px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    margin: 4px 0 0 0;
   }
 
   #goalsView .navbar .tabs button {
-    padding: 8px 0;
+    padding: 6px 0;
     font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .navbar-right {
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .main-layout {
+    padding: 0;
   }
 }
 
@@ -1130,6 +1147,16 @@ h2 {
   #goalsView .left-column,
   #goalsView .right-column,
   #goalsView .full-column {
+    padding: 0;
+  }
+  .navbar {
+    align-items: center;
+  }
+  .navbar-right {
+    justify-content: center;
+    align-items: center;
+  }
+  .main-layout {
     padding: 0;
   }
 }
