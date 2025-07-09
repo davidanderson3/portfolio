@@ -1026,9 +1026,40 @@ h2 {
     overflow-x: auto;
   }
   /* tables inside report panels and stats summary should scroll */
-  .report-panel,
-  #genericStatsSummary {
+  .report-panel {
     overflow-x: auto;
+  }
+  #genericStatsSummary {
+    overflow-x: visible;
+  }
+  #genericStatsSummary table,
+  #genericStatsSummary thead,
+  #genericStatsSummary tbody,
+  #genericStatsSummary tr,
+  #genericStatsSummary th,
+  #genericStatsSummary td {
+    display: block;
+    width: 100%;
+  }
+  #genericStatsSummary thead {
+    display: none;
+  }
+  #genericStatsSummary tr {
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 4px;
+  }
+  #genericStatsSummary td {
+    border: none;
+    padding: 4px 8px;
+    position: relative;
+  }
+  #genericStatsSummary td::before {
+    content: attr(data-label) ": ";
+    font-weight: bold;
+    display: inline-block;
+    width: 45%;
   }
 }
 

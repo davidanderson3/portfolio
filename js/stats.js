@@ -378,12 +378,14 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     const row = document.createElement('tr');
     const td1 = document.createElement('td');
     td1.textContent = cfg.label;
+    td1.dataset.label = 'Metric';
     Object.assign(td1.style, { padding: '8px', borderBottom: '1px solid #ddd', cursor: 'pointer', textDecoration: 'underline' });
     td1.addEventListener('click', () => showMetricGraph(cfg));
     row.appendChild(td1);
     // inside renderStatsSummary(), in the Today’s Value cell:
     const td2 = document.createElement('td');
     Object.assign(td2.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+    td2.dataset.label = `Value (${dayKey})`;
     const span = document.createElement('span');
     span.textContent = `${display} ${cfg.unitLabel}`;
     if (cfg.unit === 'list' && editValue) span.title = editValue;
@@ -452,10 +454,12 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
 
     const td3 = document.createElement('td');
     td3.textContent = rank;
+    td3.dataset.label = 'Rank';
     Object.assign(td3.style, { padding: '8px', borderBottom: '1px solid #ddd' });
     row.appendChild(td3);
     const td4 = document.createElement('td');
     td4.textContent = pct;
+    td4.dataset.label = 'Percentile';
     Object.assign(td4.style, { padding: '8px', borderBottom: '1px solid #ddd' });
     row.appendChild(td4);
     const rawVals = valuesByMetric[cfg.id] || [];
@@ -465,10 +469,12 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       : '—';
     const tdAvg = document.createElement('td');
     tdAvg.textContent = avg;
+    tdAvg.dataset.label = 'Average';
     Object.assign(tdAvg.style, { padding: '8px', borderBottom: '1px solid #ddd' });
     row.appendChild(tdAvg);
 
     const td6 = document.createElement('td');
+    td6.dataset.label = 'Actions';
     Object.assign(td6.style, { padding: '8px', borderBottom: '1px solid #ddd' });
 
     const postpone = document.createElement('span');
