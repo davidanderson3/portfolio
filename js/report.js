@@ -25,7 +25,7 @@ function isDailyTask(item) {
 export async function renderDailyTaskReport(user, db) {
 
     const [decisions, completionsSnap] = await Promise.all([
-        loadDecisions(user, db),
+        loadDecisions(),
         db.collection('taskCompletions').doc(user.uid).get()
     ]);
 
