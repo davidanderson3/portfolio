@@ -29,7 +29,12 @@ let selectedTags = [];
 
 export async function initTravelPanel() {
   const panel = document.getElementById('travelPanel');
-  if (!panel || mapInitialized) return;
+  if (!panel) return;
+  if (mapInitialized) {
+    // panel is being re-shown; resize the map to fill its container
+    map.invalidateSize();
+    return;
+  }
   mapInitialized = true;
 
   const mapEl = document.getElementById('travelMap');
@@ -49,6 +54,9 @@ export async function initTravelPanel() {
     attribution: '© OpenStreetMap contributors',
     noWrap: true
   }).addTo(map);
+
+  // Ensure map fills its container once it is visible
+  setTimeout(() => map.invalidateSize(), 0);
 
   const user = getCurrentUser?.();
   try {
