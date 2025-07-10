@@ -1300,12 +1300,14 @@ h2 {
   .navbar .tabs {
     order: 2;
     width: 100%;
+    margin: 0; /* occupy full width without side margins */
   }
 
   .navbar-right {
     position: absolute;
     right: 24px;
-    top: 5px;
+    top: 50%;
+    transform: translateY(-50%);
     order: 1;
     width: auto;
     margin-top: 0;
