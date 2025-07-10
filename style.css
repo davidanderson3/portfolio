@@ -1197,6 +1197,12 @@ h2 {
   background: #eee;
 }
 
+/* Style the plus icon on the add-item button */
+.add-item-btn .plus-icon {
+  color: #fff;
+  margin-right: 4px;
+}
+
 /* Completed subgoal section */
 .completed-subgoal-section {
   margin-top: 8px;
