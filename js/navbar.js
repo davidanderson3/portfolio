@@ -15,5 +15,9 @@ export function initMobileNavbar() {
     });
 
     overlay.addEventListener('click', closeMenu);
+
+    nav.querySelectorAll('.mobile-menu a, .mobile-menu button.tab-button').forEach(el => {
+      el.addEventListener('click', closeMenu);
+    });
   });
 }

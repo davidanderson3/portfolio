@@ -151,6 +151,34 @@ body {
     transform: translateX(0);
   }
 
+  .mobile-menu .tabs {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .mobile-menu .tabs .tab-button {
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    border: none;
+    border-bottom: 1px solid #eee;
+  }
+
+  .mobile-menu .navbar-right {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .mobile-menu .navbar-right button {
+    margin-left: 0;
+    width: 100%;
+  }
+
   .nav-overlay {
     position: fixed;
     top: 0;
