@@ -292,45 +292,7 @@ export async function initTravelPanel() {
     });
   }
 
-  document.getElementById('addPlaceBtn').addEventListener('click', async () => {
-    const name = prompt('Place name:');
-    const description = prompt('Description:');
-    const tags = prompt('Tags (comma separated):');
-    const rating = prompt('Rating:');
-    const date = prompt('Date:');
-    const visited = confirm('Visited?');
-    const lat = parseFloat(prompt('Latitude:'));
-    const lon = parseFloat(prompt('Longitude:'));
-    if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
-    const place = {
-      name,
-      description: description || '',
-      lat,
-      lon,
-      tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-      Rating: rating || '',
-      Date: date || '',
-      visited
-    };
-    try {
-      const user = getCurrentUser?.();
-      if (user) {
-        const docRef = await db
-          .collection('users')
-          .doc(user.uid)
-          .collection('travel')
-          .add(place);
-        place.id = docRef.id;
-      }
-    } catch (err) {
-      console.error('Failed to save place to Firestore', err);
-    }
-    travelData.push(place);
-    localStorage.setItem(storageKey(), JSON.stringify(travelData));
-    allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
-    renderTagFilters();
-    renderList(currentSearch);
-  });
+  // The "Add Place" feature has been removed, so no button handler is required.
 }
 
 
