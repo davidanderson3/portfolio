@@ -26,7 +26,6 @@ body {
   gap: 32px;
   max-width: 1440px;
   margin: 1px auto;
-  padding: 0 20px;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(2px);
@@ -714,7 +713,6 @@ body {
 .main-layout {
   display: flex;
   flex-wrap: wrap;
-  padding: 20px;
 }
 
 .left-column {
