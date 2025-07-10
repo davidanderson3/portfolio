@@ -37,9 +37,17 @@ export async function initTravelPanel() {
   const searchInput = document.getElementById('travelSearch');
   const placeInput = document.getElementById('placeSearch');
   const tagFiltersDiv = document.getElementById('travelTagFilters');
-  map = L.map(mapEl).setView([20, 0], 2);
+  map = L.map(mapEl, {
+    maxBounds: [
+      [-90, -180],
+      [90, 180]
+    ],
+    maxBoundsViscosity: 1.0,
+    worldCopyJump: false
+  }).setView([20, 0], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
+    attribution: '© OpenStreetMap contributors',
+    noWrap: true
   }).addTo(map);
 
   const user = getCurrentUser?.();
