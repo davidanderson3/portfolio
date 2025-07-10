@@ -655,9 +655,15 @@ button:hover {
 }
 
 /* Settings page */
+.settings-container.main-layout {
+  justify-content: flex-start;
+  flex-direction: column;
+  margin: 0 auto;
+}
+
 .settings-list {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 16px 0;
 }
