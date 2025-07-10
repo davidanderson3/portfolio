@@ -63,7 +63,11 @@ export function createGoalRow(goal, options = {}) {
             await saveDecisions(items);
 
             if (options.stayPut) {
-                await renderGoalsAndSubitems();
+                if (typeof options.onToggle === 'function') {
+                    await options.onToggle(checkbox.checked, items);
+                } else {
+                    await renderGoalsAndSubitems();
+                }
                 return;
             }
 
