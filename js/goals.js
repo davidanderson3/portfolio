@@ -61,6 +61,7 @@ export function createGoalRow(goal, options = {}) {
                 ? new Date().toISOString()
                 : null;
             await saveDecisions(items);
+            updateGoalCounts(items);
 
             if (options.stayPut) {
                 if (typeof options.onToggle === 'function') {
@@ -664,6 +665,7 @@ function attachEditButtons(item, buttonWrap, row) {
                 menu.style.display = 'none';
                 const wrapper = buttonWrap.closest('.decision.goal-card');
                 if (wrapper) wrapper.style.display = 'none';
+                updateGoalCounts(all);
             });
 
             menu.appendChild(btn);
@@ -738,6 +740,7 @@ function attachEditButtons(item, buttonWrap, row) {
         await saveDecisions(filtered);
         const wrapper = deleteBtn.closest('.decision.goal-card');
         if (wrapper) wrapper.remove();
+        updateGoalCounts(filtered);
     });
 
     // ——————— “Edit” → “Save” in-place ———————
