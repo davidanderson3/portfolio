@@ -11,6 +11,7 @@ import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
 import { initGoogleCalendar } from './googleCalendar.js';
 import { loadHiddenTabs, applyHiddenTabs } from './settings.js';
+import { initMobileNavbar } from './navbar.js';
 
 window.currentUser = null;
 
@@ -100,6 +101,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   initButtonStyles();
+  initMobileNavbar();
   initGoogleCalendar();
 });
 

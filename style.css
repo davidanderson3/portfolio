@@ -71,6 +71,10 @@ body {
   font-size: 1.3em;
 }
 
+.menu-toggle {
+  display: none;
+}
+
 .navbar-left a {
   text-decoration: none;
   color: inherit;
@@ -112,42 +116,31 @@ body {
 }
 
 @media (max-width: 600px) {
+  .menu-toggle {
+    display: block;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
   .navbar-inner {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .navbar .tabs,
+  .navbar .navbar-right {
+    display: none;
     flex-direction: column;
-    align-items: center;
-  }
-
-  .navbar-left {
+    width: 100%;
     text-align: center;
-    width: 100%;
+    margin: 0;
   }
 
-  #goalsView .navbar .tabs {
-    width: 100%;
+  .navbar.expanded .tabs,
+  .navbar.expanded .navbar-right {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2px;
-    margin: 4px 0 0 0;
-  }
-
-  #goalsView .navbar .tabs button {
-    flex: 1 1 auto;
-    padding: 4px 6px;
-    /* slightly tighter vertical spacing */
-    font-size: 0.9rem;
-    line-height: 1.1;
-    /* keep text compact without squeezing */
-  }
-
-  .navbar-right {
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .main-layout {
-    padding: 0 4px;
   }
 }
 
@@ -517,13 +510,10 @@ button:hover {
   }
 
   .navbar {
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .navbar-right {
-    display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
