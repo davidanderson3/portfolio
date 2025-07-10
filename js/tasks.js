@@ -199,7 +199,11 @@ export async function renderChildren(goal, all, container) {
         wrap.className = 'decision goal-card indent-1';
         wrap.dataset.goalId = g.id;
 
-        const row = createGoalRow(g, { hideScheduled: true, stayPut: true });
+        const row = createGoalRow(g, {
+            hideScheduled: true,
+            stayPut: true,
+            onToggle: () => renderChildren(goal, all, container)
+        });
         wrap.appendChild(row);
 
         const childContainer = document.createElement('div');
@@ -397,7 +401,11 @@ export async function renderChildren(goal, all, container) {
                 wrap.dataset.goalId = item.id;
                 wrap.setAttribute('draggable', 'false');
 
-                const row = createGoalRow(item, { hideScheduled: true, stayPut: true });
+                const row = createGoalRow(item, {
+                    hideScheduled: true,
+                    stayPut: true,
+                    onToggle: () => renderChildren(goal, all, container)
+                });
                 Object.assign(row.style, {
                     padding: '4px 8px',
                     fontSize: '0.85em',
