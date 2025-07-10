@@ -362,8 +362,7 @@ async function initListsPanel() {
       actionCell.style.border = '1px solid #ccc';
       actionCell.style.padding = '8px';
       actionCell.dataset.label = 'Actions';
-      actionCell.style.display = 'flex';
-      actionCell.style.gap = '0.5rem';
+      actionCell.style.whiteSpace = 'nowrap';
 
       // Up button
       const upBtn = document.createElement('button');
