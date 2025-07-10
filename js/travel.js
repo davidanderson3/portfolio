@@ -10,6 +10,11 @@ function storageKey() {
 auth.onAuthStateChanged(() => {
   mapInitialized = false;
   travelData = [];
+  // Reload travel data for the newly authenticated user.
+  // initTravelPanel safely exits if DOM is not ready or already initialized.
+  initTravelPanel().catch(err =>
+    console.error('Failed to reload travel data after auth change', err)
+  );
 });
 
 let mapInitialized = false;
