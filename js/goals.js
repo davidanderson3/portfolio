@@ -411,6 +411,7 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
     hiddenContent.innerHTML = '';
     const now = Date.now();
     const rendered = new Set();
+    const completedWrappers = [];
 
     sortedGoals.forEach(goal => {
         if (rendered.has(goal.id)) return;
@@ -435,9 +436,17 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
         } else if (isHidden) {
             addHiddenControls(wrapper, row, goal, hiddenContent);
         } else {
-            completedList.appendChild(wrapper);
+            completedWrappers.push({ wrapper, date: goal.dateCompleted });
         }
     });
+
+    completedWrappers
+        .sort((a, b) => {
+            const ad = Date.parse(a.date) || 0;
+            const bd = Date.parse(b.date) || 0;
+            return bd - ad;
+        })
+        .forEach(item => completedList.appendChild(item.wrapper));
 }
 
 function makeGoalWrapper(goal) {
