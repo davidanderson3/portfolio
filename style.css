@@ -1148,16 +1148,17 @@ h2 {
   margin-bottom: 4px;
 }
 
-/* Mobile: remove extra padding so goals use full width */
+/* Mobile: tighten vertical spacing but keep some horizontal padding */
 @media (max-width: 600px) {
   #goalsView {
-    padding: 0;
+    margin: 0 auto;
+    padding: 0 12px;
   }
 
   #goalsView .left-column,
   #goalsView .right-column,
   #goalsView .full-column {
-    padding: 0;
+    padding: 0 12px;
   }
 
   .navbar {
