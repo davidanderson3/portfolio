@@ -101,3 +101,46 @@ export function initSettings({ settingsBtn, settingsModal }) {
     applyHiddenTabs(hidden);
   });
 }
+
+export async function initSettingsPage() {
+  const listDiv = document.getElementById('settingsTabsList');
+  const saveBtn = document.getElementById('settingsSaveBtn');
+  const emailSpan = document.getElementById('settingsEmail');
+  const panels = ['goalsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
+
+  if (listDiv && listDiv.children.length === 0) {
+    panels.forEach(id => {
+      const label = document.createElement('label');
+      label.style.display = 'block';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = id;
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(' ' + id.replace('Panel','')));
+      listDiv.appendChild(label);
+    });
+  }
+
+  const populate = async () => {
+    const hidden = await loadHiddenTabs();
+    listDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      cb.checked = !hidden.includes(cb.value);
+    });
+  };
+
+  saveBtn?.addEventListener('click', async () => {
+    const hidden = [];
+    listDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      if (!cb.checked) hidden.push(cb.value);
+    });
+    await saveHiddenTabs(hidden);
+    window.location.href = 'index.html';
+  });
+
+  auth.onAuthStateChanged(user => {
+    if (emailSpan) emailSpan.textContent = user?.email || '';
+  });
+  if (emailSpan) emailSpan.textContent = getCurrentUser?.()?.email || '';
+
+  populate();
+}
