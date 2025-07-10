@@ -353,6 +353,8 @@ button:hover {
 
 .inline-add-form button {
   padding: 2px 10px;
+  /* Override global button margin so the button aligns with the input */
+  margin-top: 0;
 }
 
 .inline-add-form .button-row {
