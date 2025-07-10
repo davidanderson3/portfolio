@@ -41,26 +41,50 @@ export function attachTaskButtons(item, row, listContainer, allDecisions) {
         }
     });
 
-    // Edit
+    // Edit inline
+    let editing = false;
     const editBtn = makeIconBtn('✏️', 'Edit task', async () => {
-        const newText = prompt('Edit task:', item.text);
-        if (newText === null) return;
-        const newNotes = prompt('Task notes:', item.notes || '');
-        const idx = allDecisions.findIndex(d => d.id === item.id);
-        if (idx === -1) return;
-        if (typeof newText === 'string') allDecisions[idx].text = newText.trim();
-        if (newNotes !== null) allDecisions[idx].notes = newNotes.trim();
-        await saveDecisions(allDecisions);
         const middle = row.querySelector('.middle-group');
-        if (middle) {
+        if (!middle) return;
+
+        if (!editing) {
+            editing = true;
+            editBtn.textContent = '💾';
+
+            const textInput = document.createElement('input');
+            textInput.value = item.text;
+            textInput.style.width = '100%';
+
+            const notesInput = document.createElement('textarea');
+            notesInput.value = item.notes || '';
+            notesInput.rows = 2;
+            notesInput.style.width = '100%';
+            notesInput.style.marginTop = '4px';
+
+            middle.innerHTML = '';
+            middle.appendChild(textInput);
+            middle.appendChild(notesInput);
+        } else {
+            editing = false;
+            editBtn.textContent = '✏️';
+
+            const newText = middle.querySelector('input')?.value.trim();
+            const newNotes = middle.querySelector('textarea')?.value.trim();
+            const idx = allDecisions.findIndex(d => d.id === item.id);
+            if (idx !== -1) {
+                allDecisions[idx].text = newText;
+                allDecisions[idx].notes = newNotes;
+                await saveDecisions(allDecisions);
+            }
+
             middle.innerHTML = '';
             const tDiv = document.createElement('div');
-            tDiv.innerHTML = linkify(allDecisions[idx].text);
+            tDiv.innerHTML = linkify(newText);
             middle.appendChild(tDiv);
-            if (allDecisions[idx].notes) {
+            if (newNotes) {
                 const nDiv = document.createElement('div');
                 nDiv.className = 'note-text';
-                nDiv.innerHTML = linkify(allDecisions[idx].notes);
+                nDiv.innerHTML = linkify(newNotes);
                 middle.appendChild(nDiv);
             }
         }
