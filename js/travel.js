@@ -118,6 +118,17 @@ export async function initTravelPanel() {
     items.forEach((p, index) => {
       const m = L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.name);
       markers.push(m);
+      m.on('click', () => {
+        if (searchInput) searchInput.value = p.name;
+        currentSearch = p.name;
+        renderList(currentSearch);
+        const row = tableBody.querySelector('tr');
+        if (row) {
+          if (selectedRow) selectedRow.classList.remove('selected-row');
+          selectedRow = row;
+          row.classList.add('selected-row');
+        }
+      });
       if (term && items.length === 1 && index === 0) {
         map.setView([p.lat, p.lon], 8);
         m.openPopup();
