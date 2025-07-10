@@ -28,8 +28,9 @@ let allTags = [];
 let selectedTags = [];
 let searchMarker = null;
 let resultMarkers = [];
-let sortByDistance = false;
+let sortByDistance = true;
 let userCoords = null;
+let showVisited = false;
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371; // km
@@ -59,6 +60,7 @@ export async function initTravelPanel() {
   const placeInput = document.getElementById('placeSearch');
   const resultsList = document.getElementById('placeResults');
   const tagFiltersDiv = document.getElementById('travelTagFilters');
+  const showVisitedToggle = document.getElementById('showVisitedToggle');
   map = L.map(mapEl, {
     maxBounds: [
       [-90, -180],
@@ -120,15 +122,25 @@ export async function initTravelPanel() {
 
   renderTagFilters();
 
+  if (showVisitedToggle) {
+    showVisitedToggle.checked = showVisited;
+    showVisitedToggle.addEventListener('change', () => {
+      showVisited = showVisitedToggle.checked;
+      renderList(currentSearch);
+    });
+  }
+
   const renderList = (term = '') => {
     tableBody.innerHTML = '';
     markers.forEach(m => m.remove());
     markers = [];
     rowMarkerMap.clear();
-    const items = travelData.filter(p =>
-      p.name.toLowerCase().includes(term.toLowerCase()) &&
-      (selectedTags.length === 0 ||
-        (Array.isArray(p.tags) && selectedTags.some(t => p.tags.includes(t))))
+    const items = travelData.filter(
+      p =>
+        p.name.toLowerCase().includes(term.toLowerCase()) &&
+        (selectedTags.length === 0 ||
+          (Array.isArray(p.tags) && selectedTags.some(t => p.tags.includes(t)))) &&
+        (showVisited || !p.visited)
     );
 
     if (sortByDistance && userCoords) {
@@ -339,7 +351,6 @@ export async function initTravelPanel() {
     });
   };
 
-  renderList(currentSearch);
 
   const clearSearchResults = () => {
     if (resultsList) resultsList.innerHTML = '';
@@ -375,22 +386,20 @@ export async function initTravelPanel() {
     });
   }
 
-  const sortBtn = document.getElementById('sortByDistanceBtn');
-  if (sortBtn) {
-    sortBtn.addEventListener('click', () => {
-      if (!navigator.geolocation) {
-        alert('Geolocation not supported');
-        return;
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        userCoords = [pos.coords.latitude, pos.coords.longitude];
+        renderList(currentSearch);
+      },
+      () => {
+        // location retrieval failed; still render list without userCoords
+        renderList(currentSearch);
       }
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          userCoords = [pos.coords.latitude, pos.coords.longitude];
-          sortByDistance = true;
-          renderList(currentSearch);
-        },
-        () => alert('Unable to retrieve your location')
-      );
-    });
+    );
+  } else {
+    renderList(currentSearch);
   }
 
   if (placeInput) {
