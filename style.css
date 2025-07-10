@@ -101,6 +101,9 @@ body {
   padding: 0;
   margin-left: 10px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .navbar-right .icon-btn img {
@@ -1292,27 +1295,26 @@ h2 {
 
 
   .navbar-inner {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
     position: relative;
   }
 
+  .navbar-left {
+    flex: 0 0 auto;
+  }
+
   .navbar .tabs {
-    order: 2;
-    width: 100%;
-    margin: 0; /* occupy full width without side margins */
+    flex: 1 1 auto;
+    margin: 0;
+    padding: 0 8px;
   }
 
   .navbar-right {
-    position: absolute;
-    right: 24px;
-    top: 50%;
-    transform: translateY(-50%);
-    order: 1;
-    width: auto;
-    margin-top: 0;
+    position: static;
+    margin-left: auto;
     display: flex;
-    flex-direction: row;
     align-items: center;
   }
 
