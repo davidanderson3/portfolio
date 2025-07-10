@@ -654,6 +654,24 @@ button:hover {
   text-align: right;
 }
 
+/* Settings page */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.settings-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-option input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
 .daily-task button,
 .daily-task input {
   pointer-events: auto;
