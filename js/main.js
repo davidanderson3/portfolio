@@ -78,6 +78,13 @@ window.addEventListener('DOMContentLoaded', () => {
     renderGoalsAndSubitems(user, db);
     renderDailyTasks(user, db);
     initTabReports(user, db);
+    if (window.initTravelPanel) {
+      try {
+        await window.initTravelPanel();
+      } catch (err) {
+        console.error('Failed to initialize travel panel after sign-in', err);
+      }
+    }
 
     if (document.getElementById('reportBody')) {
       renderDailyTaskReport(user, db);
