@@ -282,7 +282,8 @@ function renderCalendarSection(all, calendarContent) {
     }
 
     let end = dateKeys.length ? parseKey(dateKeys[dateKeys.length - 1]) : new Date(start);
-    const extendEnd = new Date(start);
+    const extendEnd = new Date();
+    extendEnd.setHours(0, 0, 0, 0);
     extendEnd.setMonth(extendEnd.getMonth() + 6);
     if (extendEnd > end) end = extendEnd;
 
@@ -297,8 +298,7 @@ function renderCalendarSection(all, calendarContent) {
             const sat = new Date(d);
             const sun = new Date(d); sun.setDate(d.getDate() + 1);
             const sunKey = keyFromDate(sun);
-            const hasGoals = (byDate[key] && byDate[key].length) || (byDate[sunKey] && byDate[sunKey].length);
-            if (sun < today || !hasGoals) {
+            if (sun < today) {
                 delete byDate[key];
                 delete byDate[sunKey];
                 d.setDate(d.getDate() + 2);
@@ -338,8 +338,7 @@ function renderCalendarSection(all, calendarContent) {
         } else if (dow === 0) {
             const sat = new Date(d); sat.setDate(d.getDate() - 1);
             const satKey = keyFromDate(sat);
-            const hasGoals = (byDate[satKey] && byDate[satKey].length) || (byDate[key] && byDate[key].length);
-            if (d < today || !hasGoals) {
+            if (d < today) {
                 delete byDate[satKey];
                 delete byDate[key];
                 d.setDate(d.getDate() + 1);
