@@ -132,6 +132,7 @@ export async function renderGoalsAndSubitems() {
   const hiddenContent = initHiddenSection();
   initCompletedSection();
   await renderRemainingGoals(allDecisions, sortedGoals, hiddenContent);
+  updateGoalCounts(allDecisions);
 }
 
 
@@ -179,8 +180,8 @@ function initHiddenSection() {
         hiddenSection = document.createElement('div');
         hiddenSection.id = 'hiddenList';
         hiddenSection.innerHTML = `
-      <h2 style="margin-top:32px">
-        <span id="toggleHidden" style="cursor:pointer">▶</span> Hidden Goals
+      <h2 style="margin-top:32px" id="hiddenHeader">
+        <span id="toggleHidden" style="cursor:pointer">▶</span> <span id="hiddenLabel">Hidden Goals</span>
       </h2>
       <div id="hiddenContent" style="display:none"></div>
       <hr style="margin: 40px 0;" />
@@ -220,11 +221,15 @@ function initCompletedSection() {
     completedSection.id = 'completedSection';
 
     const hdr = document.createElement('h2');
+    hdr.id = 'completedHeader';
     const toggle = document.createElement('span');
     toggle.textContent = '▶';
     toggle.style.cursor = 'pointer';
     hdr.appendChild(toggle);
-    hdr.append(' Completed');
+    const label = document.createElement('span');
+    label.id = 'completedLabel';
+    label.textContent = ' Completed';
+    hdr.appendChild(label);
 
     const completedContent = document.createElement('div');
     completedContent.id = 'completedContent';
@@ -486,6 +491,27 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
     });
     row.querySelector('.button-row').appendChild(unhideBtn);
     hiddenContent.appendChild(wrapper);
+}
+
+function updateGoalCounts(items) {
+    const now = Date.now();
+    const rootGoals = items.filter(i => i.type === 'goal' && !i.parentGoalId);
+    const active = rootGoals.filter(g => {
+        const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
+        return !g.completed && (!hideUntil || now >= hideUntil);
+    }).length;
+    const hidden = rootGoals.filter(g => {
+        const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
+        return hideUntil && now < hideUntil;
+    }).length;
+    const completed = rootGoals.filter(g => g.completed).length;
+
+    const goalsHeader = document.getElementById('goalsHeader');
+    if (goalsHeader) goalsHeader.textContent = `Goals (${active})`;
+    const hiddenLabel = document.getElementById('hiddenLabel');
+    if (hiddenLabel) hiddenLabel.textContent = `Hidden Goals (${hidden})`;
+    const completedLabel = document.getElementById('completedLabel');
+    if (completedLabel) completedLabel.textContent = ` Completed (${completed})`;
 }
 
 /**

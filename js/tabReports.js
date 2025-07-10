@@ -23,56 +23,7 @@ export async function initTabReports(user, db) {
 export function renderGoalsReport(items) {
   const container = document.getElementById('goalsReport');
   if (!container) return;
-
-  const now = Date.now();
-  const rootGoals = items.filter(i => i.type === 'goal' && !i.parentGoalId);
-  const tasks = items.filter(i => i.type === 'task');
-
-  const activeGoals = rootGoals.filter(g => {
-    const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
-    return !g.completed && (!hideUntil || now >= hideUntil);
-  });
-  const hiddenGoals = rootGoals.filter(g => {
-    const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
-    return hideUntil && now < hideUntil;
-  });
-
-  const goalMap = Object.fromEntries(items.filter(i => i.type === 'goal').map(g => [g.id, g]));
-
-  function parentHidden(item) {
-    let pid = item.parentGoalId;
-    while (pid) {
-      const p = goalMap[pid];
-      if (!p) break;
-      const h = p.hiddenUntil ? Date.parse(p.hiddenUntil) || 0 : 0;
-      if (h && now < h) return true;
-      pid = p.parentGoalId;
-    }
-    return false;
-  }
-
-  const activeTasks = tasks.filter(t => {
-    if (!t.parentGoalId) return false; // only count tasks linked to a goal
-    const parent = goalMap[t.parentGoalId];
-    if (!parent || parent.completed) return false;
-
-    const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
-    const hidden =
-      (hideUntil && now < hideUntil) || parentHidden(t) || parentHidden(parent);
-    return !t.completed && !hidden;
-  });
-  const hiddenTasks = tasks.filter(t => {
-    const hideUntil = t.hiddenUntil ? Date.parse(t.hiddenUntil) || 0 : 0;
-    return (hideUntil && now < hideUntil) || parentHidden(t);
-  });
-
-  container.innerHTML = `
-    <h3>Goal Status</h3>
-    <p>Active goals: ${activeGoals.length}</p>
-    <p>Active tasks: ${activeTasks.length}</p>
-    <p>Hidden goals: ${hiddenGoals.length}</p>
-    <p>Hidden tasks: ${hiddenTasks.length}</p>
-  `;
+  container.innerHTML = '';
 }
 
 async function renderDailyReport(items, user, db) {
