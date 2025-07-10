@@ -377,5 +377,6 @@ export async function initTravelPanel() {
     await storePlace(place);
   });
 
+}
 
 window.initTravelPanel = initTravelPanel;
