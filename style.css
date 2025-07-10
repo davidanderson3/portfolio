@@ -101,8 +101,6 @@ body {
   padding: 0;
   margin-left: 10px;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
 }
 
 .navbar-right .icon-btn img {
@@ -1307,11 +1305,10 @@ h2 {
   .navbar-right {
     position: absolute;
     right: 24px;
-    top: 0;
-    bottom: 0;
-    margin: auto 0;
+    top: 5px;
     order: 1;
     width: auto;
+    margin-top: 0;
     display: flex;
     flex-direction: row;
     align-items: center;
