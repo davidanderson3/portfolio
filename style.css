@@ -89,9 +89,7 @@ body {
   margin-left: 10px;
   background-color: #ffffff;
   color: #000000;
-  border: 1px solid #cccccc;
   padding: 6px 12px;
-  border-radius: 4px;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -129,7 +127,6 @@ body {
 
 .navbar-right button:hover {
   background-color: #f2f2f2;
-  border-color: #999999;
 }
 
 @media (max-width: 600px) {
@@ -207,7 +204,7 @@ body {
     z-index: 999;
   }
 
-  .navbar.expanded + .nav-overlay {
+  .navbar.expanded+.nav-overlay {
     display: block;
   }
 }
@@ -813,8 +810,6 @@ button:hover {
 
 #goalsView .navbar-right button {
   background-color: #ffffff;
-  border: 1px solid #cccccc;
-  border-radius: 4px;
   transition: background-color 0.2s;
 }
 
@@ -1282,16 +1277,16 @@ h2 {
 
 /* Mobile: remove outer padding to avoid horizontal scrolling */
 @media (max-width: 600px) {
-    #goalsView {
-      margin: 0;
-      padding: 0 4px;
-    }
+  #goalsView {
+    margin: 0;
+    padding: 0 4px;
+  }
 
-    #goalsView .left-column,
-    #goalsView .right-column,
-    #goalsView .full-column {
-      padding: 4px;
-    }
+  #goalsView .left-column,
+  #goalsView .right-column,
+  #goalsView .full-column {
+    padding: 4px;
+  }
 
   .navbar {
     align-items: center;
@@ -1330,7 +1325,7 @@ h2 {
     scrollbar-width: none;
   }
 
-    .main-layout {
-      padding: 0 4px;
-    }
+  .main-layout {
+    padding: 0 4px;
+  }
 }
