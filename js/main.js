@@ -64,6 +64,8 @@ window.addEventListener('DOMContentLoaded', () => {
       initTabs(null, db);
       const hidden = await loadHiddenTabs();
       applyHiddenTabs(hidden);
+      const tabsEl = document.getElementById('tabsContainer');
+      if (tabsEl) tabsEl.style.visibility = 'visible';
       renderGoalsAndSubitems();
       renderDailyTasks(null, db);
       initTabReports(null, db);
@@ -76,6 +78,8 @@ window.addEventListener('DOMContentLoaded', () => {
     initTabs(user, db);
     const hidden = await loadHiddenTabs();
     applyHiddenTabs(hidden);
+    const tabsEl = document.getElementById('tabsContainer');
+    if (tabsEl) tabsEl.style.visibility = 'visible';
     renderGoalsAndSubitems(user, db);
     renderDailyTasks(user, db);
     initTabReports(user, db);
