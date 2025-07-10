@@ -623,7 +623,8 @@ async function initListsPanel() {
 
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
-    addBtn.textContent = '➕ Add';
+    addBtn.className = 'add-item-btn';
+    addBtn.innerHTML = '<span class="plus-icon">+</span> Add';
     Object.assign(addBtn.style, {
       padding: '.25rem .75rem', fontSize: '.9rem', cursor: 'pointer', marginTop: '.5rem'
     });
