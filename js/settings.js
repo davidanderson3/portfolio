@@ -52,12 +52,13 @@ export function initSettings({ settingsBtn, settingsModal }) {
   if (!settingsBtn || !settingsModal) return;
 
   const listDiv = settingsModal.querySelector('#settingsTabsList');
+  listDiv.classList.add('settings-list');
   const panels = ['goalsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
 
   if (listDiv.children.length === 0) {
     panels.forEach(id => {
       const label = document.createElement('label');
-      label.style.display = 'block';
+      label.className = 'settings-option';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.value = id;
@@ -104,6 +105,7 @@ export function initSettings({ settingsBtn, settingsModal }) {
 
 export async function initSettingsPage() {
   const listDiv = document.getElementById('settingsTabsList');
+  listDiv?.classList.add('settings-list');
   const saveBtn = document.getElementById('settingsSaveBtn');
   const emailSpan = document.getElementById('settingsEmail');
   const panels = ['goalsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
@@ -111,7 +113,7 @@ export async function initSettingsPage() {
   if (listDiv && listDiv.children.length === 0) {
     panels.forEach(id => {
       const label = document.createElement('label');
-      label.style.display = 'block';
+      label.className = 'settings-option';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.value = id;
