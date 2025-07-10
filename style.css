@@ -1015,7 +1015,7 @@ h2 {
 
 @media (max-width: 600px) {
   #listsContainer {
-    overflow-x: auto;
+    overflow-x: hidden;
   }
 
   #listTabs {
@@ -1185,17 +1185,17 @@ h2 {
   margin-left: 20px;
 }
 
-/* Mobile: tighten vertical spacing but keep some horizontal padding */
+/* Mobile: remove outer padding to avoid horizontal scrolling */
 @media (max-width: 600px) {
   #goalsView {
-    margin: 0 auto;
-    padding: 0 12px;
+    margin: 0;
+    padding: 0;
   }
 
   #goalsView .left-column,
   #goalsView .right-column,
   #goalsView .full-column {
-    padding: 0 12px;
+    padding: 0;
   }
 
   .navbar {
