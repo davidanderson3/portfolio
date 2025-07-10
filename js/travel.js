@@ -28,6 +28,20 @@ let allTags = [];
 let selectedTags = [];
 let searchMarker = null;
 let resultMarkers = [];
+let sortByDistance = false;
+let userCoords = null;
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371; // km
+  const toRad = deg => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 export async function initTravelPanel() {
   const panel = document.getElementById('travelPanel');
@@ -117,6 +131,14 @@ export async function initTravelPanel() {
         (Array.isArray(p.tags) && selectedTags.every(t => p.tags.includes(t))))
     );
 
+    if (sortByDistance && userCoords) {
+      items.sort(
+        (a, b) =>
+          haversine(userCoords[0], userCoords[1], a.lat, a.lon) -
+          haversine(userCoords[0], userCoords[1], b.lat, b.lon)
+      );
+    }
+
     items.forEach((p, index) => {
       const m = L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.name);
       markers.push(m);
@@ -154,6 +176,14 @@ export async function initTravelPanel() {
       const visitedTd = document.createElement('td');
       visitedTd.textContent = p.visited ? '✅' : '';
       visitedTd.dataset.label = 'Visited';
+      const distTd = document.createElement('td');
+      distTd.dataset.label = 'Distance (km)';
+      if (userCoords) {
+        const dist = haversine(userCoords[0], userCoords[1], p.lat, p.lon);
+        distTd.textContent = dist.toFixed(1);
+      } else {
+        distTd.textContent = '';
+      }
       const actionsTd = document.createElement('td');
       actionsTd.dataset.label = 'Actions';
       actionsTd.style.whiteSpace = 'nowrap';
@@ -170,7 +200,7 @@ export async function initTravelPanel() {
         form.style.flexWrap = 'wrap';
         form.style.gap = '4px';
         const td = document.createElement('td');
-        td.colSpan = 7;
+        td.colSpan = 8;
 
         const nameInput = document.createElement('input');
         nameInput.value = p.name || '';
@@ -286,7 +316,16 @@ export async function initTravelPanel() {
       });
       actionsTd.append(delBtn);
 
-      tr.append(nameTd, descTd, tagsTd, ratingTd, dateTd, visitedTd, actionsTd);
+      tr.append(
+        nameTd,
+        descTd,
+        tagsTd,
+        ratingTd,
+        dateTd,
+        visitedTd,
+        distTd,
+        actionsTd
+      );
       tableBody.append(tr);
       rowMarkerMap.set(tr, m);
 
@@ -333,6 +372,24 @@ export async function initTravelPanel() {
     searchInput.addEventListener('input', e => {
       currentSearch = e.target.value;
       renderList(currentSearch);
+    });
+  }
+
+  const sortBtn = document.getElementById('sortByDistanceBtn');
+  if (sortBtn) {
+    sortBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert('Geolocation not supported');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          userCoords = [pos.coords.latitude, pos.coords.longitude];
+          sortByDistance = true;
+          renderList(currentSearch);
+        },
+        () => alert('Unable to retrieve your location')
+      );
     });
   }
 
