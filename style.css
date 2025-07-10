@@ -25,7 +25,6 @@ body {
   justify-content: center;
   gap: 32px;
   max-width: 1440px;
-  margin: 1px auto;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(2px);
