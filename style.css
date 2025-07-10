@@ -26,7 +26,6 @@ body {
   gap: 32px;
   max-width: 1440px;
   margin: 1px auto;
-  padding: 0 20px;
   box-sizing: border-box;
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(2px);
@@ -651,7 +650,6 @@ button:hover {
   border: 2px dashed #aaa;
 }
 
-
 /* ─────────────────────────────────────────────────────────────────────────────
    1) Container inside goalsView
 ───────────────────────────────────────────────────────────────────────────── */
@@ -1038,6 +1036,40 @@ h2 {
   }
 
   #travelTable td::before {
+    content: attr(data-label) ": ";
+    font-weight: bold;
+    display: inline-block;
+    width: 45%;
+  }
+
+  #listsPanel table,
+  #listsPanel thead,
+  #listsPanel tbody,
+  #listsPanel tr,
+  #listsPanel th,
+  #listsPanel td {
+    display: block;
+    width: 100%;
+  }
+
+  #listsPanel thead {
+    display: none;
+  }
+
+  #listsPanel tr {
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 4px;
+  }
+
+  #listsPanel td {
+    border: none;
+    padding: 4px 8px;
+    position: relative;
+  }
+
+  #listsPanel td::before {
     content: attr(data-label) ": ";
     font-weight: bold;
     display: inline-block;
