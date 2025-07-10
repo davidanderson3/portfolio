@@ -430,6 +430,7 @@ export async function initTravelPanel() {
             li.addEventListener('click', () => {
               map.setView([latitude, longitude], 8);
               m.openPopup();
+              clearSearchResults();
             });
             if (resultsList) resultsList.append(li);
           });
