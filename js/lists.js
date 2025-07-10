@@ -322,6 +322,7 @@ async function initListsPanel() {
         const td = tr.insertCell();
         td.style.border = '1px solid #ccc';
         td.style.padding = '8px';
+        td.dataset.label = col.name;
 
         if (colIdx === 0) {
           const url = item[col.name] || '';
@@ -360,6 +361,7 @@ async function initListsPanel() {
       const actionCell = tr.insertCell();
       actionCell.style.border = '1px solid #ccc';
       actionCell.style.padding = '8px';
+      actionCell.dataset.label = 'Actions';
       actionCell.style.display = 'flex';
       actionCell.style.gap = '0.5rem';
 
