@@ -965,6 +965,10 @@ h2 {
     overflow-x: auto;
   }
 
+  #listTabs {
+    flex-wrap: wrap;
+  }
+
   /* tables inside report panels and stats summary should scroll */
   .report-panel {
     overflow-x: auto;
