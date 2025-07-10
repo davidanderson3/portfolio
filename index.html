@@ -76,7 +76,7 @@
     <nav class="navbar">
       <div class="container navbar-inner">
         <div class="navbar-left">Goal Oriented</div>
-        <div class="tabs scroll-tabs">
+        <div class="tabs scroll-tabs" id="tabsContainer" style="visibility:hidden;">
           <button class="tab-button active" data-target="goalsPanel">Goals</button>
           <button class="tab-button" data-target="calendarPanel">Calendar</button>
           <button class="tab-button" data-target="dailyPanel">Recurring</button>
@@ -86,7 +86,7 @@
         </div>
         <div class="navbar-right">
           <a href="settings.html" id="settingsBtn" class="icon-btn"><img src="assets/gear.svg" alt="Settings" /></a>
-          <button type="button" id="loginBtn">Sign In</button>
+          <button type="button" id="loginBtn" style="display:none;">Sign In</button>
           <button type="button" id="logoutBtn" class="icon-btn" style="display:none;"><img src="assets/sign-out.svg" alt="Sign Out" /></button>
         </div>
       </div>
