@@ -167,6 +167,29 @@ export async function initTravelPanel() {
         const tagsInput = document.createElement('input');
         tagsInput.value = Array.isArray(p.tags) ? p.tags.join(', ') : '';
         tagsInput.placeholder = 'tags';
+        const tagList = document.createElement('datalist');
+        const listId = `tag-list-${Date.now()}-${Math.random()}`;
+        tagList.id = listId;
+        tagsInput.setAttribute('list', listId);
+        const updateTagSuggestions = () => {
+          const val = tagsInput.value;
+          const parts = val.split(',');
+          const partial = parts.pop().trim().toLowerCase();
+          const prefix = parts.map(t => t.trim()).filter(Boolean).join(', ');
+          const used = parts.map(t => t.trim()).filter(Boolean);
+          tagList.innerHTML = '';
+          allTags
+            .filter(t =>
+              t.toLowerCase().startsWith(partial) && !used.includes(t)
+            )
+            .forEach(t => {
+              const option = document.createElement('option');
+              option.value = prefix ? `${prefix}, ${t}` : t;
+              tagList.appendChild(option);
+            });
+        };
+        tagsInput.addEventListener('input', updateTagSuggestions);
+        updateTagSuggestions();
         const ratingInput = document.createElement('input');
         ratingInput.value = p.Rating || '';
         ratingInput.placeholder = 'rating';
@@ -188,6 +211,7 @@ export async function initTravelPanel() {
           nameInput,
           descInput,
           tagsInput,
+          tagList,
           ratingInput,
           dateInput,
           visitedInput,
