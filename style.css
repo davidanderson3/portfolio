@@ -110,6 +110,20 @@ body {
   height: 24px;
 }
 
+/* horizontally scrollable tab list */
+.scroll-tabs {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  gap: 8px;
+  padding: 0 8px;
+  scrollbar-width: thin;
+}
+
+.scroll-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+
 .navbar-right button:hover {
   background-color: #f2f2f2;
   border-color: #999999;
@@ -811,11 +825,11 @@ button:hover {
 ───────────────────────────────────────────────────────────────────────────── */
 #goalsView .navbar .tabs {
   flex: 1;
-  margin: 0 40px;
+  margin: 0 8px;
   padding: 0;
   display: flex;
-  justify-content: center;
-  gap: 24px;
+  justify-content: flex-start;
+  gap: 8px;
   background: transparent;
   border: none;
 }
@@ -825,10 +839,11 @@ button:hover {
   border: 1px solid #cccccc;
   border-bottom: 2px solid transparent;
   border-radius: 4px 4px 0 0;
-  padding: 0px 24px;
-  font-size: 1rem;
+  padding: 2px 12px;
+  font-size: 0.9rem;
   color: #000000 !important;
   cursor: pointer;
+  white-space: nowrap;
   transition: background-color 0.2s ease-in-out, border-color 0.2s;
 }
 
