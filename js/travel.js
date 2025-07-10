@@ -128,7 +128,7 @@ export async function initTravelPanel() {
     const items = travelData.filter(p =>
       p.name.toLowerCase().includes(term.toLowerCase()) &&
       (selectedTags.length === 0 ||
-        (Array.isArray(p.tags) && selectedTags.every(t => p.tags.includes(t))))
+        (Array.isArray(p.tags) && selectedTags.some(t => p.tags.includes(t))))
     );
 
     if (sortByDistance && userCoords) {
