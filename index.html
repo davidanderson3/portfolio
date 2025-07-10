@@ -85,10 +85,9 @@
           <button class="tab-button" data-target="travelPanel">Travel</button>
         </div>
         <div class="navbar-right">
-          <span id="userEmail" class="user-email"></span>
-          <button type="button" id="settingsBtn">Settings</button>
+          <a href="settings.html" id="settingsBtn" class="icon-btn"><img src="assets/gear.svg" alt="Settings" /></a>
           <button type="button" id="loginBtn">Sign In</button>
-          <button type="button" id="logoutBtn" style="display:none;">Sign Out</button>
+          <button type="button" id="logoutBtn" class="icon-btn" style="display:none;"><img src="assets/sign-out.svg" alt="Sign Out" /></button>
         </div>
       </div>
     </nav>
@@ -211,17 +210,6 @@
       </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal" style="display:none;">
-      <div class="modal-content">
-        <h3>Tab Visibility</h3>
-        <div id="settingsTabsList"></div>
-        <div class="modal-actions">
-          <button type="button" id="settingsCancelBtn">Cancel</button>
-          <button type="button" id="settingsSaveBtn">Save</button>
-        </div>
-      </div>
-    </div>
   </section>
 
   <script src="https://apis.google.com/js/api.js"></script>

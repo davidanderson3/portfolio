@@ -10,7 +10,7 @@ import { initTabs } from './tabs.js';
 import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
 import { initGoogleCalendar } from './googleCalendar.js';
-import { initSettings, loadHiddenTabs, applyHiddenTabs } from './settings.js';
+import { loadHiddenTabs, applyHiddenTabs } from './settings.js';
 
 window.currentUser = null;
 
@@ -94,7 +94,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   initButtonStyles();
   initGoogleCalendar();
-  initSettings(uiRefs);
 });
 
 window.renderDailyTasks = renderDailyTasks;

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Settings - Goal Oriented</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <div class="navbar-left"><a href="index.html">Goal Oriented</a></div>
+      <div class="navbar-right">
+        <span id="settingsEmail" class="user-email"></span>
+        <button type="button" id="logoutBtn" class="icon-btn" style="display:none;"><img src="assets/sign-out.svg" alt="Sign Out" /></button>
+      </div>
+    </div>
+  </nav>
+
+  <section class="main-layout" style="padding:2em;">
+    <h2>Tab Visibility</h2>
+    <div id="settingsTabsList"></div>
+    <div class="modal-actions" style="margin-top:1em;">
+      <button type="button" id="settingsSaveBtn">Save</button>
+    </div>
+  </section>
+
+  <script type="module" src="js/settingsPage.js"></script>
+</body>
+</html>
