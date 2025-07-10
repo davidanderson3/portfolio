@@ -827,6 +827,16 @@ h2 {
   flex: 1 1 100%;
 }
 
+/* Layout for daily panel: allow tasks columns side-by-side with report below */
+#dailyPanel.main-layout {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+#dailyPanel .full-column {
+  flex: 1 1 100%;
+}
+
 /* Minimalist list-selector tabs */
 #listTabs {
   display: flex;
