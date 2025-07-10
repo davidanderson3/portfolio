@@ -1173,6 +1173,26 @@ h2 {
   border-color: #7aa68c;
 }
 
+/* Place search results list */
+.search-results {
+  list-style: none;
+  padding-left: 0;
+  margin: 8px 0;
+  max-height: 150px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ccc;
+}
+
+.search-results li {
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.search-results li:hover {
+  background: #eee;
+}
+
 /* Completed subgoal section */
 .completed-subgoal-section {
   margin-top: 8px;

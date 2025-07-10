@@ -27,6 +27,7 @@ let selectedRow = null;
 let allTags = [];
 let selectedTags = [];
 let searchMarker = null;
+let resultMarkers = [];
 
 export async function initTravelPanel() {
   const panel = document.getElementById('travelPanel');
@@ -42,6 +43,7 @@ export async function initTravelPanel() {
   const tableBody = document.querySelector('#travelTable tbody');
   const searchInput = document.getElementById('travelSearch');
   const placeInput = document.getElementById('placeSearch');
+  const resultsList = document.getElementById('placeResults');
   const tagFiltersDiv = document.getElementById('travelTagFilters');
   map = L.map(mapEl, {
     maxBounds: [
@@ -299,6 +301,16 @@ export async function initTravelPanel() {
   };
 
   renderList(currentSearch);
+
+  const clearSearchResults = () => {
+    if (resultsList) resultsList.innerHTML = '';
+    resultMarkers.forEach(m => m.remove());
+    resultMarkers = [];
+    if (searchMarker) {
+      searchMarker.remove();
+      searchMarker = null;
+    }
+  };
   async function storePlace(place) {
     try {
       const user = getCurrentUser?.();
@@ -330,32 +342,42 @@ export async function initTravelPanel() {
       e.preventDefault();
       const term = placeInput.value.trim();
       if (!term) return;
+      clearSearchResults();
       try {
-        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}`);
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(term)}`);
         const data = await resp.json();
         if (data && data.length) {
-          const { lat, lon, display_name } = data[0];
-          const latitude = parseFloat(lat);
-          const longitude = parseFloat(lon);
-          map.setView([latitude, longitude], 8);
-          if (searchMarker) searchMarker.remove();
-          searchMarker = L.marker([latitude, longitude]).addTo(map);
-          const popupDiv = document.createElement('div');
-          const title = document.createElement('div');
-          title.textContent = display_name;
-          const btn = document.createElement('button');
-          btn.textContent = 'Add to list';
-          popupDiv.append(title, btn);
-          searchMarker.bindPopup(popupDiv);
-          searchMarker.openPopup();
-          btn.addEventListener('click', async () => {
-            const name = prompt('Place name:', display_name.split(',')[0]);
-            if (!name) return;
-            await storePlace({ name, description: '', lat: latitude, lon: longitude, tags: [], Rating: '', Date: '', visited: false });
-            searchMarker.remove();
-            searchMarker = null;
-            placeInput.value = '';
+          data.forEach((res, idx) => {
+            const { lat, lon, display_name } = res;
+            const latitude = parseFloat(lat);
+            const longitude = parseFloat(lon);
+            const m = L.marker([latitude, longitude]).addTo(map);
+            resultMarkers.push(m);
+            const popupDiv = document.createElement('div');
+            const title = document.createElement('div');
+            title.textContent = display_name;
+            const btn = document.createElement('button');
+            btn.textContent = 'Add to list';
+            popupDiv.append(title, btn);
+            m.bindPopup(popupDiv);
+            btn.addEventListener('click', async () => {
+              const name = prompt('Place name:', display_name.split(',')[0]);
+              if (!name) return;
+              await storePlace({ name, description: '', lat: latitude, lon: longitude, tags: [], Rating: '', Date: '', visited: false });
+              clearSearchResults();
+              placeInput.value = '';
+            });
+
+            const li = document.createElement('li');
+            li.textContent = display_name;
+            li.addEventListener('click', () => {
+              map.setView([latitude, longitude], 8);
+              m.openPopup();
+            });
+            if (resultsList) resultsList.append(li);
           });
+          const first = data[0];
+          map.setView([parseFloat(first.lat), parseFloat(first.lon)], 4);
         } else {
           alert('Place not found');
         }
