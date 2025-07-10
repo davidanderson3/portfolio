@@ -26,6 +26,7 @@ let rowMarkerMap = new Map();
 let selectedRow = null;
 let allTags = [];
 let selectedTags = [];
+let searchMarker = null;
 
 export async function initTravelPanel() {
   const panel = document.getElementById('travelPanel');
@@ -287,6 +288,23 @@ export async function initTravelPanel() {
   };
 
   renderList(currentSearch);
+  async function storePlace(place) {
+    try {
+      const user = getCurrentUser?.();
+      if (user) {
+        const docRef = await db.collection("users").doc(user.uid).collection("travel").add(place);
+        place.id = docRef.id;
+      }
+    } catch (err) {
+      console.error("Failed to save place to Firestore", err);
+    }
+    travelData.push(place);
+    localStorage.setItem(storageKey(), JSON.stringify(travelData));
+    allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
+    renderTagFilters();
+    renderList(currentSearch);
+  }
+
 
   if (searchInput) {
     searchInput.addEventListener('input', e => {
@@ -305,8 +323,28 @@ export async function initTravelPanel() {
         const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(term)}`);
         const data = await resp.json();
         if (data && data.length) {
-          const { lat, lon } = data[0];
-          map.setView([parseFloat(lat), parseFloat(lon)], 8);
+          const { lat, lon, display_name } = data[0];
+          const latitude = parseFloat(lat);
+          const longitude = parseFloat(lon);
+          map.setView([latitude, longitude], 8);
+          if (searchMarker) searchMarker.remove();
+          searchMarker = L.marker([latitude, longitude]).addTo(map);
+          const popupDiv = document.createElement('div');
+          const title = document.createElement('div');
+          title.textContent = display_name;
+          const btn = document.createElement('button');
+          btn.textContent = 'Add to list';
+          popupDiv.append(title, btn);
+          searchMarker.bindPopup(popupDiv);
+          searchMarker.openPopup();
+          btn.addEventListener('click', async () => {
+            const name = prompt('Place name:', display_name.split(',')[0]);
+            if (!name) return;
+            await storePlace({ name, description: '', lat: latitude, lon: longitude, tags: [], Rating: '', Date: '', visited: false });
+            searchMarker.remove();
+            searchMarker = null;
+            placeInput.value = '';
+          });
         } else {
           alert('Place not found');
         }
@@ -316,8 +354,28 @@ export async function initTravelPanel() {
     });
   }
 
-  // The "Add Place" feature has been removed, so no button handler is required.
-}
+  document.getElementById('addPlaceBtn').addEventListener('click', async () => {
+    const name = prompt('Place name:');
+    const description = prompt('Description:');
+    const tags = prompt('Tags (comma separated):');
+    const rating = prompt('Rating:');
+    const date = prompt('Date:');
+    const visited = confirm('Visited?');
+    const lat = parseFloat(prompt('Latitude:'));
+    const lon = parseFloat(prompt('Longitude:'));
+    if (!name || Number.isNaN(lat) || Number.isNaN(lon)) return;
+    const place = {
+      name,
+      description: description || '',
+      lat,
+      lon,
+      tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      Rating: rating || '',
+      Date: date || '',
+      visited
+    };
+    await storePlace(place);
+  });
 
 
 window.initTravelPanel = initTravelPanel;
