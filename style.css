@@ -882,6 +882,12 @@ h2 {
   /* 0.5em top & bottom, 0 left & right */
 }
 
+#goalsHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 /* base look */
 .postpone-option {
   display: block;

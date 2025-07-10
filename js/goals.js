@@ -820,5 +820,41 @@ function attachEditButtons(item, buttonWrap, row) {
 }
 
 
+export async function focusOnGoal(goalId) {
+    const items = await loadDecisions();
+    const hideUntil = new Date(Date.now() + 2 * 3600 * 1000).toISOString();
+    let changed = false;
+    for (const g of items) {
+        if (g.type === 'goal' && !g.completed && !g.parentGoalId) {
+            if (g.id !== goalId) {
+                g.hiddenUntil = hideUntil;
+                changed = true;
+            }
+        }
+    }
+    if (changed) await saveDecisions(items);
+    await renderGoalsAndSubitems();
+}
+
+export function initFocusButton() {
+    const btn = document.getElementById('focusBtn');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+        const items = await loadDecisions();
+        const now = Date.now();
+        const active = items.filter(d => d.type === 'goal' && !d.completed && !d.parentGoalId && (!d.hiddenUntil || now >= Date.parse(d.hiddenUntil)));
+        if (!active.length) {
+            alert('No active goals to focus on.');
+            return;
+        }
+        const promptText = active.map((g, i) => `${i + 1}) ${g.text}`).join('\n');
+        const choice = prompt(`Focus on which goal? Enter number:\n${promptText}`);
+        const idx = parseInt(choice, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= active.length) return;
+        await focusOnGoal(active[idx].id);
+    });
+}
+
+
 
 
