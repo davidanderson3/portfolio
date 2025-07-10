@@ -1178,8 +1178,10 @@ h2 {
   list-style: none;
   padding-left: 0;
   margin: 8px 0;
-  max-height: 150px;
+  max-height: 40vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   background: #fff;
   border: 1px solid #ccc;
 }
