@@ -235,6 +235,16 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'monthly',
     parentGoalId: null,
+  },
+  {
+    id: 'sample-decision-1',
+    type: 'goal',
+    text: 'Choose a new laptop',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    parentGoalId: null,
+    outcomes: ['Mac', 'Windows', 'Chromebook']
   }
 ];
 
