@@ -1,5 +1,5 @@
 import { loadDecisions, generateId, saveDecisions } from './helpers.js';
-import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7?module';
+// D3 is loaded globally via a script tag in index.html
 import { renderGoalsAndSubitems } from './goals.js';
 import { renderDecisionList } from './decisionList.js';
 
