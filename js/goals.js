@@ -178,8 +178,39 @@ function clearDOM() {
     if (hiddenContent) hiddenContent.innerHTML = '';
 }
 
+let fixedMutualParents = false;
+
+async function fixMutualParentGoals(items) {
+    if (fixedMutualParents) return;
+    const parentMap = {};
+    for (const it of items) {
+        if (it.type === 'goal' && it.parentGoalId) {
+            parentMap[it.id] = it.parentGoalId;
+        }
+    }
+    const toClear = new Set();
+    for (const [id, parentId] of Object.entries(parentMap)) {
+        if (parentMap[parentId] === id) {
+            toClear.add(id);
+            toClear.add(parentId);
+        }
+    }
+    if (toClear.size) {
+        let changed = false;
+        for (const it of items) {
+            if (toClear.has(it.id) && it.parentGoalId) {
+                it.parentGoalId = null;
+                changed = true;
+            }
+        }
+        if (changed) await saveDecisions(items);
+    }
+    fixedMutualParents = true;
+}
+
 async function loadAndSyncGoals() {
     const allDecisions = await loadDecisions();
+    await fixMutualParentGoals(allDecisions);
     const goals = allDecisions.filter(d => d.type === 'goal' && !d.parentGoalId);
     const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
 
@@ -830,7 +861,6 @@ function attachEditButtons(item, buttonWrap, row) {
             due.appendChild(parentSelect);
 
         } else {
-            editing = false;
             const newText = middle.querySelector('input')?.value.trim();
             const newNotes = middle.querySelector('textarea')?.value.trim();
             const newScheduled = due.querySelector('input')?.value.trim();
@@ -839,6 +869,11 @@ function attachEditButtons(item, buttonWrap, row) {
             const all = await loadDecisions();
             const idx = all.findIndex(d => d.id === item.id);
             if (idx !== -1) {
+                if (newParent && all.find(g => g.id === newParent)?.parentGoalId === item.id) {
+                    alert('Cannot create circular parent relationship.');
+                    return;
+                }
+                editing = false;
                 const needsMove = all[idx].parentGoalId !== (newParent || null);
                 all[idx].text = newText;
                 all[idx].notes = newNotes;
