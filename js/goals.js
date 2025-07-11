@@ -852,14 +852,17 @@ function attachEditButtons(item, buttonWrap, row) {
 }
 
 
-export async function focusOnGoal(goalId) {
+export async function focusOnGoals(goalIds) {
     const items = await loadDecisions();
     const hideUntil = new Date(Date.now() + 2 * 3600 * 1000).toISOString();
     let changed = false;
     for (const g of items) {
         if (g.type === 'goal' && !g.completed && !g.parentGoalId) {
-            if (g.id !== goalId) {
+            if (!goalIds.includes(g.id)) {
                 g.hiddenUntil = hideUntil;
+                changed = true;
+            } else if (g.hiddenUntil) {
+                delete g.hiddenUntil;
                 changed = true;
             }
         }
@@ -868,9 +871,19 @@ export async function focusOnGoal(goalId) {
     await renderGoalsAndSubitems();
 }
 
+export async function focusOnGoal(goalId) {
+    await focusOnGoals([goalId]);
+}
+
 export function initFocusButton() {
     const btn = document.getElementById('focusBtn');
-    if (!btn) return;
+    const dialog = document.getElementById('focusDialog');
+    if (!btn || !dialog) return;
+
+    const listDiv = dialog.querySelector('#focusGoalsList');
+    const applyBtn = dialog.querySelector('#focusApplyBtn');
+    const cancelBtn = dialog.querySelector('#focusCancelBtn');
+
     btn.addEventListener('click', async () => {
         const items = await loadDecisions();
         const now = Date.now();
@@ -879,12 +892,36 @@ export function initFocusButton() {
             alert('No active goals to focus on.');
             return;
         }
-        const promptText = active.map((g, i) => `${i + 1}) ${g.text}`).join('\n');
-        const choice = prompt(`Focus on which goal? Enter number:\n${promptText}`);
-        const idx = parseInt(choice, 10) - 1;
-        if (isNaN(idx) || idx < 0 || idx >= active.length) return;
-        await focusOnGoal(active[idx].id);
+        listDiv.innerHTML = '';
+        for (const g of active) {
+            const div = document.createElement('div');
+            const label = document.createElement('label');
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = g.id;
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(' ' + g.text));
+            div.appendChild(label);
+            listDiv.appendChild(div);
+        }
+        dialog.showModal();
     });
+
+    applyBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const selected = Array.from(dialog.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+        dialog.close();
+        if (selected.length) {
+            await focusOnGoals(selected);
+        }
+    });
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            dialog.close();
+        });
+    }
 }
 
 
