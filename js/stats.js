@@ -218,6 +218,18 @@ function applyUnitLabels(cfg) {
   }[cfg.unit] || cfg.unit;
 }
 
+function summarizeListValue(str) {
+  const lines = String(str)
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
+  if (!lines.length) return 0;
+  const nums = lines.map(l => parseFloat(l));
+  return nums.every(n => !isNaN(n))
+    ? nums.reduce((sum, n) => sum + n, 0)
+    : lines.length;
+}
+
 let metricChartInstance = null;
 
 function updateMetricsDateUI() {
@@ -250,7 +262,7 @@ async function showMetricGraph(cfg) {
     const latest = entries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
     let val = latest.value;
     if (cfg.unit === 'list' && typeof val === 'string') {
-      val = val.split('\n').filter(l => l.trim()).length;
+      val = summarizeListValue(val);
     }
     labels.push(date);
     data.push(val);
@@ -311,7 +323,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       entries.filter(e => !(e.extra && e.extra.postponed)).forEach(entry => {
         let v = entry.value;
         if (unitByMetric[id] === 'list' && typeof v === 'string') {
-          v = v.split('\n').filter(l => l.trim()).length;
+          v = summarizeListValue(v);
         }
         (valuesByMetric[id] = valuesByMetric[id] || []).push(v);
       });
@@ -359,10 +371,10 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
         editValue = display;
         val = latest.value;
       } else if (cfg.unit === 'list' && typeof latest.value === 'string') {
-        const count = latest.value.split('\n').filter(l => l.trim()).length;
-        display = String(count);
+        const listVal = summarizeListValue(latest.value);
+        display = String(listVal);
         editValue = latest.value;
-        val = count;
+        val = listVal;
       } else {
         display = `${latest.value}`;
         editValue = display;
