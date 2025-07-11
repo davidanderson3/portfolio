@@ -26,6 +26,9 @@ window.addEventListener('DOMContentLoaded', () => {
     previewBtn: document.getElementById('previewBtn'),
     calendarAddGoalBtn: document.getElementById('calendarAddGoalBtn'),
     addGoalBtn: document.getElementById('addGoalBtn'),
+    bottomAddBtn: document.getElementById('bottomAddBtn'),
+    bottomLoginBtn: document.getElementById('bottomLoginBtn'),
+    bottomLogoutBtn: document.getElementById('bottomLogoutBtn'),
     wizardContainer: document.getElementById('goalWizard'),
     wizardStep: document.getElementById('wizardStep'),
     nextBtn: document.getElementById('wizardNextBtn'),
@@ -50,6 +53,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (uiRefs.calendarAddGoalBtn) {
     uiRefs.calendarAddGoalBtn.addEventListener('click', () => addCalendarGoal());
+  }
+
+  if (uiRefs.bottomAddBtn) {
+    uiRefs.bottomAddBtn.addEventListener('click', () => uiRefs.addGoalBtn?.click());
   }
 
 

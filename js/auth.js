@@ -22,12 +22,15 @@ export function getCurrentUser() {
   return auth.currentUser;
 }
 
-export function initAuth({ loginBtn, logoutBtn, userEmail }, onLogin) {
+export function initAuth({ loginBtn, logoutBtn, userEmail, bottomLoginBtn, bottomLogoutBtn }, onLogin) {
   const safeSet = (el, key, value) => {
     if (el) el[key] = value;
   };
 
-  loginBtn.onclick = async () => {
+  const loginButtons = [loginBtn, bottomLoginBtn].filter(Boolean);
+  const logoutButtons = [logoutBtn, bottomLogoutBtn].filter(Boolean);
+
+  const loginAction = async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
       const result = await firebase.auth().signInWithPopup(provider);
@@ -40,24 +43,26 @@ export function initAuth({ loginBtn, logoutBtn, userEmail }, onLogin) {
     }
   };
 
+  loginButtons.forEach(btn => btn && (btn.onclick = loginAction));
 
-
-  logoutBtn.onclick = async () => {
+  const logoutAction = async () => {
     await auth.signOut();
     currentUser = null;
     clearDecisionsCache();
     safeSet(userEmail, 'textContent', '');
-    safeSet(loginBtn, 'style', 'display: inline-block');
-    safeSet(logoutBtn, 'style', 'display: none');
+    loginButtons.forEach(b => safeSet(b, 'style', 'display: inline-block'));
+    logoutButtons.forEach(b => safeSet(b, 'style', 'display: none'));
     // onAuthStateChanged will trigger onLogin
   };
+
+  logoutButtons.forEach(btn => btn && (btn.onclick = logoutAction));
 
   auth.onAuthStateChanged(user => {
     currentUser = user;
     clearDecisionsCache();
     safeSet(userEmail, 'textContent', user?.email || '');
-    safeSet(loginBtn, 'style', user ? 'display: none' : 'display: inline-block');
-    safeSet(logoutBtn, 'style', user ? 'display: inline-block' : 'display: none');
+    loginButtons.forEach(b => safeSet(b, 'style', user ? 'display:none' : 'display:inline-block'));
+    logoutButtons.forEach(b => safeSet(b, 'style', user ? 'display:inline-block' : 'display:none'));
     onLogin(user);
   });
 }
