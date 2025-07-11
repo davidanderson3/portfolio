@@ -139,10 +139,11 @@ export async function initSettingsPage() {
     window.location.href = 'index.html';
   });
 
-  auth.onAuthStateChanged(user => {
+  const updateForUser = async (user) => {
     if (emailSpan) emailSpan.textContent = user?.email || '';
-  });
-  if (emailSpan) emailSpan.textContent = getCurrentUser?.()?.email || '';
+    await populate();
+  };
 
-  populate();
+  auth.onAuthStateChanged(updateForUser);
+  updateForUser(getCurrentUser?.());
 }
