@@ -29,6 +29,12 @@ window.addEventListener('DOMContentLoaded', () => {
     bottomAddBtn: document.getElementById('bottomAddBtn'),
     bottomLoginBtn: document.getElementById('bottomLoginBtn'),
     bottomLogoutBtn: document.getElementById('bottomLogoutBtn'),
+    bottomAddModal: document.getElementById('bottomAddModal'),
+    bottomAddTitle: document.getElementById('bottomAddTitle'),
+    bottomAddOptions: document.getElementById('bottomAddOptions'),
+    bottomAddText: document.getElementById('bottomAddText'),
+    bottomAddCancel: document.getElementById('bottomAddCancel'),
+    bottomAddSubmit: document.getElementById('bottomAddSubmit'),
     wizardContainer: document.getElementById('goalWizard'),
     wizardStep: document.getElementById('wizardStep'),
     nextBtn: document.getElementById('wizardNextBtn'),
@@ -59,6 +65,40 @@ window.addEventListener('DOMContentLoaded', () => {
     uiRefs.bottomAddBtn.addEventListener('click', handleBottomAdd);
   }
 
+  function showAddModal(cfg) {
+    if (!uiRefs.bottomAddModal) return;
+    uiRefs.bottomAddTitle.textContent = cfg.title || 'Add';
+    uiRefs.bottomAddOptions.innerHTML = '';
+    cfg.options.forEach(opt => {
+      const label = document.createElement('label');
+      label.style.marginRight = '8px';
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'bottomAddOption';
+      radio.value = opt.value;
+      label.append(radio, document.createTextNode(' ' + opt.label));
+      uiRefs.bottomAddOptions.append(label);
+    });
+    uiRefs.bottomAddText.style.display = cfg.showTextInput ? 'block' : 'none';
+    uiRefs.bottomAddText.value = '';
+
+    function close() {
+      uiRefs.bottomAddModal.style.display = 'none';
+      uiRefs.bottomAddSubmit.onclick = null;
+      uiRefs.bottomAddCancel.onclick = null;
+    }
+
+    uiRefs.bottomAddCancel.onclick = close;
+    uiRefs.bottomAddSubmit.onclick = () => {
+      const selected = uiRefs.bottomAddOptions.querySelector('input[name="bottomAddOption"]:checked')?.value;
+      const text = uiRefs.bottomAddText.value.trim();
+      close();
+      if (cfg.onSubmit) cfg.onSubmit({ option: selected, text });
+    };
+
+    uiRefs.bottomAddModal.style.display = 'flex';
+  }
+
   function handleBottomAdd() {
     const active = document.querySelector('.tab-button.active')?.dataset.target;
     if (!active) return;
@@ -67,15 +107,18 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (active === 'dailyPanel') {
-      let kind = prompt('Add daily, weekly, or monthly task? (d/w/m)') || '';
-      kind = kind.trim().toLowerCase();
-      if (!kind) return;
-      if (kind.startsWith('w')) kind = 'weekly';
-      else if (kind.startsWith('m')) kind = 'monthly';
-      else kind = 'daily';
-      const text = prompt('Task description:');
-      if (!text) return;
-      window.quickAddTask?.(kind, text);
+      showAddModal({
+        title: 'Add Task',
+        options: [
+          { label: 'Daily', value: 'daily' },
+          { label: 'Weekly', value: 'weekly' },
+          { label: 'Monthly', value: 'monthly' }
+        ],
+        showTextInput: true,
+        onSubmit({ option, text }) {
+          if (option && text) window.quickAddTask?.(option, text);
+        }
+      });
       return;
     }
     if (active === 'metricsPanel') {
@@ -83,16 +126,24 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (active === 'listsPanel') {
-      const choice = prompt('Add new list, item, or column? (l/i/c)') || '';
-      const c = choice.trim().toLowerCase();
-      if (c.startsWith('l')) {
-        document.getElementById('createListBtn')?.click();
-      } else if (c.startsWith('c')) {
-        document.getElementById('addColumnBtn')?.click();
-        document.getElementById('addColumnToListBtn')?.click();
-      } else if (c.startsWith('i')) {
-        document.querySelector('#itemForm .add-item-btn')?.click();
-      }
+      showAddModal({
+        title: 'Add to Lists',
+        options: [
+          { label: 'List', value: 'list' },
+          { label: 'Item', value: 'item' },
+          { label: 'Column', value: 'column' }
+        ],
+        onSubmit({ option }) {
+          if (option === 'list') {
+            document.getElementById('createListBtn')?.click();
+          } else if (option === 'column') {
+            document.getElementById('addColumnBtn')?.click();
+            document.getElementById('addColumnToListBtn')?.click();
+          } else if (option === 'item') {
+            document.querySelector('#itemForm .add-item-btn')?.click();
+          }
+        }
+      });
       return;
     }
     if (active === 'travelPanel') {
