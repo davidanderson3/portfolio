@@ -37,7 +37,7 @@ function sleep(ms) {
 async function reverseGeocode(lat, lon) {
   const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
   const resp = await fetch(url, {
-    headers: { 'User-Agent': 'goal-oriented-geocoder' }
+    headers: { 'User-Agent': 'dashboard-geocoder' }
   }).catch(e => {
     throw new Error(`Fetch failed: ${e.message}`);
   });
