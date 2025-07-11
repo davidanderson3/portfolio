@@ -347,6 +347,7 @@ export async function initTravelPanel() {
         tr.classList.add('selected-row');
         map.setView([p.lat, p.lon], 8);
         m.openPopup();
+        mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     });
   };
