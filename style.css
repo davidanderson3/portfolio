@@ -1277,7 +1277,7 @@ h2 {
 @media (max-width: 600px) {
   #goalsView {
     margin: 0;
-    padding: 0 4px;
+    padding: 0;
   }
 
   #goalsView .left-column,
@@ -1325,6 +1325,6 @@ h2 {
   }
 
   .main-layout {
-    padding: 0 4px;
+    padding: 0;
   }
 }
