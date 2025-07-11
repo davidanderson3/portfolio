@@ -35,7 +35,7 @@ export function initWizard(uiRefs) {
       subgoals: [],
       editingGoalId: null
     });
-    wizardContainer.style.display = 'block';
+    wizardContainer.style.display = 'flex';
     addGoalBtn.style.display = 'none';
     renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
   };
