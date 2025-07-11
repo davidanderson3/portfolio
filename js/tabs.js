@@ -6,7 +6,7 @@ export function initTabs(currentUser, db) {
   tabsInitialized = true;
 
   const tabButtons = document.querySelectorAll('.tab-button');
-  const panels    = ['goalsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
+  const panels    = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
 
   tabButtons.forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -30,6 +30,9 @@ export function initTabs(currentUser, db) {
       }
       else if (target === 'metricsPanel') {
         await window.initMetricsUI();
+      }
+      else if (target === 'decisionsPanel') {
+        await window.initDecisionsPanel();
       }
       else if (target === 'listsPanel') {
         await window.initListsPanel(window.currentUser, db);
@@ -58,6 +61,9 @@ export function initTabs(currentUser, db) {
   const runInitial = () => {
     if (initial === 'metricsPanel') {
       window.initMetricsUI();
+    }
+    else if (initial === 'decisionsPanel') {
+      window.initDecisionsPanel();
     }
     else if (initial === 'listsPanel') {
       window.initListsPanel(window.currentUser, db);
