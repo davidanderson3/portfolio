@@ -865,6 +865,7 @@ button:hover {
 #goalsView .full-column {
   background: rgba(255, 255, 255, 0.85);
   width: 100%;
+  box-sizing: border-box;
   padding: 20px;
   border: 1px solid #d0decf;
   border-top: none;
