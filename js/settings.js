@@ -53,7 +53,7 @@ export function initSettings({ settingsBtn, settingsModal }) {
 
   const listDiv = settingsModal.querySelector('#settingsTabsList');
   listDiv.classList.add('settings-list');
-  const panels = ['goalsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
+  const panels = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
 
   if (listDiv.children.length === 0) {
     panels.forEach(id => {
@@ -108,7 +108,7 @@ export async function initSettingsPage() {
   listDiv?.classList.add('settings-list');
   const saveBtn = document.getElementById('settingsSaveBtn');
   const emailSpan = document.getElementById('settingsEmail');
-  const panels = ['goalsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
+  const panels = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
 
   if (listDiv && listDiv.children.length === 0) {
     panels.forEach(id => {
