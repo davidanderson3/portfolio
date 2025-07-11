@@ -35,7 +35,7 @@ window.addEventListener('DOMContentLoaded', () => {
     bottomAddText: document.getElementById('bottomAddText'),
     bottomAddCancel: document.getElementById('bottomAddCancel'),
     bottomAddSubmit: document.getElementById('bottomAddSubmit'),
-    wizardContainer: document.getElementById('goalWizard'),
+    wizardContainer: document.getElementById('goalWizardModal'),
     wizardStep: document.getElementById('wizardStep'),
     nextBtn: document.getElementById('wizardNextBtn'),
     backBtn: document.getElementById('wizardBackBtn'),
