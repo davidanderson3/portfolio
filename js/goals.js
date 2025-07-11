@@ -839,14 +839,39 @@ function attachEditButtons(item, buttonWrap, row) {
             const all = await loadDecisions();
             const idx = all.findIndex(d => d.id === item.id);
             if (idx !== -1) {
+                const needsMove = all[idx].parentGoalId !== (newParent || null);
                 all[idx].text = newText;
                 all[idx].notes = newNotes;
                 all[idx].scheduled = newScheduled;
                 all[idx].parentGoalId = newParent || null;
                 await saveDecisions(all);
+
+                // update DOM if staying in place
+                if (!needsMove) {
+                    item.text = newText;
+                    item.notes = newNotes;
+                    item.scheduled = newScheduled;
+                    item.parentGoalId = newParent || null;
+
+                    middle.innerHTML = '';
+                    const titleDiv = document.createElement('div');
+                    titleDiv.innerHTML = linkify(newText);
+                    middle.appendChild(titleDiv);
+                    if (newNotes) {
+                        const noteDiv = document.createElement('div');
+                        noteDiv.className = 'note-text';
+                        noteDiv.innerHTML = linkify(newNotes);
+                        middle.appendChild(noteDiv);
+                    }
+
+                    due.innerHTML = '';
+                    due.textContent = item.completed ? item.dateCompleted : (newScheduled || '');
+                } else {
+                    await renderGoalsAndSubitems();
+                }
             }
+
             editBtn.innerHTML = '✏️';
-            await renderGoalsAndSubitems();
         }
     });
 }
