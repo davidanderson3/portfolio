@@ -2,7 +2,7 @@ export const SAMPLE_DECISIONS = [
   {
     id: 'demo-goal',
     type: 'goal',
-    text: 'Welcome to Goal Oriented',
+    text: 'Welcome to Dashboard',
     completed: false,
     resolution: '',
     dateCompleted: '',
