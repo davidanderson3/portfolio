@@ -1106,6 +1106,11 @@ h2 {
   background-color: #fff8b3;
 }
 
+/* Prevent horizontal overflow of travel table on small screens */
+#travelPanel .full-column {
+  overflow-x: auto;
+}
+
 #travelTagFilters label {
   margin-right: 8px;
   white-space: nowrap;
