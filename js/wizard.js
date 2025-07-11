@@ -42,7 +42,7 @@ export function initWizard(uiRefs) {
 
   uiRefs.cancelBtn.onclick = () => {
     wizardContainer.style.display = 'none';
-    addGoalBtn.style.display = 'inline-block';
+    addGoalBtn.style.display = 'none';
   };
 
   uiRefs.backBtn.onclick = () => {
@@ -175,7 +175,7 @@ async function saveGoalWizard() {
 
   wizardState.editingGoalId = null;
   wizardContainer.style.display = 'none';
-  addGoalBtn.style.display = 'inline-block';
+  addGoalBtn.style.display = 'none';
   if (isEdit) {
     renderGoalsAndSubitems();
   } else {
