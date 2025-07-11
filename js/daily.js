@@ -1,4 +1,4 @@
-import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify } from './helpers.js';
+import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify, pickDate } from './helpers.js';
 import { db } from './auth.js';
 import { createCalendarEvent } from './googleCalendar.js';
 
@@ -502,8 +502,7 @@ export async function renderDailyTasks(currentUser, db) {
     if (period === 'weekly') {
       btns.append(
         makeIconBtn('📅', 'Add to calendar', async () => {
-          const date = prompt(
-            'Schedule date (YYYY-MM-DD):',
+          const date = await pickDate(
             new Date().toISOString().slice(0, 10)
           );
           if (!date) return;

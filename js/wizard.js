@@ -109,7 +109,7 @@ function renderWizardStep(container, backBtn) {
   } else {
     container.innerHTML = `
       <label for="goalDateInput">Schedule date (optional):</label>
-      <input id="goalDateInput" value="${wizardState.calendarDate}" style="margin-left:8px;" placeholder="YYYY-MM-DD" />
+      <input id="goalDateInput" type="date" value="${wizardState.calendarDate}" style="margin-left:8px;" />
     `;
   }
 }

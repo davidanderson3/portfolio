@@ -10,7 +10,8 @@ import {
     generateId,
     makeIconBtn,
     formatDaysUntil,
-    linkify
+    linkify,
+    pickDate
 } from './helpers.js';
 
 import { db } from './auth.js';
@@ -33,7 +34,7 @@ initializeGlobalDragHandlers();
 export async function addCalendarGoal(date = '') {
     const text = prompt('New goal:');
     if (!text) return;
-    const scheduled = date || prompt('Schedule date (YYYY-MM-DD):', new Date().toISOString().slice(0, 10));
+    const scheduled = date || await pickDate(new Date().toISOString().slice(0, 10));
     if (!scheduled) return;
     const all = await loadDecisions();
     const newGoal = {
@@ -718,8 +719,7 @@ function attachEditButtons(item, buttonWrap, row) {
 
     // 📅 Schedule button
     const calendarBtn = makeIconBtn('📅', 'Add to calendar', async () => {
-        const date = prompt(
-            'Schedule date (YYYY-MM-DD):',
+        const date = await pickDate(
             item.scheduled || new Date().toISOString().slice(0, 10)
         );
         if (!date) return;

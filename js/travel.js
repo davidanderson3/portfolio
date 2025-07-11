@@ -1,4 +1,5 @@
 import { db, getCurrentUser, auth } from './auth.js';
+import { pickDate } from './helpers.js';
 
 const BASE_KEY = 'travelData';
 
@@ -250,8 +251,8 @@ export async function initTravelPanel() {
         ratingInput.value = p.Rating || '';
         ratingInput.placeholder = 'rating';
         const dateInput = document.createElement('input');
+        dateInput.type = 'date';
         dateInput.value = p.Date || '';
-        dateInput.placeholder = 'date';
         const visitedInput = document.createElement('input');
         visitedInput.type = 'checkbox';
         visitedInput.checked = !!p.visited;
@@ -460,7 +461,7 @@ export async function initTravelPanel() {
     const description = prompt('Description:');
     const tags = prompt('Tags (comma separated):');
     const rating = prompt('Rating:');
-    const date = prompt('Date:');
+    const date = await pickDate('');
     const visited = confirm('Visited?');
     const lat = parseFloat(prompt('Latitude:'));
     const lon = parseFloat(prompt('Longitude:'));
