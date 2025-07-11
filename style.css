@@ -51,16 +51,16 @@ body {
   color: #000000;
   font-family: 'Poppins', sans-serif;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 24px;
+  flex-direction: column;
+  align-items: stretch;
   border-bottom: 1px solid #cccccc;
 }
 
 .navbar-inner {
-  width: 90%;
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 5px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -795,6 +795,7 @@ button:hover {
 #goalsView .navbar-inner {
   /* sits inside your .container wrapper */
   width: 100%;
+  padding: 5px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -820,9 +821,9 @@ button:hover {
    3) Tabs pulled left & higher contrast
 ───────────────────────────────────────────────────────────────────────────── */
 #goalsView .navbar .tabs {
-  flex: 1;
-  margin: 0 8px;
-  padding: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0 8px;
   display: flex;
   justify-content: flex-start;
   gap: 8px;
@@ -1292,8 +1293,8 @@ h2 {
 
 
   .navbar-inner {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     position: relative;
   }
 
