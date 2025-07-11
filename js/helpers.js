@@ -5,6 +5,8 @@ import { SAMPLE_DECISIONS, SAMPLE_LISTS } from './sampleData.js';
 
 // Cache decisions in-memory to avoid repeated Firestore reads
 let decisionsCache = null;
+const DECISIONS_LOCAL_KEY = 'pendingDecisions';
+let saveTimer = null;
 
 export function clearDecisionsCache() {
   decisionsCache = null;
@@ -24,6 +26,28 @@ export async function loadDecisions(forceRefresh = false) {
     console.warn('🚫 No current user — returning sample data');
     decisionsCache = SAMPLE_DECISIONS;
     return decisionsCache;
+  }
+
+  const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
+  if (pending) {
+    try {
+      const items = JSON.parse(pending);
+      await db
+        .collection('decisions')
+        .doc(currentUser.uid)
+        .set({ items }, { merge: true });
+      localStorage.removeItem(DECISIONS_LOCAL_KEY);
+      decisionsCache = items;
+      return decisionsCache;
+    } catch (err) {
+      console.warn('Failed to sync pending decisions:', err);
+      try {
+        decisionsCache = JSON.parse(pending);
+        return decisionsCache;
+      } catch {
+        // fall through to fetching from Firestore
+      }
+    }
   }
   const snap = await db.collection('decisions').doc(currentUser.uid).get();
   const data = snap.data();
@@ -49,15 +73,41 @@ export async function saveDecisions(items) {
     console.warn('⚠️ Refusing to save empty or invalid decisions');
     return;
   }
+  localStorage.setItem(DECISIONS_LOCAL_KEY, JSON.stringify(items));
+  decisionsCache = items;
 
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await db
+        .collection('decisions')
+        .doc(currentUser.uid)
+        .set({ items }, { merge: true });
+      localStorage.removeItem(DECISIONS_LOCAL_KEY);
+    } catch (err) {
+      console.error('Failed to save decisions:', err);
+      alert('⚠️ Failed to save changes.');
+    }
+  }, 200);
+}
+
+export async function flushPendingDecisions() {
+  const currentUser = getCurrentUser();
+  if (!currentUser) return;
+  const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
+  if (!pending) return;
+  let items;
   try {
-    // merge in the items array without overwriting other fields
+    items = JSON.parse(pending);
+  } catch {
+    return;
+  }
+  try {
     await db
       .collection('decisions')
       .doc(currentUser.uid)
       .set({ items }, { merge: true });
-
-    // Update in-memory cache after successful save
+    localStorage.removeItem(DECISIONS_LOCAL_KEY);
     decisionsCache = items;
   } catch (err) {
     console.error('Failed to save decisions:', err);
