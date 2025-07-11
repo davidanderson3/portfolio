@@ -1,5 +1,4 @@
 import { loadDecisions, generateId, saveDecisions } from './helpers.js';
-// D3 is loaded globally via a script tag in index.html
 import { renderGoalsAndSubitems } from './goals.js';
 import { renderDecisionList } from './decisionList.js';
 
@@ -11,7 +10,7 @@ export async function initDecisionsPanel() {
     <button id="addDecisionBtn">+ Add Decision</button>
     <div id="decisionList" style="margin:12px 0;"></div>
     <h2>Decision Tree</h2>
-    <svg id="decisionSvg" width="100%" height="600"></svg>`;
+    <div id="decisionTree" class="tree"></div>`;
 
   const addBtn = panel.querySelector('#addDecisionBtn');
   addBtn.onclick = async () => {
@@ -19,6 +18,9 @@ export async function initDecisionsPanel() {
     if (!text) return;
     const out = prompt('Outcomes (comma separated):', '') || '';
     const outcomes = out.split(',').map(o => o.trim()).filter(Boolean);
+    const cons = prompt('Considerations (optional):', '') || '';
+    const next = prompt('Next steps (comma separated):', '') || '';
+    const nextSteps = next.split(',').map(o => o.trim()).filter(Boolean);
     const items = await loadDecisions();
     const newDecision = {
       id: generateId(),
@@ -31,90 +33,80 @@ export async function initDecisionsPanel() {
       parentGoalId: null,
       hiddenUntil: null,
       scheduled: '',
-      outcomes
+      outcomes,
+      considerations: cons.trim(),
+      nextSteps
     };
     await saveDecisions([...items, newDecision]);
     await renderGoalsAndSubitems();
     initDecisionsPanel();
   };
 
-  const svg = d3.select('#decisionSvg');
-
   const allItems = await loadDecisions();
   const items = allItems.filter(it => Array.isArray(it.outcomes));
   const listContainer = panel.querySelector('#decisionList');
   renderDecisionList(items, listContainer);
 
-  const nodeMap = new Map();
-  items.forEach(it => {
-    nodeMap.set(it.id, { id: it.id, name: it.text, children: [] });
-  });
+  const treeContainer = panel.querySelector('#decisionTree');
+  treeContainer.innerHTML = '';
 
-  const roots = [];
-  items.forEach(it => {
-    const node = nodeMap.get(it.id);
-    if (it.parentGoalId && nodeMap.has(it.parentGoalId)) {
-      nodeMap.get(it.parentGoalId).children.push(node);
-    } else {
-      roots.push(node);
-    }
-  });
+  function buildTree(parentId) {
+    const ul = document.createElement('ul');
+    const children = items.filter(d => d.parentGoalId === parentId);
+    children.forEach(dec => {
+      const li = document.createElement('li');
+      const card = document.createElement('div');
+      card.className = 'decision-card';
+      const title = document.createElement('div');
+      title.className = 'decision-title';
+      title.textContent = dec.text;
+      card.appendChild(title);
 
-  const root = { name: 'Decisions', children: roots };
-  const hierarchy = d3.hierarchy(root);
-  const treeLayout = d3.tree().nodeSize([24, 180]);
-  treeLayout(hierarchy);
+      if (dec.considerations) {
+        const conDiv = document.createElement('div');
+        conDiv.className = 'decision-considerations';
+        conDiv.textContent = dec.considerations;
+        card.appendChild(conDiv);
+      }
 
-  let x0 = Infinity;
-  let x1 = -Infinity;
-  hierarchy.each(d => {
-    if (d.x > x1) x1 = d.x;
-    if (d.x < x0) x0 = d.x;
-  });
+      if (dec.outcomes.length) {
+        const outHeader = document.createElement('div');
+        outHeader.className = 'decision-section';
+        outHeader.textContent = 'Outcomes:';
+        card.appendChild(outHeader);
+        const ulOut = document.createElement('ul');
+        dec.outcomes.forEach(o => {
+          const liOut = document.createElement('li');
+          liOut.textContent = o;
+          ulOut.appendChild(liOut);
+        });
+        card.appendChild(ulOut);
+      }
 
-  svg.attr('viewBox', [ -40, x0 - 24, 800, x1 - x0 + 48 ]);
-  svg.selectAll('*').remove();
-  const g = svg.append('g').attr('font-family', 'sans-serif').attr('font-size', 12);
+      if (dec.nextSteps && dec.nextSteps.length) {
+        const nsHeader = document.createElement('div');
+        nsHeader.className = 'decision-section';
+        nsHeader.textContent = 'Next Steps:';
+        card.appendChild(nsHeader);
+        const ulNs = document.createElement('ul');
+        dec.nextSteps.forEach(n => {
+          const liNs = document.createElement('li');
+          liNs.textContent = n;
+          ulNs.appendChild(liNs);
+        });
+        card.appendChild(ulNs);
+      }
 
-  g.append('g')
-    .selectAll('path')
-    .data(hierarchy.links())
-    .join('path')
-    .attr('fill', 'none')
-    .attr('stroke', '#555')
-    .attr('d', d3.linkHorizontal().x(d => d.y).y(d => d.x));
+      li.appendChild(card);
+      const childUl = buildTree(dec.id);
+      if (childUl.children.length) li.appendChild(childUl);
+      ul.appendChild(li);
+    });
+    return ul;
+  }
 
-  const node = g.append('g')
-    .selectAll('g')
-    .data(hierarchy.descendants())
-    .join('g')
-    .attr('transform', d => `translate(${d.y},${d.x})`);
-
-  node.append('circle').attr('r', 4).attr('fill', '#999');
-  node.append('text')
-    .attr('dy', '0.31em')
-    .attr('x', d => d.children ? -6 : 6)
-    .attr('text-anchor', d => d.children ? 'end' : 'start')
-    .text(d => d.data.name);
-
-  const depLinks = [];
-  items.forEach(it => {
-    if (Array.isArray(it.dependencies)) {
-      it.dependencies.forEach(depId => {
-        const source = nodeMap.get(depId);
-        const target = nodeMap.get(it.id);
-        if (source && target) depLinks.push({ source, target });
-      });
-    }
-  });
-  g.append('g')
-    .selectAll('path')
-    .data(depLinks)
-    .join('path')
-    .attr('fill', 'none')
-    .attr('stroke', '#d33')
-    .attr('stroke-dasharray', '4 2')
-    .attr('d', d => `M${d.source.y},${d.source.x}L${d.target.y},${d.target.x}`);
+  const tree = buildTree(null);
+  treeContainer.appendChild(tree);
 }
 
 window.initDecisionsPanel = initDecisionsPanel;
