@@ -60,6 +60,7 @@ body {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
   padding: 5px 24px;
   display: flex;
   justify-content: space-between;
@@ -138,6 +139,7 @@ body {
 
   .navbar-inner {
     width: 100%;
+    box-sizing: border-box;
     justify-content: space-between;
   }
 
@@ -795,6 +797,7 @@ button:hover {
 #goalsView .navbar-inner {
   /* sits inside your .container wrapper */
   width: 100%;
+  box-sizing: border-box;
   padding: 5px 24px;
   display: flex;
   justify-content: space-between;
@@ -1300,6 +1303,7 @@ h2 {
 
 
   .navbar-inner {
+    box-sizing: border-box;
     flex-direction: row;
     align-items: center;
     position: relative;
