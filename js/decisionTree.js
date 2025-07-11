@@ -40,7 +40,8 @@ export async function initDecisionsPanel() {
 
   const svg = d3.select('#decisionSvg');
 
-  const items = await loadDecisions();
+  const allItems = await loadDecisions();
+  const items = allItems.filter(it => Array.isArray(it.outcomes));
   const listContainer = panel.querySelector('#decisionList');
   renderDecisionList(items, listContainer);
 
