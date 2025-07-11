@@ -56,7 +56,49 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   if (uiRefs.bottomAddBtn) {
-    uiRefs.bottomAddBtn.addEventListener('click', () => uiRefs.addGoalBtn?.click());
+    uiRefs.bottomAddBtn.addEventListener('click', handleBottomAdd);
+  }
+
+  function handleBottomAdd() {
+    const active = document.querySelector('.tab-button.active')?.dataset.target;
+    if (!active) return;
+    if (active === 'goalsPanel') {
+      uiRefs.addGoalBtn?.click();
+      return;
+    }
+    if (active === 'dailyPanel') {
+      let kind = prompt('Add daily, weekly, or monthly task? (d/w/m)') || '';
+      kind = kind.trim().toLowerCase();
+      if (!kind) return;
+      if (kind.startsWith('w')) kind = 'weekly';
+      else if (kind.startsWith('m')) kind = 'monthly';
+      else kind = 'daily';
+      const text = prompt('Task description:');
+      if (!text) return;
+      window.quickAddTask?.(kind, text);
+      return;
+    }
+    if (active === 'metricsPanel') {
+      document.getElementById('showConfigBtn')?.click();
+      return;
+    }
+    if (active === 'listsPanel') {
+      const choice = prompt('Add new list, item, or column? (l/i/c)') || '';
+      const c = choice.trim().toLowerCase();
+      if (c.startsWith('l')) {
+        document.getElementById('createListBtn')?.click();
+      } else if (c.startsWith('c')) {
+        document.getElementById('addColumnBtn')?.click();
+        document.getElementById('addColumnToListBtn')?.click();
+      } else if (c.startsWith('i')) {
+        document.querySelector('#itemForm .add-item-btn')?.click();
+      }
+      return;
+    }
+    if (active === 'travelPanel') {
+      document.getElementById('addPlaceBtn')?.click();
+      return;
+    }
   }
 
 
