@@ -886,6 +886,12 @@ h2 {
   align-items: center;
 }
 
+#calendarHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 /* base look */
 .postpone-option {
   display: block;

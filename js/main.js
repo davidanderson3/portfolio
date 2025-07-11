@@ -1,6 +1,6 @@
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
-import { renderGoalsAndSubitems, initFocusButton } from './goals.js';
+import { renderGoalsAndSubitems, initFocusButton, addCalendarGoal } from './goals.js';
 import { initAuth } from './auth.js';
 import { db } from './auth.js';
 import { initWizard } from './wizard.js';
@@ -24,6 +24,7 @@ window.addEventListener('DOMContentLoaded', () => {
     signupBtn: document.getElementById('signupBtn'),
     splashLoginBtn: document.getElementById('splashLoginBtn'),
     previewBtn: document.getElementById('previewBtn'),
+    calendarAddGoalBtn: document.getElementById('calendarAddGoalBtn'),
     addGoalBtn: document.getElementById('addGoalBtn'),
     wizardContainer: document.getElementById('goalWizard'),
     wizardStep: document.getElementById('wizardStep'),
@@ -45,6 +46,10 @@ window.addEventListener('DOMContentLoaded', () => {
       splash.style.display = 'none';
       goalsView.scrollIntoView({ behavior: 'smooth' });
     });
+  }
+
+  if (uiRefs.calendarAddGoalBtn) {
+    uiRefs.calendarAddGoalBtn.addEventListener('click', () => addCalendarGoal());
   }
 
 

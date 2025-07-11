@@ -7,6 +7,7 @@ import {
     loadDecisions,
     saveDecisions,
     saveGoalOrder,
+    generateId,
     makeIconBtn,
     formatDaysUntil,
     linkify
@@ -28,6 +29,34 @@ const goalList = document.getElementById('goalList');
 const completedList = document.getElementById('completedList');
 
 initializeGlobalDragHandlers();
+
+export async function addCalendarGoal(date = '') {
+    const text = prompt('New goal:');
+    if (!text) return;
+    const scheduled = date || prompt('Schedule date (YYYY-MM-DD):', new Date().toISOString().slice(0, 10));
+    if (!scheduled) return;
+    const all = await loadDecisions();
+    const newGoal = {
+        id: generateId(),
+        type: 'goal',
+        text: text.trim(),
+        notes: '',
+        completed: false,
+        resolution: '',
+        dateCompleted: '',
+        parentGoalId: null,
+        hiddenUntil: null,
+        scheduled: scheduled.trim()
+    };
+    await saveDecisions([...all, newGoal]);
+    const recur = prompt('Repeat how often? (daily/weekly/monthly or blank for none):', '') || '';
+    try {
+        await createCalendarEvent(newGoal.text, newGoal.scheduled, recur);
+    } catch (err) {
+        console.error('Failed to create calendar event', err);
+    }
+    await renderGoalsAndSubitems();
+}
 
 export function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');
