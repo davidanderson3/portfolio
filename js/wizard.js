@@ -1,5 +1,5 @@
 import { parseNaturalDate, generateId, loadDecisions, saveDecisions, saveGoalOrder } from './helpers.js';
-import { renderGoalsAndSubitems } from './goals.js';
+import { renderGoalsAndSubitems, appendGoalToDOM } from './goals.js';
 import { createCalendarEvent } from './googleCalendar.js';
 
 const db = firebase.firestore();
@@ -176,7 +176,11 @@ async function saveGoalWizard() {
   wizardState.editingGoalId = null;
   wizardContainer.style.display = 'none';
   addGoalBtn.style.display = 'inline-block';
-  renderGoalsAndSubitems();
+  if (isEdit) {
+    renderGoalsAndSubitems();
+  } else {
+    appendGoalToDOM(newGoal, [...updatedItems, ...newItems]);
+  }
 }
 
 export { saveGoalWizard };

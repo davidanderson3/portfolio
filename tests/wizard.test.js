@@ -11,7 +11,10 @@ vi.mock('../js/helpers.js', () => ({
   parseNaturalDate: vi.fn()
 }));
 
-vi.mock('../js/goals.js', () => ({ renderGoalsAndSubitems: vi.fn() }));
+vi.mock('../js/goals.js', () => ({
+  renderGoalsAndSubitems: vi.fn(),
+  appendGoalToDOM: vi.fn()
+}));
 
 vi.mock('../js/googleCalendar.js', () => ({ createCalendarEvent: createEventMock }));
 
