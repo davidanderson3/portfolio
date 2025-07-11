@@ -96,18 +96,23 @@ body {
   transition: background-color 0.2s;
 }
 
-.navbar-right .icon-btn {
+.icon-btn {
   background: none;
   border: none;
   padding: 0;
-  margin-left: 10px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-
-.navbar-right .icon-btn img {
+.icon-btn img {
   width: 24px;
   height: 24px;
+}
+
+.navbar-right .icon-btn {
+  margin-left: 10px;
 }
 
 /* ------------------------------
@@ -128,15 +133,7 @@ body {
 }
 
 .bottom-nav .icon-btn {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-.bottom-nav .icon-btn img {
-  width: 24px;
-  height: 24px;
+  margin: 0;
 }
 
 /* horizontally scrollable tab list */
