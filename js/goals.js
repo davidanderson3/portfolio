@@ -56,7 +56,7 @@ export async function addCalendarGoal(date = '') {
     } catch (err) {
         console.error('Failed to create calendar event', err);
     }
-    await renderGoalsAndSubitems();
+    appendGoalToDOM(newGoal, [...all, newGoal]);
 }
 
 export function createGoalRow(goal, options = {}) {
@@ -586,6 +586,23 @@ function updateGoalCounts(items) {
     if (hiddenLabel) hiddenLabel.textContent = `Hidden Goals (${hidden})`;
     const completedLabel = document.getElementById('completedLabel');
     if (completedLabel) completedLabel.textContent = ` Completed (${completed})`;
+}
+
+export function appendGoalToDOM(goal, allItems) {
+    const wrapper = makeGoalWrapper(goal);
+    const row = createGoalRow(goal, { hideScheduled: true });
+    wrapper.appendChild(row);
+
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'goal-children';
+    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+    wrapper.appendChild(childrenContainer);
+    renderChildren(goal, allItems, childrenContainer);
+
+    setupToggle(wrapper, row, childrenContainer, goal.id);
+
+    goalList.appendChild(wrapper);
+    updateGoalCounts(allItems);
 }
 
 /**
