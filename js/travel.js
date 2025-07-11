@@ -33,7 +33,7 @@ let userCoords = null;
 let showVisited = false;
 
 function haversine(lat1, lon1, lat2, lon2) {
-  const R = 6371; // km
+  const R = 3958.8; // miles
   const toRad = deg => (deg * Math.PI) / 180;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
@@ -189,7 +189,7 @@ export async function initTravelPanel() {
       visitedTd.textContent = p.visited ? '✅' : '';
       visitedTd.dataset.label = 'Visited';
       const distTd = document.createElement('td');
-      distTd.dataset.label = 'Distance (km)';
+      distTd.dataset.label = 'Distance (mi)';
       if (userCoords) {
         const dist = haversine(userCoords[0], userCoords[1], p.lat, p.lon);
         distTd.textContent = dist.toFixed(1);
