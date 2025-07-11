@@ -67,8 +67,11 @@ describe('database helpers', () => {
 
   it('saves decisions to Firestore', async () => {
     const items = [{ id: 'a', text: 'b' }];
-    const { saveDecisions } = await import('../js/helpers.js');
+    const { saveDecisions, flushPendingDecisions } = await import('../js/helpers.js');
     await saveDecisions(items);
+    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual(items);
+    expect(setMock).not.toHaveBeenCalled();
+    await flushPendingDecisions();
     expect(setMock).toHaveBeenCalledWith({ items }, { merge: true });
   });
 
@@ -109,8 +112,9 @@ describe('database helpers', () => {
     setMock.mockRejectedValueOnce(new Error('fail'));
     const alertSpy = vi.fn();
     global.alert = alertSpy;
-    const { saveDecisions } = await import('../js/helpers.js');
+    const { saveDecisions, flushPendingDecisions } = await import('../js/helpers.js');
     await saveDecisions([{ id: 'a', text: 'b' }]);
+    await flushPendingDecisions();
     expect(alertSpy).toHaveBeenCalled();
   });
 
