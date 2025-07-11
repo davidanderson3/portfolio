@@ -456,7 +456,8 @@ export async function initTravelPanel() {
     });
   }
 
-  document.getElementById('addPlaceBtn').addEventListener('click', async () => {
+  const addBtn = document.getElementById('addPlaceBtn');
+  addBtn?.addEventListener('click', async () => {
     const name = prompt('Place name:');
     const description = prompt('Description:');
     const tags = prompt('Tags (comma separated):');
