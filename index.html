@@ -87,6 +87,7 @@
       </div>
       <div class="tabs scroll-tabs" id="tabsContainer" style="visibility:hidden;">
         <button class="tab-button active" data-target="goalsPanel">Goals</button>
+        <button class="tab-button" data-target="decisionsPanel">Decisions</button>
         <button class="tab-button" data-target="calendarPanel">Calendar</button>
         <button class="tab-button" data-target="dailyPanel">Recurring</button>
         <button class="tab-button" data-target="metricsPanel">Metrics</button>
@@ -129,6 +130,13 @@
         <hr style="margin: 40px 0;" />
 
         <div id="completedList" class="decision-container"></div>
+      </div>
+    </div>
+
+    <!-- DECISIONS PANEL -->
+    <div id="decisionsPanel" class="main-layout" style="display:none;">
+      <div class="full-column">
+        <div id="decisionsTree"></div>
       </div>
     </div>
 
@@ -238,6 +246,7 @@
   <script type="module" src="js/lists.js"></script>
   <script type="module" src="js/travel.js"></script>
   <script type="module" src="js/settings.js"></script>
+  <script type="module" src="js/decisionTree.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
