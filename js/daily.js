@@ -19,6 +19,25 @@ const skipOptions = [
   { label: '3 months', value: 2160 }
 ];
 
+export async function quickAddTask(recurs, text) {
+  const newTask = {
+    id: generateId(),
+    type: 'task',
+    text: `${text}`,
+    notes: '',
+    recurs,
+    parentGoalId: null,
+    completed: false,
+    dateCompleted: '',
+    resolution: '',
+    dependencies: [],
+    skipUntil: null
+  };
+  const updated = [...await loadDecisions(), newTask];
+  await saveDecisions(updated);
+  await renderDailyTasks(window.currentUser, db);
+}
+
 const COMPLETION_KEY = 'taskCompletions';
 
 export async function renderDailyTasks(currentUser, db) {
@@ -550,3 +569,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.renderDailyTasks = renderDailyTasks;
+window.quickAddTask = quickAddTask;
