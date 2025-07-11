@@ -153,4 +153,32 @@ describe('database helpers', () => {
     expect(result).toEqual(SAMPLE_DECISIONS);
     expect(dbMock.collection).not.toHaveBeenCalled();
   });
+
+  it('debounces rapid saveDecisions calls', async () => {
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => ({ uid: 'user1' }),
+      db: {
+        collection: vi.fn(() => ({
+          doc: vi.fn(() => ({
+            get: getMock,
+            set: setMock,
+            update: updateMock
+          }))
+        }))
+      }
+    }));
+    const itemsA = [{ id: 'a', text: 'A' }];
+    const itemsB = [{ id: 'b', text: 'B' }];
+
+    const { saveDecisions, flushPendingDecisions } = await import('../js/helpers.js');
+    await saveDecisions(itemsA);
+    await saveDecisions(itemsB);
+
+    expect(setMock).not.toHaveBeenCalled();
+
+    await flushPendingDecisions();
+
+    expect(setMock).toHaveBeenCalledTimes(1);
+    expect(setMock).toHaveBeenCalledWith({ items: itemsB }, { merge: true });
+  });
 });
