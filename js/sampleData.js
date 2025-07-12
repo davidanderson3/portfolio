@@ -244,9 +244,12 @@ export const SAMPLE_DECISIONS = [
     resolution: '',
     dateCompleted: '',
     parentGoalId: null,
-    outcomes: ['Mac', 'Windows', 'Chromebook'],
-    considerations: 'Budget, weight, operating system',
-    nextSteps: ['Read reviews', 'Visit stores']
+    outcomes: [
+      { text: 'Mac', nextSteps: ['Read reviews'] },
+      { text: 'Windows', nextSteps: ['Visit stores'] },
+      { text: 'Chromebook', nextSteps: [] }
+    ],
+    considerations: 'Budget, weight, operating system'
   }
 ];
 
