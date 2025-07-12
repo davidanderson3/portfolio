@@ -17,10 +17,14 @@ export async function initDecisionsPanel() {
     const text = prompt('Decision:');
     if (!text) return;
     const out = prompt('Outcomes (comma separated):', '') || '';
-    const outcomes = out.split(',').map(o => o.trim()).filter(Boolean);
+    const outcomeTexts = out.split(',').map(o => o.trim()).filter(Boolean);
     const cons = prompt('Considerations (optional):', '') || '';
-    const next = prompt('Next steps (comma separated):', '') || '';
-    const nextSteps = next.split(',').map(o => o.trim()).filter(Boolean);
+    const outcomes = [];
+    for (const oText of outcomeTexts) {
+      const stepInput = prompt(`Next steps for "${oText}" (comma separated):`, '') || '';
+      const steps = stepInput.split(',').map(s => s.trim()).filter(Boolean);
+      outcomes.push({ text: oText, nextSteps: steps });
+    }
     const items = await loadDecisions();
     const newDecision = {
       id: generateId(),
@@ -34,8 +38,7 @@ export async function initDecisionsPanel() {
       hiddenUntil: null,
       scheduled: '',
       outcomes,
-      considerations: cons.trim(),
-      nextSteps
+      considerations: cons.trim()
     };
     await saveDecisions([...items, newDecision]);
     await renderGoalsAndSubitems();
@@ -77,24 +80,19 @@ export async function initDecisionsPanel() {
         const ulOut = document.createElement('ul');
         dec.outcomes.forEach(o => {
           const liOut = document.createElement('li');
-          liOut.textContent = o;
+          liOut.textContent = o.text;
+          if (Array.isArray(o.nextSteps) && o.nextSteps.length) {
+            const stepsUl = document.createElement('ul');
+            o.nextSteps.forEach(step => {
+              const stepLi = document.createElement('li');
+              stepLi.textContent = step;
+              stepsUl.appendChild(stepLi);
+            });
+            liOut.appendChild(stepsUl);
+          }
           ulOut.appendChild(liOut);
         });
         card.appendChild(ulOut);
-      }
-
-      if (dec.nextSteps && dec.nextSteps.length) {
-        const nsHeader = document.createElement('div');
-        nsHeader.className = 'decision-section';
-        nsHeader.textContent = 'Next Steps:';
-        card.appendChild(nsHeader);
-        const ulNs = document.createElement('ul');
-        dec.nextSteps.forEach(n => {
-          const liNs = document.createElement('li');
-          liNs.textContent = n;
-          ulNs.appendChild(liNs);
-        });
-        card.appendChild(ulNs);
       }
 
       li.appendChild(card);

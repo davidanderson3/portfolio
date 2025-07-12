@@ -26,25 +26,21 @@ export function renderDecisionList(items, container) {
       const ul = document.createElement('ul');
       dec.outcomes.forEach(out => {
         const li = document.createElement('li');
-        li.textContent = out;
+        li.textContent = out.text;
+        if (Array.isArray(out.nextSteps) && out.nextSteps.length) {
+          const stepsUl = document.createElement('ul');
+          out.nextSteps.forEach(step => {
+            const stepLi = document.createElement('li');
+            stepLi.textContent = step;
+            stepsUl.appendChild(stepLi);
+          });
+          li.appendChild(stepsUl);
+        }
         ul.appendChild(li);
       });
       card.appendChild(ul);
     }
 
-    if (dec.nextSteps && dec.nextSteps.length) {
-      const nsHeader = document.createElement('div');
-      nsHeader.className = 'decision-section';
-      nsHeader.textContent = 'Next Steps:';
-      card.appendChild(nsHeader);
-      const ulNs = document.createElement('ul');
-      dec.nextSteps.forEach(ns => {
-        const liNs = document.createElement('li');
-        liNs.textContent = ns;
-        ulNs.appendChild(liNs);
-      });
-      card.appendChild(ulNs);
-    }
 
     container.appendChild(card);
   });
