@@ -2,10 +2,41 @@ import { describe, it, expect, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 
 // Mock auth.js to avoid loading Firebase scripts during tests
+var currentUser;
+var getMock;
+var docMock;
+var collectionMock;
+
 vi.mock('../js/auth.js', () => ({
-  getCurrentUser: () => null,
-  db: {}
+  getCurrentUser: () => currentUser,
+  db: {
+    collection: (...args) => collectionMock(...args)
+  }
 }));
+
+// Initialize mocks after vi.mock so they are available when functions run
+currentUser = null;
+getMock = vi.fn();
+docMock = vi.fn(() => ({ get: getMock }));
+collectionMock = vi.fn(() => ({ doc: docMock }));
+
+// Simple localStorage mock for Node environment
+var storage = (() => {
+  let store = {};
+  return {
+    getItem: key => (key in store ? store[key] : null),
+    setItem: (key, value) => {
+      store[key] = String(value);
+    },
+    removeItem: key => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    }
+  };
+})();
+global.localStorage = storage;
 
 import { parseNaturalDate, formatDaysUntil, generateId, linkify } from '../js/helpers.js';
 
@@ -72,5 +103,27 @@ describe('linkify', () => {
     container.innerHTML = linkify(input);
     expect(container.textContent).toBe("<script>alert('x')</script>");
     expect(container.querySelector('script')).toBeNull();
+  });
+});
+
+describe('loadDecisions caching behavior', () => {
+  it('fetches real data after anonymous call', async () => {
+    const { loadDecisions } = await import('../js/helpers.js');
+    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
+
+    currentUser = null;
+    collectionMock.mockClear();
+    getMock.mockClear();
+
+    const anon = await loadDecisions();
+    expect(anon).toEqual(SAMPLE_DECISIONS);
+    expect(collectionMock).not.toHaveBeenCalled();
+
+    currentUser = { uid: 'user1' };
+    getMock.mockResolvedValueOnce({ data: () => ({ items: [{ id: '1', text: 't' }] }) });
+
+    const auth = await loadDecisions();
+    expect(auth).toEqual([{ id: '1', text: 't' }]);
+    expect(collectionMock).toHaveBeenCalled();
   });
 });
