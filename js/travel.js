@@ -352,7 +352,8 @@ export async function initTravelPanel() {
         tr.classList.add('selected-row');
         map.setView([p.lat, p.lon], 8);
         m.openPopup();
-        mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // mapEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Don't auto-scroll to the map when selecting a place
       });
     });
   };
