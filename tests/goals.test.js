@@ -17,6 +17,8 @@ vi.mock('../js/helpers.js', () => ({
   loadDecisions: vi.fn(),
   saveDecisions: vi.fn(),
   saveGoalOrder: vi.fn(),
+  generateId: vi.fn(() => 'g1'),
+  pickDate: vi.fn(async () => ''),
   makeIconBtn: () => document.createElement('button'),
   formatDaysUntil: () => '',
   linkify: (t) => t
@@ -90,5 +92,22 @@ describe('goal postponing', () => {
     expect(saved.hiddenUntil).toBe(new Date('2023-01-03T00:00:00.000Z').toISOString());
 
     vi.useRealTimers();
+  });
+});
+
+describe('addCalendarGoal', () => {
+  it('renders goal in calendar section', async () => {
+    helpers.loadDecisions.mockResolvedValue([]);
+    const mod = await import('../js/goals.js');
+    const { addCalendarGoal } = mod;
+
+    global.prompt = vi.fn()
+      .mockReturnValueOnce('My calendar goal')
+      .mockReturnValueOnce('');
+
+    await addCalendarGoal('2024-01-02');
+
+    const content = document.getElementById('calendarContent');
+    expect(content.children.length).toBeGreaterThan(0);
   });
 });
