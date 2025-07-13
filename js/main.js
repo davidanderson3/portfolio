@@ -1,8 +1,7 @@
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
 import { renderGoalsAndSubitems, initFocusButton, addCalendarGoal } from './goals.js';
-import { initAuth } from './auth.js';
-import { db } from './auth.js';
+import { initAuth, db, currentUser } from './auth.js';
 import { initWizard } from './wizard.js';
 import { renderDailyTaskReport } from './report.js';
 import { initMetricsUI } from './stats.js';
@@ -11,8 +10,6 @@ import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
 import { initGoogleCalendar } from './googleCalendar.js';
 import { loadHiddenTabs, applyHiddenTabs } from './settings.js';
-
-window.currentUser = null;
 
 window.addEventListener('DOMContentLoaded', () => {
   const uiRefs = {
@@ -154,8 +151,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
   initAuth(uiRefs, async (user) => {
-    window.currentUser = user;
-
     ['goalList', 'completedList', 'dailyTasksList', 'weeklyTasksList', 'monthlyTasksList'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '';

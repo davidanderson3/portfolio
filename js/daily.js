@@ -1,5 +1,5 @@
 import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify, pickDate } from './helpers.js';
-import { db } from './auth.js';
+import { db, currentUser } from './auth.js';
 import { createCalendarEvent } from './googleCalendar.js';
 
 // Shared skip intervals (same as goals)
@@ -35,7 +35,7 @@ export async function quickAddTask(recurs, text) {
   };
   const updated = [...await loadDecisions(), newTask];
   await saveDecisions(updated);
-  await renderDailyTasks(window.currentUser, db);
+  await renderDailyTasks(currentUser, db);
 }
 
 const COMPLETION_KEY = 'taskCompletions';
@@ -564,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const panel = document.getElementById('dailyPanel');
   if (panel && panel.style.display !== 'none') {
     // Render tasks for the current user if the Daily tab is visible
-    renderDailyTasks(window.currentUser, db);
+    renderDailyTasks(currentUser, db);
   }
 });
 

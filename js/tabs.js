@@ -1,7 +1,9 @@
+import { currentUser } from './auth.js';
+
 let tabsInitialized = false;
 
-export function initTabs(currentUser, db) {
-  // Only attach listeners once; handlers reference window.currentUser
+export function initTabs(user, db) {
+  // Only attach listeners once; handlers reference the shared currentUser
   if (tabsInitialized) return;
   tabsInitialized = true;
 
@@ -26,7 +28,7 @@ export function initTabs(currentUser, db) {
 
       // 4) init dynamic content
       if (target === 'dailyPanel') {
-        await window.renderDailyTasks(window.currentUser, db);
+        await window.renderDailyTasks(currentUser, db);
       }
       else if (target === 'metricsPanel') {
         await window.initMetricsUI();
@@ -35,7 +37,7 @@ export function initTabs(currentUser, db) {
         await window.initDecisionsPanel();
       }
       else if (target === 'listsPanel') {
-        await window.initListsPanel(window.currentUser, db);
+        await window.initListsPanel(currentUser, db);
       }
       else if (target === 'travelPanel') {
         await window.initTravelPanel();
@@ -66,7 +68,7 @@ export function initTabs(currentUser, db) {
       window.initDecisionsPanel();
     }
     else if (initial === 'listsPanel') {
-      window.initListsPanel(window.currentUser, db);
+      window.initListsPanel(currentUser, db);
     }
     else if (initial === 'travelPanel') {
       window.initTravelPanel();
