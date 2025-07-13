@@ -95,25 +95,26 @@ export function createGoalRow(goal, options = {}) {
             items[idx].dateCompleted = checkbox.checked
                 ? new Date().toISOString()
                 : null;
-            await saveDecisions(items);
-            updateGoalCounts(items);
 
+            // 2) Update the UI immediately
             if (options.stayPut) {
                 if (typeof options.onToggle === 'function') {
                     await options.onToggle(checkbox.checked, items);
                 } else {
                     await renderGoalsAndSubitems();
                 }
-                return;
+            } else {
+                const wrapper = row.closest('.decision.goal-card') || row;
+                if (checkbox.checked) {
+                    completedList.appendChild(wrapper);
+                } else {
+                    goalList.appendChild(wrapper);
+                }
             }
 
-            // 2) Move the row in the DOM
-            const wrapper = row.closest('.decision.goal-card') || row;
-            if (checkbox.checked) {
-                completedList.appendChild(wrapper);
-            } else {
-                goalList.appendChild(wrapper);
-            }
+            // 3) Persist changes after updating UI
+            await saveDecisions(items);
+            updateGoalCounts(items);
         };
     }
 
