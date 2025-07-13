@@ -10,5 +10,14 @@ An app for tracking goals and tasks.
 
 👉 **Live App:** [https://davidanderson3.github.io/dashboard/](https://davidanderson3.github.io/dashboard/)
 
+## Importing travel data
+
+Two node scripts help load travel places into Firestore:
+
+1. `npm run import:travel` – Clears all existing travel documents for the default user and imports `assets/travel/doc.kml`.
+2. `npm run append:travel` – Reads `assets/travel/extra.kml` and appends those places to the same user without removing existing ones.
+
+Both scripts expect `serviceAccountKey.json` in the project root and support the Firestore emulator if `FIRESTORE_EMULATOR_HOST` is set.
+
 
 
