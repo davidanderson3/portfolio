@@ -172,7 +172,11 @@ export async function initTravelPanel() {
       }
       const tr = document.createElement('tr');
       const nameTd = document.createElement('td');
-      nameTd.textContent = p.name;
+      const nameLink = document.createElement('a');
+      nameLink.href = `https://www.google.com/search?q=${encodeURIComponent(p.name)}`;
+      nameLink.textContent = p.name;
+      nameLink.target = '_blank';
+      nameTd.appendChild(nameLink);
       nameTd.dataset.label = 'Name';
       const descTd = document.createElement('td');
       descTd.textContent = p.description || '';
