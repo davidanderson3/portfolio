@@ -103,6 +103,10 @@ window.addEventListener('DOMContentLoaded', () => {
       uiRefs.addGoalBtn?.click();
       return;
     }
+    if (active === 'decisionsPanel') {
+      window.addDecision?.();
+      return;
+    }
     if (active === 'dailyPanel') {
       showAddModal({
         title: 'Add Task',
