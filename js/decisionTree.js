@@ -1,57 +1,51 @@
 import { loadDecisions, generateId, saveDecisions } from './helpers.js';
 import { renderGoalsAndSubitems } from './goals.js';
-import { renderDecisionList } from './decisionList.js';
+
+export async function addDecision(parentId = null) {
+  if (parentId === null) {
+    parentId = prompt('Parent decision ID (optional):', '') || null;
+    if (parentId) parentId = parentId.trim();
+  }
+  const text = prompt('Decision:');
+  if (!text) return;
+  const out = prompt('Outcomes (comma separated):', '') || '';
+  const outcomeTexts = out.split(',').map(o => o.trim()).filter(Boolean);
+  const cons = prompt('Considerations (optional):', '') || '';
+  const outcomes = [];
+  for (const oText of outcomeTexts) {
+    const stepInput = prompt(`Next steps for "${oText}" (comma separated):`, '') || '';
+    const steps = stepInput.split(',').map(s => s.trim()).filter(Boolean);
+    outcomes.push({ text: oText, nextSteps: steps });
+  }
+  const items = await loadDecisions();
+  const newDecision = {
+    id: generateId(),
+    type: 'goal',
+    text: text.trim(),
+    notes: '',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    parentGoalId: parentId,
+    hiddenUntil: null,
+    scheduled: '',
+    outcomes,
+    considerations: cons.trim()
+  };
+  await saveDecisions([...items, newDecision]);
+  await renderGoalsAndSubitems();
+  initDecisionsPanel();
+}
 
 export async function initDecisionsPanel() {
   const panel = document.getElementById('decisionsPanel');
   if (!panel) return;
 
-  panel.innerHTML = `
-    <button id="addDecisionBtn">+ Add Decision</button>
-    <div id="decisionList" style="margin:12px 0;"></div>
-    <h2>Decision Tree</h2>
-    <div id="decisionTree" class="tree"></div>`;
-
-  const addBtn = panel.querySelector('#addDecisionBtn');
-  addBtn.onclick = async () => {
-    const text = prompt('Decision:');
-    if (!text) return;
-    const out = prompt('Outcomes (comma separated):', '') || '';
-    const outcomeTexts = out.split(',').map(o => o.trim()).filter(Boolean);
-    const cons = prompt('Considerations (optional):', '') || '';
-    const outcomes = [];
-    for (const oText of outcomeTexts) {
-      const stepInput = prompt(`Next steps for "${oText}" (comma separated):`, '') || '';
-      const steps = stepInput.split(',').map(s => s.trim()).filter(Boolean);
-      outcomes.push({ text: oText, nextSteps: steps });
-    }
-    const items = await loadDecisions();
-    const newDecision = {
-      id: generateId(),
-      type: 'goal',
-      text: text.trim(),
-      notes: '',
-      completed: false,
-      resolution: '',
-      dateCompleted: '',
-      parentGoalId: null,
-      hiddenUntil: null,
-      scheduled: '',
-      outcomes,
-      considerations: cons.trim()
-    };
-    await saveDecisions([...items, newDecision]);
-    await renderGoalsAndSubitems();
-    initDecisionsPanel();
-  };
+  const treeContainer = panel.querySelector('#decisionTree');
+  treeContainer.innerHTML = '';
 
   const allItems = await loadDecisions();
   const items = allItems.filter(it => Array.isArray(it.outcomes));
-  const listContainer = panel.querySelector('#decisionList');
-  renderDecisionList(items, listContainer);
-
-  const treeContainer = panel.querySelector('#decisionTree');
-  treeContainer.innerHTML = '';
 
   function buildTree(parentId) {
     const ul = document.createElement('ul');
@@ -108,3 +102,4 @@ export async function initDecisionsPanel() {
 }
 
 window.initDecisionsPanel = initDecisionsPanel;
+window.addDecision = addDecision;
