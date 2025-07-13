@@ -11,6 +11,7 @@ function storageKey() {
 auth.onAuthStateChanged(() => {
   mapInitialized = false;
   travelData = [];
+  initialRandomShown = false;
   // Reload travel data for the newly authenticated user.
   // initTravelPanel safely exits if DOM is not ready or already initialized.
   initTravelPanel().catch(err =>
@@ -32,6 +33,7 @@ let resultMarkers = [];
 let sortByDistance = true;
 let userCoords = null;
 let showVisited = false;
+let initialRandomShown = false;
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 3958.8; // miles
@@ -131,18 +133,23 @@ export async function initTravelPanel() {
     });
   }
 
-  const renderList = (term = '') => {
+  const renderList = (term = '', customItems = null) => {
     tableBody.innerHTML = '';
     markers.forEach(m => m.remove());
     markers = [];
     rowMarkerMap.clear();
-    const items = travelData.filter(
-      p =>
-        p.name.toLowerCase().includes(term.toLowerCase()) &&
-        (selectedTags.length === 0 ||
-          (Array.isArray(p.tags) && selectedTags.some(t => p.tags.includes(t)))) &&
-        (showVisited || !p.visited)
-    );
+    let items;
+    if (Array.isArray(customItems)) {
+      items = customItems;
+    } else {
+      items = travelData.filter(
+        p =>
+          p.name.toLowerCase().includes(term.toLowerCase()) &&
+          (selectedTags.length === 0 ||
+            (Array.isArray(p.tags) && selectedTags.some(t => p.tags.includes(t)))) &&
+          (showVisited || !p.visited)
+      );
+    }
 
     if (sortByDistance && userCoords) {
       items.sort(
@@ -358,6 +365,13 @@ export async function initTravelPanel() {
     });
   };
 
+  const renderRandomList = (count = 10) => {
+    const candidates = travelData.filter(p => showVisited || !p.visited);
+    const shuffled = candidates.slice().sort(() => Math.random() - 0.5);
+    const selection = shuffled.slice(0, Math.min(count, shuffled.length));
+    renderList('', selection);
+  };
+
 
   const clearSearchResults = () => {
     if (resultsList) resultsList.innerHTML = '';
@@ -394,19 +408,28 @@ export async function initTravelPanel() {
   }
 
 
+  const renderInitial = () => {
+    if (!initialRandomShown) {
+      renderRandomList(10);
+      initialRandomShown = true;
+    } else {
+      renderList(currentSearch);
+    }
+  };
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       pos => {
         userCoords = [pos.coords.latitude, pos.coords.longitude];
-        renderList(currentSearch);
+        renderInitial();
       },
       () => {
         // location retrieval failed; still render list without userCoords
-        renderList(currentSearch);
+        renderInitial();
       }
     );
   } else {
-    renderList(currentSearch);
+    renderInitial();
   }
 
   if (placeInput) {
