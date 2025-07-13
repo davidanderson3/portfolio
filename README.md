@@ -8,6 +8,7 @@ An app for tracking goals and tasks.
 - Goals can now be scheduled directly on your calendar during creation.
 - Tasks can be edited inline without pop-up prompts.
 - Decisions can be edited inline without pop-up prompts.
+- Lists can be sorted by clicking column headers.
 
 👉 **Live App:** [https://davidanderson3.github.io/dashboard/](https://davidanderson3.github.io/dashboard/)
 
