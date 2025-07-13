@@ -2,19 +2,50 @@ import { loadDecisions, generateId, saveDecisions, makeIconBtn } from './helpers
 import { renderGoalsAndSubitems } from './goals.js';
 
 async function editDecision(decId) {
+  const card = document.querySelector(`.decision-card[data-dec-id="${decId}"]`);
+  if (!card) return;
+
   const items = await loadDecisions();
   const idx = items.findIndex(d => d.id === decId);
   if (idx === -1) return;
   const dec = items[idx];
-  const newText = prompt('Decision:', dec.text);
-  if (newText === null) return;
-  const newCons = prompt('Considerations (optional):', dec.considerations || '');
-  if (newCons === null) return;
-  items[idx].text = newText.trim();
-  items[idx].considerations = newCons.trim();
-  await saveDecisions(items);
-  await renderGoalsAndSubitems();
-  initDecisionsPanel();
+
+  const editBtn = card.querySelector('.edit-decision-btn');
+  const editing = card.dataset.editing === 'true';
+
+  if (!editing) {
+    card.dataset.editing = 'true';
+    if (editBtn) editBtn.textContent = '💾';
+
+    const titleInput = document.createElement('input');
+    titleInput.value = dec.text;
+    titleInput.style.width = '100%';
+
+    const consInput = document.createElement('textarea');
+    consInput.value = dec.considerations || '';
+    consInput.rows = 2;
+    consInput.style.width = '100%';
+    consInput.style.marginTop = '4px';
+
+    card.querySelector('.decision-title')?.replaceWith(titleInput);
+    const conDiv = card.querySelector('.decision-considerations');
+    if (conDiv) {
+      conDiv.replaceWith(consInput);
+    } else {
+      card.insertBefore(consInput, card.children[1] || null);
+    }
+  } else {
+    card.dataset.editing = '';
+    if (editBtn) editBtn.textContent = '✏️';
+
+    const newText = card.querySelector('input')?.value.trim() || '';
+    const newCons = card.querySelector('textarea')?.value.trim() || '';
+    items[idx].text = newText;
+    items[idx].considerations = newCons;
+    await saveDecisions(items);
+    await renderGoalsAndSubitems();
+    initDecisionsPanel();
+  }
 }
 
 async function deleteDecision(decId) {
@@ -35,20 +66,51 @@ async function deleteDecision(decId) {
 }
 
 async function editOutcome(decId, index) {
+  const li = document.querySelector(`li[data-dec-id="${decId}"][data-out-index="${index}"]`);
+  if (!li) return;
+
   const items = await loadDecisions();
   const dec = items.find(d => d.id === decId);
   if (!dec || !dec.outcomes[index]) return;
-  const out = dec.outcomes[index];
-  const newText = prompt('Outcome:', out.text);
-  if (newText === null) return;
-  const steps = prompt('Next steps (comma separated):', (out.nextSteps || []).join(', '));
-  if (steps === null) return;
-  dec.outcomes[index] = {
-    text: newText.trim(),
-    nextSteps: steps.split(',').map(s => s.trim()).filter(Boolean)
-  };
-  await saveDecisions(items);
-  initDecisionsPanel();
+
+  const editBtn = li.querySelector('.edit-outcome-btn');
+  const editing = li.dataset.editing === 'true';
+
+  if (!editing) {
+    li.dataset.editing = 'true';
+    if (editBtn) editBtn.textContent = '💾';
+
+    const textInput = document.createElement('input');
+    textInput.value = dec.outcomes[index].text;
+    textInput.style.width = '100%';
+
+    const stepsInput = document.createElement('input');
+    stepsInput.value = (dec.outcomes[index].nextSteps || []).join(', ');
+    stepsInput.style.width = '100%';
+    stepsInput.style.marginTop = '4px';
+
+    li.innerHTML = '';
+    li.appendChild(textInput);
+    li.appendChild(stepsInput);
+    const btnRow = document.createElement('span');
+    btnRow.className = 'button-row';
+    btnRow.append(editBtn, makeIconBtn('❌', 'Cancel', () => initDecisionsPanel()));
+    li.appendChild(btnRow);
+  } else {
+    li.dataset.editing = '';
+    if (editBtn) editBtn.textContent = '✏️';
+
+    const inputs = li.querySelectorAll('input');
+    const newText = inputs[0]?.value.trim() || '';
+    const newSteps = (inputs[1]?.value || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    dec.outcomes[index] = { text: newText, nextSteps: newSteps };
+    await saveDecisions(items);
+    initDecisionsPanel();
+  }
 }
 
 async function deleteOutcome(decId, index) {
@@ -114,10 +176,12 @@ export async function initDecisionsPanel() {
       const li = document.createElement('li');
       const card = document.createElement('div');
       card.className = 'decision-card';
+      card.dataset.decId = dec.id;
 
       const btnRow = document.createElement('div');
       btnRow.className = 'button-row';
       const editBtn = makeIconBtn('✏️', 'Edit decision', () => editDecision(dec.id));
+      editBtn.classList.add('edit-decision-btn');
       const delBtn = makeIconBtn('❌', 'Delete decision', () => deleteDecision(dec.id));
       btnRow.append(editBtn, delBtn);
       card.appendChild(btnRow);
@@ -141,6 +205,8 @@ export async function initDecisionsPanel() {
         const ulOut = document.createElement('ul');
         dec.outcomes.forEach((o, idx) => {
           const liOut = document.createElement('li');
+          liOut.dataset.decId = dec.id;
+          liOut.dataset.outIndex = idx;
           const spanText = document.createElement('span');
           spanText.textContent = o.text;
           liOut.appendChild(spanText);
@@ -148,8 +214,10 @@ export async function initDecisionsPanel() {
           const btns = document.createElement('span');
           btns.className = 'button-row';
           btns.style.marginLeft = '6px';
+          const editOutBtn = makeIconBtn('✏️', 'Edit outcome', () => editOutcome(dec.id, idx));
+          editOutBtn.classList.add('edit-outcome-btn');
           btns.append(
-            makeIconBtn('✏️', 'Edit outcome', () => editOutcome(dec.id, idx)),
+            editOutBtn,
             makeIconBtn('❌', 'Delete outcome', () => deleteOutcome(dec.id, idx))
           );
           liOut.appendChild(btns);
