@@ -57,6 +57,11 @@ export async function addCalendarGoal(date = '') {
         console.error('Failed to create calendar event', err);
     }
     appendGoalToDOM(newGoal, [...all, newGoal]);
+    const calendarContent = document.getElementById('calendarContent');
+    if (calendarContent) {
+        const refreshed = initCalendarSection();
+        renderCalendarSection([...all, newGoal], refreshed);
+    }
 }
 
 export function createGoalRow(goal, options = {}) {
