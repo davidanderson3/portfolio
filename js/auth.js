@@ -4,6 +4,8 @@ import "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js";
 import "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js";
 import { clearDecisionsCache } from './helpers.js';
 
+export let currentUser = null;
+
 const firebaseConfig = {
   apiKey: "AIzaSyBbet_bmwm8h8G5CqvmzrdAnc3AO-0IKa8",
   authDomain: "decision-maker-4e1d3.firebaseapp.com",
