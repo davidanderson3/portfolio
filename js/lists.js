@@ -5,6 +5,8 @@ let isScaffolded = false;
 let listsArray = [];
 let selectedListIndex = 0;
 let persist;
+// Track sort state for each list { [idx]: { colIdx:number, dir:1|-1 } }
+const listSortStates = {};
 
 auth.onAuthStateChanged(async () => {
   listsArray = await loadLists();
@@ -96,6 +98,23 @@ function debounce(fn, delay) {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), delay);
   };
+}
+
+function getSortValue(item, col, colIdx) {
+  if (colIdx === 0) {
+    return (item[col.name + '_label'] || item[col.name] || '').toString().toLowerCase();
+  }
+  const val = item[col.name];
+  switch (col.type) {
+    case 'number':
+      return Number(val) || 0;
+    case 'date':
+      return new Date(val || 0).getTime();
+    case 'checkbox':
+      return val ? 1 : 0;
+    default:
+      return (val || '').toString().toLowerCase();
+  }
 }
 
 
@@ -299,11 +318,36 @@ async function initListsPanel() {
     // Header
     const thead = table.createTHead();
     const headerRow = thead.insertRow();
-    columns.forEach(col => {
+    columns.forEach((col, colIdx) => {
       const th = document.createElement('th');
       th.textContent = col.name;
       th.style.border = '1px solid #ccc';
       th.style.padding = '8px';
+      th.style.cursor = 'pointer';
+
+      const sortState = listSortStates[selectedListIndex];
+      if (sortState && sortState.colIdx === colIdx) {
+        th.textContent += sortState.dir === 1 ? ' \u25B2' : ' \u25BC';
+      }
+
+      th.addEventListener('click', async () => {
+        const current = listSortStates[selectedListIndex] || {};
+        const dir = current.colIdx === colIdx ? -current.dir : 1;
+        listSortStates[selectedListIndex] = { colIdx, dir };
+
+        const cmp = (a, b) => {
+          const vA = getSortValue(a, col, colIdx);
+          const vB = getSortValue(b, col, colIdx);
+          if (vA > vB) return dir;
+          if (vA < vB) return -dir;
+          return 0;
+        };
+
+        listsArray[selectedListIndex].items.sort(cmp);
+        await persist();
+        renderSelectedList();
+      });
+
       headerRow.append(th);
     });
     const actionsTh = document.createElement('th');
