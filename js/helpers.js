@@ -24,8 +24,7 @@ export async function loadDecisions(forceRefresh = false) {
   const currentUser = getCurrentUser();
   if (!currentUser) {
     console.warn('🚫 No current user — returning sample data');
-    decisionsCache = SAMPLE_DECISIONS;
-    return decisionsCache;
+    return SAMPLE_DECISIONS;
   }
 
   const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
