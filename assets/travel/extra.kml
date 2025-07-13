@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Extra Places</name>
+    <Placemark>
+      <name>Colorado Springs</name>
+      <description><![CDATA[description: Weekend trip<br>Pictutes: <br>Interest Rating: <br>Rating: <br>Date: 2024]]></description>
+      <Point>
+        <coordinates>-104.8214,38.8339,0</coordinates>
+      </Point>
+    </Placemark>
+    <Placemark>
+      <name>Santa Fe</name>
+      <description><![CDATA[description: Visited for art galleries<br>Pictutes: <br>Interest Rating: <br>Rating: <br>Date: 2023]]></description>
+      <Point>
+        <coordinates>-105.9378,35.6870,0</coordinates>
+      </Point>
+    </Placemark>
+  </Document>
+</kml>

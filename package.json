@@ -7,6 +7,7 @@
     "purge:css": "purgecss --config purgecss.config.js --output ./clean-css",
     "test": "vitest run",
     "import:travel": "node scripts/importTravelKml.js",
+    "append:travel": "node scripts/appendTravelKml.js",
     "update:geo": "node scripts/addGeoMetadata.js",
     "prepare": "husky install",
     "start": "node backend/server.js"
