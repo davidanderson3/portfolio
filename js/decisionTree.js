@@ -1,5 +1,65 @@
-import { loadDecisions, generateId, saveDecisions } from './helpers.js';
+import { loadDecisions, generateId, saveDecisions, makeIconBtn } from './helpers.js';
 import { renderGoalsAndSubitems } from './goals.js';
+
+async function editDecision(decId) {
+  const items = await loadDecisions();
+  const idx = items.findIndex(d => d.id === decId);
+  if (idx === -1) return;
+  const dec = items[idx];
+  const newText = prompt('Decision:', dec.text);
+  if (newText === null) return;
+  const newCons = prompt('Considerations (optional):', dec.considerations || '');
+  if (newCons === null) return;
+  items[idx].text = newText.trim();
+  items[idx].considerations = newCons.trim();
+  await saveDecisions(items);
+  await renderGoalsAndSubitems();
+  initDecisionsPanel();
+}
+
+async function deleteDecision(decId) {
+  if (!confirm('Delete this decision and all sub-decisions?')) return;
+  let items = await loadDecisions();
+  const idsToRemove = new Set();
+  const gather = id => {
+    idsToRemove.add(id);
+    items.forEach(it => {
+      if (it.parentGoalId === id) gather(it.id);
+    });
+  };
+  gather(decId);
+  items = items.filter(it => !idsToRemove.has(it.id));
+  await saveDecisions(items);
+  await renderGoalsAndSubitems();
+  initDecisionsPanel();
+}
+
+async function editOutcome(decId, index) {
+  const items = await loadDecisions();
+  const dec = items.find(d => d.id === decId);
+  if (!dec || !dec.outcomes[index]) return;
+  const out = dec.outcomes[index];
+  const newText = prompt('Outcome:', out.text);
+  if (newText === null) return;
+  const steps = prompt('Next steps (comma separated):', (out.nextSteps || []).join(', '));
+  if (steps === null) return;
+  dec.outcomes[index] = {
+    text: newText.trim(),
+    nextSteps: steps.split(',').map(s => s.trim()).filter(Boolean)
+  };
+  await saveDecisions(items);
+  initDecisionsPanel();
+}
+
+async function deleteOutcome(decId, index) {
+  if (!confirm('Delete this outcome?')) return;
+  const items = await loadDecisions();
+  const dec = items.find(d => d.id === decId);
+  if (!dec) return;
+  dec.outcomes.splice(index, 1);
+  await saveDecisions(items);
+  initDecisionsPanel();
+}
 
 export async function addDecision(parentId = null) {
   if (parentId === null) {
@@ -54,6 +114,13 @@ export async function initDecisionsPanel() {
       const li = document.createElement('li');
       const card = document.createElement('div');
       card.className = 'decision-card';
+
+      const btnRow = document.createElement('div');
+      btnRow.className = 'button-row';
+      const editBtn = makeIconBtn('✏️', 'Edit decision', () => editDecision(dec.id));
+      const delBtn = makeIconBtn('❌', 'Delete decision', () => deleteDecision(dec.id));
+      btnRow.append(editBtn, delBtn);
+      card.appendChild(btnRow);
       const title = document.createElement('div');
       title.className = 'decision-title';
       title.textContent = dec.text;
@@ -72,9 +139,21 @@ export async function initDecisionsPanel() {
         outHeader.textContent = 'Outcomes:';
         card.appendChild(outHeader);
         const ulOut = document.createElement('ul');
-        dec.outcomes.forEach(o => {
+        dec.outcomes.forEach((o, idx) => {
           const liOut = document.createElement('li');
-          liOut.textContent = o.text;
+          const spanText = document.createElement('span');
+          spanText.textContent = o.text;
+          liOut.appendChild(spanText);
+
+          const btns = document.createElement('span');
+          btns.className = 'button-row';
+          btns.style.marginLeft = '6px';
+          btns.append(
+            makeIconBtn('✏️', 'Edit outcome', () => editOutcome(dec.id, idx)),
+            makeIconBtn('❌', 'Delete outcome', () => deleteOutcome(dec.id, idx))
+          );
+          liOut.appendChild(btns);
+
           if (Array.isArray(o.nextSteps) && o.nextSteps.length) {
             const stepsUl = document.createElement('ul');
             o.nextSteps.forEach(step => {
