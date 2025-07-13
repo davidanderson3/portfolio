@@ -142,3 +142,8 @@ serviceAccountKey.json
 
 clean-css
 .zsh_history
+assets/travel/extra.kml
+.gitignore
+doc.kml
+assets/travel/extra.kml
+
