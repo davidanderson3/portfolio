@@ -1266,6 +1266,9 @@ h2 {
   margin-bottom: 20px;
   border-radius: 6px;
 }
+.weekend-section.current-weekend {
+  background-color: #ffffe0;
+}
 
 /* Tag filter buttons */
 .tag-filter-button {

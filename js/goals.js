@@ -382,8 +382,9 @@ function renderCalendarSection(all, calendarContent) {
             const hdr = document.createElement('h3');
             const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             const sunLabel = sun.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-            const daysText = formatDaysUntil(key);
-            hdr.textContent = `Weekend: ${satLabel} - ${sunLabel} (${daysText})`;
+            const isCurrentWeekend = today >= sat && today <= sun;
+            if (isCurrentWeekend) section.classList.add('current-weekend');
+            hdr.textContent = `Weekend: ${satLabel} - ${sunLabel}`;
             section.appendChild(hdr);
 
             [key, sunKey].forEach(k => {
@@ -422,8 +423,9 @@ function renderCalendarSection(all, calendarContent) {
             const hdr = document.createElement('h3');
             const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             const sunLabel = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-            const daysText = formatDaysUntil(satKey);
-            hdr.textContent = `Weekend: ${satLabel} - ${sunLabel} (${daysText})`;
+            const isCurrentWeekend = today >= sat && today <= d;
+            if (isCurrentWeekend) section.classList.add('current-weekend');
+            hdr.textContent = `Weekend: ${satLabel} - ${sunLabel}`;
             section.appendChild(hdr);
 
             [satKey, key].forEach(k => {
