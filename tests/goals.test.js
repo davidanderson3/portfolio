@@ -96,7 +96,7 @@ describe('goal postponing', () => {
 });
 
 describe('addCalendarGoal', () => {
-  it('renders goal in calendar section', async () => {
+  it('renders goal in calendar section and main list', async () => {
     helpers.loadDecisions.mockResolvedValue([]);
     const mod = await import('../js/goals.js');
     const { addCalendarGoal } = mod;
@@ -109,5 +109,7 @@ describe('addCalendarGoal', () => {
 
     const content = document.getElementById('calendarContent');
     expect(content.children.length).toBeGreaterThan(0);
+    // goal should also appear in the main goal list
+    expect(document.getElementById('goalList').children.length).toBe(1);
   });
 });
