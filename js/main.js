@@ -107,6 +107,10 @@ window.addEventListener('DOMContentLoaded', () => {
       window.addDecision?.();
       return;
     }
+    if (active === 'calendarPanel') {
+      addCalendarGoal();
+      return;
+    }
     if (active === 'dailyPanel') {
       showAddModal({
         title: 'Add Task',

@@ -1,0 +1,48 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { JSDOM } from 'jsdom';
+
+vi.mock('../js/helpers.js', () => ({
+  loadDecisions: vi.fn(),
+  saveDecisions: vi.fn(),
+  generateId: vi.fn()
+}));
+
+vi.mock('../js/daily.js', () => ({ renderDailyTasks: vi.fn() }));
+vi.mock('../js/goals.js', () => ({
+  renderGoalsAndSubitems: vi.fn(),
+  initFocusButton: vi.fn(),
+  addCalendarGoal: vi.fn()
+}));
+vi.mock('../js/auth.js', () => ({ initAuth: vi.fn(), db: {}, currentUser: null }));
+vi.mock('../js/wizard.js', () => ({ initWizard: vi.fn() }));
+vi.mock('../js/report.js', () => ({ renderDailyTaskReport: vi.fn() }));
+vi.mock('../js/stats.js', () => ({ initMetricsUI: vi.fn() }));
+vi.mock('../js/tabs.js', () => ({ initTabs: vi.fn() }));
+vi.mock('../js/buttonStyles.js', () => ({ initButtonStyles: vi.fn() }));
+vi.mock('../js/tabReports.js', () => ({ initTabReports: vi.fn() }));
+vi.mock('../js/googleCalendar.js', () => ({ initGoogleCalendar: vi.fn() }));
+vi.mock('../js/settings.js', () => ({ loadHiddenTabs: vi.fn(), applyHiddenTabs: vi.fn() }));
+
+beforeEach(() => {
+  vi.resetModules();
+});
+
+describe('bottom add button', () => {
+  it('adds calendar goal when on calendar tab', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+      <button id="bottomAddBtn"></button>
+      <button class="tab-button active" data-target="calendarPanel"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+
+    const goals = await import('../js/goals.js');
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    dom.window.document.getElementById('bottomAddBtn').click();
+    expect(goals.addCalendarGoal).toHaveBeenCalled();
+  });
+});
