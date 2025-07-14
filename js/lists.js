@@ -71,6 +71,13 @@ function addColumnInput() {
   Object.assign(nameInp.style, { marginRight: '0.5rem', flex: '1' });
   row.append(nameInp);
 
+  const widthInp = document.createElement('input');
+  widthInp.type = 'number';
+  widthInp.placeholder = 'Width';
+  widthInp.value = 120;
+  Object.assign(widthInp.style, { marginRight: '0.5rem', width: '4rem' });
+  row.append(widthInp);
+
   const typeSel = document.createElement('select');
   ['text', 'number', 'date', 'checkbox', 'link', 'list'].forEach(type => {
     const opt = document.createElement('option');
@@ -275,9 +282,15 @@ async function initListsPanel() {
     // 2) Gather column definitions (name+type) from the create form
     const rows = Array.from(document.querySelectorAll('#columnsContainer > div'));
     const cols = rows.map(row => {
-      const nameInp = row.querySelector('input[type="text"]');
+      const inputs = row.querySelectorAll('input');
+      const nameInp = inputs[0];
+      const widthInp = inputs[1];
       const typeSel = row.querySelector('select');
-      return { name: nameInp.value.trim(), type: typeSel.value };
+      return {
+        name: nameInp.value.trim(),
+        type: typeSel.value,
+        width: parseInt(widthInp.value, 10) || undefined
+      };
     }).filter(col => col.name);
 
     if (!cols.length) {
@@ -324,6 +337,7 @@ async function initListsPanel() {
       th.style.border = '1px solid #ccc';
       th.style.padding = '8px';
       th.style.cursor = 'pointer';
+      if (col.width) th.style.width = col.width + 'px';
 
       const sortState = listSortStates[selectedListIndex];
       if (sortState && sortState.colIdx === colIdx) {
@@ -367,6 +381,7 @@ async function initListsPanel() {
         td.style.border = '1px solid #ccc';
         td.style.padding = '8px';
         td.dataset.label = col.name;
+        if (col.width) td.style.width = col.width + 'px';
 
         if (colIdx === 0) {
           const url = item[col.name] || '';
@@ -503,6 +518,13 @@ async function initListsPanel() {
         Object.assign(typeSel.style, { flex: '0.8', margin: '0 0.5rem' });
         row.append(typeSel);
 
+        const widthInp = document.createElement('input');
+        widthInp.type = 'number';
+        widthInp.value = col.width || 120;
+        widthInp.placeholder = 'Width';
+        Object.assign(widthInp.style, { width: '4rem', marginRight: '0.5rem' });
+        row.append(widthInp);
+
         // 3) value inputs
         let urlInp, lblInp, valInp;
         if (i === 0) {
@@ -565,6 +587,10 @@ async function initListsPanel() {
           }
         });
         typeSel.addEventListener('change', () => col.type = typeSel.value);
+        widthInp.addEventListener('blur', () => {
+          const w = parseInt(widthInp.value, 10);
+          col.width = isNaN(w) ? undefined : w;
+        });
         if (urlInp) urlInp.addEventListener('blur', () => { values[col.name] = urlInp.value.trim(); });
         if (lblInp) lblInp.addEventListener('blur', () => { values[col.name + '_label'] = lblInp.value.trim(); });
         if (valInp) valInp.addEventListener('blur', () => { values[col.name] = valInp.value.trim(); });
@@ -580,7 +606,8 @@ async function initListsPanel() {
     addColBtn.addEventListener('click', () => {
       const nm = prompt('New column name:');
       if (!nm) return;
-      columns.push({ name: nm.trim(), type: 'text' });
+      const width = parseInt(prompt('Column width in pixels?', '120') || '120', 10);
+      columns.push({ name: nm.trim(), type: 'text', width: isNaN(width) ? undefined : width });
       values[nm.trim()] = '';
       redraw();
     });
@@ -719,6 +746,7 @@ async function initListsPanel() {
     if (!colName) return;
     const colType = (prompt('Enter column type (text,number,date,checkbox,link,list):', 'text') || '')
       .trim().toLowerCase();
+    const width = parseInt(prompt('Column width in pixels?', '120') || '120', 10);
     if (!['text', 'number', 'date', 'checkbox', 'link', 'list'].includes(colType)) {
       return alert('Invalid column type.');
     }
@@ -726,7 +754,7 @@ async function initListsPanel() {
     if (list.columns.find(c => c.name === colName)) {
       return alert('Column exists.');
     }
-    list.columns.push({ name: colName, type: colType });
+    list.columns.push({ name: colName, type: colType, width: isNaN(width) ? undefined : width });
     list.items.forEach(i => i[colName] = colType === 'checkbox' ? false : '');
     await persist();
     renderSelectedList();
