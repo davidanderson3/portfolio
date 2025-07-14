@@ -29,8 +29,24 @@ export function initAuth({ loginBtn, logoutBtn, userEmail, bottomLoginBtn, botto
     if (el) el[key] = value;
   };
 
-  const loginButtons = [loginBtn, bottomLoginBtn].filter(Boolean);
-  const logoutButtons = [logoutBtn, bottomLogoutBtn].filter(Boolean);
+  const usesSingleBottomBtn = bottomLogoutBtn && !bottomLoginBtn;
+
+  const loginButtons = [loginBtn].filter(Boolean);
+  if (!usesSingleBottomBtn && bottomLoginBtn) loginButtons.push(bottomLoginBtn);
+
+  const logoutButtons = [logoutBtn].filter(Boolean);
+  if (!usesSingleBottomBtn && bottomLogoutBtn) logoutButtons.push(bottomLogoutBtn);
+
+  const updateBottomBtn = (user) => {
+    if (!bottomLogoutBtn || !usesSingleBottomBtn) return;
+    const img = bottomLogoutBtn.querySelector('img');
+    if (img) {
+      img.src = user ? 'assets/sign-out.svg' : 'assets/sign-in.svg';
+      img.alt = user ? 'Sign Out' : 'Sign In';
+    }
+    bottomLogoutBtn.onclick = user ? logoutAction : loginAction;
+    bottomLogoutBtn.style.display = 'inline-block';
+  };
 
   const loginAction = async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -39,6 +55,7 @@ export function initAuth({ loginBtn, logoutBtn, userEmail, bottomLoginBtn, botto
       currentUser = result.user;
       clearDecisionsCache();
       safeSet(userEmail, 'textContent', currentUser.email);
+      updateBottomBtn(currentUser);
       // onAuthStateChanged will trigger onLogin
     } catch (err) {
       console.error('Login failed:', err);
@@ -54,6 +71,7 @@ export function initAuth({ loginBtn, logoutBtn, userEmail, bottomLoginBtn, botto
     safeSet(userEmail, 'textContent', '');
     loginButtons.forEach(b => safeSet(b, 'style', 'display: inline-block'));
     logoutButtons.forEach(b => safeSet(b, 'style', 'display: none'));
+    updateBottomBtn(null);
     // onAuthStateChanged will trigger onLogin
   };
 
@@ -65,6 +83,7 @@ export function initAuth({ loginBtn, logoutBtn, userEmail, bottomLoginBtn, botto
     safeSet(userEmail, 'textContent', user?.email || '');
     loginButtons.forEach(b => safeSet(b, 'style', user ? 'display:none' : 'display:inline-block'));
     logoutButtons.forEach(b => safeSet(b, 'style', user ? 'display:inline-block' : 'display:none'));
+    updateBottomBtn(user);
     onLogin(user);
   });
 }

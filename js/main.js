@@ -24,7 +24,6 @@ window.addEventListener('DOMContentLoaded', () => {
     calendarAddGoalBtn: document.getElementById('calendarAddGoalBtn'),
     addGoalBtn: document.getElementById('addGoalBtn'),
     bottomAddBtn: document.getElementById('bottomAddBtn'),
-    bottomLoginBtn: document.getElementById('bottomLoginBtn'),
     bottomLogoutBtn: document.getElementById('bottomLogoutBtn'),
     bottomAddModal: document.getElementById('bottomAddModal'),
     bottomAddTitle: document.getElementById('bottomAddTitle'),
