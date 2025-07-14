@@ -245,8 +245,8 @@ export async function renderChildren(goal, all, container) {
             task.dateCompleted = cb.checked ? new Date().toISOString() : '';
             const idx = all.findIndex(d => d.id === task.id);
             if (idx !== -1) all[idx] = task;
-            await saveDecisions(all);
             renderChildren(goal, all, container);
+            await saveDecisions(all);
         });
     });
 
@@ -293,9 +293,9 @@ export async function renderChildren(goal, all, container) {
             type: 'goal'
         };
         all.push(newGoal);
+        renderChildren(goal, all, container);
         await saveDecisions(all);
         inputText.value = '';
-        renderChildren(goal, all, container);
     });
 
     addForm.append(inputText, addBtn);
@@ -353,8 +353,8 @@ export async function renderChildren(goal, all, container) {
                     item.dateCompleted = cb.checked ? new Date().toISOString() : '';
                     const idx = all.findIndex(d => d.id === item.id);
                     if (idx !== -1) all[idx] = item;
-                    await saveDecisions(all);
                     renderChildren(goal, all, container);
+                    await saveDecisions(all);
                 });
                 left.appendChild(cb);
 
