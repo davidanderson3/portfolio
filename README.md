@@ -9,6 +9,7 @@ An app for tracking goals and tasks.
 - Tasks can be edited inline without pop-up prompts.
 - Decisions can be edited inline without pop-up prompts.
 - Lists can be sorted by clicking column headers.
+- Tabs can be temporarily hidden via Settings.
 
 👉 **Live App:** [https://davidanderson3.github.io/dashboard/](https://davidanderson3.github.io/dashboard/)
 

@@ -2,38 +2,54 @@ import { auth, db, getCurrentUser } from './auth.js';
 
 const KEY = 'hiddenTabs';
 
+function normalize(data) {
+  if (!data) return {};
+  if (Array.isArray(data)) {
+    const obj = {};
+    data.forEach(id => {
+      obj[id] = new Date('9999-12-31').toISOString();
+    });
+    return obj;
+  }
+  return typeof data === 'object' ? data : {};
+}
+
 export async function loadHiddenTabs() {
   const user = getCurrentUser?.();
   if (!user) {
-    const stored = JSON.parse(localStorage.getItem(KEY) || '[]');
-    return Array.isArray(stored) ? stored : [];
+    const stored = JSON.parse(localStorage.getItem(KEY) || '{}');
+    return normalize(stored);
   }
   const snap = await db
     .collection('users').doc(user.uid)
     .collection('settings').doc(KEY)
     .get();
-  return snap.exists && Array.isArray(snap.data().tabs) ? snap.data().tabs : [];
+  return snap.exists ? normalize(snap.data().tabs) : {};
 }
 
 export async function saveHiddenTabs(tabs) {
-  const arr = Array.isArray(tabs) ? tabs : [];
+  const obj = normalize(tabs);
   const user = getCurrentUser?.();
   if (!user) {
-    localStorage.setItem(KEY, JSON.stringify(arr));
+    localStorage.setItem(KEY, JSON.stringify(obj));
     return;
   }
   await db
     .collection('users').doc(user.uid)
     .collection('settings').doc(KEY)
-    .set({ tabs: arr }, { merge: true });
+    .set({ tabs: obj }, { merge: true });
 }
 
 export function applyHiddenTabs(tabs) {
+  const obj = normalize(tabs);
   const buttons = document.querySelectorAll('.tab-button');
   let active = document.querySelector('.tab-button.active');
+  const now = Date.now();
   buttons.forEach(btn => {
     const target = btn.dataset.target;
-    if (tabs.includes(target)) {
+    const until = obj[target];
+    const hideUntil = until ? Date.parse(until) || 0 : 0;
+    if (hideUntil && now < hideUntil) {
       btn.style.display = 'none';
       const panel = document.getElementById(target);
       if (panel) panel.style.display = 'none';
@@ -53,6 +69,11 @@ export function initSettings({ settingsBtn, settingsModal }) {
 
   const listDiv = settingsModal.querySelector('#settingsTabsList');
   listDiv.classList.add('settings-list');
+  const durations = [
+    { label: '1 day', value: 1 },
+    { label: '1 week', value: 7 },
+    { label: '1 month', value: 30 }
+  ];
   const panels = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
 
   if (listDiv.children.length === 0) {
@@ -62,16 +83,36 @@ export function initSettings({ settingsBtn, settingsModal }) {
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.value = id;
+      const txt = document.createTextNode(' ' + id.replace('Panel',''));
+      const select = document.createElement('select');
+      durations.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.value;
+        o.textContent = opt.label;
+        select.appendChild(o);
+      });
+      select.style.display = 'none';
+      cb.addEventListener('change', () => {
+        select.style.display = cb.checked ? 'none' : 'inline-block';
+      });
       label.appendChild(cb);
-      label.appendChild(document.createTextNode(' ' + id.replace('Panel','')));
+      label.appendChild(txt);
+      label.appendChild(select);
       listDiv.appendChild(label);
     });
   }
 
   settingsBtn.addEventListener('click', async () => {
     const hidden = await loadHiddenTabs();
-    listDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
-      cb.checked = !hidden.includes(cb.value);
+    listDiv.querySelectorAll('.settings-option').forEach(lbl => {
+      const cb = lbl.querySelector('input[type=checkbox]');
+      const select = lbl.querySelector('select');
+      const until = hidden[cb.value];
+      const hideUntil = until ? Date.parse(until) || 0 : 0;
+      const hiddenNow = hideUntil && Date.now() < hideUntil;
+      cb.checked = !hiddenNow;
+      select.style.display = hiddenNow ? 'inline-block' : 'none';
+      select.value = durations[0].value;
     });
     settingsModal.style.display = 'flex';
   });
@@ -80,9 +121,14 @@ export function initSettings({ settingsBtn, settingsModal }) {
   const cancelBtn = settingsModal.querySelector('#settingsCancelBtn');
 
   saveBtn?.addEventListener('click', async () => {
-    const hidden = [];
-    listDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
-      if (!cb.checked) hidden.push(cb.value);
+    const hidden = {};
+    listDiv.querySelectorAll('.settings-option').forEach(lbl => {
+      const cb = lbl.querySelector('input[type=checkbox]');
+      const select = lbl.querySelector('select');
+      if (!cb.checked) {
+        const days = parseInt(select.value) || 1;
+        hidden[cb.value] = new Date(Date.now() + days*86400000).toISOString();
+      }
     });
     await saveHiddenTabs(hidden);
     applyHiddenTabs(hidden);
@@ -108,6 +154,11 @@ export async function initSettingsPage() {
   listDiv?.classList.add('settings-list');
   const saveBtn = document.getElementById('settingsSaveBtn');
   const emailSpan = document.getElementById('settingsEmail');
+  const durations = [
+    { label: '1 day', value: 1 },
+    { label: '1 week', value: 7 },
+    { label: '1 month', value: 30 }
+  ];
   const panels = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
 
   if (listDiv && listDiv.children.length === 0) {
@@ -117,23 +168,48 @@ export async function initSettingsPage() {
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.value = id;
+      const txt = document.createTextNode(' ' + id.replace('Panel',''));
+      const select = document.createElement('select');
+      durations.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.value;
+        o.textContent = opt.label;
+        select.appendChild(o);
+      });
+      select.style.display = 'none';
+      cb.addEventListener('change', () => {
+        select.style.display = cb.checked ? 'none' : 'inline-block';
+      });
       label.appendChild(cb);
-      label.appendChild(document.createTextNode(' ' + id.replace('Panel','')));
+      label.appendChild(txt);
+      label.appendChild(select);
       listDiv.appendChild(label);
     });
   }
 
   const populate = async () => {
     const hidden = await loadHiddenTabs();
-    listDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
-      cb.checked = !hidden.includes(cb.value);
+    listDiv.querySelectorAll('.settings-option').forEach(lbl => {
+      const cb = lbl.querySelector('input[type=checkbox]');
+      const select = lbl.querySelector('select');
+      const until = hidden[cb.value];
+      const hideUntil = until ? Date.parse(until) || 0 : 0;
+      const hiddenNow = hideUntil && Date.now() < hideUntil;
+      cb.checked = !hiddenNow;
+      select.style.display = hiddenNow ? 'inline-block' : 'none';
+      select.value = durations[0].value;
     });
   };
 
   saveBtn?.addEventListener('click', async () => {
-    const hidden = [];
-    listDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
-      if (!cb.checked) hidden.push(cb.value);
+    const hidden = {};
+    listDiv.querySelectorAll('.settings-option').forEach(lbl => {
+      const cb = lbl.querySelector('input[type=checkbox]');
+      const select = lbl.querySelector('select');
+      if (!cb.checked) {
+        const days = parseInt(select.value) || 1;
+        hidden[cb.value] = new Date(Date.now() + days*86400000).toISOString();
+      }
     });
     await saveHiddenTabs(hidden);
     window.location.href = 'index.html';
