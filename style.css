@@ -1221,8 +1221,9 @@ h2 {
   #travelTable td::before {
     content: attr(data-label) ": ";
     font-weight: bold;
-    display: inline-block;
-    width: 45%;
+    display: block;
+    width: auto;
+    margin-bottom: 4px;
   }
 
   #travelTable td.edit-cell::before {
