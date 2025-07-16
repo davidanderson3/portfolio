@@ -225,6 +225,7 @@ export async function initTravelPanel() {
         form.style.gap = '4px';
         const td = document.createElement('td');
         td.colSpan = 8;
+        td.className = 'edit-cell';
 
         const nameInput = document.createElement('input');
         nameInput.value = p.name || '';
@@ -268,6 +269,9 @@ export async function initTravelPanel() {
         visitedInput.type = 'checkbox';
         visitedInput.checked = !!p.visited;
         visitedInput.title = 'Visited';
+        const visitedLabel = document.createElement('label');
+        visitedLabel.style.whiteSpace = 'nowrap';
+        visitedLabel.append(visitedInput, ' Visited');
 
         const saveBtn = document.createElement('button');
         saveBtn.textContent = 'Save';
@@ -282,7 +286,7 @@ export async function initTravelPanel() {
           tagList,
           ratingInput,
           dateInput,
-          visitedInput,
+          visitedLabel,
           saveBtn,
           cancelBtn
         );
