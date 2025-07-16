@@ -970,6 +970,7 @@ h2 {
   flex: 1 1 100%;
 }
 
+
 /* Minimalist list-selector tabs */
 #listTabs {
   display: flex;
@@ -1132,6 +1133,19 @@ h2 {
 
   #listTabs {
     flex-wrap: wrap;
+  }
+
+  #listsPanel.main-layout {
+    align-items: stretch;
+    max-width: none;
+    width: 100%;
+  }
+
+  #listTabs,
+  #listsContainer,
+  #itemForm,
+  #listForm {
+    width: 100%;
   }
 
   /* tables inside report panels and stats summary should scroll */
