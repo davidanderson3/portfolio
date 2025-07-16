@@ -203,10 +203,80 @@ async function initListsPanel() {
     createForm
   );
 
+  function initHiddenSection() {
+    let hidden = document.getElementById('hiddenLists');
+    if (!hidden) {
+      hidden = document.createElement('div');
+      hidden.id = 'hiddenLists';
+      hidden.innerHTML = `
+        <h3 style="margin-top:32px" id="hiddenListsHeader">
+          <span id="toggleHiddenLists" style="cursor:pointer">▶</span>
+          <span id="hiddenListsLabel">Hidden Lists</span>
+        </h3>
+        <div id="hiddenListsContent" style="display:none"></div>
+        <hr style="margin:40px 0;" />
+      `;
+      panel.append(hidden);
+      const toggle = hidden.querySelector('#toggleHiddenLists');
+      const content = hidden.querySelector('#hiddenListsContent');
+      toggle.onclick = () => {
+        const open = content.style.display === 'block';
+        toggle.textContent = open ? '▶' : '▼';
+        content.style.display = open ? 'none' : 'block';
+      };
+    }
+    return hidden.querySelector('#hiddenListsContent');
+  }
+
+  const hiddenContent = initHiddenSection();
+
 
   // ─── 5) Load data & wire persistence ─────────────────────────
   let listsArray = await loadLists();
   const persist = debounce(() => saveLists(listsArray), 250);
+
+  function isHidden(list) {
+    const hideUntil = list.hiddenUntil ? Date.parse(list.hiddenUntil) || 0 : 0;
+    return hideUntil && Date.now() < hideUntil;
+  }
+
+  function renderHiddenLists() {
+    if (!hiddenContent) return;
+    hiddenContent.innerHTML = '';
+    const now = Date.now();
+    let count = 0;
+    listsArray.forEach((list, idx) => {
+      const hideUntil = list.hiddenUntil ? Date.parse(list.hiddenUntil) || 0 : 0;
+      if (hideUntil && now < hideUntil) {
+        count++;
+        const div = document.createElement('div');
+        div.style.margin = '4px 0';
+        div.textContent = `${list.name} (hidden until ${new Date(hideUntil).toLocaleString()})`;
+        const unhide = document.createElement('button');
+        unhide.type = 'button';
+        unhide.textContent = 'Unhide';
+        Object.assign(unhide.style, { marginLeft: '8px', cursor: 'pointer' });
+        unhide.addEventListener('click', async () => {
+          listsArray[idx].hiddenUntil = null;
+          await persist();
+          renderTabs();
+          renderHiddenLists();
+          if (isHidden(listsArray[selectedListIndex])) {
+            const firstActive = listsArray.findIndex(l => !isHidden(l));
+            if (firstActive !== -1) selectList(firstActive);
+            else {
+              listsContainer.innerHTML = '';
+              itemForm.innerHTML = '';
+            }
+          }
+        });
+        div.appendChild(unhide);
+        hiddenContent.appendChild(div);
+      }
+    });
+    const label = document.getElementById('hiddenListsLabel');
+    if (label) label.textContent = `Hidden Lists (${count})`;
+  }
 
   // ─── 6) Helper: render the tab buttons ──────────────────────
   let dragTabEl = null;
@@ -214,6 +284,7 @@ async function initListsPanel() {
   function renderTabs() {
     tabsContainer.innerHTML = '';
     listsArray.forEach((list, idx) => {
+      if (isHidden(list)) return;
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'list-tab';
@@ -258,6 +329,7 @@ async function initListsPanel() {
 
       tabsContainer.append(btn);
     });
+    renderHiddenLists();
   }
 
   // ─── 7) Helper: when a tab is selected ──────────────────────
@@ -299,7 +371,7 @@ async function initListsPanel() {
     }
 
     // 3) Build the newList object before using it
-    const newList = { name, columns: cols, items: [] };
+    const newList = { name, columns: cols, items: [], hiddenUntil: null };
 
     // 4) Push, persist, re-render, and select the new tab
     listsArray.push(newList);
@@ -710,6 +782,96 @@ async function initListsPanel() {
       renderSelectedList();
     });
     itemForm.append(addBtn);
+
+    const hideBtn = document.createElement('button');
+    hideBtn.type = 'button';
+    hideBtn.textContent = '🕒 Hide';
+    Object.assign(hideBtn.style, {
+      display: 'block',
+      marginTop: '0.5rem',
+      background: 'none',
+      border: '1px solid #88c',
+      color: '#88c',
+      cursor: 'pointer',
+      padding: '.25rem .75rem'
+    });
+    itemForm.append(hideBtn);
+
+    const menu = document.createElement('div');
+    Object.assign(menu.style, {
+      position: 'absolute',
+      background: '#fff',
+      border: '1px solid #ccc',
+      borderRadius: '6px',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+      padding: '6px 0',
+      fontSize: '0.9em',
+      display: 'none',
+      zIndex: '9999',
+      minWidth: '120px'
+    });
+    document.body.appendChild(menu);
+
+    const options = [
+      { label: '1 hour', value: 1 },
+      { label: '2 hours', value: 2 },
+      { label: '4 hours', value: 4 },
+      { label: '8 hours', value: 8 },
+      { label: '1 day', value: 24 },
+      { label: '2 days', value: 48 },
+      { label: '3 days', value: 72 },
+      { label: '4 days', value: 96 },
+      { label: '1 week', value: 168 },
+      { label: '2 weeks', value: 336 },
+      { label: '1 month', value: 720 },
+      { label: '2 months', value: 1440 },
+      { label: '3 months', value: 2160 }
+    ];
+
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = opt.label;
+      btn.classList.add('postpone-option');
+      Object.assign(btn.style, {
+        display: 'block',
+        width: '100%',
+        padding: '4px 12px',
+        border: 'none',
+        background: 'white',
+        color: '#333',
+        textAlign: 'left',
+        cursor: 'pointer'
+      });
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        listsArray[selectedListIndex].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+        await persist();
+        menu.style.display = 'none';
+        renderTabs();
+        const firstActive = listsArray.findIndex(l => !isHidden(l));
+        if (firstActive !== -1) selectList(firstActive);
+        else {
+          listsContainer.innerHTML = '';
+          itemForm.innerHTML = '';
+        }
+      });
+      menu.appendChild(btn);
+    });
+
+    hideBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const rect = hideBtn.getBoundingClientRect();
+      menu.style.top = `${rect.bottom + window.scrollY}px`;
+      menu.style.left = `${rect.left + window.scrollX}px`;
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', e => {
+      if (!menu.contains(e.target) && e.target !== hideBtn) {
+        menu.style.display = 'none';
+      }
+    });
 
     const deleteListBtn = document.createElement('button');
     deleteListBtn.type = 'button';
