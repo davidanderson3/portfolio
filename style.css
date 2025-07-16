@@ -1259,8 +1259,9 @@ h2 {
   #listsPanel td::before {
     content: attr(data-label) ": ";
     font-weight: bold;
-    display: inline-block;
-    width: 45%;
+    display: block;
+    width: auto;
+    margin-bottom: 4px;
   }
 }
 
