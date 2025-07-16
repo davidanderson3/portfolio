@@ -10,8 +10,12 @@ function randomDarkColor() {
 
 // Detect an “icon-only” button
 function isIconButton(btn) {
-  // 1) if you’ve explicitly marked it:
-  if (btn.classList.contains('icon-button')) return true;
+  // 1) if you've explicitly marked it with one of our icon classes
+  if (btn.classList.contains('icon-button') ||
+      btn.classList.contains('icon-btn') ||
+      btn.classList.contains('circle-btn')) {
+    return true;
+  }
 
   // 2) or if its text is 1–2 non-alphanumeric chars (likely an emoji)
   const txt = btn.textContent.trim();
