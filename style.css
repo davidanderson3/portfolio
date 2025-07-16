@@ -1225,6 +1225,10 @@ h2 {
     width: 45%;
   }
 
+  #travelTable td.edit-cell::before {
+    content: none;
+  }
+
   #listsPanel table,
   #listsPanel thead,
   #listsPanel tbody,
