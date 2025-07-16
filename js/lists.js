@@ -336,8 +336,8 @@ async function initListsPanel() {
   let selectedListIndex = 0;
   function selectList(idx) {
     selectedListIndex = idx;
-    Array.from(tabsContainer.children).forEach((b, i) =>
-      b.classList.toggle('active', i === idx)
+    Array.from(tabsContainer.children).forEach(b =>
+      b.classList.toggle('active', Number(b.dataset.idx) === idx)
     );
     renderSelectedList();
     renderItemForm();
