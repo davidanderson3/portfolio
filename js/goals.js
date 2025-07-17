@@ -134,36 +134,18 @@ export function createGoalRow(goal, options = {}) {
         noteDiv.innerHTML = linkify(goal.notes);
         middle.appendChild(noteDiv);
     }
-    row.appendChild(middle);
-
-    // ── Right group: scheduled + buttons ──
-    const right = document.createElement('div');
-    right.className = 'right-group';
-
-    if (goal.type === 'goal' && !options.hideScheduled) {
-        // … your scheduled-date code here …
-    }
-
-    const due = document.createElement('div');
-    due.className = 'due-column';
-    due.textContent = goal.completed ? goal.dateCompleted : (goal.scheduled || '');
-
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
     if (goal.type === 'goal') {
         attachEditButtons(goal, buttonWrap, row);
     }
+    middle.appendChild(buttonWrap);
+    row.appendChild(middle);
 
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-        left.appendChild(due);
-        middle.appendChild(buttonWrap);
-    } else {
-        right.appendChild(due);
-        right.appendChild(buttonWrap);
-        row.appendChild(right);
-    }
-
+    const due = document.createElement('div');
+    due.className = 'due-column';
+    due.textContent = goal.completed ? goal.dateCompleted : (goal.scheduled || '');
+    row.appendChild(due);
     return row;
 }
 

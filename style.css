@@ -530,25 +530,22 @@ button:hover {
   }
 
   .decision-row {
-    flex-direction: row !important;
-    /* Allow wrapping so icon section can drop below text */
-    flex-wrap: wrap;
-    align-items: flex-start !important;
+    display: grid !important;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "left middle"
+      "due middle";
+    align-items: start !important;
     gap: 6px;
     padding: 8px 10px !important;
   }
 
-  .left-group,
-  .middle-group,
-  .right-group {
+  .left-group {
+    grid-area: left;
     display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-    flex-wrap: nowrap;
-    width: auto !important;
-    flex-shrink: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 
   .left-group {
@@ -557,21 +554,19 @@ button:hover {
   }
 
   .middle-group {
+    grid-area: middle;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     flex: 1 1 auto;
     min-width: 0;
     font-size: 0.95em;
-    flex-direction: column;
-    align-items: flex-start;
+    gap: 4px;
   }
 
-  .right-group {
-    flex: 0 0 auto;
+  .due-column {
+    grid-area: due;
     font-size: 0.9em;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    width: 100%;
-    margin-top: 4px;
   }
 
   .title-column {
