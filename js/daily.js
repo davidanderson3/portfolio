@@ -113,48 +113,7 @@ export async function renderDailyTasks(currentUser, db) {
     catch (err) { console.error(err); alert('⚠️ Failed to migrate old tasks.'); }
   }
 
-  // — Add‐new form
-  const addForm = document.createElement('div');
-  addForm.style = 'display:flex;gap:8px;margin-bottom:12px';
-  const input = document.createElement('input');
-  Object.assign(input, { type: 'text', placeholder: 'New daily task…' });
-  Object.assign(input.style, { flex: '1', padding: '6px', borderRadius: '6px', border: '1px solid #ccc' });
-  const addBtn = document.createElement('button');
-  addBtn.textContent = '+';
-  Object.assign(addBtn.style, { padding: '0 14px', borderRadius: '6px', fontWeight: 'bold', background: 'none', border: 'none' });
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); addBtn.click(); }
-  });
-  addBtn.onclick = async () => {
-    const text = input.value.trim();
-    if (!text) return;
-    const newTask = {
-      id: generateId(),
-      type: 'task',
-      text: `${text}`,
-      notes: '',
-      recurs: 'daily',
-      parentGoalId: null,
-      completed: false,
-      dateCompleted: '',
-      resolution: '',
-      dependencies: [],
-      skipUntil: null
-    };
-    try {
-      const updated = [...await loadDecisions(), newTask];
-      await saveDecisions(updated);
-      input.value = '';
-      const wrapper = makeTaskElement(newTask, 'daily');
-      wrapper.classList.add('flash');
-      wrapper.addEventListener('animationend', () => wrapper.classList.remove('flash'), { once: true });
-      container.insertBefore(wrapper, addForm.nextSibling);
-    } catch {
-      alert('⚠️ Could not add task.');
-    }
-  };
-  addForm.append(input, addBtn);
-  container.appendChild(addForm);
+  // ——— No add form for recurring tasks
 
   // — Load today’s completions
   // — Compute keys and completion sets
@@ -176,97 +135,7 @@ export async function renderDailyTasks(currentUser, db) {
   const weeklyDone = new Set(completionMap[weekKey] || []);
   const monthlyDone = new Set(completionMap[monthKey] || []);
 
-  // — Add-new WEEKLY form
-  (function () {
-    const form = document.createElement('div');
-    form.style = 'display:flex;gap:8px;margin-bottom:12px';
-
-    const input = document.createElement('input');
-    Object.assign(input, { type: 'text', placeholder: 'New weekly task…' });
-    Object.assign(input.style, { flex: '1', padding: '6px', borderRadius: '6px', border: '1px solid #ccc' });
-
-    const btn = document.createElement('button');
-    btn.textContent = '+';
-    Object.assign(btn.style, { padding: '0 14px', borderRadius: '6px', fontWeight: 'bold', background: 'none', border: 'none' });
-
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); btn.click(); }
-    });
-
-    btn.onclick = async () => {
-      const text = input.value.trim();
-      if (!text) return;
-      const task = {
-        id: generateId(),
-        type: 'task',
-        text: `${text}`,
-        notes: '',
-        recurs: 'weekly',
-        parentGoalId: null,
-        completed: false,
-        dateCompleted: '',
-        resolution: '',
-        dependencies: [],
-        skipUntil: null
-      };
-      const updated = [...await loadDecisions(), task];
-      await saveDecisions(updated);
-      input.value = '';
-      const wrap = makeTaskElement(task, 'weekly');
-      wrap.classList.add('flash');
-      wrap.addEventListener('animationend', () => wrap.classList.remove('flash'), { once: true });
-      weeklyContainer.appendChild(wrap);
-    };
-
-    form.append(input, btn);
-    weeklyContainer.appendChild(form);
-  })();
-
-  // — Add-new MONTHLY form
-  (function () {
-    const form = document.createElement('div');
-    form.style = 'display:flex;gap:8px;margin-bottom:12px';
-
-    const input = document.createElement('input');
-    Object.assign(input, { type: 'text', placeholder: 'New monthly task…' });
-    Object.assign(input.style, { flex: '1', padding: '6px', borderRadius: '6px', border: '1px solid #ccc' });
-
-    const btn = document.createElement('button');
-    btn.textContent = '+';
-    Object.assign(btn.style, { padding: '0 14px', borderRadius: '6px', fontWeight: 'bold', background: 'none', border: 'none' });
-
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); btn.click(); }
-    });
-
-    btn.onclick = async () => {
-      const text = input.value.trim();
-      if (!text) return;
-      const task = {
-        id: generateId(),
-        type: 'task',
-        text: `${text}`,
-        notes: '',
-        recurs: 'monthly',
-        parentGoalId: null,
-        completed: false,
-        dateCompleted: '',
-        resolution: '',
-        dependencies: [],
-        skipUntil: null
-      };
-      const updated = [...await loadDecisions(), task];
-      await saveDecisions(updated);
-      input.value = '';
-      const wrap = makeTaskElement(task, 'monthly');
-      wrap.classList.add('flash');
-      wrap.addEventListener('animationend', () => wrap.classList.remove('flash'), { once: true });
-      monthlyContainer.appendChild(wrap);
-    };
-
-    form.append(input, btn);
-    monthlyContainer.appendChild(form);
-  })();
+  // ——— No weekly or monthly add forms
 
   // Track completions for each recurrence period
   const doneDaily = new Set(completionMap[todayKey] || []);
@@ -326,8 +195,7 @@ export async function renderDailyTasks(currentUser, db) {
       if (cb.checked) {
         wrapper.remove();
       } else {
-        const addFormEl = listEl.firstElementChild;
-        listEl.insertBefore(wrapper, addFormEl.nextSibling);
+        listEl.prepend(wrapper);
       }
     } catch (err) {
       console.error(err);
@@ -528,7 +396,7 @@ export async function renderDailyTasks(currentUser, db) {
   }
 
   async function persistReorder() {
-    const wrappers = Array.from(container.querySelectorAll('.daily-task-wrapper')).slice(1);
+    const wrappers = Array.from(container.querySelectorAll('.daily-task-wrapper'));
     const ids = wrappers.map(w => w.dataset.taskId);
     const others = all.filter(t => !ids.includes(t.id));
     const reordered = ids.map(id => all.find(t => t.id === id)).filter(Boolean);
