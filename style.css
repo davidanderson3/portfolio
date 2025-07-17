@@ -691,6 +691,11 @@ button:hover {
   padding: 4px 8px;
 }
 
+#focusCancelBtn,
+#focusApplyBtn {
+  padding: 4px 8px;
+}
+
 
 .button-row {
   display: flex;
