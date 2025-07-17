@@ -619,6 +619,19 @@ button:hover {
     font-size: 0.9em;
   }
 
+  /* Expanded layout when editing goals */
+  .decision-row.editing .due-column {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .decision-row.editing .due-column input,
+  .decision-row.editing .due-column select {
+    width: 100%;
+  }
+
   .completed-decision-inline .middle-group {
     grid-template-columns: 1fr !important;
   }

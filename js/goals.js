@@ -845,7 +845,7 @@ function attachEditButtons(item, buttonWrap, row) {
 
             scheduledInput.type = 'date';
             scheduledInput.value = item.scheduled || '';
-            scheduledInput.style.width = '140px';
+            scheduledInput.style.width = '100%';
 
             const allItems = await loadDecisions();
             const goals = allItems.filter(g =>
@@ -865,7 +865,9 @@ function attachEditButtons(item, buttonWrap, row) {
                 parentSelect.appendChild(opt);
             });
             parentSelect.style.marginLeft = '8px';
-            parentSelect.style.maxWidth = '160px';
+            parentSelect.style.width = '100%';
+
+            const buttonWrap = row.querySelector('.button-row');
 
             middle.innerHTML = '';
             middle.appendChild(textInput);
@@ -874,6 +876,11 @@ function attachEditButtons(item, buttonWrap, row) {
             due.innerHTML = '';
             due.appendChild(scheduledInput);
             due.appendChild(parentSelect);
+            if (buttonWrap) {
+                buttonWrap.style.marginTop = '6px';
+                due.appendChild(buttonWrap);
+            }
+            row.classList.add('editing');
 
         } else {
             const newText = middle.querySelector('input')?.value.trim();
@@ -903,6 +910,8 @@ function attachEditButtons(item, buttonWrap, row) {
                     item.scheduled = newScheduled;
                     item.parentGoalId = newParent || null;
 
+                    const buttonWrap = row.querySelector('.button-row');
+
                     middle.innerHTML = '';
                     const titleDiv = document.createElement('div');
                     titleDiv.innerHTML = linkify(newText);
@@ -913,6 +922,7 @@ function attachEditButtons(item, buttonWrap, row) {
                         noteDiv.innerHTML = linkify(newNotes);
                         middle.appendChild(noteDiv);
                     }
+                    if (buttonWrap) middle.appendChild(buttonWrap);
 
                     due.innerHTML = '';
                     due.textContent = item.completed ? item.dateCompleted : (newScheduled || '');
@@ -921,6 +931,7 @@ function attachEditButtons(item, buttonWrap, row) {
                 }
             }
 
+            row.classList.remove('editing');
             editBtn.innerHTML = '✏️';
         }
     });
