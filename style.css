@@ -1407,6 +1407,12 @@ h2 {
   .main-layout {
     padding: 0;
   }
+
+  /* Ensure list items span the full width on small screens */
+  li {
+    width: 100%;
+    box-sizing: border-box;
+  }
 }
 
 /* Decision tree styles */
