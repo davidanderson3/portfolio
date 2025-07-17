@@ -954,6 +954,12 @@ h2 {
   align-items: center;
 }
 
+/* Remove default button margin so header buttons align with text */
+#goalsHeaderRow button,
+#calendarHeaderRow button {
+  margin-top: 0;
+}
+
 #calendarHeaderRow {
   display: flex;
   justify-content: space-between;
@@ -1508,5 +1514,11 @@ h2 {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Prevent global input styles from stretching focus dialog checkboxes */
+#focusGoalsList input[type="checkbox"] {
+  width: auto;
+  margin: 0;
 }
 
