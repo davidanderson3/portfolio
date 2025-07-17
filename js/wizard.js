@@ -90,6 +90,18 @@ export function initWizard(uiRefs) {
       nextBtn.disabled = false;
     }
   };
+
+  // Advance wizard when Enter is pressed on inputs
+  if (wizardContainer.addEventListener) {
+    wizardContainer.addEventListener('keydown', e => {
+      if (e.key === 'Enter' &&
+          e.target.tagName !== 'TEXTAREA' &&
+          e.target.tagName !== 'BUTTON') {
+        e.preventDefault();
+        uiRefs.nextBtn.click();
+      }
+    });
+  }
 }
 
 function renderWizardStep(container, backBtn) {
