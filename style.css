@@ -690,6 +690,12 @@ button:hover {
   justify-content: center;
 }
 
+#wizardBackBtn,
+#wizardCancelBtn,
+#wizardNextBtn {
+  padding: 4px 8px;
+}
+
 
 .button-row {
   display: flex;
