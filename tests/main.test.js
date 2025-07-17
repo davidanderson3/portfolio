@@ -71,6 +71,7 @@ describe('bottom add button', () => {
     const text = dom.window.document.getElementById('bottomAddText');
     expect(dom.window.document.activeElement).toBe(text);
   });
+
 });
 
 describe('shift+A hotkey', () => {
@@ -116,5 +117,43 @@ describe('shift+A hotkey', () => {
     dom.window.document.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'A', shiftKey: true }));
     const text = dom.window.document.getElementById('bottomAddText');
     expect(dom.window.document.activeElement).toBe(text);
+  });
+
+  it('prevents default when no input is focused', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+      <button id="bottomAddBtn"></button>
+      <button class="tab-button active" data-target="calendarPanel"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    const evt = new dom.window.KeyboardEvent('keydown', { key: 'A', shiftKey: true, cancelable: true });
+    const result = dom.window.document.dispatchEvent(evt);
+    expect(result).toBe(false);
+  });
+
+  it('does not prevent default when typing in an input', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+      <button id="bottomAddBtn"></button>
+      <input id="dummy" />
+      <button class="tab-button active" data-target="goalsPanel"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    dom.window.document.getElementById('dummy').focus();
+    const evt = new dom.window.KeyboardEvent('keydown', { key: 'A', shiftKey: true, cancelable: true });
+    const result = dom.window.document.dispatchEvent(evt);
+    expect(result).toBe(true);
   });
 });
