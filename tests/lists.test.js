@@ -40,3 +40,11 @@ describe('list postponing', () => {
     vi.useRealTimers();
   });
 });
+
+describe('openListsFormModal', () => {
+  it('focuses the first input when modal opens', () => {
+    window.openListsFormModal();
+    const first = document.querySelector('#listsFormModal input, #listsFormModal textarea');
+    expect(document.activeElement).toBe(first);
+  });
+});

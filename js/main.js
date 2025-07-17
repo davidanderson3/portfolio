@@ -93,6 +93,12 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     uiRefs.bottomAddModal.style.display = 'flex';
+    if (cfg.showTextInput) {
+      uiRefs.bottomAddText.focus();
+    } else {
+      const firstRadio = uiRefs.bottomAddOptions.querySelector('input[type="radio"]');
+      firstRadio?.focus();
+    }
   }
 
   function handleBottomAdd() {

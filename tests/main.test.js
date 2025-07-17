@@ -45,4 +45,30 @@ describe('bottom add button', () => {
     dom.window.document.getElementById('bottomAddBtn').click();
     expect(goals.addCalendarGoal).toHaveBeenCalled();
   });
+
+  it('focuses text input when adding a daily task', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+      <button id="bottomAddBtn"></button>
+      <div id="bottomAddModal" style="display:none;">
+        <div id="bottomAddTitle"></div>
+        <div id="bottomAddOptions"></div>
+        <input id="bottomAddText" />
+        <button id="bottomAddCancel"></button>
+        <button id="bottomAddSubmit"></button>
+      </div>
+      <button class="tab-button active" data-target="dailyPanel"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+    global.window.quickAddTask = vi.fn();
+
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    dom.window.document.getElementById('bottomAddBtn').click();
+    const text = dom.window.document.getElementById('bottomAddText');
+    expect(dom.window.document.activeElement).toBe(text);
+  });
 });

@@ -943,6 +943,7 @@ function openListsFormModal() {
   const modal = document.getElementById('listsFormModal');
   if (!modal) return;
   modal.style.display = 'flex';
+  modal.querySelector('input,textarea')?.focus();
   function close(e) {
     if (e.target === modal) {
       modal.style.display = 'none';

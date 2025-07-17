@@ -112,6 +112,7 @@ function renderWizardStep(container, backBtn) {
       <input id="goalDateInput" type="date" value="${wizardState.calendarDate}" style="margin-left:8px;" />
     `;
   }
+  container.querySelector('input, textarea')?.focus();
 }
 
 async function saveGoalWizard() {

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { JSDOM } from 'jsdom';
 
 const createEventMock = vi.fn();
 const getMock = vi.fn();
@@ -56,5 +57,34 @@ describe('saveGoalWizard', () => {
 
     await saveGoalWizard();
     expect(createEventMock).toHaveBeenCalledWith('My goal', '2024-01-02', '');
+  });
+});
+
+describe('initWizard', () => {
+  it('focuses first input when wizard opens', async () => {
+    const dom = new JSDOM(`
+      <div id="goalWizardModal" style="display:none;"></div>
+      <div id="wizardStep"></div>
+      <button id="wizardNextBtn"></button>
+      <button id="wizardBackBtn"></button>
+      <button id="wizardCancelBtn"></button>
+      <button id="addGoalBtn"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+
+    const mod = await import('../js/wizard.js');
+    const { initWizard } = mod;
+    initWizard({
+      wizardContainer: document.getElementById('goalWizardModal'),
+      addGoalBtn: document.getElementById('addGoalBtn'),
+      cancelBtn: document.getElementById('wizardCancelBtn'),
+      backBtn: document.getElementById('wizardBackBtn'),
+      nextBtn: document.getElementById('wizardNextBtn'),
+      wizardStep: document.getElementById('wizardStep')
+    });
+
+    document.getElementById('addGoalBtn').click();
+    expect(document.activeElement.id).toBe('goalTextInput');
   });
 });
