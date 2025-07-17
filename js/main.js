@@ -130,24 +130,7 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (active === 'listsPanel') {
-      showAddModal({
-        title: 'Add to Lists',
-        options: [
-          { label: 'List', value: 'list' },
-          { label: 'Item', value: 'item' },
-          { label: 'Column', value: 'column' }
-        ],
-        onSubmit({ option }) {
-          if (option === 'list') {
-            document.getElementById('createListBtn')?.click();
-          } else if (option === 'column') {
-            document.getElementById('addColumnBtn')?.click();
-            document.getElementById('addColumnToListBtn')?.click();
-          } else if (option === 'item') {
-            document.querySelector('#itemForm .add-item-btn')?.click();
-          }
-        }
-      });
+      window.openListsFormModal?.();
       return;
     }
     if (active === 'travelPanel') {

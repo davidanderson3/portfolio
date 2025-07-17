@@ -15,7 +15,7 @@ let helpers;
 
 beforeEach(async () => {
   vi.resetModules();
-  const dom = new JSDOM('<div id="listsPanel"></div><button class="tab-button active" data-target="listsPanel"></button>');
+  const dom = new JSDOM('<div id="listsPanel"></div><div id="listsFormModal"><div id="listsFormWrapper"></div></div><button class="tab-button active" data-target="listsPanel"></button>');
   global.window = dom.window;
   global.document = dom.window.document;
   helpers = await import('../js/helpers.js');
