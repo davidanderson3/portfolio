@@ -281,22 +281,18 @@ export async function renderDailyTasks(currentUser, db) {
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
   const activeList = dailyAll.filter(t => !doneDaily.has(t.id));
-  const doneList = dailyAll.filter(t => doneDaily.has(t.id));
 
-  // — Render active then done
-  for (const t of activeList) container.appendChild(makeTaskElement(t, 'daily'));
-  for (const t of doneList) container.appendChild(makeTaskElement(t, 'daily'));
+  // — Render only active tasks
+  for (const t of activeList)
+    container.appendChild(makeTaskElement(t, 'daily'));
   const weeklyAll = all.filter(t =>
     t.type === 'task' &&
     t.recurs === 'weekly' &&
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
   const weeklyActive = weeklyAll.filter(t => !doneWeekly.has(t.id));
-  const weeklyDoneList = weeklyAll.filter(t => doneWeekly.has(t.id));
 
   for (const t of weeklyActive)
-    weeklyContainer.appendChild(makeTaskElement(t, 'weekly'));
-  for (const t of weeklyDoneList)
     weeklyContainer.appendChild(makeTaskElement(t, 'weekly'));
 
   const monthlyAll = all.filter(t =>
@@ -305,11 +301,8 @@ export async function renderDailyTasks(currentUser, db) {
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
   const monthlyActive = monthlyAll.filter(t => !doneMonthly.has(t.id));
-  const monthlyDoneList = monthlyAll.filter(t => doneMonthly.has(t.id));
 
   for (const t of monthlyActive)
-    monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
-  for (const t of monthlyDoneList)
     monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
 
 
@@ -330,25 +323,11 @@ export async function renderDailyTasks(currentUser, db) {
       } else {
         localStorage.setItem(COMPLETION_KEY, JSON.stringify(completionMap));
       }
-      const rowEl = wrapper.querySelector('.daily-task');
-      const labelEl = rowEl.children[1];
-      rowEl.style.opacity = cb.checked ? '0.6' : '1';
       if (cb.checked) {
-        labelEl.style.textDecoration = 'line-through';
-        labelEl.style.color = '#777';
+        wrapper.remove();
       } else {
-        labelEl.style.textDecoration = '';
-        labelEl.style.color = '';
-      }
-      if (cb.checked) {
-        listEl.appendChild(wrapper);
-      } else {
-        const allWrappers = Array.from(listEl.querySelectorAll('.daily-task-wrapper'));
-        const firstDone = allWrappers.find(el =>
-          el.querySelector('input[type="checkbox"]').checked
-        );
         const addFormEl = listEl.firstElementChild;
-        listEl.insertBefore(wrapper, firstDone || addFormEl.nextSibling);
+        listEl.insertBefore(wrapper, addFormEl.nextSibling);
       }
     } catch (err) {
       console.error(err);
@@ -410,9 +389,6 @@ export async function renderDailyTasks(currentUser, db) {
       noteSpan.className = 'note-text';
       noteSpan.innerHTML = linkify(task.notes);
       label.appendChild(noteSpan);
-    }
-    if (isDone) {
-      Object.assign(label.style, { textDecoration: 'line-through', color: '#777' });
     }
     Object.assign(label.style, {
       whiteSpace: 'nowrap',
