@@ -1478,3 +1478,10 @@ h2 {
   margin-top: 6px;
 }
 
+/* Align checkboxes with goal text in the Focus dialog */
+#focusGoalsList label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
