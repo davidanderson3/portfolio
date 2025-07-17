@@ -530,11 +530,12 @@ button:hover {
 
   .decision-row {
     flex-direction: row !important;
-    flex-wrap: wrap;
+    /* Prevent label wrapping so goal names stay beside the checkbox */
+    flex-wrap: nowrap;
     align-items: center !important;
     gap: 6px;
     padding: 8px 10px !important;
-  }
+    }
 
   .left-group,
   .middle-group,
