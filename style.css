@@ -385,11 +385,11 @@ button:hover {
   padding-left: 8px;
 }
 
-.due-column {
-  text-align: right;
-  white-space: nowrap;
-  color: #777;
-}
+  .due-column {
+    text-align: right;
+    white-space: nowrap;
+    color: #777;
+  }
 
 /* ------------------------------
    Decision Card
@@ -553,13 +553,16 @@ button:hover {
     flex: 1 1 auto;
     min-width: 0;
     font-size: 0.95em;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .right-group {
     flex: 0 0 auto;
     font-size: 0.9em;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
   }
 
   .title-column {
@@ -574,10 +577,15 @@ button:hover {
     padding-left: 4px;
   }
 
+  .due-column {
+    width: 100%;
+  }
+
   .button-row {
     flex-wrap: nowrap;
     gap: 4px;
     justify-content: flex-end;
+    width: 100%;
   }
 
   .button-row button {
