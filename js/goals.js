@@ -125,12 +125,8 @@ export function createGoalRow(goal, options = {}) {
     const middle = document.createElement('div');
     middle.className = 'middle-group';
     const titleDiv = document.createElement('div');
-    titleDiv.className = 'title-column desktop-title';
+    titleDiv.className = 'title-column';
     titleDiv.innerHTML = linkify(goal.text);
-    // clone title for mobile display next to checkbox
-    const mobileTitle = titleDiv.cloneNode(true);
-    mobileTitle.className = 'title-column mobile-title';
-    left.appendChild(mobileTitle);
     middle.appendChild(titleDiv);
     if (goal.notes) {
         const noteDiv = document.createElement('div');
@@ -138,29 +134,20 @@ export function createGoalRow(goal, options = {}) {
         noteDiv.innerHTML = linkify(goal.notes);
         middle.appendChild(noteDiv);
     }
-    row.appendChild(middle);
-
-    // ── Right group: scheduled + buttons ──
-    const right = document.createElement('div');
-    right.className = 'right-group';
-
-    if (goal.type === 'goal' && !options.hideScheduled) {
-        // … your scheduled-date code here …
-    }
-
-    const due = document.createElement('div');
-    due.className = 'due-column';
-    due.textContent = goal.completed ? goal.dateCompleted : (goal.scheduled || '');
-    right.appendChild(due);
-
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
     if (goal.type === 'goal') {
         attachEditButtons(goal, buttonWrap, row);
     }
-    right.appendChild(buttonWrap);
+    middle.appendChild(buttonWrap);
+    row.appendChild(middle);
 
-    row.appendChild(right);
+    const due = document.createElement('div');
+    due.className = 'due-column';
+    due.textContent = goal.completed ? goal.dateCompleted : (goal.scheduled || '');
+
+    row.appendChild(due);
+
     return row;
 }
 
