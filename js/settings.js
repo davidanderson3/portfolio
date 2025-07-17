@@ -69,11 +69,6 @@ export function initSettings({ settingsBtn, settingsModal }) {
 
   const listDiv = settingsModal.querySelector('#settingsTabsList');
   listDiv.classList.add('settings-list');
-  const durations = [
-    { label: '1 day', value: 1 },
-    { label: '1 week', value: 7 },
-    { label: '1 month', value: 30 }
-  ];
   const panels = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
 
   if (listDiv.children.length === 0) {
@@ -83,36 +78,19 @@ export function initSettings({ settingsBtn, settingsModal }) {
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.value = id;
-      const txt = document.createTextNode(' ' + id.replace('Panel',''));
-      const select = document.createElement('select');
-      durations.forEach(opt => {
-        const o = document.createElement('option');
-        o.value = opt.value;
-        o.textContent = opt.label;
-        select.appendChild(o);
-      });
-      select.style.display = 'none';
-      cb.addEventListener('change', () => {
-        select.style.display = cb.checked ? 'none' : 'inline-block';
-      });
       label.appendChild(cb);
-      label.appendChild(txt);
-      label.appendChild(select);
+      label.appendChild(document.createTextNode(' ' + id.replace('Panel','')));
       listDiv.appendChild(label);
     });
   }
 
   settingsBtn.addEventListener('click', async () => {
     const hidden = await loadHiddenTabs();
-    listDiv.querySelectorAll('.settings-option').forEach(lbl => {
-      const cb = lbl.querySelector('input[type=checkbox]');
-      const select = lbl.querySelector('select');
+    listDiv.querySelectorAll('.settings-option input[type=checkbox]').forEach(cb => {
       const until = hidden[cb.value];
       const hideUntil = until ? Date.parse(until) || 0 : 0;
       const hiddenNow = hideUntil && Date.now() < hideUntil;
       cb.checked = !hiddenNow;
-      select.style.display = hiddenNow ? 'inline-block' : 'none';
-      select.value = durations[0].value;
     });
     settingsModal.style.display = 'flex';
   });
@@ -122,12 +100,9 @@ export function initSettings({ settingsBtn, settingsModal }) {
 
   saveBtn?.addEventListener('click', async () => {
     const hidden = {};
-    listDiv.querySelectorAll('.settings-option').forEach(lbl => {
-      const cb = lbl.querySelector('input[type=checkbox]');
-      const select = lbl.querySelector('select');
+    listDiv.querySelectorAll('.settings-option input[type=checkbox]').forEach(cb => {
       if (!cb.checked) {
-        const days = parseInt(select.value) || 1;
-        hidden[cb.value] = new Date(Date.now() + days*86400000).toISOString();
+        hidden[cb.value] = new Date('9999-12-31').toISOString();
       }
     });
     await saveHiddenTabs(hidden);
@@ -154,11 +129,6 @@ export async function initSettingsPage() {
   listDiv?.classList.add('settings-list');
   const saveBtn = document.getElementById('settingsSaveBtn');
   const emailSpan = document.getElementById('settingsEmail');
-  const durations = [
-    { label: '1 day', value: 1 },
-    { label: '1 week', value: 7 },
-    { label: '1 month', value: 30 }
-  ];
   const panels = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
 
   if (listDiv && listDiv.children.length === 0) {
@@ -168,47 +138,27 @@ export async function initSettingsPage() {
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.value = id;
-      const txt = document.createTextNode(' ' + id.replace('Panel',''));
-      const select = document.createElement('select');
-      durations.forEach(opt => {
-        const o = document.createElement('option');
-        o.value = opt.value;
-        o.textContent = opt.label;
-        select.appendChild(o);
-      });
-      select.style.display = 'none';
-      cb.addEventListener('change', () => {
-        select.style.display = cb.checked ? 'none' : 'inline-block';
-      });
       label.appendChild(cb);
-      label.appendChild(txt);
-      label.appendChild(select);
+      label.appendChild(document.createTextNode(' ' + id.replace('Panel','')));
       listDiv.appendChild(label);
     });
   }
 
   const populate = async () => {
     const hidden = await loadHiddenTabs();
-    listDiv.querySelectorAll('.settings-option').forEach(lbl => {
-      const cb = lbl.querySelector('input[type=checkbox]');
-      const select = lbl.querySelector('select');
+    listDiv.querySelectorAll('.settings-option input[type=checkbox]').forEach(cb => {
       const until = hidden[cb.value];
       const hideUntil = until ? Date.parse(until) || 0 : 0;
       const hiddenNow = hideUntil && Date.now() < hideUntil;
       cb.checked = !hiddenNow;
-      select.style.display = hiddenNow ? 'inline-block' : 'none';
-      select.value = durations[0].value;
     });
   };
 
   saveBtn?.addEventListener('click', async () => {
     const hidden = {};
-    listDiv.querySelectorAll('.settings-option').forEach(lbl => {
-      const cb = lbl.querySelector('input[type=checkbox]');
-      const select = lbl.querySelector('select');
+    listDiv.querySelectorAll('.settings-option input[type=checkbox]').forEach(cb => {
       if (!cb.checked) {
-        const days = parseInt(select.value) || 1;
-        hidden[cb.value] = new Date(Date.now() + days*86400000).toISOString();
+        hidden[cb.value] = new Date('9999-12-31').toISOString();
       }
     });
     await saveHiddenTabs(hidden);

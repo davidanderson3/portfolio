@@ -798,9 +798,6 @@ button:hover {
   transform: scale(1.2);
 }
 
-.settings-option select {
-  margin-left: 4px;
-}
 
 .daily-task button,
 .daily-task input {
