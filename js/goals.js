@@ -145,9 +145,7 @@ export function createGoalRow(goal, options = {}) {
     const due = document.createElement('div');
     due.className = 'due-column';
     due.textContent = goal.completed ? goal.dateCompleted : (goal.scheduled || '');
-
     row.appendChild(due);
-
     return row;
 }
 
