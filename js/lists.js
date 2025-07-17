@@ -201,10 +201,14 @@ async function initListsPanel() {
     listsContainer
   );
 
+  panel.append(itemForm);
+
   const formsWrapper = document.getElementById('listsFormWrapper');
   if (formsWrapper) {
     formsWrapper.innerHTML = '';
-    formsWrapper.append(itemForm, createForm);
+    formsWrapper.append(createForm);
+  } else {
+    panel.append(createForm);
   }
 
   function initHiddenSection() {
