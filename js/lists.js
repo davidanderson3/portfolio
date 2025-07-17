@@ -198,10 +198,14 @@ async function initListsPanel() {
   // ─── 4) Append scaffolding (button will go just after listsContainer) ───
   panel.append(
     tabsContainer,
-    listsContainer,
-    itemForm,
-    createForm
+    listsContainer
   );
+
+  const formsWrapper = document.getElementById('listsFormWrapper');
+  if (formsWrapper) {
+    formsWrapper.innerHTML = '';
+    formsWrapper.append(itemForm, createForm);
+  }
 
   function initHiddenSection() {
     let hidden = document.getElementById('hiddenLists');
@@ -934,3 +938,18 @@ async function initListsPanel() {
 }
 
 window.initListsPanel = initListsPanel;
+
+function openListsFormModal() {
+  const modal = document.getElementById('listsFormModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  function close(e) {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+      modal.removeEventListener('click', close);
+    }
+  }
+  modal.addEventListener('click', close);
+}
+
+window.openListsFormModal = openListsFormModal;
