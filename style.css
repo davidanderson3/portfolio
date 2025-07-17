@@ -378,6 +378,13 @@ button:hover {
   padding-left: 8px;
 }
 
+.mobile-title {
+  display: none;
+}
+.desktop-title {
+  display: block;
+}
+
 .note-text {
   font-size: 0.85em;
   font-style: italic;
@@ -571,6 +578,13 @@ button:hover {
   .title-column {
     font-size: 1em;
     padding-left: 4px;
+  }
+
+  .desktop-title {
+    display: none;
+  }
+  .mobile-title {
+    display: inline;
   }
 
   .note-text {

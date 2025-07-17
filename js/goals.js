@@ -125,7 +125,12 @@ export function createGoalRow(goal, options = {}) {
     const middle = document.createElement('div');
     middle.className = 'middle-group';
     const titleDiv = document.createElement('div');
+    titleDiv.className = 'title-column desktop-title';
     titleDiv.innerHTML = linkify(goal.text);
+    // clone title for mobile display next to checkbox
+    const mobileTitle = titleDiv.cloneNode(true);
+    mobileTitle.className = 'title-column mobile-title';
+    left.appendChild(mobileTitle);
     middle.appendChild(titleDiv);
     if (goal.notes) {
         const noteDiv = document.createElement('div');
