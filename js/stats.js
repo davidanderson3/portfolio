@@ -70,7 +70,14 @@ async function loadMetricsConfig() {
     .collection('users').doc(user.uid)
     .collection('settings').doc('metricsConfig')
     .get();
-  return snap.exists ? snap.data().metrics : [];
+  let cfg = snap.exists ? snap.data().metrics : [];
+  cfg = cfg.map(m => {
+    if (m && m.hiddenUntil && typeof m.hiddenUntil.toDate === 'function') {
+      return { ...m, hiddenUntil: m.hiddenUntil.toDate().toISOString() };
+    }
+    return m;
+  });
+  return cfg;
 }
 
 async function saveMetricsConfig(metrics) {
@@ -350,6 +357,9 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
   const today = dayKey;
   let visible = 0, filled = 0;
   for (const cfg of config) {
+    if (cfg.hiddenUntil && Date.now() < Date.parse(cfg.hiddenUntil)) {
+      continue;
+    }
     const entries = ((allStats[today] || {})[cfg.id]) || [];
     const validEntries = entries.filter(e => !(e.extra && e.extra.postponed));
     const wasPostponed = entries.some(e => e.extra && e.extra.postponed);
@@ -497,6 +507,86 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       await renderStatsSummary();
     });
     td6.appendChild(postpone);
+
+    const clockBtn = document.createElement('span');
+    clockBtn.textContent = '🕒';
+    clockBtn.style.cursor = 'pointer';
+    clockBtn.style.marginLeft = '8px';
+    td6.appendChild(clockBtn);
+
+    const menu = document.createElement('div');
+    Object.assign(menu.style, {
+      position: 'absolute',
+      background: '#fff',
+      border: '1px solid #ccc',
+      borderRadius: '6px',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+      padding: '6px 0',
+      fontSize: '0.9em',
+      display: 'none',
+      zIndex: '9999',
+      minWidth: '120px'
+    });
+    document.body.appendChild(menu);
+
+    const options = [
+      { label: '1 hour', value: 1 },
+      { label: '2 hours', value: 2 },
+      { label: '4 hours', value: 4 },
+      { label: '8 hours', value: 8 },
+      { label: '1 day', value: 24 },
+      { label: '2 days', value: 48 },
+      { label: '3 days', value: 72 },
+      { label: '4 days', value: 96 },
+      { label: '1 week', value: 168 },
+      { label: '2 weeks', value: 336 },
+      { label: '1 month', value: 720 },
+      { label: '2 months', value: 1440 },
+      { label: '3 months', value: 2160 }
+    ];
+
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = opt.label;
+      btn.classList.add('postpone-option');
+      Object.assign(btn.style, {
+        display: 'block',
+        width: '100%',
+        padding: '4px 12px',
+        border: 'none',
+        background: 'white',
+        color: '#333',
+        textAlign: 'left',
+        cursor: 'pointer'
+      });
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const allCfg = await loadMetricsConfig();
+        const idx = allCfg.findIndex(m => m.id === cfg.id);
+        if (idx !== -1) {
+          allCfg[idx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+          await saveMetricsConfig(allCfg);
+        }
+        menu.style.display = 'none';
+        await renderStatsSummary();
+      });
+      menu.appendChild(btn);
+    });
+
+    clockBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const rect = clockBtn.getBoundingClientRect();
+      menu.style.top = `${rect.bottom + window.scrollY}px`;
+      menu.style.left = `${rect.left + window.scrollX}px`;
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', e => {
+      if (!menu.contains(e.target) && e.target !== clockBtn) {
+        menu.style.display = 'none';
+      }
+    });
 
     const configEdit = document.createElement('span');
     configEdit.textContent = '✏️';
