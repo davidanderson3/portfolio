@@ -67,6 +67,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
         return;
       }
+      e.preventDefault();
       handleBottomAdd();
     }
   });
