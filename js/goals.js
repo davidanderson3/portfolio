@@ -125,12 +125,8 @@ export function createGoalRow(goal, options = {}) {
     const middle = document.createElement('div');
     middle.className = 'middle-group';
     const titleDiv = document.createElement('div');
-    titleDiv.className = 'title-column desktop-title';
+    titleDiv.className = 'title-column';
     titleDiv.innerHTML = linkify(goal.text);
-    // clone title for mobile display next to checkbox
-    const mobileTitle = titleDiv.cloneNode(true);
-    mobileTitle.className = 'title-column mobile-title';
-    left.appendChild(mobileTitle);
     middle.appendChild(titleDiv);
     if (goal.notes) {
         const noteDiv = document.createElement('div');
@@ -151,16 +147,23 @@ export function createGoalRow(goal, options = {}) {
     const due = document.createElement('div');
     due.className = 'due-column';
     due.textContent = goal.completed ? goal.dateCompleted : (goal.scheduled || '');
-    right.appendChild(due);
 
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
     if (goal.type === 'goal') {
         attachEditButtons(goal, buttonWrap, row);
     }
-    right.appendChild(buttonWrap);
 
-    row.appendChild(right);
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+        left.appendChild(due);
+        middle.appendChild(buttonWrap);
+    } else {
+        right.appendChild(due);
+        right.appendChild(buttonWrap);
+        row.appendChild(right);
+    }
+
     return row;
 }
 

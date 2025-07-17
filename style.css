@@ -378,12 +378,6 @@ button:hover {
   padding-left: 8px;
 }
 
-.mobile-title {
-  display: none;
-}
-.desktop-title {
-  display: block;
-}
 
 .note-text {
   font-size: 0.85em;
@@ -557,6 +551,11 @@ button:hover {
     flex-shrink: 0;
   }
 
+  .left-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .middle-group {
     flex: 1 1 auto;
     min-width: 0;
@@ -580,12 +579,6 @@ button:hover {
     padding-left: 4px;
   }
 
-  .desktop-title {
-    display: none;
-  }
-  .mobile-title {
-    display: inline;
-  }
 
   .note-text {
     font-size: 0.8em;
@@ -595,7 +588,7 @@ button:hover {
   }
 
   .due-column {
-    width: 100%;
+    width: auto;
   }
 
   .button-row {
