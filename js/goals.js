@@ -125,6 +125,7 @@ export function createGoalRow(goal, options = {}) {
     const middle = document.createElement('div');
     middle.className = 'middle-group';
     const titleDiv = document.createElement('div');
+    titleDiv.className = 'title-column';
     titleDiv.innerHTML = linkify(goal.text);
     middle.appendChild(titleDiv);
     if (goal.notes) {
@@ -146,16 +147,23 @@ export function createGoalRow(goal, options = {}) {
     const due = document.createElement('div');
     due.className = 'due-column';
     due.textContent = goal.completed ? goal.dateCompleted : (goal.scheduled || '');
-    right.appendChild(due);
 
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
     if (goal.type === 'goal') {
         attachEditButtons(goal, buttonWrap, row);
     }
-    right.appendChild(buttonWrap);
 
-    row.appendChild(right);
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+        left.appendChild(due);
+        middle.appendChild(buttonWrap);
+    } else {
+        right.appendChild(due);
+        right.appendChild(buttonWrap);
+        row.appendChild(right);
+    }
+
     return row;
 }
 

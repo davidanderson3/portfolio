@@ -69,8 +69,6 @@ export async function renderDailyTasks(currentUser, db) {
     monthlyContainer.className = 'decision-container';
     wrapper.appendChild(monthlyContainer);
   }
-
-
   // — Inject CSS once to remove green focus/active backgrounds on buttons
   if (!document.getElementById('dailyTasks-btn-reset-css')) {
     const style = document.createElement('style');

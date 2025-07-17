@@ -692,22 +692,11 @@ async function renderConfigForm(metricToEdit = null) {
   if (metricToEdit) showBtn.click();
 }
 
-async function postponeAllMetrics() {
-  const cfg = await loadMetricsConfig();
-  for (const m of cfg) {
-    await recordMetric(m.id, null, { postponed: true }, activeMetricsDate);
-  }
-  await renderStatsSummary();
-}
-
-
-
 export async function initMetricsUI() {
   activeMetricsDate = todayKey();
   updateMetricsDateUI();
   const prev = document.getElementById('metricPrevDayBtn');
   const next = document.getElementById('metricNextDayBtn');
-  const postponeDay = document.getElementById('metricPostponeDayBtn');
   if (prev && !prev.dataset.bound) {
     prev.addEventListener('click', () => changeMetricsDate(-1));
     prev.dataset.bound = '1';
@@ -715,10 +704,6 @@ export async function initMetricsUI() {
   if (next && !next.dataset.bound) {
     next.addEventListener('click', () => changeMetricsDate(1));
     next.dataset.bound = '1';
-  }
-  if (postponeDay && !postponeDay.dataset.bound) {
-    postponeDay.addEventListener('click', postponeAllMetrics);
-    postponeDay.dataset.bound = '1';
   }
   await ensureMoodConfig();
   await renderStatsSummary();

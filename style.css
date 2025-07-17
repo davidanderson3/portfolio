@@ -378,6 +378,7 @@ button:hover {
   padding-left: 8px;
 }
 
+
 .note-text {
   font-size: 0.85em;
   font-style: italic;
@@ -385,11 +386,11 @@ button:hover {
   padding-left: 8px;
 }
 
-.due-column {
-  text-align: right;
-  white-space: nowrap;
-  color: #777;
-}
+  .due-column {
+    text-align: right;
+    white-space: nowrap;
+    color: #777;
+  }
 
 /* ------------------------------
    Decision Card
@@ -530,8 +531,9 @@ button:hover {
 
   .decision-row {
     flex-direction: row !important;
+    /* Allow wrapping so icon section can drop below text */
     flex-wrap: wrap;
-    align-items: center !important;
+    align-items: flex-start !important;
     gap: 6px;
     padding: 8px 10px !important;
   }
@@ -549,23 +551,34 @@ button:hover {
     flex-shrink: 0;
   }
 
+  .left-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
   .middle-group {
     flex: 1 1 auto;
     min-width: 0;
     font-size: 0.95em;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .right-group {
     flex: 0 0 auto;
     font-size: 0.9em;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    margin-top: 4px;
   }
 
   .title-column {
     font-size: 1em;
     padding-left: 4px;
   }
+
 
   .note-text {
     font-size: 0.8em;
@@ -574,10 +587,15 @@ button:hover {
     padding-left: 4px;
   }
 
+  .due-column {
+    width: auto;
+  }
+
   .button-row {
     flex-wrap: nowrap;
     gap: 4px;
     justify-content: flex-end;
+    width: 100%;
   }
 
   .button-row button {
@@ -670,6 +688,12 @@ button:hover {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#wizardBackBtn,
+#wizardCancelBtn,
+#wizardNextBtn {
+  padding: 4px 8px;
 }
 
 
@@ -773,9 +797,6 @@ button:hover {
   transform: scale(1.2);
 }
 
-.settings-option select {
-  margin-left: 4px;
-}
 
 .daily-task button,
 .daily-task input {
@@ -927,6 +948,12 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+/* Remove default button margin so header buttons align with text */
+#goalsHeaderRow button,
+#calendarHeaderRow button {
+  margin-top: 0;
 }
 
 #calendarHeaderRow {
@@ -1483,5 +1510,11 @@ h2 {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Prevent global input styles from stretching focus dialog checkboxes */
+#focusGoalsList input[type="checkbox"] {
+  width: auto;
+  margin: 0;
 }
 
