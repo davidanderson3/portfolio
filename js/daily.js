@@ -52,12 +52,23 @@ export async function renderDailyTasks(currentUser, db) {
     container.className = 'decision-container';
     panel.appendChild(container);
   }
-  // Use the same container for weekly and monthly tasks so all tasks
-  // appear in a single list
-  const weeklyContainer = container;
-  const monthlyContainer = container;
-
-
+  // — ensure our weekly container exists
+  const wrapper = container.parentElement || panel;
+  let weeklyContainer = panel.querySelector('#weeklyTasksList');
+  if (!weeklyContainer) {
+    weeklyContainer = document.createElement('div');
+    weeklyContainer.id = 'weeklyTasksList';
+    weeklyContainer.className = 'decision-container';
+    wrapper.appendChild(weeklyContainer);
+  }
+  // — ensure our monthly container exists
+  let monthlyContainer = panel.querySelector('#monthlyTasksList');
+  if (!monthlyContainer) {
+    monthlyContainer = document.createElement('div');
+    monthlyContainer.id = 'monthlyTasksList';
+    monthlyContainer.className = 'decision-container';
+    wrapper.appendChild(monthlyContainer);
+  }
   // — Inject CSS once to remove green focus/active backgrounds on buttons
   if (!document.getElementById('dailyTasks-btn-reset-css')) {
     const style = document.createElement('style');
@@ -81,6 +92,8 @@ export async function renderDailyTasks(currentUser, db) {
 
   // — Clear and load all tasks
   container.innerHTML = '';
+  weeklyContainer.innerHTML = '';
+  monthlyContainer.innerHTML = '';
   const all = await loadDecisions();
 
   // — Migrate legacy “[Daily]” flags
