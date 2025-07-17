@@ -52,13 +52,14 @@ export async function renderDailyTasks(currentUser, db) {
     container.className = 'decision-container';
     panel.appendChild(container);
   }
-    // — ensure our weekly container exists
+  // — ensure our weekly container exists
+  const wrapper = container.parentElement || panel;
   let weeklyContainer = panel.querySelector('#weeklyTasksList');
   if (!weeklyContainer) {
     weeklyContainer = document.createElement('div');
     weeklyContainer.id = 'weeklyTasksList';
     weeklyContainer.className = 'decision-container';
-    panel.appendChild(weeklyContainer);
+    wrapper.appendChild(weeklyContainer);
   }
   // — ensure our monthly container exists
   let monthlyContainer = panel.querySelector('#monthlyTasksList');
@@ -66,12 +67,8 @@ export async function renderDailyTasks(currentUser, db) {
     monthlyContainer = document.createElement('div');
     monthlyContainer.id = 'monthlyTasksList';
     monthlyContainer.className = 'decision-container';
-    panel.appendChild(monthlyContainer);
+    wrapper.appendChild(monthlyContainer);
   }
-  // Clear any existing weekly tasks/forms before re-rendering
-  weeklyContainer.innerHTML = '';
-  // Clear any existing monthly tasks/forms before re-rendering
-  monthlyContainer.innerHTML = '';
 
 
   // — Inject CSS once to remove green focus/active backgrounds on buttons
@@ -97,8 +94,9 @@ export async function renderDailyTasks(currentUser, db) {
 
   // — Clear and load all tasks
   container.innerHTML = '';
+  weeklyContainer.innerHTML = '';
+  monthlyContainer.innerHTML = '';
   const all = await loadDecisions();
-  weeklyContainer.innerHTML = "";
 
   // — Migrate legacy “[Daily]” flags
   let migrated = false;
