@@ -54,6 +54,7 @@ body {
   flex-direction: column;
   align-items: stretch;
   border-bottom: 1px solid #cccccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .navbar-inner {
@@ -130,6 +131,7 @@ body {
   align-items: center;
   padding: 6px 0;
   z-index: 1000;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .bottom-nav .icon-btn {
