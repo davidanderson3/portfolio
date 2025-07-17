@@ -61,6 +61,16 @@ window.addEventListener('DOMContentLoaded', () => {
     uiRefs.bottomAddBtn.addEventListener('click', handleBottomAdd);
   }
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'A' && e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+        return;
+      }
+      handleBottomAdd();
+    }
+  });
+
   function showAddModal(cfg) {
     if (!uiRefs.bottomAddModal) return;
     uiRefs.bottomAddTitle.textContent = cfg.title || 'Add';
