@@ -678,6 +678,22 @@ h1 {
     flex-direction: row;
     align-items: center;
   }
+  .goal-card .decision-row {
+    position: relative;
+  }
+  .goal-card .button-row {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .goal-card .decision-row.editing .button-row {
+    position: static;
+    transform: none;
+  }
+  .goal-card .due-column {
+    margin-right: 120px;
+  }
 }
 
 
