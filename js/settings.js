@@ -56,6 +56,8 @@ export function applyHiddenTabs(tabs) {
       if (btn === active) active = null;
     } else {
       btn.style.display = '';
+      const panel = document.getElementById(target);
+      if (panel && btn === active) panel.style.display = 'flex';
     }
   });
   if (!active) {
