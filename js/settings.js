@@ -47,17 +47,16 @@ export function applyHiddenTabs(tabs) {
   const now = Date.now();
   buttons.forEach(btn => {
     const target = btn.dataset.target;
+    const panel = document.getElementById(target);
     const until = obj[target];
     const hideUntil = until ? Date.parse(until) || 0 : 0;
     if (hideUntil && now < hideUntil) {
       btn.style.display = 'none';
-      const panel = document.getElementById(target);
       if (panel) panel.style.display = 'none';
       if (btn === active) active = null;
     } else {
       btn.style.display = '';
-      const panel = document.getElementById(target);
-      if (panel && btn === active) panel.style.display = 'flex';
+      if (panel) panel.style.display = btn === active ? 'flex' : 'none';
     }
   });
   if (!active) {
