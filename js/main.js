@@ -143,7 +143,7 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (active === 'metricsPanel') {
-      document.getElementById('showConfigBtn')?.click();
+      window.openMetricsConfigForm?.();
       return;
     }
     if (active === 'listsPanel') {
