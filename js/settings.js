@@ -66,65 +66,6 @@ export function applyHiddenTabs(tabs) {
   }
 }
 
-export function initSettings({ settingsBtn, settingsModal }) {
-  if (!settingsBtn || !settingsModal) return;
-
-  const listDiv = settingsModal.querySelector('#settingsTabsList');
-  listDiv.classList.add('settings-list');
-  const panels = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
-
-  if (listDiv.children.length === 0) {
-    panels.forEach(id => {
-      const label = document.createElement('label');
-      label.className = 'settings-option';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.value = id;
-      label.appendChild(cb);
-      label.appendChild(document.createTextNode(' ' + id.replace('Panel','')));
-      listDiv.appendChild(label);
-    });
-  }
-
-  settingsBtn.addEventListener('click', async () => {
-    const hidden = await loadHiddenTabs();
-    listDiv.querySelectorAll('.settings-option input[type=checkbox]').forEach(cb => {
-      const until = hidden[cb.value];
-      const hideUntil = until ? Date.parse(until) || 0 : 0;
-      const hiddenNow = hideUntil && Date.now() < hideUntil;
-      cb.checked = !hiddenNow;
-    });
-    settingsModal.style.display = 'flex';
-  });
-
-  const saveBtn = settingsModal.querySelector('#settingsSaveBtn');
-  const cancelBtn = settingsModal.querySelector('#settingsCancelBtn');
-
-  saveBtn?.addEventListener('click', async () => {
-    const hidden = {};
-    listDiv.querySelectorAll('.settings-option input[type=checkbox]').forEach(cb => {
-      if (!cb.checked) {
-        hidden[cb.value] = new Date('9999-12-31').toISOString();
-      }
-    });
-    await saveHiddenTabs(hidden);
-    applyHiddenTabs(hidden);
-    settingsModal.style.display = 'none';
-  });
-
-  cancelBtn?.addEventListener('click', () => {
-    settingsModal.style.display = 'none';
-  });
-
-  settingsModal.addEventListener('click', e => {
-    if (e.target === settingsModal) settingsModal.style.display = 'none';
-  });
-
-  auth.onAuthStateChanged(async () => {
-    const hidden = await loadHiddenTabs();
-    applyHiddenTabs(hidden);
-  });
-}
 
 export async function initSettingsPage() {
   const listDiv = document.getElementById('settingsTabsList');
