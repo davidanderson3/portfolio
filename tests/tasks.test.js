@@ -12,13 +12,28 @@ vi.mock('../js/helpers.js', () => ({
   linkify: (t) => t
 }));
 
+let currentItems = [];
+
 vi.mock('../js/goals.js', () => ({
-  createGoalRow: vi.fn((goal) => {
+  createGoalRow: vi.fn((goal, options = {}) => {
     const row = document.createElement('div');
     row.className = 'decision-row';
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.checked = !!goal.completed;
+
+    if (goal.type === 'goal') {
+      cb.addEventListener('change', () => {
+        goal.completed = cb.checked;
+        goal.dateCompleted = cb.checked ? 'now' : '';
+        const idx = currentItems.findIndex(i => i.id === goal.id);
+        if (idx !== -1) currentItems[idx] = goal;
+        if (options.stayPut && typeof options.onToggle === 'function') {
+          options.onToggle(cb.checked, currentItems);
+        }
+      });
+    }
+
     row.appendChild(cb);
     const btnRow = document.createElement('div');
     btnRow.className = 'button-row';
@@ -59,5 +74,23 @@ describe('task completion', () => {
     expect(doneList.children.length).toBe(1);
     expect(doneList.querySelector('input[type="checkbox"]').checked).toBe(true);
     expect(helpers.saveDecisions).toHaveBeenCalled();
+  });
+
+  it('moves subgoal to completed list immediately on check', async () => {
+    const parent = { id: 'g1', type: 'goal', parentGoalId: null, completed: false };
+    const sub = { id: 'g2', type: 'goal', text: 'sub', notes: '', parentGoalId: 'g1', completed: false, dateCompleted: '' };
+    const all = [parent, sub];
+    currentItems = all;
+
+    await renderChildren(parent, all, container);
+    const cb = container.querySelector('input[type="checkbox"]');
+    cb.checked = true;
+    cb.dispatchEvent(new window.Event('change', { bubbles: true }));
+
+    const taskList = container.querySelector('.task-list');
+    const doneList = container.querySelector('.completed-task-list');
+    expect(taskList.children.length).toBe(0);
+    expect(doneList.children.length).toBe(1);
+    expect(doneList.querySelector('input[type="checkbox"]').checked).toBe(true);
   });
 });
