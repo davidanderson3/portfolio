@@ -694,6 +694,9 @@ h1 {
   .goal-card .due-column {
     margin-right: 120px;
   }
+  .goal-card .decision-row.editing .due-column {
+    margin-right: 0;
+  }
 }
 
 
