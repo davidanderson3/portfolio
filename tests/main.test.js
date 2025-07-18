@@ -10,7 +10,6 @@ vi.mock('../js/helpers.js', () => ({
 vi.mock('../js/daily.js', () => ({ renderDailyTasks: vi.fn() }));
 vi.mock('../js/goals.js', () => ({
   renderGoalsAndSubitems: vi.fn(),
-  initFocusButton: vi.fn(),
   addCalendarGoal: vi.fn()
 }));
 vi.mock('../js/auth.js', () => ({ initAuth: vi.fn(), db: {}, currentUser: null }));

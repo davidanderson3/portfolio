@@ -18,8 +18,6 @@ body {
   overflow-x: hidden;
 }
 
-
-
 /* Subtle background pattern on main container */
 .main-layout {
   display: flex;
@@ -751,12 +749,6 @@ h1 {
 #wizardNextBtn {
   padding: 4px 8px;
 }
-
-#focusCancelBtn,
-#focusApplyBtn {
-  padding: 4px 8px;
-}
-
 
 .button-row {
   display: flex;
@@ -1582,16 +1574,5 @@ h2 {
   margin-right: 0;
 }
 
-/* Align checkboxes with goal text in the Focus dialog */
-#focusGoalsList label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 
-/* Prevent global input styles from stretching focus dialog checkboxes */
-#focusGoalsList input[type="checkbox"] {
-  width: auto;
-  margin: 0;
-}
 
