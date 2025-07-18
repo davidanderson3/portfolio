@@ -535,12 +535,14 @@ function setupToggle(wrapper, row, childrenContainer, id) {
 
 
 function addHiddenControls(wrapper, row, goal, hiddenContent) {
-    const lbl = document.createElement('span');
     const hideUntil = Date.parse(goal.hiddenUntil);
+
+    const info = document.createElement('div');
+    info.className = 'hidden-info';
+
+    const lbl = document.createElement('span');
     lbl.textContent = `Hidden until ${new Date(hideUntil).toLocaleString()}`;
-    lbl.style.margin = '0 8px';
-    lbl.style.fontStyle = 'italic';
-    row.querySelector('.button-row').appendChild(lbl);
+    info.appendChild(lbl);
 
     const unhideBtn = document.createElement('button');
     unhideBtn.type = 'button';
@@ -548,8 +550,7 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
     Object.assign(unhideBtn.style, {
         background: '#88c', color: '#fff',
         border: '1px solid #88c', borderRadius: '4px',
-        padding: '2px 6px', cursor: 'pointer', fontSize: '0.9em',
-        marginLeft: '8px'
+        padding: '2px 6px', cursor: 'pointer', fontSize: '0.9em'
     });
     unhideBtn.addEventListener('click', async e => {
         e.stopPropagation();
@@ -561,7 +562,9 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
             await renderGoalsAndSubitems();
         }
     });
-    row.querySelector('.button-row').appendChild(unhideBtn);
+    info.appendChild(unhideBtn);
+
+    row.appendChild(info);
     hiddenContent.appendChild(wrapper);
 }
 
