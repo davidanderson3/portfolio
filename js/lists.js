@@ -933,8 +933,9 @@ async function initListsPanel() {
 
   // ───11) Initial render ────────────────────────────────────
   renderTabs();
-  if (listsArray.length) {
-    selectList(0);
+  const firstActiveIdx = listsArray.findIndex(l => !isHidden(l));
+  if (firstActiveIdx !== -1) {
+    selectList(firstActiveIdx);
     addColumnBtnForList.style.display = 'block';
   } else {
     addColumnBtnForList.style.display = 'none';
