@@ -1566,6 +1566,33 @@ h2 {
   margin-top: 6px;
 }
 
+/* Message + button for hidden goals */
+.hidden-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-style: italic;
+  position: absolute;
+  right: 16px;
+  top: 6px;
+}
+
+.goal-card .decision-row.editing .hidden-info {
+  position: static;
+  right: auto;
+  top: auto;
+  margin-bottom: 6px;
+}
+
+@media (max-width: 768px) {
+  .goal-card .hidden-info {
+    position: static;
+    right: auto;
+    top: auto;
+    margin-bottom: 6px;
+  }
+}
+
 /* Align checkboxes with goal text in the Focus dialog */
 #focusGoalsList label {
   display: flex;
