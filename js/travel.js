@@ -47,6 +47,12 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
+function ensureDefaultTag(place) {
+  if (!Array.isArray(place.tags) || place.tags.length === 0) {
+    place.tags = ['no tag'];
+  }
+}
+
 export async function initTravelPanel() {
   const panel = document.getElementById('travelPanel');
   if (!panel) return;
@@ -88,7 +94,11 @@ export async function initTravelPanel() {
         .doc(user.uid)
         .collection('travel')
         .get();
-      travelData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      travelData = snap.docs.map(doc => {
+        const data = { id: doc.id, ...doc.data() };
+        ensureDefaultTag(data);
+        return data;
+      });
     } else {
       travelData = [];
     }
@@ -98,6 +108,9 @@ export async function initTravelPanel() {
     const cached = localStorage.getItem(storageKey());
     travelData = cached ? JSON.parse(cached) : [];
   }
+
+  travelData.forEach(ensureDefaultTag);
+  localStorage.setItem(storageKey(), JSON.stringify(travelData));
 
   allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
 
@@ -298,6 +311,7 @@ export async function initTravelPanel() {
           p.name = nameInput.value.trim();
           p.description = descInput.value.trim();
           p.tags = tagsInput.value.split(',').map(t => t.trim()).filter(Boolean);
+          ensureDefaultTag(p);
           p.Rating = ratingInput.value.trim();
           p.Date = dateInput.value.trim();
           p.visited = visitedInput.checked;
@@ -387,6 +401,7 @@ export async function initTravelPanel() {
     }
   };
   async function storePlace(place) {
+    ensureDefaultTag(place);
     try {
       const user = getCurrentUser?.();
       if (user) {
