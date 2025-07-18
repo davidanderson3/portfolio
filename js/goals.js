@@ -137,7 +137,7 @@ export function createGoalRow(goal, options = {}) {
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
     if (goal.type === 'goal') {
-        attachEditButtons(goal, buttonWrap, row);
+        attachEditButtons(goal, buttonWrap, row, options.itemsRef);
     }
     middle.appendChild(buttonWrap);
     row.appendChild(middle);
@@ -618,7 +618,7 @@ export function appendGoalToDOM(goal, allItems) {
  * @param {Object} item         The goal object
  * @param {HTMLElement} buttonWrap  The .button-row container in the goal’s row
  */
-function attachEditButtons(item, buttonWrap, row) {
+function attachEditButtons(item, buttonWrap, row, itemsRef) {
     // ⬆️ Move goal up
     if (row) {
         const upBtn = makeIconBtn('⬆️', 'Move goal up', async () => {
@@ -655,6 +655,9 @@ function attachEditButtons(item, buttonWrap, row) {
                     .filter(Boolean);
                 const updated = [...other, ...reordered];
                 await saveDecisions(updated);
+                if (Array.isArray(itemsRef)) {
+                    itemsRef.splice(0, itemsRef.length, ...updated);
+                }
             }
         });
         buttonWrap.appendChild(upBtn);

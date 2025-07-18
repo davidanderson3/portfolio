@@ -202,6 +202,7 @@ export async function renderChildren(goal, all, container) {
         const row = createGoalRow(g, {
             hideScheduled: true,
             stayPut: true,
+            itemsRef: all,
             onToggle: (_checked, items) => {
                 if (Array.isArray(items)) {
                     all.splice(0, all.length, ...items);
@@ -409,6 +410,7 @@ export async function renderChildren(goal, all, container) {
                 const row = createGoalRow(item, {
                     hideScheduled: true,
                     stayPut: true,
+                    itemsRef: all,
                     onToggle: () => renderChildren(goal, all, container)
                 });
                 Object.assign(row.style, {
