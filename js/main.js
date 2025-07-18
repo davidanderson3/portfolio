@@ -1,6 +1,6 @@
 import { loadDecisions, saveDecisions, generateId } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
-import { renderGoalsAndSubitems, initFocusButton, addCalendarGoal } from './goals.js';
+import { renderGoalsAndSubitems, addCalendarGoal } from './goals.js';
 import { initAuth, db, currentUser } from './auth.js';
 import { initWizard } from './wizard.js';
 import { renderDailyTaskReport } from './report.js';
@@ -35,8 +35,7 @@ window.addEventListener('DOMContentLoaded', () => {
     wizardStep: document.getElementById('wizardStep'),
     nextBtn: document.getElementById('wizardNextBtn'),
     backBtn: document.getElementById('wizardBackBtn'),
-    cancelBtn: document.getElementById('wizardCancelBtn'),
-    focusBtn: document.getElementById('focusBtn')
+    cancelBtn: document.getElementById('wizardCancelBtn')
   };
 
   const splash = document.getElementById('splash');
@@ -210,8 +209,6 @@ window.addEventListener('DOMContentLoaded', () => {
   if (uiRefs.wizardContainer && uiRefs.wizardStep) {
     initWizard(uiRefs);
   }
-
-  initFocusButton();
 
   initButtonStyles();
   initGoogleCalendar();
