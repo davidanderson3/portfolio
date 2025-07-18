@@ -592,7 +592,10 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     configEdit.textContent = '✏️';
     configEdit.style.cursor = 'pointer';
     configEdit.style.marginLeft = '8px';
-    configEdit.addEventListener('click', () => renderConfigForm(cfg));
+    configEdit.addEventListener('click', () => {
+      renderConfigForm();
+      openMetricsConfigForm(cfg);
+    });
     td6.appendChild(configEdit);
 
     if (cfg.id !== 'mood') {
@@ -622,74 +625,66 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
 
 
 
-async function renderConfigForm(metricToEdit = null) {
+async function renderConfigForm() {
   let config = await loadMetricsConfig();
   config = await ensureMoodConfig();
   config.forEach(m => { if (!('direction' in m)) m.direction = 'higher'; applyUnitLabels(m); });
 
   const section = document.getElementById('metricsConfigSection');
-  section.innerHTML =
-    '<button id="showConfigBtn" style="margin-bottom:12px;">' +
-    (metricToEdit ? '✏️ Edit Metric' : '➕ Add New Metric') +
-    '</button>' +
-    '<div id="configFormContainer" style="display:none;"></div>';
+  section.innerHTML = '<div id="configFormContainer" style="display:none;"></div>';
+}
 
+function openMetricsConfigForm(metricToEdit = null) {
   const formContainer = document.getElementById('configFormContainer');
-  const showBtn = document.getElementById('showConfigBtn');
+  if (!formContainer) return;
+  const labelVal = metricToEdit ? metricToEdit.label : '';
+  const unitVal = metricToEdit ? metricToEdit.unit : 'pounds';
+  const dirVal = metricToEdit ? metricToEdit.direction : 'higher';
 
-  showBtn.addEventListener('click', () => {
-    const labelVal = metricToEdit ? metricToEdit.label : '';
-    const unitVal = metricToEdit ? metricToEdit.unit : 'pounds';
-    const dirVal = metricToEdit ? metricToEdit.direction : 'higher';
+  formContainer.innerHTML =
+    `<form id="configForm">` +
+    `<input type="text" id="metricLabel" value="${labelVal}" required style="margin-right:8px;">` +
+    `<select id="metricUnit" required style="margin:0 8px;">` +
+    `<option value="pounds"${unitVal === 'pounds' ? ' selected' : ''}>pounds</option>` +
+    `<option value="rating"${unitVal === 'rating' ? ' selected' : ''}>rating out of 10</option>` +
+    `<option value="minutes"${unitVal === 'minutes' ? ' selected' : ''}>minutes</option>` +
+    `<option value="time_mmss"${unitVal === 'time_mmss' ? ' selected' : ''}>MM:SS</option>` +
+    `<option value="list"${unitVal === 'list' ? ' selected' : ''}>list</option>` +
+    `<option value="count"${unitVal === 'count' ? ' selected' : ''}>count</option>` +
+    `</select>` +
+    `<select id="metricDirection" required style="margin:0 8px;">` +
+    `<option value="higher"${dirVal === 'higher' ? ' selected' : ''}>Higher is better</option>` +
+    `<option value="lower"${dirVal === 'lower' ? ' selected' : ''}>Lower is better</option>` +
+    `</select>` +
+    `<button type="submit">${metricToEdit ? 'Save Changes' : 'Add Metric'}</button>` +
+    `<button type="button" id="cancelConfig" style="margin-left:8px;">✖️</button>` +
+    `</form>`;
 
-    formContainer.innerHTML =
-      `<form id="configForm">` +
-      `<input type="text" id="metricLabel" value="${labelVal}" required style="margin-right:8px;">` +
-      `<select id="metricUnit" required style="margin:0 8px;">` +
-      `<option value="pounds"${unitVal === 'pounds' ? ' selected' : ''}>pounds</option>` +
-      `<option value="rating"${unitVal === 'rating' ? ' selected' : ''}>rating out of 10</option>` +
-      `<option value="minutes"${unitVal === 'minutes' ? ' selected' : ''}>minutes</option>` +
-      `<option value="time_mmss"${unitVal === 'time_mmss' ? ' selected' : ''}>MM:SS</option>` +
-      `<option value="list"${unitVal === 'list' ? ' selected' : ''}>list</option>` +
-      `<option value="count"${unitVal === 'count' ? ' selected' : ''}>count</option>` +
-      `</select>` +
-      `<select id="metricDirection" required style="margin:0 8px;">` +
-      `<option value="higher"${dirVal === 'higher' ? ' selected' : ''}>Higher is better</option>` +
-      `<option value="lower"${dirVal === 'lower' ? ' selected' : ''}>Lower is better</option>` +
-      `</select>` +
-      `<button type="submit">${metricToEdit ? 'Save Changes' : 'Add Metric'}</button>` +
-      `<button type="button" id="cancelConfig" style="margin-left:8px;">✖️</button>` +
-      `</form>`;
+  formContainer.style.display = 'block';
+  const labelInput = document.getElementById('metricLabel');
+  labelInput.focus();
 
-    formContainer.style.display = 'block';
-    showBtn.disabled = true;
-
-    document.getElementById('cancelConfig').addEventListener('click', () => {
-      formContainer.style.display = 'none';
-      showBtn.disabled = false;
-      formContainer.innerHTML = '';
-    });
-
-    document.getElementById('configForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const label = document.getElementById('metricLabel').value.trim();
-      const unit = document.getElementById('metricUnit').value;
-      const dir = document.getElementById('metricDirection').value;
-      if (!label || !unit || !dir) return alert('Please enter all fields');
-      const id = metricToEdit ? metricToEdit.id : label.toLowerCase().replace(/\W+/g, '_');
-      const newMetric = { id, label, unit, direction: dir };
-      const oldCfg = await loadMetricsConfig();
-      const filtered = oldCfg.filter(m => m.id !== id);
-      await saveMetricsConfig([...filtered, newMetric]);
-      formContainer.style.display = 'none';
-      showBtn.disabled = false;
-      formContainer.innerHTML = '';
-      await renderConfigForm();
-      await renderStatsSummary();
-    });
+  document.getElementById('cancelConfig').addEventListener('click', () => {
+    formContainer.style.display = 'none';
+    formContainer.innerHTML = '';
   });
 
-  if (metricToEdit) showBtn.click();
+  document.getElementById('configForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const label = document.getElementById('metricLabel').value.trim();
+    const unit = document.getElementById('metricUnit').value;
+    const dir = document.getElementById('metricDirection').value;
+    if (!label || !unit || !dir) return alert('Please enter all fields');
+    const id = metricToEdit ? metricToEdit.id : label.toLowerCase().replace(/\W+/g, '_');
+    const newMetric = { id, label, unit, direction: dir };
+    const oldCfg = await loadMetricsConfig();
+    const filtered = oldCfg.filter(m => m.id !== id);
+    await saveMetricsConfig([...filtered, newMetric]);
+    formContainer.style.display = 'none';
+    formContainer.innerHTML = '';
+    await renderConfigForm();
+    await renderStatsSummary();
+  });
 }
 
 export async function initMetricsUI() {
@@ -733,3 +728,4 @@ if (metricModal) {
 }
 
 window.initMetricsUI = initMetricsUI;
+window.openMetricsConfigForm = openMetricsConfigForm;

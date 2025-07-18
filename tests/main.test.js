@@ -72,6 +72,30 @@ describe('bottom add button', () => {
     expect(dom.window.document.activeElement).toBe(text);
   });
 
+  it('focuses metric input when adding a metric', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+      <button id="bottomAddBtn"></button>
+      <div id="metricsConfigSection"></div>
+      <button class="tab-button active" data-target="metricsPanel"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+    global.window.openMetricsConfigForm = () => {
+      const sec = dom.window.document.getElementById('metricsConfigSection');
+      sec.innerHTML = '<div id="configFormContainer"><input id="metricLabel"></div>';
+      dom.window.document.getElementById('metricLabel').focus();
+    };
+
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    dom.window.document.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'A', shiftKey: true }));
+    const inp = dom.window.document.getElementById('metricLabel');
+    expect(dom.window.document.activeElement).toBe(inp);
+  });
+
 });
 
 describe('shift+A hotkey', () => {
@@ -155,5 +179,29 @@ describe('shift+A hotkey', () => {
     const evt = new dom.window.KeyboardEvent('keydown', { key: 'A', shiftKey: true, cancelable: true });
     const result = dom.window.document.dispatchEvent(evt);
     expect(result).toBe(true);
+  });
+
+  it('focuses metric input when adding a metric', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+      <button id="bottomAddBtn"></button>
+      <div id="metricsConfigSection"></div>
+      <button class="tab-button active" data-target="metricsPanel"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+    global.window.openMetricsConfigForm = () => {
+      const sec = dom.window.document.getElementById('metricsConfigSection');
+      sec.innerHTML = '<div id="configFormContainer"><input id="metricLabel"></div>';
+      dom.window.document.getElementById('metricLabel').focus();
+    };
+
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    dom.window.document.getElementById('bottomAddBtn').click();
+    const inp = dom.window.document.getElementById('metricLabel');
+    expect(dom.window.document.activeElement).toBe(inp);
   });
 });
