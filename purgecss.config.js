@@ -3,8 +3,6 @@ module.exports = {
     // 1) point at every file that contains markup or class-names:
     content: [
         './index.html',
-        './daily.html',
-        './test.html',
         './report.html',
         './js/**/*.js'
     ],
