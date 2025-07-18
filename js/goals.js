@@ -537,12 +537,12 @@ function setupToggle(wrapper, row, childrenContainer, id) {
 function addHiddenControls(wrapper, row, goal, hiddenContent) {
     const hideUntil = Date.parse(goal.hiddenUntil);
 
+    const middle = row.querySelector('.middle-group');
+    const buttonRow = row.querySelector('.button-row');
+
     const info = document.createElement('div');
     info.className = 'hidden-info';
-
-    const lbl = document.createElement('span');
-    lbl.textContent = `Hidden until ${new Date(hideUntil).toLocaleString()}`;
-    info.appendChild(lbl);
+    info.textContent = `Hidden until ${new Date(hideUntil).toLocaleString()}`;
 
     const unhideBtn = document.createElement('button');
     unhideBtn.type = 'button';
@@ -562,9 +562,15 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
             await renderGoalsAndSubitems();
         }
     });
-    info.appendChild(unhideBtn);
 
-    row.appendChild(info);
+    if (buttonRow) {
+        middle.insertBefore(info, buttonRow);
+    } else {
+        middle.appendChild(info);
+    }
+    middle.appendChild(unhideBtn);
+
+    wrapper.classList.add('hidden-goal');
     hiddenContent.appendChild(wrapper);
 }
 
