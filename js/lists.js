@@ -350,6 +350,7 @@ async function initListsPanel() {
     const table = document.createElement('table');
     table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
+    const ulsToCheck = [];
 
     // Header
     const thead = table.createTHead();
@@ -432,20 +433,7 @@ async function initListsPanel() {
               ul.append(li);
             });
             td.append(ul);
-            if (ul.scrollHeight > MAX_LIST_HEIGHT) {
-              ul.style.maxHeight = `${MAX_LIST_HEIGHT}px`;
-              ul.style.overflow = 'hidden';
-              const btn = document.createElement('button');
-              btn.type = 'button';
-              btn.className = 'expand-btn';
-              btn.textContent = 'Show more';
-              btn.addEventListener('click', () => {
-                const collapsed = ul.style.maxHeight !== '';
-                ul.style.maxHeight = collapsed ? '' : `${MAX_LIST_HEIGHT}px`;
-                btn.textContent = collapsed ? 'Show less' : 'Show more';
-              });
-              td.append(btn);
-            }
+            ulsToCheck.push({ ul, td });
           }
         }
         else {
@@ -510,6 +498,24 @@ async function initListsPanel() {
 
     table.append(tbody);
     listsContainer.append(table);
+    setTimeout(() => {
+      ulsToCheck.forEach(({ ul, td }) => {
+        if (ul.scrollHeight > MAX_LIST_HEIGHT) {
+          ul.style.maxHeight = `${MAX_LIST_HEIGHT}px`;
+          ul.style.overflow = 'hidden';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'expand-btn';
+          btn.textContent = 'Show more';
+          btn.addEventListener('click', () => {
+            const collapsed = ul.style.maxHeight !== '';
+            ul.style.maxHeight = collapsed ? '' : `${MAX_LIST_HEIGHT}px`;
+            btn.textContent = collapsed ? 'Show less' : 'Show more';
+          });
+          td.append(btn);
+        }
+      });
+    }, 0);
   }
 
 
