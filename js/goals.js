@@ -908,7 +908,9 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                     return;
                 }
                 editing = false;
-                const needsMove = all[idx].parentGoalId !== (newParent || null);
+                const needsMove =
+                    all[idx].parentGoalId !== (newParent || null) ||
+                    all[idx].scheduled !== newScheduled;
                 all[idx].text = newText;
                 all[idx].notes = newNotes;
                 all[idx].scheduled = newScheduled;
