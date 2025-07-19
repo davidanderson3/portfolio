@@ -11,7 +11,7 @@ import { auth } from './auth.js';
 let listsArray = [];
 // Track sort state for each list { [idx]: { colIdx:number, dir:1|-1 } }
 const listSortStates = {};
-const MAX_LIST_HEIGHT = 200; // px
+const MAX_LIST_HEIGHT = 150; // px
 
 auth.onAuthStateChanged(async () => {
   listsArray = await loadLists();
@@ -507,11 +507,13 @@ async function initListsPanel() {
           btn.type = 'button';
           btn.className = 'expand-btn';
           btn.textContent = 'Show more';
-          btn.addEventListener('click', () => {
+          const toggle = () => {
             const collapsed = ul.style.maxHeight !== '';
             ul.style.maxHeight = collapsed ? '' : `${MAX_LIST_HEIGHT}px`;
             btn.textContent = collapsed ? 'Show less' : 'Show more';
-          });
+          };
+          btn.addEventListener('click', toggle);
+          ul.addEventListener('dblclick', toggle);
           td.append(btn);
         }
       });
