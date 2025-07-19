@@ -1219,6 +1219,17 @@ h2 {
   white-space: nowrap;
 }
 
+#paginationControls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+#paginationControls button {
+  cursor: pointer;
+}
+
 @media (max-width: 600px) {
   #listsContainer {
     overflow-x: hidden;
