@@ -11,7 +11,6 @@ function storageKey() {
 auth.onAuthStateChanged(() => {
   mapInitialized = false;
   travelData = [];
-  initialRandomShown = false;
   // Reload travel data for the newly authenticated user.
   // initTravelPanel safely exits if DOM is not ready or already initialized.
   initTravelPanel().catch(err =>
@@ -33,7 +32,8 @@ let resultMarkers = [];
 let sortByDistance = true;
 let userCoords = null;
 let showVisited = false;
-let initialRandomShown = false;
+const pageSize = 100;
+let currentPage = 0;
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 3958.8; // miles
@@ -69,6 +69,11 @@ export async function initTravelPanel() {
   const placeInput = document.getElementById('placeSearch');
   const resultsList = document.getElementById('placeResults');
   const tagFiltersDiv = document.getElementById('travelTagFilters');
+  const placeCountEl = document.getElementById('placeCount');
+  const paginationDiv = document.getElementById('paginationControls');
+  const prevPageBtn = document.getElementById('prevPageBtn');
+  const nextPageBtn = document.getElementById('nextPageBtn');
+  const pageInfoSpan = document.getElementById('pageInfo');
   const showVisitedToggle = document.getElementById('showVisitedToggle');
   map = L.map(mapEl, {
     maxBounds: [
@@ -129,6 +134,7 @@ export async function initTravelPanel() {
         } else {
           selectedTags.push(tag);
         }
+        currentPage = 0;
         renderTagFilters();
         renderList(currentSearch);
       });
@@ -138,16 +144,38 @@ export async function initTravelPanel() {
 
   renderTagFilters();
 
+  function updatePagination(total) {
+    if (!paginationDiv) return;
+    const totalPages = Math.ceil(total / pageSize) || 1;
+    pageInfoSpan.textContent = `${currentPage + 1} / ${totalPages}`;
+    prevPageBtn.disabled = currentPage === 0;
+    nextPageBtn.disabled = currentPage >= totalPages - 1;
+  }
+
+  prevPageBtn?.addEventListener('click', () => {
+    if (currentPage > 0) {
+      currentPage -= 1;
+      renderList(currentSearch);
+    }
+  });
+
+  nextPageBtn?.addEventListener('click', () => {
+    currentPage += 1;
+    renderList(currentSearch);
+  });
+
   if (showVisitedToggle) {
     showVisitedToggle.checked = showVisited;
     showVisitedToggle.addEventListener('change', () => {
       showVisited = showVisitedToggle.checked;
+      currentPage = 0;
       renderList(currentSearch);
     });
   }
 
   const renderList = (term = '', customItems = null) => {
     tableBody.innerHTML = '';
+    if (customItems) currentPage = 0;
     markers.forEach(m => m.remove());
     markers = [];
     rowMarkerMap.clear();
@@ -171,8 +199,16 @@ export async function initTravelPanel() {
           haversine(userCoords[0], userCoords[1], b.lat, b.lon)
       );
     }
+    const total = items.length;
+    const start = currentPage * pageSize;
+    const pageItems = items.slice(start, start + pageSize);
+    updatePagination(total);
+    if (placeCountEl) {
+      const end = Math.min(start + pageItems.length, total);
+      placeCountEl.textContent = `Showing ${start + 1}-${end} of ${total}`;
+    }
 
-    items.forEach((p, index) => {
+    pageItems.forEach((p, index) => {
       const m = L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.name);
       markers.push(m);
       m.on('click', () => {
@@ -387,11 +423,9 @@ export async function initTravelPanel() {
     });
   };
 
-  const renderRandomList = (count = 10) => {
-    const candidates = travelData.filter(p => showVisited || !p.visited);
-    const shuffled = candidates.slice().sort(() => Math.random() - 0.5);
-    const selection = shuffled.slice(0, Math.min(count, shuffled.length));
-    renderList('', selection);
+  const renderDefaultList = () => {
+    currentPage = 0;
+    renderList('');
   };
 
 
@@ -426,18 +460,14 @@ export async function initTravelPanel() {
   if (searchInput) {
     searchInput.addEventListener('input', e => {
       currentSearch = e.target.value;
+      currentPage = 0;
       renderList(currentSearch);
     });
   }
 
 
   const renderInitial = () => {
-    if (!initialRandomShown) {
-      renderRandomList(10);
-      initialRandomShown = true;
-    } else {
-      renderList(currentSearch);
-    }
+    renderDefaultList();
   };
 
   if (navigator.geolocation) {
