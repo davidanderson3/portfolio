@@ -113,4 +113,29 @@ describe('weather panel', () => {
     expect(hourlyRow.classList.contains('comfortable-temp')).toBe(true);
     expect(dailyRow.classList.contains('comfortable-temp')).toBe(true);
   });
+
+  it('adds a mild glow when current temperature is comfortable', async () => {
+    const dom = new JSDOM(`<div id="weatherPanel"></div>`);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.navigator = dom.window.navigator;
+    delete global.navigator.geolocation;
+
+    const data = {
+      hourly: {
+        time: ['2024-01-01T10:00'],
+        temperature_2m: [60],
+        precipitation_probability: [0]
+      },
+      daily: { time: [], temperature_2m_max: [], temperature_2m_min: [] }
+    };
+
+    const fetchMock = vi.fn().mockResolvedValue({ json: vi.fn().mockResolvedValue(data) });
+    global.fetch = fetchMock;
+
+    const mod = await import('../js/weather.js');
+    await mod.initWeatherPanel();
+
+    expect(dom.window.document.body.classList.contains('mild-glow')).toBe(true);
+  });
 });

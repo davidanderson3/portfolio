@@ -60,13 +60,19 @@ function renderWeather(panel, data, usingDefault) {
   const now = new Date();
   const startIdx = data.hourly.time.findIndex(t => new Date(t) >= now);
   const begin = startIdx === -1 ? 0 : startIdx;
+  const currentTemp = data.hourly.temperature_2m[begin];
+  if (currentTemp >= 58 && currentTemp <= 77) {
+    document.body.classList.add('mild-glow');
+  } else {
+    document.body.classList.remove('mild-glow');
+  }
   for (let i = begin; i < Math.min(data.hourly.time.length, begin + 24); i++) {
     const t = data.hourly.time[i];
     const tr = document.createElement('tr');
     const time = new Date(t).toLocaleTimeString([], { hour: 'numeric', hour12: true });
     const temp = data.hourly.temperature_2m[i];
     const rain = data.hourly.precipitation_probability ? data.hourly.precipitation_probability[i] : '';
-    if (temp >= 58 && temp <= 75) tr.classList.add('comfortable-temp');
+    if (temp >= 58 && temp <= 77) tr.classList.add('comfortable-temp');
     tr.innerHTML = `<td>${time}</td><td>${temp}</td><td>${rain}</td>`;
     hBody.appendChild(tr);
   }
@@ -80,7 +86,7 @@ function renderWeather(panel, data, usingDefault) {
     const high = data.daily.temperature_2m_max[i];
     const low = data.daily.temperature_2m_min[i];
     const rain = data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[i] : '';
-    if (high >= 58 && high <= 75) tr.classList.add('comfortable-temp');
+    if (high >= 58 && high <= 77) tr.classList.add('comfortable-temp');
     tr.innerHTML = `<td>${day}</td><td>${high}</td><td>${low}</td><td>${rain}</td>`;
     dBody.appendChild(tr);
   });
