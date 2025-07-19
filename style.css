@@ -1638,5 +1638,27 @@ h2 {
   margin-right: 0;
 }
 
+/* ----- Today Schedule ----- */
+#todaySchedule {
+  margin: 16px 0;
+}
+
+#todaySchedule .hour-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+#todaySchedule .hour-label {
+  width: 48px;
+  font-weight: bold;
+}
+
+#todaySchedule ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
 
 
