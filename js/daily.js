@@ -366,7 +366,7 @@ export async function renderDailyTasks(currentUser, db) {
           );
           if (!date) return;
           try {
-            await createCalendarEvent(task.text, date.trim(), 'WEEKLY');
+            await createCalendarEvent(task.text, date.trim(), date.trim(), 'WEEKLY');
           } catch (err) {
             console.error('Failed to create calendar event', err);
           }

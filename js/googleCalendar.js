@@ -99,7 +99,7 @@ export function initGoogleCalendar() {
   connectBtn.addEventListener('click', handleAuthClick);
 }
 
-export async function createCalendarEvent(summary, date, recurrence = '') {
+export async function createCalendarEvent(summary, startDate, endDate = startDate, recurrence = '') {
   if (!window.gapi?.client || !gapi.client.getToken()) {
     console.warn('Google Calendar not connected');
     return;
@@ -107,8 +107,8 @@ export async function createCalendarEvent(summary, date, recurrence = '') {
   try {
     const resource = {
       summary,
-      start: { date },
-      end: { date }
+      start: { date: startDate },
+      end: { date: endDate }
     };
     if (recurrence) {
       let rule = recurrence.trim().toUpperCase();
