@@ -66,6 +66,7 @@ function renderWeather(panel, data, usingDefault) {
     const time = new Date(t).toLocaleTimeString([], { hour: 'numeric', hour12: true });
     const temp = data.hourly.temperature_2m[i];
     const rain = data.hourly.precipitation_probability ? data.hourly.precipitation_probability[i] : '';
+    if (temp >= 58 && temp <= 75) tr.classList.add('comfortable-temp');
     tr.innerHTML = `<td>${time}</td><td>${temp}</td><td>${rain}</td>`;
     hBody.appendChild(tr);
   }
@@ -79,6 +80,7 @@ function renderWeather(panel, data, usingDefault) {
     const high = data.daily.temperature_2m_max[i];
     const low = data.daily.temperature_2m_min[i];
     const rain = data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[i] : '';
+    if (high >= 58 && high <= 75) tr.classList.add('comfortable-temp');
     tr.innerHTML = `<td>${day}</td><td>${high}</td><td>${low}</td><td>${rain}</td>`;
     dBody.appendChild(tr);
   });
