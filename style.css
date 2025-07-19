@@ -469,6 +469,7 @@ button:hover {
   font-size: 1.2em;
   display: inline-block;
   width: 20px;
+  color: #333;
 }
 
 .goal-card {
