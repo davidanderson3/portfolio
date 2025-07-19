@@ -1,5 +1,5 @@
-export async function initWeatherPanel() {
-  const panel = document.getElementById('weatherPanel');
+export async function initWeatherPanel(targetId = 'weatherPanel', options = {}) {
+  const panel = document.getElementById(targetId);
   if (!panel) return;
 
   panel.innerHTML = '<div class="full-column">Loading...</div>';
@@ -31,7 +31,7 @@ export async function initWeatherPanel() {
     const resp = await fetch(url);
     const data = await resp.json();
     extendHourlyForecast(data);
-    renderWeather(panel, data, usingDefault);
+    renderWeather(panel, data, usingDefault, options);
   } catch (err) {
     console.error('Weather fetch failed', err);
     panel.innerHTML = '<div class="full-column">Failed to fetch weather data.</div>';
@@ -69,7 +69,8 @@ function extendHourlyForecast(data) {
   });
 }
 
-function renderWeather(panel, data, usingDefault) {
+function renderWeather(panel, data, usingDefault, opts = {}) {
+  const { showHourly = true } = opts;
   if (!data) return;
 
   panel.innerHTML = '';
@@ -85,28 +86,31 @@ function renderWeather(panel, data, usingDefault) {
     container.appendChild(note);
   }
 
-  const hourlyTable = document.createElement('table');
-  hourlyTable.innerHTML = '<thead><tr><th>Time</th><th>Temp \xB0F</th><th>Rain %</th></tr></thead><tbody></tbody>';
-  const hBody = hourlyTable.querySelector('tbody');
+  if (showHourly) {
+    const hourlyTable = document.createElement('table');
+    hourlyTable.innerHTML = '<thead><tr><th>Time</th><th>Temp \xB0F</th><th>Rain %</th></tr></thead><tbody></tbody>';
+    const hBody = hourlyTable.querySelector('tbody');
 
-  const now = new Date();
-  const startIdx = data.hourly.time.findIndex(t => new Date(t) >= now);
-  const begin = startIdx === -1 ? 0 : startIdx;
-  const currentTemp = data.hourly.temperature_2m[begin];
-  if (currentTemp >= 58 && currentTemp <= 77) {
-    document.body.classList.add('mild-glow');
-  } else {
-    document.body.classList.remove('mild-glow');
-  }
-  for (let i = begin; i < data.hourly.time.length; i++) {
-    const t = data.hourly.time[i];
-    const tr = document.createElement('tr');
-    const time = new Date(t).toLocaleTimeString([], { hour: 'numeric', hour12: true });
-    const temp = data.hourly.temperature_2m[i];
-    const rain = data.hourly.precipitation_probability ? data.hourly.precipitation_probability[i] : '';
-    if (temp >= 58 && temp <= 77) tr.classList.add('comfortable-temp');
-    tr.innerHTML = `<td>${time}</td><td>${temp}</td><td>${rain}</td>`;
-    hBody.appendChild(tr);
+    const now = new Date();
+    const startIdx = data.hourly.time.findIndex(t => new Date(t) >= now);
+    const begin = startIdx === -1 ? 0 : startIdx;
+    const currentTemp = data.hourly.temperature_2m[begin];
+    if (currentTemp >= 58 && currentTemp <= 77) {
+      document.body.classList.add('mild-glow');
+    } else {
+      document.body.classList.remove('mild-glow');
+    }
+    for (let i = begin; i < data.hourly.time.length; i++) {
+      const t = data.hourly.time[i];
+      const tr = document.createElement('tr');
+      const time = new Date(t).toLocaleTimeString([], { hour: 'numeric', hour12: true });
+      const temp = data.hourly.temperature_2m[i];
+      const rain = data.hourly.precipitation_probability ? data.hourly.precipitation_probability[i] : '';
+      if (temp >= 58 && temp <= 77) tr.classList.add('comfortable-temp');
+      tr.innerHTML = `<td>${time}</td><td>${temp}</td><td>${rain}</td>`;
+      hBody.appendChild(tr);
+    }
+    container.appendChild(hourlyTable);
   }
 
   const dailyTable = document.createElement('table');
@@ -123,9 +127,12 @@ function renderWeather(panel, data, usingDefault) {
     dBody.appendChild(tr);
   });
 
-  container.appendChild(hourlyTable);
   container.appendChild(dailyTable);
   panel.appendChild(container);
 }
 
 window.initWeatherPanel = initWeatherPanel;
+export function initCalendarWeather() {
+  return initWeatherPanel('calendarWeather', { showHourly: false });
+}
+window.initCalendarWeather = initCalendarWeather;

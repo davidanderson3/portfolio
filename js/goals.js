@@ -166,8 +166,12 @@ export async function renderGoalsAndSubitems() {
   // 1) Render the calendar on the left
   const calendarContent = initCalendarSection();
   const todayList = initTodayScheduleSection();
+  initCalendarWeatherSection();
   renderCalendarSection(allDecisions, calendarContent);
   renderTodaySchedule(allDecisions, todayList);
+  if (window.initCalendarWeather) {
+    window.initCalendarWeather().catch(err => console.error('Weather init failed', err));
+  }
 
   // 3) Hidden & completed goals below
   const hiddenContent = initHiddenSection();
@@ -305,6 +309,27 @@ function initTodayScheduleSection() {
     }
     container.innerHTML = '<h3>Today\'s Schedule</h3><div id="todayScheduleList"></div>';
     return container.querySelector('#todayScheduleList');
+}
+
+function initCalendarWeatherSection() {
+    let container = document.getElementById('calendarWeather');
+    if (!container) {
+        const panel = document.getElementById('calendarPanel');
+        const parent =
+            panel?.querySelector('.right-column') ||
+            panel?.querySelector('.full-column') ||
+            document.body;
+        container = document.createElement('div');
+        container.id = 'calendarWeather';
+        const todayEl = document.getElementById('todaySchedule');
+        if (todayEl && todayEl.parentElement === parent) {
+            parent.insertBefore(container, todayEl);
+        } else {
+            parent.appendChild(container);
+        }
+    }
+    container.innerHTML = '<div id="calendarWeatherContent"></div>';
+    return container.querySelector('#calendarWeatherContent');
 }
 
 export function renderTodaySchedule(all, listEl) {
