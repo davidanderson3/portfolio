@@ -5,6 +5,7 @@ export async function initWeatherPanel() {
   panel.innerHTML = '<div class="full-column">Loading...</div>';
 
   let coords = null;
+  let usingDefault = false;
   if (navigator.geolocation) {
     try {
       coords = await new Promise((resolve) => {
@@ -20,22 +21,23 @@ export async function initWeatherPanel() {
   }
 
   if (!coords) {
-    panel.innerHTML = '<div class="full-column">Location permission denied.</div>';
-    return;
+    // fallback to a default location (San Francisco) if permission denied
+    coords = { lat: 37.7749, lon: -122.4194 };
+    usingDefault = true;
   }
 
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=10&timezone=auto`;
     const resp = await fetch(url);
     const data = await resp.json();
-    renderWeather(panel, data);
+    renderWeather(panel, data, usingDefault);
   } catch (err) {
     console.error('Weather fetch failed', err);
     panel.innerHTML = '<div class="full-column">Failed to fetch weather data.</div>';
   }
 }
 
-function renderWeather(panel, data) {
+function renderWeather(panel, data, usingDefault) {
   if (!data) return;
 
   panel.innerHTML = '';
@@ -44,6 +46,12 @@ function renderWeather(panel, data) {
   const title = document.createElement('h2');
   title.textContent = 'Weather';
   container.appendChild(title);
+  if (usingDefault) {
+    const note = document.createElement('div');
+    note.textContent = 'Location unavailable; showing San Francisco weather.';
+    note.style.fontStyle = 'italic';
+    container.appendChild(note);
+  }
 
   const hourlyTable = document.createElement('table');
   hourlyTable.innerHTML = '<thead><tr><th>Time</th><th>Temp \xB0C</th><th>Rain %</th></tr></thead><tbody></tbody>';
