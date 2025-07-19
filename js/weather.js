@@ -27,14 +27,46 @@ export async function initWeatherPanel() {
   }
 
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=10&timezone=auto&temperature_unit=fahrenheit`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=16&timezone=auto&temperature_unit=fahrenheit`;
     const resp = await fetch(url);
     const data = await resp.json();
+    extendHourlyForecast(data);
     renderWeather(panel, data, usingDefault);
   } catch (err) {
     console.error('Weather fetch failed', err);
     panel.innerHTML = '<div class="full-column">Failed to fetch weather data.</div>';
   }
+}
+
+function extendHourlyForecast(data) {
+  const hourly = data.hourly;
+  if (!hourly || !data.daily) return;
+  const precipArr = hourly.precipitation_probability;
+  const lastTime = hourly.time.length
+    ? new Date(hourly.time[hourly.time.length - 1])
+    : null;
+  const lastDay = lastTime ? new Date(lastTime.toDateString()) : null;
+
+  data.daily.time.forEach((dateStr, idx) => {
+    const dayDate = new Date(dateStr);
+    if (lastDay && dayDate <= lastDay) return;
+    const min = data.daily.temperature_2m_min[idx];
+    const max = data.daily.temperature_2m_max[idx];
+    const rainProb = data.daily.precipitation_probability_max
+      ? data.daily.precipitation_probability_max[idx]
+      : undefined;
+    for (let h = 0; h < 24; h++) {
+      const tDate = new Date(dayDate);
+      tDate.setHours(h, 0, 0, 0);
+      hourly.time.push(tDate.toISOString().slice(0, 16));
+      const mean = (max + min) / 2;
+      const amp = (max - min) / 2;
+      const rad = ((h - 15) / 24) * 2 * Math.PI;
+      const temp = Math.round(mean + amp * Math.sin(rad));
+      hourly.temperature_2m.push(temp);
+      if (precipArr) hourly.precipitation_probability.push(rainProb);
+    }
+  });
 }
 
 function renderWeather(panel, data, usingDefault) {
@@ -66,7 +98,7 @@ function renderWeather(panel, data, usingDefault) {
   } else {
     document.body.classList.remove('mild-glow');
   }
-  for (let i = begin; i < Math.min(data.hourly.time.length, begin + 24); i++) {
+  for (let i = begin; i < data.hourly.time.length; i++) {
     const t = data.hourly.time[i];
     const tr = document.createElement('tr');
     const time = new Date(t).toLocaleTimeString([], { hour: 'numeric', hour12: true });
