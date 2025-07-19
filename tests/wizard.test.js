@@ -48,15 +48,16 @@ describe('saveGoalWizard', () => {
       wizardStep: {}
     });
 
-    Object.assign(wizardState, {
+  Object.assign(wizardState, {
       goalText: 'My goal',
-      calendarDate: '2024-01-02',
+      calendarStartDate: '2024-01-02',
+      calendarEndDate: '',
       subgoals: [],
       editingGoalId: null
     });
 
     await saveGoalWizard();
-    expect(createEventMock).toHaveBeenCalledWith('My goal', '2024-01-02', '');
+    expect(createEventMock).toHaveBeenCalledWith('My goal', '2024-01-02', '2024-01-02', '');
   });
 });
 

@@ -6,6 +6,7 @@ An app for tracking goals and tasks.
 
 - New goal wizard creates subgoals instead of subtasks.
 - Goals can now be scheduled directly on your calendar during creation.
+- Goals can span a date range on the calendar view.
 - Tasks can be edited inline without pop-up prompts.
 - Decisions can be edited inline without pop-up prompts.
 - Lists can be sorted by clicking column headers.

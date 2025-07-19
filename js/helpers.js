@@ -275,5 +275,52 @@ export function pickDate(initial = '') {
   });
 }
 
+export function pickDateRange(start = '', end = '') {
+  return new Promise(resolve => {
+    const dialog = document.createElement('dialog');
+    const form = document.createElement('form');
+    form.method = 'dialog';
+
+    const startInput = document.createElement('input');
+    startInput.type = 'date';
+    startInput.value = start;
+
+    const endInput = document.createElement('input');
+    endInput.type = 'date';
+    endInput.value = end;
+    endInput.style.marginLeft = '8px';
+
+    const ok = document.createElement('button');
+    ok.textContent = 'OK';
+    ok.value = 'default';
+
+    const cancel = document.createElement('button');
+    cancel.textContent = 'Cancel';
+    cancel.value = 'cancel';
+
+    const row = document.createElement('div');
+    row.className = 'button-row';
+    row.append(cancel, ok);
+
+    form.append(startInput, endInput, row);
+    dialog.append(form);
+    document.body.appendChild(dialog);
+
+    dialog.addEventListener('close', () => {
+      const cancelled = dialog.returnValue === 'cancel';
+      const result = {
+        start: cancelled ? '' : startInput.value,
+        end: cancelled ? '' : endInput.value
+      };
+      dialog.remove();
+      resolve(result);
+    });
+
+    dialog.showModal();
+    startInput.focus();
+    startInput.showPicker?.();
+  });
+}
+
 
 

@@ -7,7 +7,8 @@ const db = firebase.firestore();
 export const wizardState = {
   step: 0,
   goalText: '',
-  calendarDate: '',
+  calendarStartDate: '',
+  calendarEndDate: '',
   subgoals: [],
   editingGoalId: null
 };
@@ -31,7 +32,8 @@ export function initWizard(uiRefs) {
     Object.assign(wizardState, {
       step: 0,
       goalText: '',
-      calendarDate: '',
+      calendarStartDate: '',
+      calendarEndDate: '',
       subgoals: [],
       editingGoalId: null
     });
@@ -75,10 +77,15 @@ export function initWizard(uiRefs) {
         wizardState.subgoals = textarea.value
           .split('\n').map(t => t.trim()).filter(Boolean);
       } else if (wizardState.step === 2) {
-        const dateInput = document.getElementById('goalDateInput');
-        if (dateInput) {
-          const val = dateInput.value.trim();
-          wizardState.calendarDate = parseNaturalDate(val) || val;
+        const startInput = document.getElementById('goalStartInput');
+        const endInput = document.getElementById('goalEndInput');
+        if (startInput) {
+          const val = startInput.value.trim();
+          wizardState.calendarStartDate = parseNaturalDate(val) || val;
+        }
+        if (endInput) {
+          const val = endInput.value.trim();
+          wizardState.calendarEndDate = parseNaturalDate(val) || val;
         }
         await saveGoalWizard();
         return;
@@ -120,8 +127,11 @@ function renderWizardStep(container, backBtn) {
     `;
   } else {
     container.innerHTML = `
-      <label for="goalDateInput">Schedule date (optional):</label>
-      <input id="goalDateInput" type="date" value="${wizardState.calendarDate}" style="margin-left:8px;" />
+      <label for="goalStartInput">Start date (optional):</label>
+      <input id="goalStartInput" type="date" value="${wizardState.calendarStartDate}" style="margin-left:8px;" />
+      <br/>
+      <label for="goalEndInput">End date (optional):</label>
+      <input id="goalEndInput" type="date" value="${wizardState.calendarEndDate}" style="margin-left:8px;" />
     `;
   }
   container.querySelector('input, textarea')?.focus();
@@ -143,7 +153,8 @@ async function saveGoalWizard() {
     dateCompleted: '',
     parentGoalId: null,
     hiddenUntil: null,
-    scheduled: wizardState.calendarDate || ''
+    scheduled: wizardState.calendarStartDate || '',
+    scheduledEnd: wizardState.calendarEndDate || ''
   };
 
   const newItems = [newGoal];
@@ -159,7 +170,8 @@ async function saveGoalWizard() {
       dateCompleted: '',
       parentGoalId: goalId,
       hiddenUntil: null,
-      scheduled: ''
+      scheduled: '',
+      scheduledEnd: ''
     });
   });
 
@@ -169,13 +181,18 @@ async function saveGoalWizard() {
 
   await saveDecisions([...updatedItems, ...newItems]);
 
-  if (wizardState.calendarDate) {
+  if (wizardState.calendarStartDate) {
     const recur = prompt(
       'Repeat how often? (daily/weekly/monthly or blank for none):',
       ''
     ) || '';
     try {
-      await createCalendarEvent(newGoal.text, wizardState.calendarDate, recur);
+      await createCalendarEvent(
+        newGoal.text,
+        wizardState.calendarStartDate,
+        wizardState.calendarEndDate || wizardState.calendarStartDate,
+        recur
+      );
     } catch (err) {
       console.error('Failed to create calendar event', err);
     }

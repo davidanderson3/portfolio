@@ -11,7 +11,8 @@ import {
     makeIconBtn,
     formatDaysUntil,
     linkify,
-    pickDate
+    pickDate,
+    pickDateRange
 } from './helpers.js';
 
 import { db } from './auth.js';
@@ -34,8 +35,11 @@ initializeGlobalDragHandlers();
 export async function addCalendarGoal(date = '') {
     const text = prompt('New goal:');
     if (!text) return;
-    const scheduled = date || await pickDate(new Date().toISOString().slice(0, 10));
-    if (!scheduled) return;
+    const range = await pickDateRange(
+        date || new Date().toISOString().slice(0, 10),
+        ''
+    );
+    if (!range.start) return;
     const all = await loadDecisions();
     const newGoal = {
         id: generateId(),
@@ -47,12 +51,13 @@ export async function addCalendarGoal(date = '') {
         dateCompleted: '',
         parentGoalId: null,
         hiddenUntil: null,
-        scheduled: scheduled.trim()
+        scheduled: range.start.trim(),
+        scheduledEnd: range.end.trim() || ''
     };
     await saveDecisions([...all, newGoal]);
     const recur = prompt('Repeat how often? (daily/weekly/monthly or blank for none):', '') || '';
     try {
-        await createCalendarEvent(newGoal.text, newGoal.scheduled, recur);
+        await createCalendarEvent(newGoal.text, newGoal.scheduled, newGoal.scheduledEnd || newGoal.scheduled, recur);
     } catch (err) {
         console.error('Failed to create calendar event', err);
     }
@@ -144,7 +149,10 @@ export function createGoalRow(goal, options = {}) {
 
     const due = document.createElement('div');
     due.className = 'due-column';
-    due.textContent = goal.completed ? goal.dateCompleted : (goal.scheduled || '');
+    const rangeText = goal.scheduledEnd && goal.scheduledEnd !== goal.scheduled
+        ? `${goal.scheduled} - ${goal.scheduledEnd}`
+        : (goal.scheduled || '');
+    due.textContent = goal.completed ? goal.dateCompleted : rangeText;
     row.appendChild(due);
     return row;
 }
@@ -319,11 +327,17 @@ function renderCalendarSection(all, calendarContent) {
         )
         .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
 
-    const byDate = scheduled.reduce((groups, goal) => {
-        const key = goal.scheduled.slice(0, 10);
-        (groups[key] = groups[key] || []).push(goal);
-        return groups;
-    }, {});
+    const byDate = {};
+    scheduled.forEach(goal => {
+        const start = new Date(goal.scheduled);
+        const end = goal.scheduledEnd && !isNaN(Date.parse(goal.scheduledEnd))
+            ? new Date(goal.scheduledEnd)
+            : new Date(goal.scheduled);
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const key = d.toISOString().slice(0, 10);
+            (byDate[key] = byDate[key] || []).push(goal);
+        }
+    });
 
     function parseKey(key) {
         const [y, m, d] = key.split('-').map(Number);
@@ -777,10 +791,11 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
 
     // 📅 Schedule button
     const calendarBtn = makeIconBtn('📅', 'Add to calendar', async () => {
-        const date = await pickDate(
-            item.scheduled || new Date().toISOString().slice(0, 10)
+        const range = await pickDateRange(
+            item.scheduled || new Date().toISOString().slice(0, 10),
+            item.scheduledEnd || ''
         );
-        if (!date) return;
+        if (!range.start) return;
         const recurrence = prompt(
             'Repeat how often? (daily/weekly/monthly or blank for none):',
             ''
@@ -788,10 +803,16 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
         const all = await loadDecisions();
         const idx = all.findIndex(d => d.id === item.id);
         if (idx !== -1) {
-            all[idx].scheduled = date.trim();
+            all[idx].scheduled = range.start.trim();
+            all[idx].scheduledEnd = range.end.trim();
             await saveDecisions(all);
             try {
-                await createCalendarEvent(item.text, date.trim(), recurrence);
+                await createCalendarEvent(
+                    item.text,
+                    range.start.trim(),
+                    range.end.trim() || range.start.trim(),
+                    recurrence
+                );
             } catch (err) {
                 console.error('Failed to sync with Google Calendar', err);
             }
@@ -845,6 +866,7 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
             const textInput = document.createElement('input');
             const notesInput = document.createElement('textarea');
             const scheduledInput = document.createElement('input');
+            const scheduledEndInput = document.createElement('input');
             const parentSelect = document.createElement('select');
 
             textInput.value = item.text;
@@ -858,6 +880,11 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
             scheduledInput.type = 'date';
             scheduledInput.value = item.scheduled || '';
             scheduledInput.style.width = '100%';
+
+            scheduledEndInput.type = 'date';
+            scheduledEndInput.value = item.scheduledEnd || '';
+            scheduledEndInput.style.width = '100%';
+            scheduledEndInput.style.marginTop = '4px';
 
             const allItems = await loadDecisions();
             const goals = allItems.filter(g =>
@@ -887,6 +914,7 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
 
             due.innerHTML = '';
             due.appendChild(scheduledInput);
+            due.appendChild(scheduledEndInput);
             due.appendChild(parentSelect);
             if (buttonWrap) {
                 buttonWrap.style.marginTop = '6px';
@@ -897,7 +925,9 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
         } else {
             const newText = middle.querySelector('input')?.value.trim();
             const newNotes = middle.querySelector('textarea')?.value.trim();
-            const newScheduled = due.querySelector('input')?.value.trim();
+            const [startInput, endInput] = due.querySelectorAll('input');
+            const newScheduled = startInput?.value.trim();
+            const newScheduledEnd = endInput?.value.trim();
             const newParent = due.querySelector('select')?.value || null;
 
             const all = await loadDecisions();
@@ -910,10 +940,12 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                 editing = false;
                 const needsMove =
                     all[idx].parentGoalId !== (newParent || null) ||
-                    all[idx].scheduled !== newScheduled;
+                    all[idx].scheduled !== newScheduled ||
+                    (all[idx].scheduledEnd || '') !== newScheduledEnd;
                 all[idx].text = newText;
                 all[idx].notes = newNotes;
                 all[idx].scheduled = newScheduled;
+                all[idx].scheduledEnd = newScheduledEnd;
                 all[idx].parentGoalId = newParent || null;
                 await saveDecisions(all);
 
@@ -922,6 +954,7 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                     item.text = newText;
                     item.notes = newNotes;
                     item.scheduled = newScheduled;
+                    item.scheduledEnd = newScheduledEnd;
                     item.parentGoalId = newParent || null;
 
                     const buttonWrap = row.querySelector('.button-row');
@@ -939,7 +972,10 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                     if (buttonWrap) middle.appendChild(buttonWrap);
 
                     due.innerHTML = '';
-                    due.textContent = item.completed ? item.dateCompleted : (newScheduled || '');
+                    const rangeText = newScheduledEnd && newScheduledEnd !== newScheduled
+                        ? `${newScheduled} - ${newScheduledEnd}`
+                        : (newScheduled || '');
+                    due.textContent = item.completed ? item.dateCompleted : rangeText;
                 } else {
                     await renderGoalsAndSubitems();
                 }

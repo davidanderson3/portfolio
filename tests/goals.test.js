@@ -19,6 +19,7 @@ vi.mock('../js/helpers.js', () => ({
   saveGoalOrder: vi.fn(),
   generateId: vi.fn(() => 'g1'),
   pickDate: vi.fn(async () => ''),
+  pickDateRange: vi.fn(async () => ({ start: '', end: '' })),
   makeIconBtn: () => document.createElement('button'),
   formatDaysUntil: () => '',
   linkify: (t) => t
@@ -105,6 +106,7 @@ describe('addCalendarGoal', () => {
       .mockReturnValueOnce('My calendar goal')
       .mockReturnValueOnce('');
 
+    helpers.pickDateRange.mockResolvedValue({ start: '2024-01-02', end: '' });
     await addCalendarGoal('2024-01-02');
 
     const content = document.getElementById('calendarContent');
@@ -124,7 +126,8 @@ describe('editing scheduled date', () => {
       completed: false,
       dateCompleted: '',
       parentGoalId: null,
-      scheduled: '2024-01-01'
+      scheduled: '2024-01-01',
+      scheduledEnd: ''
     };
 
     helpers.loadDecisions.mockResolvedValue([goal]);
@@ -144,8 +147,8 @@ describe('editing scheduled date', () => {
     await Promise.resolve();
 
     row.querySelector('.middle-group input').value = 'Test';
-    const dateInput = row.querySelector('.due-column input');
-    dateInput.value = '2024-02-01';
+    const inputs = row.querySelectorAll('.due-column input');
+    inputs[0].value = '2024-02-01';
 
     editBtn.click();
     await Promise.resolve();
