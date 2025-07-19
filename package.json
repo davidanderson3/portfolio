@@ -9,6 +9,7 @@
     "import:travel": "node scripts/importTravelKml.js",
     "append:travel": "node scripts/appendTravelKml.js",
     "update:geo": "node scripts/addGeoMetadata.js",
+    "monitor:temp": "node scripts/tempAlert.js",
     "prepare": "husky install",
     "start": "node backend/server.js"
   },
@@ -20,7 +21,8 @@
     "fast-xml-parser": "^4.5.3",
     "firebase": "^11.8.1",
     "firebase-admin": "^13.4.0",
-    "d3": "^7.9.0"
+    "d3": "^7.9.0",
+    "twilio": "^4.21.0"
   },
   "devDependencies": {
     "purgecss": "^7.0.2",
