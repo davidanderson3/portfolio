@@ -196,6 +196,13 @@ window.addEventListener('DOMContentLoaded', () => {
         console.error('Failed to initialize travel panel after sign-in', err);
       }
     }
+    if (window.initWeatherPanel) {
+      try {
+        await window.initWeatherPanel();
+      } catch (err) {
+        console.error('Failed to initialize weather panel after sign-in', err);
+      }
+    }
 
     if (document.getElementById('reportBody')) {
       renderDailyTaskReport(user, db);
