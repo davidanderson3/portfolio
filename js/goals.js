@@ -165,7 +165,9 @@ export async function renderGoalsAndSubitems() {
 
   // 1) Render the calendar on the left
   const calendarContent = initCalendarSection();
+  const todayList = initTodayScheduleSection();
   renderCalendarSection(allDecisions, calendarContent);
+  renderTodaySchedule(allDecisions, todayList);
 
   // 3) Hidden & completed goals below
   const hiddenContent = initHiddenSection();
@@ -282,6 +284,60 @@ function initCalendarSection() {
     }
     calendarContent.innerHTML = '';   // clear prior render
     return calendarContent;
+}
+
+function initTodayScheduleSection() {
+    let container = document.getElementById('todaySchedule');
+    if (!container) {
+        const panel = document.getElementById('calendarPanel');
+        const parent = panel?.querySelector('.full-column') || document.body;
+        container = document.createElement('div');
+        container.id = 'todaySchedule';
+        const target = document.getElementById('calendarContent');
+        if (target && target.parentElement === parent) {
+            parent.insertBefore(container, target);
+        } else {
+            parent.appendChild(container);
+        }
+    }
+    container.innerHTML = '<h3>Today\'s Schedule</h3><div id="todayScheduleList"></div>';
+    return container.querySelector('#todayScheduleList');
+}
+
+export function renderTodaySchedule(all, listEl) {
+    if (!listEl) return;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const todays = all.filter(g => g.scheduled && g.scheduled.startsWith(todayKey));
+    const byHour = {};
+    todays.forEach(g => {
+        const h = new Date(g.scheduled).getHours();
+        (byHour[h] = byHour[h] || []).push(g);
+    });
+
+    listEl.innerHTML = '';
+    for (let h = 0; h < 24; h++) {
+        const row = document.createElement('div');
+        row.className = 'hour-row';
+        const label = document.createElement('div');
+        label.className = 'hour-label';
+        label.textContent = `${String(h).padStart(2, '0')}:00`;
+        row.appendChild(label);
+
+        const cell = document.createElement('div');
+        cell.className = 'hour-events';
+        const events = byHour[h] || [];
+        if (events.length) {
+            const ul = document.createElement('ul');
+            events.forEach(ev => {
+                const li = document.createElement('li');
+                li.textContent = ev.text;
+                ul.appendChild(li);
+            });
+            cell.appendChild(ul);
+        }
+        row.appendChild(cell);
+        listEl.appendChild(row);
+    }
 }
 
 
