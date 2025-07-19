@@ -1259,6 +1259,29 @@ h2 {
   overflow-x: auto;
 }
 
+#calendarWeather table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+#calendarWeather th,
+#calendarWeather td {
+  border: 1px solid #d0decf;
+  padding: 4px;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+#calendarWeather tbody tr:nth-child(even) {
+  background-color: #f8f5f0;
+}
+
+#calendarWeather tbody tr.comfortable-temp {
+  background-color: #e0f8e0;
+}
+
 #travelTagFilters label {
   margin-right: 8px;
   white-space: nowrap;
