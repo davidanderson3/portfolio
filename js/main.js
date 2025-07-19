@@ -10,6 +10,7 @@ import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
 import { initGoogleCalendar } from './googleCalendar.js';
 import { loadHiddenTabs, applyHiddenTabs } from './settings.js';
+import './planning.js';
 
 window.addEventListener('DOMContentLoaded', () => {
   const uiRefs = {
@@ -201,6 +202,13 @@ window.addEventListener('DOMContentLoaded', () => {
         await window.initWeatherPanel();
       } catch (err) {
         console.error('Failed to initialize weather panel after sign-in', err);
+      }
+    }
+    if (window.initPlanningPanel) {
+      try {
+        await window.initPlanningPanel();
+      } catch (err) {
+        console.error('Failed to initialize planning panel after sign-in', err);
       }
     }
 

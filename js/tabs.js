@@ -8,7 +8,7 @@ export function initTabs(user, db) {
   tabsInitialized = true;
 
   const tabButtons = document.querySelectorAll('.tab-button');
-  const panels    = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel','weatherPanel'];
+  const panels    = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel','weatherPanel','planningPanel'];
 
   tabButtons.forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -45,6 +45,9 @@ export function initTabs(user, db) {
       else if (target === 'weatherPanel') {
         await window.initWeatherPanel();
       }
+      else if (target === 'planningPanel') {
+        await window.initPlanningPanel();
+      }
     });
   });
 
@@ -78,6 +81,9 @@ export function initTabs(user, db) {
     }
     else if (initial === 'weatherPanel') {
       window.initWeatherPanel();
+    }
+    else if (initial === 'planningPanel') {
+      window.initPlanningPanel();
     }
   };
 
