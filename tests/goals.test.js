@@ -113,3 +113,44 @@ describe('addCalendarGoal', () => {
     expect(document.getElementById('goalList').children.length).toBe(1);
   });
 });
+
+describe('editing scheduled date', () => {
+  it('re-renders goals when schedule changes', async () => {
+    const goal = {
+      id: 'g1',
+      type: 'goal',
+      text: 'Test',
+      notes: '',
+      completed: false,
+      dateCompleted: '',
+      parentGoalId: null,
+      scheduled: '2024-01-01'
+    };
+
+    helpers.loadDecisions.mockResolvedValue([goal]);
+
+    const mod = await import('../js/goals.js');
+    const { createGoalRow } = mod;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'decision goal-card';
+    wrapper.dataset.goalId = goal.id;
+    const row = createGoalRow(goal);
+    wrapper.appendChild(row);
+    document.getElementById('goalList').appendChild(wrapper);
+
+    const editBtn = row.querySelector('button[title="Edit"]');
+    editBtn.click();
+    await Promise.resolve();
+
+    row.querySelector('.middle-group input').value = 'Test';
+    const dateInput = row.querySelector('.due-column input');
+    dateInput.value = '2024-02-01';
+
+    editBtn.click();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(document.getElementById('goalList').contains(wrapper)).toBe(false);
+  });
+});
