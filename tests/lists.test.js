@@ -3,7 +3,14 @@ import { JSDOM } from 'jsdom';
 
 vi.mock('../js/helpers.js', () => ({
   loadLists: vi.fn(),
-  saveLists: vi.fn()
+  saveLists: vi.fn(),
+  loadDecisions: vi.fn(),
+  saveDecisions: vi.fn(),
+  generateId: vi.fn()
+}));
+
+vi.mock('../js/goals.js', () => ({
+  appendGoalToDOM: vi.fn()
 }));
 
 vi.mock('../js/auth.js', () => ({
@@ -12,14 +19,18 @@ vi.mock('../js/auth.js', () => ({
 }));
 
 let helpers;
+let goals;
 
 beforeEach(async () => {
   vi.resetModules();
-  const dom = new JSDOM('<div id="listsPanel"></div><div id="listsFormModal"><div id="listsFormWrapper"></div></div><button class="tab-button active" data-target="listsPanel"></button>');
+  const dom = new JSDOM('<div id="listsPanel"></div><div id="listsFormModal"><div id="listsFormWrapper"></div></div><button class="tab-button active" data-target="listsPanel"></button><div id="goalList"></div>');
   global.window = dom.window;
   global.document = dom.window.document;
   helpers = await import('../js/helpers.js');
+  goals = await import('../js/goals.js');
   helpers.loadLists.mockResolvedValue([{ name: 'Test', columns: [], items: [], hiddenUntil: null }]);
+  helpers.loadDecisions.mockResolvedValue([]);
+  helpers.generateId.mockReturnValue('g1');
   await import('../js/lists.js');
 });
 
@@ -46,5 +57,32 @@ describe('openListsFormModal', () => {
     window.openListsFormModal();
     const first = document.querySelector('#listsFormModal input, #listsFormModal textarea');
     expect(document.activeElement).toBe(first);
+  });
+});
+
+describe('addListItemGoal', () => {
+  it('creates goal from first column label', () => {
+    const list = { name: 'Test', columns: [{ name: 'Item', type: 'text' }], items: [{ Item: 'Do it' }], hiddenUntil: null };
+    helpers.loadLists.mockResolvedValue([list]);
+    document.getElementById('listsPanel').innerHTML = '';
+    vi.resetModules();
+    return Promise.all([
+      import('../js/helpers.js'),
+      import('../js/goals.js'),
+      import('../js/lists.js')
+    ]).then(async ([h, g]) => {
+      helpers = h;
+      goals = g;
+      helpers.loadDecisions.mockResolvedValue([]);
+      helpers.generateId.mockReturnValue('g1');
+      const btn = document.querySelector('button[title="Add as goal"]');
+      btn.click();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(helpers.saveDecisions).toHaveBeenCalled();
+      const newGoal = helpers.saveDecisions.mock.calls[0][0].pop();
+      expect(newGoal.text).toBe('Do it');
+      expect(goals.appendGoalToDOM).toHaveBeenCalled();
+    });
   });
 });

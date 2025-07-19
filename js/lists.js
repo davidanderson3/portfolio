@@ -1,4 +1,11 @@
-import { loadLists, saveLists } from './helpers.js';
+import {
+  loadLists,
+  saveLists,
+  loadDecisions,
+  saveDecisions,
+  generateId
+} from './helpers.js';
+import { appendGoalToDOM } from './goals.js';
 import { auth } from './auth.js';
 
 let listsArray = [];
@@ -489,6 +496,16 @@ async function initListsPanel() {
         selectList(selectedListIndex);
       });
       actionCell.append(del);
+
+      // Add as goal button
+      const goalBtn = document.createElement('button');
+      goalBtn.textContent = '🎯';
+      goalBtn.title = 'Add as goal';
+      Object.assign(goalBtn.style, { background: 'none', border: 'none', cursor: 'pointer' });
+      goalBtn.addEventListener('click', async () => {
+        await addListItemGoal(rowIdx);
+      });
+      actionCell.append(goalBtn);
     });
 
     table.append(tbody);
@@ -497,7 +514,7 @@ async function initListsPanel() {
 
 
 
-  function openRowEditor(rowIdx) {
+function openRowEditor(rowIdx) {
     const list = listsArray[selectedListIndex];
     const columns = list.columns;
     const values = list.items[rowIdx];
@@ -667,6 +684,34 @@ async function initListsPanel() {
 
     document.body.append(editor);
     redraw();
+  }
+
+  async function addListItemGoal(rowIdx) {
+    const list = listsArray[selectedListIndex];
+    if (!list || !list.columns.length) return;
+    const item = list.items[rowIdx];
+    if (!item) return;
+    const first = list.columns[0];
+    const text = (item[first.name + '_label'] || item[first.name] || '').trim();
+    if (!text) return;
+
+    const all = await loadDecisions();
+    const newGoal = {
+      id: generateId(),
+      type: 'goal',
+      text,
+      notes: '',
+      completed: false,
+      resolution: '',
+      dateCompleted: '',
+      parentGoalId: null,
+      hiddenUntil: null,
+      scheduled: ''
+    };
+
+    const updated = [...all, newGoal];
+    await saveDecisions(updated);
+    appendGoalToDOM(newGoal, updated);
   }
 
 
@@ -891,6 +936,7 @@ async function initListsPanel() {
     addColumnBtnForList.style.display = 'none';
   }
 }
+
 
 window.initListsPanel = initListsPanel;
 
