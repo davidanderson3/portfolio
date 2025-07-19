@@ -327,7 +327,22 @@ export async function initTravelPanel() {
         saveBtn.textContent = 'Save';
         const cancelBtn = document.createElement('button');
         cancelBtn.textContent = 'Cancel';
-        [saveBtn, cancelBtn].forEach(b => Object.assign(b.style, { background: 'none', border: '1px solid #999', padding: '2px 6px' }));
+        [saveBtn, cancelBtn].forEach(b =>
+          Object.assign(b.style, {
+            background: 'none',
+            border: '1px solid #999',
+            padding: '2px 6px',
+            marginTop: '0'
+          })
+        );
+
+        visitedLabel.style.display = 'flex';
+        visitedLabel.style.alignItems = 'center';
+
+        const btnRow = document.createElement('div');
+        btnRow.style.display = 'flex';
+        btnRow.style.gap = '4px';
+        btnRow.append(saveBtn, cancelBtn);
 
         form.append(
           nameInput,
@@ -337,8 +352,7 @@ export async function initTravelPanel() {
           ratingInput,
           dateInput,
           visitedLabel,
-          saveBtn,
-          cancelBtn
+          btnRow
         );
         td.append(form);
         tr.append(td);
