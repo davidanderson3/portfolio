@@ -79,4 +79,38 @@ describe('weather panel', () => {
 
     vi.useRealTimers();
   });
+
+  it('color codes moderate temperature rows', async () => {
+    const dom = new JSDOM(`<div id="weatherPanel"></div>`);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.navigator = dom.window.navigator;
+    delete global.navigator.geolocation;
+
+    const data = {
+      hourly: {
+        time: ['2024-01-01T10:00'],
+        temperature_2m: [60],
+        precipitation_probability: [0]
+      },
+      daily: {
+        time: ['2024-01-01'],
+        temperature_2m_max: [70],
+        temperature_2m_min: [55],
+        precipitation_probability_max: [0]
+      }
+    };
+
+    const fetchMock = vi.fn().mockResolvedValue({ json: vi.fn().mockResolvedValue(data) });
+    global.fetch = fetchMock;
+
+    const mod = await import('../js/weather.js');
+    await mod.initWeatherPanel();
+
+    const tables = dom.window.document.querySelectorAll('table');
+    const hourlyRow = tables[0].querySelector('tbody tr');
+    const dailyRow = tables[1].querySelector('tbody tr');
+    expect(hourlyRow.classList.contains('comfortable-temp')).toBe(true);
+    expect(dailyRow.classList.contains('comfortable-temp')).toBe(true);
+  });
 });

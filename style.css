@@ -1244,6 +1244,11 @@ h2 {
   background-color: #f8f5f0;
 }
 
+/* highlight pleasant temperature rows */
+#weatherPanel tbody tr.comfortable-temp {
+  background-color: #e0f8e0;
+}
+
 #weatherPanel .full-column {
   overflow-x: auto;
 }
