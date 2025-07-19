@@ -290,7 +290,10 @@ function initTodayScheduleSection() {
     let container = document.getElementById('todaySchedule');
     if (!container) {
         const panel = document.getElementById('calendarPanel');
-        const parent = panel?.querySelector('.full-column') || document.body;
+        const parent =
+            panel?.querySelector('.right-column') ||
+            panel?.querySelector('.full-column') ||
+            document.body;
         container = document.createElement('div');
         container.id = 'todaySchedule';
         const target = document.getElementById('calendarContent');
