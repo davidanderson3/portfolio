@@ -4,6 +4,7 @@ import { auth } from './auth.js';
 let listsArray = [];
 // Track sort state for each list { [idx]: { colIdx:number, dir:1|-1 } }
 const listSortStates = {};
+const MAX_VISIBLE_LIST_LINES = 5;
 
 auth.onAuthStateChanged(async () => {
   listsArray = await loadLists();
@@ -418,12 +419,26 @@ async function initListsPanel() {
           const lines = (item[col.name] || '').split('\n').filter(l => l.trim());
           if (lines.length) {
             const ul = document.createElement('ul');
-            lines.forEach(line => {
+            lines.forEach((line, idx) => {
               const li = document.createElement('li');
               li.textContent = line;
+              if (idx >= MAX_VISIBLE_LIST_LINES) li.style.display = 'none';
               ul.append(li);
             });
             td.append(ul);
+            if (lines.length > MAX_VISIBLE_LIST_LINES) {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'expand-btn';
+              btn.textContent = 'Show more';
+              btn.addEventListener('click', () => {
+                const hidden = Array.from(ul.children).slice(MAX_VISIBLE_LIST_LINES);
+                const collapsed = hidden[0].style.display === 'none';
+                hidden.forEach(li => li.style.display = collapsed ? 'list-item' : 'none');
+                btn.textContent = collapsed ? 'Show less' : 'Show more';
+              });
+              td.append(btn);
+            }
           }
         }
         else {

@@ -1165,6 +1165,15 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+.expand-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #0077cc;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
 /* Metrics summary table */
 #genericStatsSummary table {
   width: 100%;
