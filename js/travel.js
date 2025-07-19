@@ -371,7 +371,11 @@ export async function initTravelPanel() {
       tableBody.append(tr);
       rowMarkerMap.set(tr, m);
 
-      tr.addEventListener('click', () => {
+      tr.addEventListener('click', e => {
+        // If the user clicked a link inside the row, allow the link to
+        // navigate without selecting the row or moving the map.
+        if (e.target.closest('a')) return;
+
         if (selectedRow) selectedRow.classList.remove('selected-row');
         selectedRow = tr;
         tr.classList.add('selected-row');
