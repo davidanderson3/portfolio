@@ -505,7 +505,7 @@ button:hover {
    Collapsed parent row for goals with active subgoals
 ------------------------------ */
 .parent-summary {
-  padding: 2px 6px;
+  padding: 0 6px;
   font-size: 0.8em;
   background: #f3f3f3;
 }
