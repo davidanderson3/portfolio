@@ -22,6 +22,7 @@ import {
     renderChildren
 } from './tasks.js';
 import { createCalendarEvent } from './googleCalendar.js';
+import { loadHourNotes, saveHourNotes } from './hourNotes.js';
 
 
 const openGoalIds = new Set();
@@ -323,24 +324,15 @@ function initTodayScheduleSection() {
 }
 
 
-export function renderTodaySchedule(all, listEl, weather) {
+export function renderTodaySchedule(_all, listEl, weather) {
     if (!listEl) return;
+
+    const notes = loadHourNotes();
 
     const start = new Date();
     start.setHours(0, 0, 0, 0);
     const now = new Date();
     const currentHour = now.getHours();
-
-    const byDateHour = {};
-    all.forEach(g => {
-        if (!g.scheduled) return;
-        const d = new Date(g.scheduled);
-        const key = d.toISOString().slice(0, 10);
-        const h = d.getHours();
-        if (!byDateHour[key]) byDateHour[key] = {};
-        (byDateHour[key][h] = byDateHour[key][h] || []).push(g);
-    });
-
     const weatherMap = {};
     if (weather && weather.hourly && weather.hourly.time) {
         weather.hourly.time.forEach((t, idx) => {
@@ -400,86 +392,48 @@ export function renderTodaySchedule(all, listEl, weather) {
             cell.className = 'hour-events';
             cell.dataset.date = key;
             cell.dataset.hour = h;
-            const events = byDateHour[key]?.[h] || [];
-            if (events.length) {
-                const ul = document.createElement('ul');
-                events.forEach(ev => {
-                    const li = document.createElement('li');
-                    li.textContent = ev.text;
-                    li.dataset.goalId = ev.id;
-                    ul.appendChild(li);
-                });
-                cell.appendChild(ul);
-            }
-            cell.addEventListener('click', async e => {
-                if (cell.querySelector('input.hour-input')) return;
 
-                const li = e.target.closest('li');
-                const editingId = li ? li.dataset.goalId : null;
-                if (li) li.style.display = 'none';
+            const noteText = notes[key]?.[h] || '';
+            if (noteText) {
+                const span = document.createElement('span');
+                span.className = 'hour-note';
+                span.textContent = noteText;
+                cell.appendChild(span);
+            }
+
+            cell.addEventListener('click', () => {
+                if (cell.querySelector('input.hour-input')) return;
 
                 const input = document.createElement('input');
                 input.type = 'text';
-                input.placeholder = 'Schedule item';
                 input.className = 'hour-input';
-                if (li) input.value = li.textContent;
-                if (li) li.after(input); else cell.appendChild(input);
+                input.value = notes[key]?.[h] || '';
+
+                cell.innerHTML = '';
+                cell.appendChild(input);
                 input.focus();
 
-                const cancelInput = () => {
-                    input.remove();
-                    if (li) li.style.display = '';
-                };
-
-                const saveInput = async () => {
+                const save = () => {
                     const text = input.value.trim();
-                    input.remove();
-                    if (editingId) {
-                        const all = await loadDecisions();
-                        const idx = all.findIndex(d => d.id === editingId);
-                        if (idx !== -1) {
-                            if (text) {
-                                all[idx].text = text;
-                            } else {
-                                all.splice(idx, 1);
-                            }
-                            await saveDecisions(all);
-                            await renderGoalsAndSubitems();
-                        } else {
-                            cancelInput();
-                        }
-                    } else if (text) {
-                        const sched = `${cell.dataset.date}T${String(cell.dataset.hour).padStart(2, '0')}:00:00`;
-                        const all = await loadDecisions();
-                        const newGoal = {
-                            id: generateId(),
-                            type: 'goal',
-                            text,
-                            notes: '',
-                            completed: false,
-                            resolution: '',
-                            dateCompleted: '',
-                            parentGoalId: null,
-                            hiddenUntil: null,
-                            scheduled: sched,
-                            scheduledEnd: ''
-                        };
-                        await saveDecisions([...all, newGoal]);
-                        await renderGoalsAndSubitems();
-                    } else {
-                        cancelInput();
+                    if (text) {
+                        if (!notes[key]) notes[key] = {};
+                        notes[key][h] = text;
+                    } else if (notes[key]) {
+                        delete notes[key][h];
+                        if (!Object.keys(notes[key]).length) delete notes[key];
+                    }
+                    saveHourNotes(notes);
+                    cell.innerHTML = '';
+                    if (text) {
+                        const span = document.createElement('span');
+                        span.className = 'hour-note';
+                        span.textContent = text;
+                        cell.appendChild(span);
                     }
                 };
 
-                input.addEventListener('keydown', async ev => {
-                    if (ev.key === 'Enter') {
-                        ev.preventDefault();
-                        await saveInput();
-                    } else if (ev.key === 'Escape') {
-                        cancelInput();
-                    }
-                });
-                input.addEventListener('blur', cancelInput);
+                input.addEventListener('input', save);
+                input.addEventListener('blur', save);
             });
             row.appendChild(cell);
             section.appendChild(row);

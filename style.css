@@ -1657,6 +1657,10 @@ h2 {
   margin-top: 2px;
 }
 
+#todaySchedule .hour-note {
+  white-space: pre-wrap;
+}
+
 #todaySchedule .hour-row.comfortable-temp {
   background-color: #e0f8e0;
 }

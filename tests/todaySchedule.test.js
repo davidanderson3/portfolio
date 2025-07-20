@@ -12,6 +12,18 @@ vi.mock('../js/tasks.js', () => ({
 }));
 
 vi.mock('../js/googleCalendar.js', () => ({ createCalendarEvent: vi.fn() }));
+
+// Simple localStorage mock for Node environment
+const storage = (() => {
+  let store = {};
+  return {
+    getItem: key => (key in store ? store[key] : null),
+    setItem: (key, value) => { store[key] = String(value); },
+    removeItem: key => { delete store[key]; },
+    clear: () => { store = {}; }
+  };
+})();
+global.localStorage = storage;
 vi.mock('../js/helpers.js', () => ({
   loadDecisions: vi.fn(),
   saveDecisions: vi.fn(),
@@ -51,84 +63,65 @@ beforeEach(async () => {
 });
 
 describe('renderTodaySchedule', () => {
-  it('renders a week of hourly rows and places goals correctly', () => {
+  it('renders a week of hourly rows and shows notes', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2023-01-01T10:00:00Z'));
 
     const container = document.getElementById('test');
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const todayStr = new Date().toISOString().split('T')[0];
+    localStorage.setItem('hourNotes', JSON.stringify({ [todayStr]: { '12': 'Lunch' } }));
 
-    const items = [
-      { id: 'g1', type: 'goal', text: 'Lunch', scheduled: `${todayStr}T12:00` },
-      { id: 'g2', type: 'goal', text: 'Evening', scheduled: `${tomorrowStr}T19:30` }
-    ];
-
-    const weather = {
-      hourly: {
-        time: [`${todayStr}T12:00`, `${tomorrowStr}T19:00`],
-        temperature_2m: [60, 70],
-        precipitation_probability: [0, 0]
-      }
-    };
-
-    renderTodaySchedule(items, container, weather);
+    renderTodaySchedule([], container, null);
     const days = container.querySelectorAll('.day-section');
     expect(days.length).toBe(7);
     const firstDayRows = days[0].querySelectorAll('.hour-row');
     const startHour = Math.max(6, new Date().getHours() + 1);
     expect(firstDayRows.length).toBe(22 - startHour);
-    expect(firstDayRows[1].textContent).toContain('Lunch');
-    const secondDayRows = days[1].querySelectorAll('.hour-row');
-    expect(secondDayRows[13].textContent).toContain('Evening');
-    expect(firstDayRows[1].classList.contains('comfortable-temp')).toBe(true);
+    expect(container.querySelector('.hour-note').textContent).toBe('Lunch');
+    expect(container.querySelectorAll('li').length).toBe(0);
     vi.useRealTimers();
   });
 
-  it('updates an existing hourly entry when edited', async () => {
+  it('saves a note when edited', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2023-01-01T10:00:00Z'));
 
     const container = document.getElementById('test');
     const todayStr = new Date().toISOString().split('T')[0];
-    const goal = { id: 'g1', type: 'goal', text: 'Lunch', scheduled: `${todayStr}T12:00` };
+    localStorage.setItem('hourNotes', JSON.stringify({ [todayStr]: { '12': 'Lunch' } }));
 
-    renderTodaySchedule([goal], container, null);
-    const li = container.querySelector('li');
-    helpers.loadDecisions.mockResolvedValue([goal]);
-
-    li.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    renderTodaySchedule([], container, null);
+    const startHour = Math.max(6, new Date().getHours() + 1);
+    const cell = container.querySelectorAll('.hour-events')[12 - startHour];
+    cell.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     const input = container.querySelector('input.hour-input');
     input.value = 'Brunch';
-    input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter' }));
-    await Promise.resolve();
-
-    expect(helpers.saveDecisions).toHaveBeenCalledWith([{ ...goal, text: 'Brunch' }]);
+    input.dispatchEvent(new window.Event('input'));
+    input.dispatchEvent(new window.Event('blur'));
+    const stored = JSON.parse(localStorage.getItem('hourNotes'));
+    expect(stored[todayStr]['12']).toBe('Brunch');
     vi.useRealTimers();
   });
 
-  it('deletes an hourly entry when cleared', async () => {
+  it('deletes a note when cleared', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2023-01-01T10:00:00Z'));
 
     const container = document.getElementById('test');
     const todayStr = new Date().toISOString().split('T')[0];
-    const goal = { id: 'g1', type: 'goal', text: 'Lunch', scheduled: `${todayStr}T12:00` };
+    localStorage.setItem('hourNotes', JSON.stringify({ [todayStr]: { '12': 'Lunch' } }));
 
-    renderTodaySchedule([goal], container, null);
-    const li = container.querySelector('li');
-    helpers.loadDecisions.mockResolvedValue([goal]);
-
-    li.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
+    renderTodaySchedule([], container, null);
+    const startHour = Math.max(6, new Date().getHours() + 1);
+    const cell = container.querySelectorAll('.hour-events')[12 - startHour];
+    cell.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
     const input = container.querySelector('input.hour-input');
     input.value = '';
-    input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter' }));
-    await Promise.resolve();
+    input.dispatchEvent(new window.Event('input'));
+    input.dispatchEvent(new window.Event('blur'));
 
-    expect(helpers.saveDecisions).toHaveBeenCalledWith([]);
+    const stored = JSON.parse(localStorage.getItem('hourNotes'));
+    expect(stored[todayStr]).toBeUndefined();
     vi.useRealTimers();
   });
 });
