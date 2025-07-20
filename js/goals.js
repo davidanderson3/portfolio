@@ -399,26 +399,46 @@ export function renderTodaySchedule(all, listEl, weather) {
                 cell.appendChild(ul);
             }
             cell.addEventListener('click', async e => {
-                if (e.target.tagName === 'LI') return;
-                const text = prompt('Schedule item:');
-                if (!text) return;
-                const sched = `${cell.dataset.date}T${String(cell.dataset.hour).padStart(2, '0')}:00:00`;
-                const all = await loadDecisions();
-                const newGoal = {
-                    id: generateId(),
-                    type: 'goal',
-                    text: text.trim(),
-                    notes: '',
-                    completed: false,
-                    resolution: '',
-                    dateCompleted: '',
-                    parentGoalId: null,
-                    hiddenUntil: null,
-                    scheduled: sched,
-                    scheduledEnd: ''
+                if (e.target.tagName === 'LI' || cell.querySelector('input.hour-input')) return;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Schedule item';
+                input.className = 'hour-input';
+                cell.appendChild(input);
+                input.focus();
+
+                const saveInput = async () => {
+                    const text = input.value.trim();
+                    input.remove();
+                    if (!text) return;
+                    const sched = `${cell.dataset.date}T${String(cell.dataset.hour).padStart(2, '0')}:00:00`;
+                    const all = await loadDecisions();
+                    const newGoal = {
+                        id: generateId(),
+                        type: 'goal',
+                        text,
+                        notes: '',
+                        completed: false,
+                        resolution: '',
+                        dateCompleted: '',
+                        parentGoalId: null,
+                        hiddenUntil: null,
+                        scheduled: sched,
+                        scheduledEnd: ''
+                    };
+                    await saveDecisions([...all, newGoal]);
+                    renderGoalsAndSubitems();
                 };
-                await saveDecisions([...all, newGoal]);
-                renderGoalsAndSubitems();
+
+                input.addEventListener('keydown', async ev => {
+                    if (ev.key === 'Enter') {
+                        ev.preventDefault();
+                        await saveInput();
+                    } else if (ev.key === 'Escape') {
+                        input.remove();
+                    }
+                });
+                input.addEventListener('blur', saveInput);
             });
             row.appendChild(cell);
             section.appendChild(row);

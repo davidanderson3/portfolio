@@ -1655,6 +1655,12 @@ h2 {
   cursor: pointer;
 }
 
+#todaySchedule .hour-input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 2px;
+}
+
 #todaySchedule .hour-row.comfortable-temp {
   background-color: #e0f8e0;
 }
