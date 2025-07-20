@@ -619,32 +619,30 @@ function renderCalendarSection(all, calendarContent, weather) {
             calendarContent.appendChild(section);
             d.setDate(d.getDate() + 1);
         } else {
-            if (byDate[key]) {
-                const header = document.createElement('h3');
-                const dowLabel = d.toLocaleDateString(undefined, { weekday: 'short' });
-                const dateStr = d.toLocaleDateString();
-                const daysText = formatDaysUntil(key);
-                const w = dailyWeather[key];
-                const weatherInfo = w ? ` ${window.chooseWeatherIcon?.(w.rain) || ''} ${w.high}\u00B0/${w.low}\u00B0` : '';
-                header.textContent = `${dowLabel} ${dateStr} (${daysText})${weatherInfo}`;
-                calendarContent.appendChild(header);
+            const header = document.createElement('h3');
+            const dowLabel = d.toLocaleDateString(undefined, { weekday: 'short' });
+            const dateStr = d.toLocaleDateString();
+            const daysText = formatDaysUntil(key);
+            const w = dailyWeather[key];
+            const weatherInfo = w ? ` ${window.chooseWeatherIcon?.(w.rain) || ''} ${w.high}\u00B0/${w.low}\u00B0` : '';
+            header.textContent = `${dowLabel} ${dateStr} (${daysText})${weatherInfo}`;
+            calendarContent.appendChild(header);
 
-                byDate[key].forEach(goal => {
-                    const wrapper = makeGoalWrapper(goal);
-                    const row = createGoalRow(goal, { hideScheduled: true });
-                    wrapper.appendChild(row);
+            (byDate[key] || []).forEach(goal => {
+                const wrapper = makeGoalWrapper(goal);
+                const row = createGoalRow(goal, { hideScheduled: true });
+                wrapper.appendChild(row);
 
-                    const childrenContainer = document.createElement('div');
-                    childrenContainer.className = 'goal-children';
-                    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
-                    wrapper.appendChild(childrenContainer);
-                    renderChildren(goal, all, childrenContainer);
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = 'goal-children';
+                childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                wrapper.appendChild(childrenContainer);
+                renderChildren(goal, all, childrenContainer);
 
-                    setupToggle(wrapper, row, childrenContainer, goal.id);
-                    calendarContent.appendChild(wrapper);
-                });
-                delete byDate[key];
-            }
+                setupToggle(wrapper, row, childrenContainer, goal.id);
+                calendarContent.appendChild(wrapper);
+            });
+            delete byDate[key];
             d.setDate(d.getDate() + 1);
         }
     }
