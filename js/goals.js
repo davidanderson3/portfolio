@@ -386,6 +386,8 @@ export function renderTodaySchedule(all, listEl, weather) {
 
             const cell = document.createElement('div');
             cell.className = 'hour-events';
+            cell.dataset.date = key;
+            cell.dataset.hour = h;
             const events = byDateHour[key]?.[h] || [];
             if (events.length) {
                 const ul = document.createElement('ul');
@@ -396,6 +398,28 @@ export function renderTodaySchedule(all, listEl, weather) {
                 });
                 cell.appendChild(ul);
             }
+            cell.addEventListener('click', async e => {
+                if (e.target.tagName === 'LI') return;
+                const text = prompt('Schedule item:');
+                if (!text) return;
+                const sched = `${cell.dataset.date}T${String(cell.dataset.hour).padStart(2, '0')}:00:00`;
+                const all = await loadDecisions();
+                const newGoal = {
+                    id: generateId(),
+                    type: 'goal',
+                    text: text.trim(),
+                    notes: '',
+                    completed: false,
+                    resolution: '',
+                    dateCompleted: '',
+                    parentGoalId: null,
+                    hiddenUntil: null,
+                    scheduled: sched,
+                    scheduledEnd: ''
+                };
+                await saveDecisions([...all, newGoal]);
+                renderGoalsAndSubitems();
+            });
             row.appendChild(cell);
             section.appendChild(row);
         }

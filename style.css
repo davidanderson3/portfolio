@@ -1634,6 +1634,11 @@ h2 {
   padding: 2px;
 }
 
+#todaySchedule .hour-events {
+  min-height: 24px;
+  cursor: pointer;
+}
+
 #todaySchedule .hour-row.comfortable-temp {
   background-color: #e0f8e0;
 }
