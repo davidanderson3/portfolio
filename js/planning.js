@@ -46,37 +46,51 @@ export function clearPlanningCache() {
 }
 
 export async function loadPlanningData() {
-  if (planningCache) return planningCache;
   const user = getCurrentUser?.();
+
+  // Always try localStorage first
+  let localData = {};
   const stored = localStorage.getItem(PLANNING_KEY);
   if (stored) {
     try {
-      const data = JSON.parse(stored);
-      if (user) {
-        try {
-          await db
-            .collection('users').doc(user.uid)
-            .collection('settings').doc(PLANNING_KEY)
-            .set(data, { merge: true });
-        } catch (err) {
-          console.warn('Failed to sync pending planning data:', err);
-        }
-      }
-      planningCache = data;
-      return planningCache;
+      localData = JSON.parse(stored) || {};
     } catch (err) {
       console.warn('Failed to parse stored planning data:', err);
     }
   }
+
+  // If not signed in, just return the local data
   if (!user) {
-    planningCache = {};
+    planningCache = localData;
     return planningCache;
   }
-  const snap = await db
-    .collection('users').doc(user.uid)
-    .collection('settings').doc(PLANNING_KEY)
-    .get();
-  planningCache = snap.exists ? snap.data() : {};
+
+  // Fetch the latest cloud data
+  let cloudData = {};
+  try {
+    const snap = await db
+      .collection('users').doc(user.uid)
+      .collection('settings').doc(PLANNING_KEY)
+      .get();
+    if (snap) {
+      cloudData = snap.exists ? snap.data() : {};
+    }
+  } catch (err) {
+    console.error('Failed to fetch planning data:', err);
+  }
+
+  // Merge cloud and local (local wins) and sync back
+  planningCache = { ...cloudData, ...localData };
+  try {
+    await db
+      .collection('users').doc(user.uid)
+      .collection('settings').doc(PLANNING_KEY)
+      .set(planningCache, { merge: true });
+  } catch (err) {
+    console.error('Failed to save planning data:', err);
+  }
+
+  localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
   return planningCache;
 }
 
