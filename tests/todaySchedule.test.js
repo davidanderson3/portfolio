@@ -37,17 +37,35 @@ beforeEach(async () => {
 });
 
 describe('renderTodaySchedule', () => {
-  it('places goals under the correct hour', () => {
+  it('renders a week of hourly rows and places goals correctly', () => {
     const container = document.getElementById('test');
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const tomorrow = new Date(today); 
+    tomorrow.setDate(today.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
     const items = [
-      { id: 'g1', type: 'goal', text: 'Morning', scheduled: `${today}T08:00` },
-      { id: 'g2', type: 'goal', text: 'Afternoon', scheduled: `${today}T13:30` }
+      { id: 'g1', type: 'goal', text: 'Morning', scheduled: `${todayStr}T08:00` },
+      { id: 'g2', type: 'goal', text: 'Evening', scheduled: `${tomorrowStr}T19:30` }
     ];
-    renderTodaySchedule(items, container);
-    const rows = container.querySelectorAll('.hour-row');
-    expect(rows.length).toBe(24);
-    expect(rows[8].textContent).toContain('Morning');
-    expect(rows[13].textContent).toContain('Afternoon');
+
+    const weather = {
+      hourly: {
+        time: [`${todayStr}T08:00`, `${tomorrowStr}T19:00`],
+        temperature_2m: [60, 70],
+        precipitation_probability: [0, 0]
+      }
+    };
+
+    renderTodaySchedule(items, container, weather);
+    const days = container.querySelectorAll('.day-section');
+    expect(days.length).toBe(7);
+    const firstDayRows = days[0].querySelectorAll('.hour-row');
+    expect(firstDayRows.length).toBe(16);
+    expect(firstDayRows[2].textContent).toContain('Morning');
+    const secondDayRows = days[1].querySelectorAll('.hour-row');
+    expect(secondDayRows[13].textContent).toContain('Evening');
+    expect(firstDayRows[2].classList.contains('comfortable-temp')).toBe(true);
   });
 });

@@ -309,67 +309,93 @@ function initTodayScheduleSection() {
             parent.appendChild(container);
         }
     }
-    container.innerHTML = '<h3>Today\'s Schedule</h3><div id="todayScheduleList"></div>';
+    container.innerHTML = '<h3>Weekly Schedule</h3><div id="todayScheduleList"></div>';
     return container.querySelector('#todayScheduleList');
 }
 
 
 export function renderTodaySchedule(all, listEl, weather) {
     if (!listEl) return;
-    const todayKey = new Date().toISOString().slice(0, 10);
-    const todays = all.filter(g => g.scheduled && g.scheduled.startsWith(todayKey));
-    const byHour = {};
-    todays.forEach(g => {
-        const h = new Date(g.scheduled).getHours();
-        (byHour[h] = byHour[h] || []).push(g);
+
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const byDateHour = {};
+    all.forEach(g => {
+        if (!g.scheduled) return;
+        const d = new Date(g.scheduled);
+        const key = d.toISOString().slice(0, 10);
+        const h = d.getHours();
+        if (!byDateHour[key]) byDateHour[key] = {};
+        (byDateHour[key][h] = byDateHour[key][h] || []).push(g);
     });
 
-    const weatherByHour = {};
+    const weatherMap = {};
     if (weather && weather.hourly && weather.hourly.time) {
         weather.hourly.time.forEach((t, idx) => {
             const d = new Date(t);
-            if (t.startsWith(todayKey)) {
-                weatherByHour[d.getHours()] = {
-                    temp: weather.hourly.temperature_2m[idx],
-                    rain: weather.hourly.precipitation_probability
-                        ? weather.hourly.precipitation_probability[idx]
-                        : undefined
-                };
-            }
+            const key = t.slice(0, 10);
+            if (!weatherMap[key]) weatherMap[key] = {};
+            weatherMap[key][d.getHours()] = {
+                temp: weather.hourly.temperature_2m[idx],
+                rain: weather.hourly.precipitation_probability
+                    ? weather.hourly.precipitation_probability[idx]
+                    : undefined
+            };
         });
     }
 
     listEl.innerHTML = '';
-    for (let h = 0; h < 24; h++) {
-        const row = document.createElement('div');
-        row.className = 'hour-row time-box';
-        const label = document.createElement('div');
-        label.className = 'hour-label';
-        label.textContent = `${String(h).padStart(2, '0')}:00`;
-        const w = weatherByHour[h];
-        if (w) {
-            const span = document.createElement('span');
-            span.className = 'hour-weather';
-            const icon = window.chooseWeatherIcon ? window.chooseWeatherIcon(w.rain) : '';
-            span.textContent = `${icon} ${w.temp}\u00B0`;
-            label.appendChild(span);
-        }
-        row.appendChild(label);
 
-        const cell = document.createElement('div');
-        cell.className = 'hour-events';
-        const events = byHour[h] || [];
-        if (events.length) {
-            const ul = document.createElement('ul');
-            events.forEach(ev => {
-                const li = document.createElement('li');
-                li.textContent = ev.text;
-                ul.appendChild(li);
-            });
-            cell.appendChild(ul);
+    for (let day = 0; day < 7; day++) {
+        const current = new Date(start);
+        current.setDate(start.getDate() + day);
+        const key = current.toISOString().slice(0, 10);
+
+        const section = document.createElement('div');
+        section.className = 'day-section';
+
+        const hdr = document.createElement('h4');
+        hdr.textContent = current.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        section.appendChild(hdr);
+
+        for (let h = 6; h < 22; h++) {
+            const row = document.createElement('div');
+            row.className = 'hour-row time-box';
+            const label = document.createElement('div');
+            label.className = 'hour-label';
+            label.textContent = `${String(h).padStart(2, '0')}:00`;
+
+            const w = weatherMap[key]?.[h];
+            if (w) {
+                const span = document.createElement('span');
+                span.className = 'hour-weather';
+                const icon = window.chooseWeatherIcon ? window.chooseWeatherIcon(w.rain) : '';
+                span.textContent = `${icon} ${w.temp}\u00B0`;
+                label.appendChild(span);
+                if (w.temp >= 58 && w.temp <= 77) {
+                    row.classList.add('comfortable-temp');
+                }
+            }
+            row.appendChild(label);
+
+            const cell = document.createElement('div');
+            cell.className = 'hour-events';
+            const events = byDateHour[key]?.[h] || [];
+            if (events.length) {
+                const ul = document.createElement('ul');
+                events.forEach(ev => {
+                    const li = document.createElement('li');
+                    li.textContent = ev.text;
+                    ul.appendChild(li);
+                });
+                cell.appendChild(ul);
+            }
+            row.appendChild(cell);
+            section.appendChild(row);
         }
-        row.appendChild(cell);
-        listEl.appendChild(row);
+
+        listEl.appendChild(section);
     }
 }
 
