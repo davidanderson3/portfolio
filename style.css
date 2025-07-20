@@ -1661,6 +1661,13 @@ h2 {
 #todaySchedule .hour-label {
   width: 72px;
   font-weight: bold;
+  white-space: nowrap;
+}
+
+#todaySchedule .time-box {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px;
 }
 
 #todaySchedule ul {
