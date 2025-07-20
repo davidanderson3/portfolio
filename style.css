@@ -515,7 +515,11 @@ button:hover {
   display: none;
 }
 .first-subgoal-row {
+  display: none;
   border-left-color: #7aa68c;
+}
+.parent-summary + .first-subgoal-row {
+  display: block;
 }
 
 /* ------------------------------
