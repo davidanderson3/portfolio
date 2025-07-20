@@ -542,15 +542,15 @@ function renderCalendarSection(all, calendarContent, weather) {
             section.className = 'weekend-section';
 
             const hdr = document.createElement('h3');
-            const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            const sunLabel = sun.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            const satLabel = sat.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+            const sunLabel = sun.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
             const isCurrentWeekend = today >= sat && today <= sun;
             if (isCurrentWeekend) section.classList.add('current-weekend');
             const satW = dailyWeather[key];
             const sunW = dailyWeather[sunKey];
             const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
             const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
-            hdr.textContent = `Weekend: ${satLabel}${satInfo} - ${sunLabel}${sunInfo}`;
+            hdr.innerHTML = `Weekend:<br>${satLabel}${satInfo}<br>${sunLabel}${sunInfo}`;
             section.appendChild(hdr);
 
             [key, sunKey].forEach(k => {
@@ -587,15 +587,15 @@ function renderCalendarSection(all, calendarContent, weather) {
             section.className = 'weekend-section';
 
             const hdr = document.createElement('h3');
-            const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-            const sunLabel = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            const satLabel = sat.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+            const sunLabel = d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
             const isCurrentWeekend = today >= sat && today <= d;
             if (isCurrentWeekend) section.classList.add('current-weekend');
             const satW = dailyWeather[satKey];
             const sunW = dailyWeather[key];
             const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
             const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
-            hdr.textContent = `Weekend: ${satLabel}${satInfo} - ${sunLabel}${sunInfo}`;
+            hdr.innerHTML = `Weekend:<br>${satLabel}${satInfo}<br>${sunLabel}${sunInfo}`;
             section.appendChild(hdr);
 
             [satKey, key].forEach(k => {
