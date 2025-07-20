@@ -367,7 +367,9 @@ export function renderTodaySchedule(all, listEl, weather) {
             row.className = 'hour-row time-box';
             const label = document.createElement('div');
             label.className = 'hour-label';
-            label.textContent = `${String(h).padStart(2, '0')}:00`;
+            const h12 = h % 12 || 12;
+            const ampm = h < 12 ? 'AM' : 'PM';
+            label.textContent = `${h12} ${ampm}`;
 
             const w = weatherMap[key]?.[h];
             if (w) {
