@@ -32,6 +32,15 @@ const completedList = document.getElementById('completedList');
 
 initializeGlobalDragHandlers();
 
+function tempToColor(temp) {
+    const min = 20;
+    const max = 100;
+    const t = Math.max(min, Math.min(max, temp));
+    const ratio = (t - min) / (max - min);
+    const hue = 240 - ratio * 240;
+    return `hsl(${hue}, 90%, 85%)`;
+}
+
 export async function addCalendarGoal(date = '') {
     const text = prompt('New goal:');
     if (!text) return;
@@ -359,6 +368,8 @@ export function renderTodaySchedule(all, listEl, weather) {
 
         const hdr = document.createElement('h4');
         hdr.textContent = current.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        const middayTemp = weatherMap[key]?.[12]?.temp;
+        if (middayTemp !== undefined) hdr.style.backgroundColor = tempToColor(middayTemp);
         section.appendChild(hdr);
 
         const startHour = day === 0 ? Math.max(6, currentHour + 1) : 6;
@@ -378,6 +389,7 @@ export function renderTodaySchedule(all, listEl, weather) {
                 const icon = window.chooseWeatherIcon ? window.chooseWeatherIcon(w.rain) : '';
                 span.textContent = `${icon} ${w.temp}\u00B0`;
                 label.appendChild(span);
+                row.style.backgroundColor = tempToColor(w.temp);
                 if (w.temp >= 58 && w.temp <= 77) {
                     row.classList.add('comfortable-temp');
                 }
@@ -551,6 +563,8 @@ function renderCalendarSection(all, calendarContent, weather) {
             const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
             const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
             hdr.innerHTML = `Weekend:<br>${satLabel}${satInfo}<br>${sunLabel}${sunInfo}`;
+            const highTemp = Math.max(satW?.high ?? -Infinity, sunW?.high ?? -Infinity);
+            if (isFinite(highTemp)) hdr.style.backgroundColor = tempToColor(highTemp);
             section.appendChild(hdr);
 
             [key, sunKey].forEach(k => {
@@ -596,6 +610,8 @@ function renderCalendarSection(all, calendarContent, weather) {
             const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
             const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
             hdr.innerHTML = `Weekend:<br>${satLabel}${satInfo}<br>${sunLabel}${sunInfo}`;
+            const highTemp2 = Math.max(satW?.high ?? -Infinity, sunW?.high ?? -Infinity);
+            if (isFinite(highTemp2)) hdr.style.backgroundColor = tempToColor(highTemp2);
             section.appendChild(hdr);
 
             [satKey, key].forEach(k => {
@@ -626,6 +642,7 @@ function renderCalendarSection(all, calendarContent, weather) {
             const w = dailyWeather[key];
             const weatherInfo = w ? ` ${window.chooseWeatherIcon?.(w.rain) || ''} ${w.high}\u00B0/${w.low}\u00B0` : '';
             header.textContent = `${dowLabel} ${dateStr} (${daysText})${weatherInfo}`;
+            if (w) header.style.backgroundColor = tempToColor(w.high);
             calendarContent.appendChild(header);
 
             (byDate[key] || []).forEach(goal => {
