@@ -23,5 +23,18 @@ Two node scripts help load travel places into Firestore:
 
 Both scripts expect `serviceAccountKey.json` in the project root and support the Firestore emulator if `FIRESTORE_EMULATOR_HOST` is set.
 
+## Running E2E tests
+
+End-to-end tests are written with [Playwright](https://playwright.dev/). Install
+the browsers once and then run the `e2e` script:
+
+```bash
+npm install
+npx playwright install
+npm run e2e
+```
+
+This starts the local server, launches a browser, and exercises basic UI flows.
+
 
 
