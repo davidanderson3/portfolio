@@ -38,21 +38,24 @@ beforeEach(async () => {
 
 describe('renderTodaySchedule', () => {
   it('renders a week of hourly rows and places goals correctly', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T10:00:00Z'));
+
     const container = document.getElementById('test');
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    const tomorrow = new Date(today); 
+    const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
     const items = [
-      { id: 'g1', type: 'goal', text: 'Morning', scheduled: `${todayStr}T08:00` },
+      { id: 'g1', type: 'goal', text: 'Lunch', scheduled: `${todayStr}T12:00` },
       { id: 'g2', type: 'goal', text: 'Evening', scheduled: `${tomorrowStr}T19:30` }
     ];
 
     const weather = {
       hourly: {
-        time: [`${todayStr}T08:00`, `${tomorrowStr}T19:00`],
+        time: [`${todayStr}T12:00`, `${tomorrowStr}T19:00`],
         temperature_2m: [60, 70],
         precipitation_probability: [0, 0]
       }
@@ -62,10 +65,12 @@ describe('renderTodaySchedule', () => {
     const days = container.querySelectorAll('.day-section');
     expect(days.length).toBe(7);
     const firstDayRows = days[0].querySelectorAll('.hour-row');
-    expect(firstDayRows.length).toBe(16);
-    expect(firstDayRows[2].textContent).toContain('Morning');
+    const startHour = Math.max(6, new Date().getHours() + 1);
+    expect(firstDayRows.length).toBe(22 - startHour);
+    expect(firstDayRows[1].textContent).toContain('Lunch');
     const secondDayRows = days[1].querySelectorAll('.hour-row');
     expect(secondDayRows[13].textContent).toContain('Evening');
-    expect(firstDayRows[2].classList.contains('comfortable-temp')).toBe(true);
+    expect(firstDayRows[1].classList.contains('comfortable-temp')).toBe(true);
+    vi.useRealTimers();
   });
 });

@@ -319,6 +319,8 @@ export function renderTodaySchedule(all, listEl, weather) {
 
     const start = new Date();
     start.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const currentHour = now.getHours();
 
     const byDateHour = {};
     all.forEach(g => {
@@ -359,7 +361,8 @@ export function renderTodaySchedule(all, listEl, weather) {
         hdr.textContent = current.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
         section.appendChild(hdr);
 
-        for (let h = 6; h < 22; h++) {
+        const startHour = day === 0 ? Math.max(6, currentHour + 1) : 6;
+        for (let h = startHour; h < 22; h++) {
             const row = document.createElement('div');
             row.className = 'hour-row time-box';
             const label = document.createElement('div');
