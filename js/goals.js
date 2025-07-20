@@ -671,8 +671,9 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
             (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
         );
         let firstRow = null;
+        const isOpen = openGoalIds.has(goal.id);
         if (subs.length) {
-            row.classList.add('parent-summary');
+            if (!isOpen) row.classList.add('parent-summary');
             firstRow = createGoalRow(subs[0], {
                 hideScheduled: true,
                 stayPut: true,
@@ -685,7 +686,7 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
                 }
             });
             firstRow.classList.add('first-subgoal-row');
-            firstRow.style.display = openGoalIds.has(goal.id) ? 'none' : 'block';
+            firstRow.style.display = isOpen ? 'none' : 'block';
             wrapper.appendChild(firstRow);
         }
 
@@ -736,6 +737,7 @@ function setupToggle(wrapper, row, childrenContainer, id, firstRow) {
         wrapper.setAttribute('draggable', open ? 'true' : 'false');
         open ? openGoalIds.delete(id) : openGoalIds.add(id);
         if (firstRow) firstRow.style.display = open ? 'block' : 'none';
+        row.classList.toggle('parent-summary', open);
     };
 }
 
@@ -814,8 +816,9 @@ export function appendGoalToDOM(goal, allItems) {
         (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
     );
     let firstRow = null;
+    const isOpen = openGoalIds.has(goal.id);
     if (subs.length) {
-        row.classList.add('parent-summary');
+        if (!isOpen) row.classList.add('parent-summary');
         firstRow = createGoalRow(subs[0], {
             hideScheduled: true,
             stayPut: true,
@@ -828,7 +831,7 @@ export function appendGoalToDOM(goal, allItems) {
             }
         });
         firstRow.classList.add('first-subgoal-row');
-        firstRow.style.display = openGoalIds.has(goal.id) ? 'none' : 'block';
+        firstRow.style.display = isOpen ? 'none' : 'block';
         wrapper.appendChild(firstRow);
     }
 

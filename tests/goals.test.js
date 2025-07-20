@@ -154,6 +154,23 @@ describe('editing scheduled date', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(document.getElementById('goalList').contains(wrapper)).toBe(false);
+  expect(document.getElementById('goalList').contains(wrapper)).toBe(false);
+  });
+});
+
+describe('parent-summary display', () => {
+  it('applies compact class when collapsed and removes it when expanded', async () => {
+    const parent = { id: 'p1', type: 'goal', text: 'P', notes: '', completed: false, parentGoalId: null };
+    const child = { id: 'c1', type: 'goal', text: 'C', notes: '', completed: false, parentGoalId: 'p1' };
+    helpers.loadDecisions.mockResolvedValue([parent, child]);
+
+    await renderGoalsAndSubitems();
+    let row = document.querySelector('#goalList .decision-row');
+    expect(row.classList.contains('parent-summary')).toBe(true);
+
+    window.openGoalIds.add('p1');
+    await renderGoalsAndSubitems();
+    row = document.querySelector('#goalList .decision-row');
+    expect(row.classList.contains('parent-summary')).toBe(false);
   });
 });
