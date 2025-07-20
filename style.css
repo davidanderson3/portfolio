@@ -1643,14 +1643,14 @@ h2 {
   padding-left: 20px;
 }
 
-/* Planning panel finance profiles */
-#financeProfiles {
+/* Planning panel profiles */
+#profilesList {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
 }
 
-.finance-profile {
+.planning-profile {
   flex: 1 1 300px;
   box-sizing: border-box;
   border: 1px solid #ddd;

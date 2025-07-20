@@ -76,120 +76,67 @@ export async function initPlanningPanel() {
 
   const saved = await loadPlanningData();
   let currentData = saved || {};
+  currentData.profiles = currentData.profiles || [];
 
   const container = document.getElementById('planningContainer');
   container.innerHTML = `
-    <h3>Financial Profiles</h3>
-    <button type="button" id="addFinanceProfile">+ Add Profile</button>
-    <div id="financeProfiles" style="margin-top:1em;"></div>
-    <h3 style="margin-top:2em;">Happiness Projection</h3>
-    <form id="happyForm" style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
-      <label>Hours on Hobbies/week <input type="number" id="hobbyHours" value="10" /></label>
-      <label>Hours Working/week <input type="number" id="workHours" value="40" /></label>
-      <button type="submit">Calculate</button>
-    </form>
-    <div id="happyResult" style="margin-top:1em;"></div>
+    <h3>Profiles</h3>
+    <button type="button" id="addProfile">+ Add Profile</button>
+    <div id="profilesList" style="margin-top:1em;"></div>
     <h3 style="margin-top:2em;">Sources of Happiness</h3>
     <ul id="happySourcesList" style="margin-top:0;"></ul>
   `;
 
-  const profilesDiv = container.querySelector('#financeProfiles');
+  const profilesDiv = container.querySelector('#profilesList');
   let profileCount = 0;
 
-  function addFinanceProfile(initial = {}) {
+  function addProfile(initial = {}) {
     const index = profileCount++;
     const wrap = document.createElement('div');
-    wrap.className = 'finance-profile';
+    wrap.className = 'planning-profile';
     wrap.dataset.index = index;
     wrap.innerHTML = `
-      <div class="profile-header"><h4>Profile ${index + 1}</h4></div>
-      <form style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
-        <label>Current Age <input type="number" name="curAge" value="${initial.curAge ?? 30}" /></label>
-        <label>Retirement Age <input type="number" name="retAge" value="${initial.retAge ?? 65}" /></label>
-        <label>Current Savings <input type="number" name="savings" value="${initial.savings ?? 0}" /></label>
-        <label>Annual Income <input type="number" name="income" value="${initial.income ?? 50000}" /></label>
-        <label>Annual Expenses <input type="number" name="expenses" value="${initial.expenses ?? 40000}" /></label>
-        <label>Return Rate % <input type="number" name="returnRate" value="${initial.returnRate ?? 5}" /></label>
-        <button type="submit">Calculate</button>
+      <div class="profile-header">
+        <input type="text" class="profile-name" placeholder="Profile Name" value="${initial.name ?? ''}" />
+      </div>
+      <form class="finance-form" style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
+        <label>Current Age <input type="number" name="curAge" value="${initial.finance?.curAge ?? 30}" /></label>
+        <label>Retirement Age <input type="number" name="retAge" value="${initial.finance?.retAge ?? 65}" /></label>
+        <label>Current Savings <input type="number" name="savings" value="${initial.finance?.savings ?? 0}" /></label>
+        <label>Annual Income <input type="number" name="income" value="${initial.finance?.income ?? 50000}" /></label>
+        <label>Annual Expenses <input type="number" name="expenses" value="${initial.finance?.expenses ?? 40000}" /></label>
+        <label>Return Rate % <input type="number" name="returnRate" value="${initial.finance?.returnRate ?? 5}" /></label>
       </form>
       <div class="financeResult" style="margin-top:1em;"></div>
+      <form class="happy-form" style="display:flex;flex-direction:column;gap:4px;max-width:260px;margin-top:1em;">
+        <label>Hours on Hobbies/week <input type="number" name="hobbyHours" value="${initial.happiness?.hobbyHours ?? 10}" /></label>
+        <label>Hours Working/week <input type="number" name="workHours" value="${initial.happiness?.workHours ?? 40}" /></label>
+      </form>
+      <div class="happyResult" style="margin-top:1em;"></div>
     `;
+
     const header = wrap.querySelector('.profile-header');
+    const nameInput = wrap.querySelector('.profile-name');
     const delBtn = makeIconBtn('❌', 'Delete profile', () => {
       if (!confirm('Delete this profile?')) return;
       const idx = Number(wrap.dataset.index);
       profilesDiv.removeChild(wrap);
-      currentData.financeProfiles.splice(idx, 1);
+      currentData.profiles.splice(idx, 1);
       profileCount--;
       Array.from(profilesDiv.children).forEach((child, i) => {
         child.dataset.index = i;
-        child.querySelector('h4').textContent = `Profile ${i + 1}`;
       });
       savePlanningData(currentData);
     });
     header.appendChild(delBtn);
-    const form = wrap.querySelector('form');
-    const resultDiv = wrap.querySelector('.financeResult');
 
-    function renderResult(values) {
-      const data = calculateFinanceProjection(values);
-      resultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
-        data.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
-        '</tbody></table>';
-    }
+    const financeForm = wrap.querySelector('.finance-form');
+    const financeResultDiv = wrap.querySelector('.financeResult');
+    const happyForm = wrap.querySelector('.happy-form');
+    const happyResultDiv = wrap.querySelector('.happyResult');
 
-    if (Object.keys(initial).length) {
-      renderResult({
-        currentAge: initial.curAge,
-        retirementAge: initial.retAge,
-        savings: initial.savings,
-        income: initial.income,
-        expenses: initial.expenses,
-        returnRate: initial.returnRate
-      });
-    }
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
+    function renderFinance() {
       const values = {
-        curAge: form.curAge.value,
-        retAge: form.retAge.value,
-        savings: form.savings.value,
-        income: form.income.value,
-        expenses: form.expenses.value,
-        returnRate: form.returnRate.value
-      };
-      renderResult({
-        currentAge: values.curAge,
-        retirementAge: values.retAge,
-        savings: values.savings,
-        income: values.income,
-        expenses: values.expenses,
-        returnRate: values.returnRate
-      });
-      currentData.financeProfiles[index] = values;
-      savePlanningData(currentData);
-    });
-
-    profilesDiv.appendChild(wrap);
-  }
-  container.querySelector('#addFinanceProfile').addEventListener('click', addFinanceProfile);
-  addFinanceProfile();
-  addFinanceProfile();
-  const financeForm = container.querySelector('#financeForm');
-  const financeResult = container.querySelector('#financeResult');
-  if (financeForm) {
-    if (saved.finance) {
-      financeForm.curAge.value = saved.finance.curAge ?? financeForm.curAge.value;
-      financeForm.retAge.value = saved.finance.retAge ?? financeForm.retAge.value;
-      financeForm.savings.value = saved.finance.savings ?? financeForm.savings.value;
-      financeForm.income.value = saved.finance.income ?? financeForm.income.value;
-      financeForm.expenses.value = saved.finance.expenses ?? financeForm.expenses.value;
-      financeForm.returnRate.value = saved.finance.returnRate ?? financeForm.returnRate.value;
-    }
-    financeForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const input = {
         currentAge: financeForm.curAge.value,
         retirementAge: financeForm.retAge.value,
         savings: financeForm.savings.value,
@@ -197,43 +144,49 @@ export async function initPlanningPanel() {
         expenses: financeForm.expenses.value,
         returnRate: financeForm.returnRate.value
       };
-      const data = calculateFinanceProjection(input);
-      financeResult.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
+      const data = calculateFinanceProjection(values);
+      financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
         data.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
         '</tbody></table>';
-      currentData = { ...currentData, finance: input };
+      currentData.profiles[index] = currentData.profiles[index] || {};
+      currentData.profiles[index].finance = { ...values };
+      savePlanningData(currentData);
+    }
+
+    function renderHappiness() {
+      const values = {
+        hobbyHours: happyForm.hobbyHours.value,
+        workHours: happyForm.workHours.value
+      };
+      const score = calculateHappinessScore(values);
+      happyResultDiv.textContent = `Happiness Score: ${score}`;
+      currentData.profiles[index] = currentData.profiles[index] || {};
+      currentData.profiles[index].happiness = { ...values };
+      savePlanningData(currentData);
+    }
+
+    nameInput.addEventListener('input', () => {
+      currentData.profiles[index] = currentData.profiles[index] || {};
+      currentData.profiles[index].name = nameInput.value;
       savePlanningData(currentData);
     });
-  }
-  currentData.financeProfiles = currentData.financeProfiles || [];
-  container.querySelector('#addFinanceProfile').addEventListener('click', () => {
-    addFinanceProfile();
-  });
 
-  if (currentData.financeProfiles.length) {
-    currentData.financeProfiles.forEach(p => addFinanceProfile(p));
+    financeForm.addEventListener('input', renderFinance);
+    happyForm.addEventListener('input', renderHappiness);
+
+    if (initial.finance) renderFinance();
+    if (initial.happiness) renderHappiness();
+
+    profilesDiv.appendChild(wrap);
+  }
+
+  container.querySelector('#addProfile').addEventListener('click', () => addProfile());
+
+  if (currentData.profiles.length) {
+    currentData.profiles.forEach(p => addProfile(p));
   } else {
-    addFinanceProfile();
-    addFinanceProfile();
+    addProfile();
   }
-
-  const happyForm = container.querySelector('#happyForm');
-  const happyResult = container.querySelector('#happyResult');
-  if (saved.happiness) {
-    happyForm.hobbyHours.value = saved.happiness.hobbyHours ?? happyForm.hobbyHours.value;
-    happyForm.workHours.value = saved.happiness.workHours ?? happyForm.workHours.value;
-  }
-  happyForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const input = {
-      hobbyHours: happyForm.hobbyHours.value,
-      workHours: happyForm.workHours.value
-    };
-    const score = calculateHappinessScore(input);
-    happyResult.textContent = `Happiness Score: ${score}`;
-    currentData = { ...currentData, happiness: input };
-    savePlanningData(currentData);
-  });
 
   const srcList = container.querySelector('#happySourcesList');
   if (srcList) {
