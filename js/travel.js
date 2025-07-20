@@ -1,5 +1,11 @@
 import { db, getCurrentUser, auth } from './auth.js';
-import { pickDate, loadDecisions, saveDecisions, generateId } from './helpers.js';
+import {
+  pickDate,
+  loadDecisions,
+  saveDecisions,
+  generateId,
+  linkify
+} from './helpers.js';
 import { appendGoalToDOM } from './goals.js';
 
 const BASE_KEY = 'travelData';
@@ -236,7 +242,7 @@ export async function initTravelPanel() {
       nameTd.appendChild(nameLink);
       nameTd.dataset.label = 'Name';
       const descTd = document.createElement('td');
-      descTd.textContent = p.description || '';
+      descTd.innerHTML = linkify(p.description || '');
       descTd.dataset.label = 'Description';
       const tagsTd = document.createElement('td');
       tagsTd.textContent = Array.isArray(p.tags) ? p.tags.join(', ') : '';
