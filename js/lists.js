@@ -339,7 +339,8 @@ async function initListsPanel() {
 
   // 4️⃣ Finally, do the initial render
   renderTabs();
-  if (listsArray.length) selectList(0);
+  const firstActiveInit = listsArray.findIndex(l => !isHidden(l));
+  if (firstActiveInit !== -1) selectList(firstActiveInit);
 
 
   function renderSelectedList() {
@@ -942,6 +943,12 @@ function openRowEditor(rowIdx) {
     addColumnBtnForList.style.display = 'block';
   } else {
     addColumnBtnForList.style.display = 'none';
+    const toggle = document.getElementById('toggleHiddenLists');
+    const content = document.getElementById('hiddenListsContent');
+    if (toggle && content) {
+      toggle.textContent = '▼';
+      content.style.display = 'block';
+    }
   }
 }
 
