@@ -587,7 +587,7 @@ function renderCalendarSection(all, calendarContent, weather) {
                     wrapper.appendChild(childrenContainer);
                     renderChildren(goal, all, childrenContainer);
 
-                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    setupToggle(wrapper, row, childrenContainer, goal.id, { current: null });
                     section.appendChild(wrapper);
                 });
                 delete byDate[k];
@@ -634,7 +634,7 @@ function renderCalendarSection(all, calendarContent, weather) {
                     wrapper.appendChild(childrenContainer);
                     renderChildren(goal, all, childrenContainer);
 
-                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    setupToggle(wrapper, row, childrenContainer, goal.id, { current: null });
                     section.appendChild(wrapper);
                 });
                 delete byDate[k];
@@ -664,7 +664,7 @@ function renderCalendarSection(all, calendarContent, weather) {
                 wrapper.appendChild(childrenContainer);
                 renderChildren(goal, all, childrenContainer);
 
-                setupToggle(wrapper, row, childrenContainer, goal.id);
+                setupToggle(wrapper, row, childrenContainer, goal.id, { current: null });
                 calendarContent.appendChild(wrapper);
             });
             delete byDate[key];
@@ -688,6 +688,12 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
         const row = createGoalRow(goal, { hideScheduled: true });
         wrapper.appendChild(row);
 
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'goal-children';
+        childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+        wrapper.appendChild(childrenContainer);
+        renderChildren(goal, all, childrenContainer);
+
         // If this goal has active subgoals, show the first one prominently
         const subs = all.filter(it =>
             it.parentGoalId === goal.id &&
@@ -695,34 +701,31 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
             !it.completed &&
             (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
         );
-        let firstRow = null;
+        let firstRowRef = { current: null };
         const isOpen = openGoalIds.has(goal.id);
         if (subs.length) {
             if (!isOpen) {
                 row.classList.add('parent-summary');
-                firstRow = createGoalRow(subs[0], {
+                const handler = createFirstSubgoalHandler(
+                    goal,
+                    all,
+                    wrapper,
+                    row,
+                    childrenContainer,
+                    firstRowRef
+                );
+                firstRowRef.current = createGoalRow(subs[0], {
                     hideScheduled: true,
                     stayPut: true,
                     itemsRef: all,
-                    onToggle: async (_checked, items) => {
-                        if (Array.isArray(items)) {
-                            all.splice(0, all.length, ...items);
-                        }
-                        await renderGoalsAndSubitems();
-                    }
+                    onToggle: handler
                 });
-                firstRow.classList.add('first-subgoal-row');
-                wrapper.appendChild(firstRow);
+                firstRowRef.current.classList.add('first-subgoal-row');
+                wrapper.appendChild(firstRowRef.current);
             }
         }
 
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'goal-children';
-        childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
-        wrapper.appendChild(childrenContainer);
-        renderChildren(goal, all, childrenContainer);
-
-        setupToggle(wrapper, row, childrenContainer, goal.id, firstRow);
+        setupToggle(wrapper, row, childrenContainer, goal.id, firstRowRef);
 
         const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
         const isHidden = hideUntil && now < hideUntil;
@@ -754,7 +757,7 @@ function makeGoalWrapper(goal) {
     return wrapper;
 }
 
-function setupToggle(wrapper, row, childrenContainer, id, firstRow) {
+function setupToggle(wrapper, row, childrenContainer, id, firstRowRef) {
     const toggle = row.querySelector('.toggle-triangle');
     toggle.onclick = () => {
         const open = childrenContainer.style.display === 'block';
@@ -762,8 +765,49 @@ function setupToggle(wrapper, row, childrenContainer, id, firstRow) {
         childrenContainer.style.display = open ? 'none' : 'block';
         wrapper.setAttribute('draggable', open ? 'true' : 'false');
         open ? openGoalIds.delete(id) : openGoalIds.add(id);
-        if (firstRow) firstRow.style.display = open ? 'block' : 'none';
+        const fr = firstRowRef?.current;
+        if (fr) fr.style.display = open ? 'block' : 'none';
         row.classList.toggle('parent-summary', open);
+    };
+}
+
+function createFirstSubgoalHandler(goal, all, wrapper, parentRow, childContainer, firstRowRef) {
+    return async function (_checked, items) {
+        if (Array.isArray(items)) {
+            all.splice(0, all.length, ...items);
+        }
+        renderChildren(goal, all, childContainer);
+
+        const now = Date.now();
+        const subs = all.filter(it =>
+            it.parentGoalId === goal.id &&
+            it.type === 'goal' &&
+            !it.completed &&
+            (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
+        );
+
+        if (subs.length) {
+            const newRow = createGoalRow(subs[0], {
+                hideScheduled: true,
+                stayPut: true,
+                itemsRef: all,
+                onToggle: createFirstSubgoalHandler(goal, all, wrapper, parentRow, childContainer, firstRowRef)
+            });
+            newRow.classList.add('first-subgoal-row');
+            if (firstRowRef.current) {
+                wrapper.replaceChild(newRow, firstRowRef.current);
+            } else {
+                wrapper.appendChild(newRow);
+            }
+            firstRowRef.current = newRow;
+            parentRow.classList.add('parent-summary');
+        } else {
+            if (firstRowRef.current) {
+                firstRowRef.current.remove();
+                firstRowRef.current = null;
+            }
+            parentRow.classList.remove('parent-summary');
+        }
     };
 }
 
@@ -834,6 +878,12 @@ export function appendGoalToDOM(goal, allItems) {
     const row = createGoalRow(goal, { hideScheduled: true });
     wrapper.appendChild(row);
 
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'goal-children';
+    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+    wrapper.appendChild(childrenContainer);
+    renderChildren(goal, allItems, childrenContainer);
+
     const now = Date.now();
     const subs = allItems.filter(it =>
         it.parentGoalId === goal.id &&
@@ -841,34 +891,31 @@ export function appendGoalToDOM(goal, allItems) {
         !it.completed &&
         (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
     );
-    let firstRow = null;
+    let firstRowRef = { current: null };
     const isOpen = openGoalIds.has(goal.id);
     if (subs.length) {
         if (!isOpen) {
             row.classList.add('parent-summary');
-            firstRow = createGoalRow(subs[0], {
+            const handler = createFirstSubgoalHandler(
+                goal,
+                allItems,
+                wrapper,
+                row,
+                childrenContainer,
+                firstRowRef
+            );
+            firstRowRef.current = createGoalRow(subs[0], {
                 hideScheduled: true,
                 stayPut: true,
                 itemsRef: allItems,
-                onToggle: async (_c, items) => {
-                    if (Array.isArray(items)) {
-                        allItems.splice(0, allItems.length, ...items);
-                    }
-                    await renderGoalsAndSubitems();
-                }
+                onToggle: handler
             });
-            firstRow.classList.add('first-subgoal-row');
-            wrapper.appendChild(firstRow);
+            firstRowRef.current.classList.add('first-subgoal-row');
+            wrapper.appendChild(firstRowRef.current);
         }
     }
 
-    const childrenContainer = document.createElement('div');
-    childrenContainer.className = 'goal-children';
-    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
-    wrapper.appendChild(childrenContainer);
-    renderChildren(goal, allItems, childrenContainer);
-
-    setupToggle(wrapper, row, childrenContainer, goal.id, firstRow);
+    setupToggle(wrapper, row, childrenContainer, goal.id, firstRowRef);
 
     goalList.appendChild(wrapper);
     updateGoalCounts(allItems);

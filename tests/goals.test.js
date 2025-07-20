@@ -189,4 +189,24 @@ describe('subgoal rendering', () => {
     const preview = card.querySelector('.first-subgoal-row');
     expect(preview).toBeNull();
   });
+
+  it('replaces preview with next subgoal without rerendering the page', async () => {
+    const parent = { id: 'p1', type: 'goal', text: 'P', notes: '', completed: false, parentGoalId: null };
+    const child1 = { id: 'c1', type: 'goal', text: 'C1', notes: '', completed: false, parentGoalId: 'p1', dateCompleted: '' };
+    const child2 = { id: 'c2', type: 'goal', text: 'C2', notes: '', completed: false, parentGoalId: 'p1', dateCompleted: '' };
+    helpers.loadDecisions.mockResolvedValue([parent, child1, child2]);
+
+    await renderGoalsAndSubitems();
+
+    const wrapper = document.querySelector('#goalList .goal-card');
+    const cb = wrapper.querySelector('.first-subgoal-row input[type="checkbox"]');
+    const before = wrapper;
+    cb.checked = true;
+    cb.dispatchEvent(new window.Event('change', { bubbles: true }));
+    await Promise.resolve();
+
+    expect(document.querySelector('#goalList .goal-card')).toBe(before);
+    const title = wrapper.querySelector('.first-subgoal-row .title-column');
+    expect(title.textContent).toBe('C2');
+  });
 });
