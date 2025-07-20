@@ -39,7 +39,8 @@ vi.mock('../js/goals.js', () => ({
     btnRow.className = 'button-row';
     row.appendChild(btnRow);
     return row;
-  })
+  }),
+  renderGoalsAndSubitems: vi.fn()
 }));
 
 let renderChildren;
