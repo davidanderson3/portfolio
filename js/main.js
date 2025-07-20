@@ -156,6 +156,25 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function initCalendarMobileTabs() {
+    if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
+    const panel = document.getElementById('calendarPanel');
+    const dailyBtn = document.getElementById('calendarDailyTab');
+    const hourlyBtn = document.getElementById('calendarHourlyTab');
+    if (!panel || !dailyBtn || !hourlyBtn) return;
+
+    const setView = view => {
+      panel.classList.toggle('mobile-daily', view === 'daily');
+      panel.classList.toggle('mobile-hourly', view === 'hourly');
+      dailyBtn.classList.toggle('active', view === 'daily');
+      hourlyBtn.classList.toggle('active', view === 'hourly');
+    };
+
+    dailyBtn.addEventListener('click', () => setView('daily'));
+    hourlyBtn.addEventListener('click', () => setView('hourly'));
+    setView('daily');
+  }
+
 
   initAuth(uiRefs, async (user) => {
     ['goalList', 'completedList', 'dailyTasksList', 'weeklyTasksList', 'monthlyTasksList'].forEach(id => {
@@ -225,6 +244,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initWizard(uiRefs);
   }
 
+  initCalendarMobileTabs();
   initButtonStyles();
   initGoogleCalendar();
 });

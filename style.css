@@ -1686,5 +1686,37 @@ h2 {
   margin-bottom: 4px;
 }
 
+/* Mobile calendar view toggle */
+.calendar-mobile-tabs {
+  display: none;
+  margin-bottom: 8px;
+  gap: 4px;
+}
+
+.calendar-mobile-tab {
+  flex: 1 1 0;
+  padding: 6px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  cursor: pointer;
+}
+
+.calendar-mobile-tab.active {
+  background: #7aa68c;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .calendar-mobile-tabs {
+    display: flex;
+  }
+  #calendarPanel.mobile-daily #todaySchedule {
+    display: none;
+  }
+  #calendarPanel.mobile-hourly #calendarContent {
+    display: none;
+  }
+}
+
 
 
