@@ -43,10 +43,28 @@ let planningInitialized = false;
 export async function loadPlanningData() {
   if (planningCache) return planningCache;
   const user = getCurrentUser?.();
+  const stored = localStorage.getItem(PLANNING_KEY);
   if (!user) {
-    const stored = localStorage.getItem(PLANNING_KEY);
     planningCache = stored ? JSON.parse(stored) : {};
     return planningCache;
+  }
+  if (stored) {
+    try {
+      const data = JSON.parse(stored);
+      await db
+        .collection('users').doc(user.uid)
+        .collection('settings').doc(PLANNING_KEY)
+        .set(data, { merge: true });
+      localStorage.removeItem(PLANNING_KEY);
+      planningCache = data;
+      return planningCache;
+    } catch (err) {
+      console.warn('Failed to sync pending planning data:', err);
+      try {
+        planningCache = JSON.parse(stored);
+        return planningCache;
+      } catch {}
+    }
   }
   const snap = await db
     .collection('users').doc(user.uid)
@@ -59,14 +77,19 @@ export async function loadPlanningData() {
 export async function savePlanningData(data) {
   planningCache = data || {};
   const user = getCurrentUser?.();
+  localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
   if (!user) {
-    localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
     return;
   }
-  await db
-    .collection('users').doc(user.uid)
-    .collection('settings').doc(PLANNING_KEY)
-    .set(planningCache, { merge: true });
+  try {
+    await db
+      .collection('users').doc(user.uid)
+      .collection('settings').doc(PLANNING_KEY)
+      .set(planningCache, { merge: true });
+    localStorage.removeItem(PLANNING_KEY);
+  } catch (err) {
+    console.error('Failed to save planning data:', err);
+  }
 }
 
 export async function initPlanningPanel() {
