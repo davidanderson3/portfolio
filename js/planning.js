@@ -40,6 +40,11 @@ const PLANNING_KEY = 'planningData';
 let planningCache = null;
 let planningInitialized = false;
 
+export function clearPlanningCache() {
+  planningCache = null;
+  planningInitialized = false;
+}
+
 export async function loadPlanningData() {
   if (planningCache) return planningCache;
   const user = getCurrentUser?.();
@@ -219,4 +224,5 @@ export async function initPlanningPanel() {
 
 if (typeof window !== 'undefined') {
   window.initPlanningPanel = initPlanningPanel;
+  window.clearPlanningCache = clearPlanningCache;
 }
