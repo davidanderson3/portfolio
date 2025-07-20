@@ -15,4 +15,6 @@ jobs:
         node-version: 18
         cache: 'npm'
     - run: npm install
+    - run: npx playwright install --with-deps
     - run: npm test
+    - run: npm run e2e
