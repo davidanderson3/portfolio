@@ -1259,27 +1259,11 @@ h2 {
   overflow-x: auto;
 }
 
-#calendarWeather table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-}
 
-#calendarWeather th,
-#calendarWeather td {
-  border: 1px solid #d0decf;
-  padding: 4px;
-  text-align: left;
-  word-wrap: break-word;
-  overflow-wrap: anywhere;
-}
-
-#calendarWeather tbody tr:nth-child(even) {
-  background-color: #f8f5f0;
-}
-
-#calendarWeather tbody tr.comfortable-temp {
-  background-color: #e0f8e0;
+/* show weather next to each hourly label */
+#todaySchedule .hour-weather {
+  margin-left: 4px;
+  font-weight: normal;
 }
 
 #travelTagFilters label {
@@ -1675,7 +1659,7 @@ h2 {
 }
 
 #todaySchedule .hour-label {
-  width: 48px;
+  width: 72px;
   font-weight: bold;
 }
 
