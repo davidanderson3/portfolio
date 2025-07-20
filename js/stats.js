@@ -486,9 +486,14 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     row.appendChild(td4);
     const rawVals = valuesByMetric[cfg.id] || [];
     const numericVals = rawVals.filter(v => typeof v === 'number' && !isNaN(v));
-    const avg = numericVals.length
-      ? (numericVals.reduce((sum, v) => sum + v, 0) / numericVals.length).toFixed(2)
-      : '—';
+    let avg = '—';
+    if (numericVals.length) {
+      const sum = numericVals.reduce((s, v) => s + v, 0);
+      const denom = cfg.unit === 'count'
+        ? Object.keys(allStats).length || numericVals.length
+        : numericVals.length;
+      avg = (sum / denom).toFixed(2);
+    }
     const tdAvg = document.createElement('td');
     tdAvg.textContent = avg;
     tdAvg.dataset.label = 'Average';
