@@ -95,73 +95,81 @@ export async function initPlanningPanel() {
   const profilesDiv = container.querySelector('#financeProfiles');
   let profileCount = 0;
 
-  function addFinanceProfile() {
-    profileCount++;
+  function addFinanceProfile(initial = {}) {
+    const index = profileCount++;
     const wrap = document.createElement('div');
     wrap.className = 'finance-profile';
     wrap.style.marginBottom = '1em';
     wrap.innerHTML = `
       <h4>Profile ${profileCount}</h4>
       <form style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
-        <label>Current Age <input type="number" name="curAge" value="30" /></label>
-        <label>Retirement Age <input type="number" name="retAge" value="65" /></label>
-        <label>Current Savings <input type="number" name="savings" value="0" /></label>
-        <label>Annual Income <input type="number" name="income" value="50000" /></label>
-        <label>Annual Expenses <input type="number" name="expenses" value="40000" /></label>
-        <label>Return Rate % <input type="number" name="returnRate" value="5" /></label>
+        <label>Current Age <input type="number" name="curAge" value="${initial.curAge ?? 30}" /></label>
+        <label>Retirement Age <input type="number" name="retAge" value="${initial.retAge ?? 65}" /></label>
+        <label>Current Savings <input type="number" name="savings" value="${initial.savings ?? 0}" /></label>
+        <label>Annual Income <input type="number" name="income" value="${initial.income ?? 50000}" /></label>
+        <label>Annual Expenses <input type="number" name="expenses" value="${initial.expenses ?? 40000}" /></label>
+        <label>Return Rate % <input type="number" name="returnRate" value="${initial.returnRate ?? 5}" /></label>
         <button type="submit">Calculate</button>
       </form>
       <div class="financeResult" style="margin-top:1em;"></div>
     `;
     const form = wrap.querySelector('form');
     const resultDiv = wrap.querySelector('.financeResult');
+
+    function renderResult(values) {
+      const data = calculateFinanceProjection(values);
+      resultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
+        data.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
+        '</tbody></table>';
+    }
+
+    if (Object.keys(initial).length) {
+      renderResult({
+        currentAge: initial.curAge,
+        retirementAge: initial.retAge,
+        savings: initial.savings,
+        income: initial.income,
+        expenses: initial.expenses,
+        returnRate: initial.returnRate
+      });
+    }
+
     form.addEventListener('submit', e => {
       e.preventDefault();
-      const data = calculateFinanceProjection({
-        currentAge: form.curAge.value,
-        retirementAge: form.retAge.value,
+      const values = {
+        curAge: form.curAge.value,
+        retAge: form.retAge.value,
         savings: form.savings.value,
         income: form.income.value,
         expenses: form.expenses.value,
         returnRate: form.returnRate.value
+      };
+      renderResult({
+        currentAge: values.curAge,
+        retirementAge: values.retAge,
+        savings: values.savings,
+        income: values.income,
+        expenses: values.expenses,
+        returnRate: values.returnRate
       });
-      resultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
-        data.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
-        '</tbody></table>';
+      currentData.financeProfiles[index] = values;
+      savePlanningData(currentData);
     });
+
     profilesDiv.appendChild(wrap);
   }
 
-  container.querySelector('#addFinanceProfile').addEventListener('click', addFinanceProfile);
-  addFinanceProfile();
-  addFinanceProfile();
-  const financeForm = container.querySelector('#financeForm');
-  const financeResult = container.querySelector('#financeResult');
-  if (saved.finance) {
-    financeForm.curAge.value = saved.finance.curAge ?? financeForm.curAge.value;
-    financeForm.retAge.value = saved.finance.retAge ?? financeForm.retAge.value;
-    financeForm.savings.value = saved.finance.savings ?? financeForm.savings.value;
-    financeForm.income.value = saved.finance.income ?? financeForm.income.value;
-    financeForm.expenses.value = saved.finance.expenses ?? financeForm.expenses.value;
-    financeForm.returnRate.value = saved.finance.returnRate ?? financeForm.returnRate.value;
-  }
-  financeForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const input = {
-      currentAge: financeForm.curAge.value,
-      retirementAge: financeForm.retAge.value,
-      savings: financeForm.savings.value,
-      income: financeForm.income.value,
-      expenses: financeForm.expenses.value,
-      returnRate: financeForm.returnRate.value
-    };
-    const data = calculateFinanceProjection(input);
-    financeResult.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
-      data.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
-      '</tbody></table>';
-    currentData = { ...currentData, finance: input };
-    savePlanningData(currentData);
+  currentData.financeProfiles = currentData.financeProfiles || [];
+  container.querySelector('#addFinanceProfile').addEventListener('click', () => {
+    addFinanceProfile();
   });
+
+  if (currentData.financeProfiles.length) {
+    currentData.financeProfiles.forEach(p => addFinanceProfile(p));
+  } else {
+    addFinanceProfile();
+    addFinanceProfile();
+  }
 
   const happyForm = container.querySelector('#happyForm');
   const happyResult = container.querySelector('#happyResult');
