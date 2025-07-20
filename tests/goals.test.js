@@ -209,4 +209,23 @@ describe('subgoal rendering', () => {
     const title = wrapper.querySelector('.first-subgoal-row .title-column');
     expect(title.textContent).toBe('C2');
   });
+
+  it('toggles preview row in and out of the DOM', async () => {
+    const parent = { id: 'p1', type: 'goal', text: 'P', notes: '', completed: false, parentGoalId: null };
+    const child = { id: 'c1', type: 'goal', text: 'C1', notes: '', completed: false, parentGoalId: 'p1' };
+    helpers.loadDecisions.mockResolvedValue([parent, child]);
+
+    await renderGoalsAndSubitems();
+
+    const wrapper = document.querySelector('#goalList .goal-card');
+    const row = wrapper.querySelector('.decision-row');
+    const toggle = row.querySelector('.toggle-triangle');
+    expect(wrapper.querySelector('.first-subgoal-row')).not.toBeNull();
+
+    toggle.click();
+    expect(wrapper.querySelector('.first-subgoal-row')).toBeNull();
+
+    toggle.click();
+    expect(wrapper.querySelector('.first-subgoal-row')).not.toBeNull();
+  });
 });

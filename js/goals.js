@@ -766,7 +766,18 @@ function setupToggle(wrapper, row, childrenContainer, id, firstRowRef) {
         wrapper.setAttribute('draggable', open ? 'true' : 'false');
         open ? openGoalIds.delete(id) : openGoalIds.add(id);
         const fr = firstRowRef?.current;
-        if (fr) fr.style.display = open ? 'block' : 'none';
+        if (!open) {
+            // expanding: detach the preview row but keep reference
+            if (fr && fr.parentNode) {
+                wrapper._firstRow = fr;
+                fr.remove();
+            }
+        } else {
+            // collapsing: reinsert the stored preview row
+            if (wrapper._firstRow) {
+                wrapper.insertBefore(wrapper._firstRow, childrenContainer);
+            }
+        }
         row.classList.toggle('parent-summary', open);
     };
 }
@@ -794,8 +805,10 @@ function createFirstSubgoalHandler(goal, all, wrapper, parentRow, childContainer
                 onToggle: createFirstSubgoalHandler(goal, all, wrapper, parentRow, childContainer, firstRowRef)
             });
             newRow.classList.add('first-subgoal-row');
-            if (firstRowRef.current) {
+            if (firstRowRef.current && firstRowRef.current.parentNode === wrapper) {
                 wrapper.replaceChild(newRow, firstRowRef.current);
+            } else if (wrapper._firstRow === firstRowRef.current) {
+                wrapper._firstRow = newRow;
             } else {
                 wrapper.appendChild(newRow);
             }
@@ -805,6 +818,7 @@ function createFirstSubgoalHandler(goal, all, wrapper, parentRow, childContainer
             if (firstRowRef.current) {
                 firstRowRef.current.remove();
                 firstRowRef.current = null;
+                wrapper._firstRow = null;
             }
             parentRow.classList.remove('parent-summary');
         }
