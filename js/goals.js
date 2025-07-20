@@ -693,21 +693,22 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
         let firstRow = null;
         const isOpen = openGoalIds.has(goal.id);
         if (subs.length) {
-            if (!isOpen) row.classList.add('parent-summary');
-            firstRow = createGoalRow(subs[0], {
-                hideScheduled: true,
-                stayPut: true,
-                itemsRef: all,
-                onToggle: async (_checked, items) => {
-                    if (Array.isArray(items)) {
-                        all.splice(0, all.length, ...items);
+            if (!isOpen) {
+                row.classList.add('parent-summary');
+                firstRow = createGoalRow(subs[0], {
+                    hideScheduled: true,
+                    stayPut: true,
+                    itemsRef: all,
+                    onToggle: async (_checked, items) => {
+                        if (Array.isArray(items)) {
+                            all.splice(0, all.length, ...items);
+                        }
+                        await renderGoalsAndSubitems();
                     }
-                    await renderGoalsAndSubitems();
-                }
-            });
-            firstRow.classList.add('first-subgoal-row');
-            firstRow.style.display = isOpen ? 'none' : 'block';
-            wrapper.appendChild(firstRow);
+                });
+                firstRow.classList.add('first-subgoal-row');
+                wrapper.appendChild(firstRow);
+            }
         }
 
         const childrenContainer = document.createElement('div');
@@ -838,21 +839,22 @@ export function appendGoalToDOM(goal, allItems) {
     let firstRow = null;
     const isOpen = openGoalIds.has(goal.id);
     if (subs.length) {
-        if (!isOpen) row.classList.add('parent-summary');
-        firstRow = createGoalRow(subs[0], {
-            hideScheduled: true,
-            stayPut: true,
-            itemsRef: allItems,
-            onToggle: async (_c, items) => {
-                if (Array.isArray(items)) {
-                    allItems.splice(0, allItems.length, ...items);
+        if (!isOpen) {
+            row.classList.add('parent-summary');
+            firstRow = createGoalRow(subs[0], {
+                hideScheduled: true,
+                stayPut: true,
+                itemsRef: allItems,
+                onToggle: async (_c, items) => {
+                    if (Array.isArray(items)) {
+                        allItems.splice(0, allItems.length, ...items);
+                    }
+                    await renderGoalsAndSubitems();
                 }
-                await renderGoalsAndSubitems();
-            }
-        });
-        firstRow.classList.add('first-subgoal-row');
-        firstRow.style.display = isOpen ? 'none' : 'block';
-        wrapper.appendChild(firstRow);
+            });
+            firstRow.classList.add('first-subgoal-row');
+            wrapper.appendChild(firstRow);
+        }
     }
 
     const childrenContainer = document.createElement('div');
