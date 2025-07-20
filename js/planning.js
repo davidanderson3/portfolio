@@ -49,27 +49,28 @@ export async function loadPlanningData() {
   if (planningCache) return planningCache;
   const user = getCurrentUser?.();
   const stored = localStorage.getItem(PLANNING_KEY);
-  if (!user) {
-    planningCache = stored ? JSON.parse(stored) : {};
-    return planningCache;
-  }
   if (stored) {
     try {
       const data = JSON.parse(stored);
-      await db
-        .collection('users').doc(user.uid)
-        .collection('settings').doc(PLANNING_KEY)
-        .set(data, { merge: true });
-      localStorage.removeItem(PLANNING_KEY);
+      if (user) {
+        try {
+          await db
+            .collection('users').doc(user.uid)
+            .collection('settings').doc(PLANNING_KEY)
+            .set(data, { merge: true });
+        } catch (err) {
+          console.warn('Failed to sync pending planning data:', err);
+        }
+      }
       planningCache = data;
       return planningCache;
     } catch (err) {
-      console.warn('Failed to sync pending planning data:', err);
-      try {
-        planningCache = JSON.parse(stored);
-        return planningCache;
-      } catch {}
+      console.warn('Failed to parse stored planning data:', err);
     }
+  }
+  if (!user) {
+    planningCache = {};
+    return planningCache;
   }
   const snap = await db
     .collection('users').doc(user.uid)
@@ -91,7 +92,6 @@ export async function savePlanningData(data) {
       .collection('users').doc(user.uid)
       .collection('settings').doc(PLANNING_KEY)
       .set(planningCache, { merge: true });
-    localStorage.removeItem(PLANNING_KEY);
   } catch (err) {
     console.error('Failed to save planning data:', err);
   }

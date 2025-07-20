@@ -78,7 +78,7 @@ describe('planning persistence', () => {
     const { savePlanningData } = await import('../js/planning.js');
     await savePlanningData({ profiles: [{ name: 'p1' }] });
     expect(setMock).toHaveBeenCalledWith({ profiles: [{ name: 'p1' }] }, { merge: true });
-    expect(localStorage.getItem('planningData')).toBe(null);
+    expect(JSON.parse(localStorage.getItem('planningData'))).toEqual({ profiles: [{ name: 'p1' }] });
   });
 
   it('uses localStorage when anonymous', async () => {
