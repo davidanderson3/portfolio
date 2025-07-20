@@ -344,7 +344,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
   // header row
-  ['Metric', `Value (${dayKey})`, 'Rank', 'Percentile', 'Average', 'Actions'].forEach(text => {
+  ['Metric', `Value (${dayKey})`, 'Rank', 'Percentile', 'Average', 'Status', 'Actions'].forEach(text => {
     const th = document.createElement('th');
     th.textContent = text;
     Object.assign(th.style, { borderBottom: '2px solid #444', textAlign: 'left', padding: '8px' });
@@ -371,6 +371,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
 
     visible++;
     let display = '—', editValue = '', pct = '—', rank = '—';
+    const latestEntry = entries.reduce((a, b) => (!a || a.timestamp < b.timestamp) ? b : a, null);
     if (validEntries.length) {
       filled++;
       const latest = validEntries.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
@@ -394,8 +395,20 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       const raw = computePercentile(val, allVals);
       pct = `${cfg.direction === 'lower' ? 100 - raw : raw}th`;
       rank = computeRank(val, allVals, cfg.direction);
-    } else if (wasPostponed) {
-      display = 'postponed';
+    } else if (wasPostponed && latestEntry && latestEntry.value != null) {
+      // show the postponed value but exclude it from stats
+      if (cfg.unit === 'time_mmss') {
+        const m = Math.floor(latestEntry.value), s = String(Math.round((latestEntry.value - m) * 60)).padStart(2, '0');
+        display = `${m}:${s}`;
+        editValue = display;
+      } else if (cfg.unit === 'list' && typeof latestEntry.value === 'string') {
+        const listVal = summarizeListValue(latestEntry.value);
+        display = String(listVal);
+        editValue = latestEntry.value;
+      } else {
+        display = `${latestEntry.value}`;
+        editValue = display;
+      }
     }
     const row = document.createElement('tr');
     const td1 = document.createElement('td');
@@ -500,6 +513,12 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     Object.assign(tdAvg.style, { padding: '8px', borderBottom: '1px solid #ddd' });
     row.appendChild(tdAvg);
 
+    const tdStatus = document.createElement('td');
+    tdStatus.textContent = wasPostponed ? 'postponed' : '';
+    tdStatus.dataset.label = 'Status';
+    Object.assign(tdStatus.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+    row.appendChild(tdStatus);
+
     const td6 = document.createElement('td');
     td6.dataset.label = 'Actions';
     Object.assign(td6.style, { padding: '8px', borderBottom: '1px solid #ddd' });
@@ -508,7 +527,14 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     postpone.textContent = '⏭️';
     postpone.style.cursor = 'pointer';
     postpone.addEventListener('click', async () => {
-      await recordMetric(cfg.id, null, { postponed: true }, activeMetricsDate);
+      const allStats = await loadAllStats();
+      const entriesToday = ((allStats[activeMetricsDate] || {})[cfg.id]) || [];
+      let existingVal = null;
+      if (entriesToday.length) {
+        const latest = entriesToday.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
+        existingVal = latest.value;
+      }
+      await recordMetric(cfg.id, existingVal, { postponed: true }, activeMetricsDate);
       await renderStatsSummary();
     });
     td6.appendChild(postpone);
