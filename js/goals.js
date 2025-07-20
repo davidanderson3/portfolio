@@ -663,13 +663,39 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
         const row = createGoalRow(goal, { hideScheduled: true });
         wrapper.appendChild(row);
 
+        // If this goal has active subgoals, show the first one prominently
+        const subs = all.filter(it =>
+            it.parentGoalId === goal.id &&
+            it.type === 'goal' &&
+            !it.completed &&
+            (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
+        );
+        let firstRow = null;
+        if (subs.length) {
+            row.classList.add('parent-summary');
+            firstRow = createGoalRow(subs[0], {
+                hideScheduled: true,
+                stayPut: true,
+                itemsRef: all,
+                onToggle: async (_checked, items) => {
+                    if (Array.isArray(items)) {
+                        all.splice(0, all.length, ...items);
+                    }
+                    await renderGoalsAndSubitems();
+                }
+            });
+            firstRow.classList.add('first-subgoal-row');
+            firstRow.style.display = openGoalIds.has(goal.id) ? 'none' : 'block';
+            wrapper.appendChild(firstRow);
+        }
+
         const childrenContainer = document.createElement('div');
         childrenContainer.className = 'goal-children';
         childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
         wrapper.appendChild(childrenContainer);
         renderChildren(goal, all, childrenContainer);
 
-        setupToggle(wrapper, row, childrenContainer, goal.id);
+        setupToggle(wrapper, row, childrenContainer, goal.id, firstRow);
 
         const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
         const isHidden = hideUntil && now < hideUntil;
@@ -701,7 +727,7 @@ function makeGoalWrapper(goal) {
     return wrapper;
 }
 
-function setupToggle(wrapper, row, childrenContainer, id) {
+function setupToggle(wrapper, row, childrenContainer, id, firstRow) {
     const toggle = row.querySelector('.toggle-triangle');
     toggle.onclick = () => {
         const open = childrenContainer.style.display === 'block';
@@ -709,6 +735,7 @@ function setupToggle(wrapper, row, childrenContainer, id) {
         childrenContainer.style.display = open ? 'none' : 'block';
         wrapper.setAttribute('draggable', open ? 'true' : 'false');
         open ? openGoalIds.delete(id) : openGoalIds.add(id);
+        if (firstRow) firstRow.style.display = open ? 'block' : 'none';
     };
 }
 
@@ -779,13 +806,39 @@ export function appendGoalToDOM(goal, allItems) {
     const row = createGoalRow(goal, { hideScheduled: true });
     wrapper.appendChild(row);
 
+    const now = Date.now();
+    const subs = allItems.filter(it =>
+        it.parentGoalId === goal.id &&
+        it.type === 'goal' &&
+        !it.completed &&
+        (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
+    );
+    let firstRow = null;
+    if (subs.length) {
+        row.classList.add('parent-summary');
+        firstRow = createGoalRow(subs[0], {
+            hideScheduled: true,
+            stayPut: true,
+            itemsRef: allItems,
+            onToggle: async (_c, items) => {
+                if (Array.isArray(items)) {
+                    allItems.splice(0, allItems.length, ...items);
+                }
+                await renderGoalsAndSubitems();
+            }
+        });
+        firstRow.classList.add('first-subgoal-row');
+        firstRow.style.display = openGoalIds.has(goal.id) ? 'none' : 'block';
+        wrapper.appendChild(firstRow);
+    }
+
     const childrenContainer = document.createElement('div');
     childrenContainer.className = 'goal-children';
     childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
     wrapper.appendChild(childrenContainer);
     renderChildren(goal, allItems, childrenContainer);
 
-    setupToggle(wrapper, row, childrenContainer, goal.id);
+    setupToggle(wrapper, row, childrenContainer, goal.id, firstRow);
 
     goalList.appendChild(wrapper);
     updateGoalCounts(allItems);

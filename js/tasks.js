@@ -2,7 +2,7 @@
 
 import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify } from './helpers.js';
 import { enableTaskDragAndDrop } from './dragAndDrop.js';
-import { createGoalRow } from './goals.js';
+import { createGoalRow, renderGoalsAndSubitems } from './goals.js';
 
 // Access the global openGoalIds set defined in goals.js
 const openGoalIds = window.openGoalIds || new Set();
@@ -208,6 +208,7 @@ export async function renderChildren(goal, all, container) {
                     all.splice(0, all.length, ...items);
                 }
                 renderChildren(goal, all, container);
+                renderGoalsAndSubitems();
             }
         });
         wrap.appendChild(row);
@@ -411,7 +412,10 @@ export async function renderChildren(goal, all, container) {
                     hideScheduled: true,
                     stayPut: true,
                     itemsRef: all,
-                    onToggle: () => renderChildren(goal, all, container)
+                    onToggle: () => {
+                        renderChildren(goal, all, container);
+                        renderGoalsAndSubitems();
+                    }
                 });
                 Object.assign(row.style, {
                     padding: '4px 8px',
