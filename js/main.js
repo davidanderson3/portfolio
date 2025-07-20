@@ -10,7 +10,7 @@ import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
 import { initGoogleCalendar } from './googleCalendar.js';
 import { loadHiddenTabs, applyHiddenTabs } from './settings.js';
-import './planning.js';
+import { clearPlanningCache } from './planning.js';
 
 window.addEventListener('DOMContentLoaded', () => {
   const uiRefs = {
@@ -185,6 +185,7 @@ window.addEventListener('DOMContentLoaded', () => {
     window.openGoalIds?.clear?.();
 
     if (!user) {
+      clearPlanningCache();
       splash.style.display = 'flex';
       goalsView.style.display = '';
       initTabs(null, db);
@@ -200,6 +201,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     splash.style.display = 'none';
     goalsView.style.display = '';
+
+    clearPlanningCache();
 
     initTabs(user, db);
     const hidden = await loadHiddenTabs();
