@@ -407,6 +407,36 @@ function initCompletedSection() {
 }
 
 function renderCalendarSection(all, calendarContent, weather) {
+    const scheduled = all
+        .filter(
+            g =>
+                g.scheduled &&
+                !g.completed &&
+                !isNaN(Date.parse(g.scheduled))
+        )
+        .sort((a, b) => new Date(a.scheduled) - new Date(b.scheduled));
+
+    const byDate = {};
+    scheduled.forEach(goal => {
+        const start = new Date(goal.scheduled);
+        const end = goal.scheduledEnd && !isNaN(Date.parse(goal.scheduledEnd))
+            ? new Date(goal.scheduledEnd)
+            : new Date(goal.scheduled);
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            const key = d.toISOString().slice(0, 10);
+            (byDate[key] = byDate[key] || []).push(goal);
+        }
+    });
+
+    function parseKey(key) {
+        const [y, m, d] = key.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
+
+    function keyFromDate(date) {
+        return date.toISOString().slice(0, 10);
+    }
+
     const dailyWeather = {};
     if (weather && weather.daily && weather.daily.time) {
         weather.daily.time.forEach((t, idx) => {
@@ -420,43 +450,148 @@ function renderCalendarSection(all, calendarContent, weather) {
         });
     }
 
-    const start = new Date();
+    const dateKeys = Object.keys(byDate).sort();
+    let start = new Date();
     start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setMonth(end.getMonth() + 6);
+    if (dateKeys.length) {
+        const first = parseKey(dateKeys[0]);
+        first.setHours(0, 0, 0, 0);
+        if (first < start) start = first;
+    }
+
+    let end = dateKeys.length ? parseKey(dateKeys[dateKeys.length - 1]) : new Date(start);
+    const extendEnd = new Date();
+    extendEnd.setHours(0, 0, 0, 0);
+    extendEnd.setMonth(extendEnd.getMonth() + 6);
+    if (extendEnd > end) end = extendEnd;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     for (let d = new Date(start); d <= end;) {
+        const key = keyFromDate(d);
         const dow = d.getDay();
 
         if (dow === 6) {
+            const sat = new Date(d);
+            const sun = new Date(d); sun.setDate(d.getDate() + 1);
+            const sunKey = keyFromDate(sun);
+            if (sun < today) {
+                delete byDate[key];
+                delete byDate[sunKey];
+                d.setDate(d.getDate() + 2);
+                continue;
+            }
+
             const section = document.createElement('div');
             section.className = 'weekend-section';
-            section.appendChild(createDayHeader(d, dailyWeather));
-            const sun = new Date(d); sun.setDate(d.getDate() + 1);
-            if (sun <= end) section.appendChild(createDayHeader(sun, dailyWeather));
+
+            const hdr = document.createElement('h3');
+            const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            const sunLabel = sun.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            const isCurrentWeekend = today >= sat && today <= sun;
+            if (isCurrentWeekend) section.classList.add('current-weekend');
+            const satW = dailyWeather[key];
+            const sunW = dailyWeather[sunKey];
+            const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
+            const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
+            hdr.textContent = `Weekend: ${satLabel}${satInfo} - ${sunLabel}${sunInfo}`;
+            section.appendChild(hdr);
+
+            [key, sunKey].forEach(k => {
+                (byDate[k] || []).forEach(goal => {
+                    const wrapper = makeGoalWrapper(goal);
+                    const row = createGoalRow(goal, { hideScheduled: true });
+                    wrapper.appendChild(row);
+
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'goal-children';
+                    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                    wrapper.appendChild(childrenContainer);
+                    renderChildren(goal, all, childrenContainer);
+
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    section.appendChild(wrapper);
+                });
+                delete byDate[k];
+            });
+
             calendarContent.appendChild(section);
             d.setDate(d.getDate() + 2);
         } else if (dow === 0) {
+            const sat = new Date(d); sat.setDate(d.getDate() - 1);
+            const satKey = keyFromDate(sat);
+            if (d < today) {
+                delete byDate[satKey];
+                delete byDate[key];
+                d.setDate(d.getDate() + 1);
+                continue;
+            }
+
             const section = document.createElement('div');
             section.className = 'weekend-section';
-            section.appendChild(createDayHeader(d, dailyWeather));
+
+            const hdr = document.createElement('h3');
+            const satLabel = sat.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            const sunLabel = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            const isCurrentWeekend = today >= sat && today <= d;
+            if (isCurrentWeekend) section.classList.add('current-weekend');
+            const satW = dailyWeather[satKey];
+            const sunW = dailyWeather[key];
+            const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
+            const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
+            hdr.textContent = `Weekend: ${satLabel}${satInfo} - ${sunLabel}${sunInfo}`;
+            section.appendChild(hdr);
+
+            [satKey, key].forEach(k => {
+                (byDate[k] || []).forEach(goal => {
+                    const wrapper = makeGoalWrapper(goal);
+                    const row = createGoalRow(goal, { hideScheduled: true });
+                    wrapper.appendChild(row);
+
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'goal-children';
+                    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                    wrapper.appendChild(childrenContainer);
+                    renderChildren(goal, all, childrenContainer);
+
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    section.appendChild(wrapper);
+                });
+                delete byDate[k];
+            });
+
             calendarContent.appendChild(section);
             d.setDate(d.getDate() + 1);
         } else {
-            calendarContent.appendChild(createDayHeader(d, dailyWeather));
+            if (byDate[key]) {
+                const header = document.createElement('h3');
+                const dowLabel = d.toLocaleDateString(undefined, { weekday: 'short' });
+                const dateStr = d.toLocaleDateString();
+                const daysText = formatDaysUntil(key);
+                const w = dailyWeather[key];
+                const weatherInfo = w ? ` ${window.chooseWeatherIcon?.(w.rain) || ''} ${w.high}\u00B0/${w.low}\u00B0` : '';
+                header.textContent = `${dowLabel} ${dateStr} (${daysText})${weatherInfo}`;
+                calendarContent.appendChild(header);
+
+                byDate[key].forEach(goal => {
+                    const wrapper = makeGoalWrapper(goal);
+                    const row = createGoalRow(goal, { hideScheduled: true });
+                    wrapper.appendChild(row);
+
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'goal-children';
+                    childrenContainer.style.display = openGoalIds.has(goal.id) ? 'block' : 'none';
+                    wrapper.appendChild(childrenContainer);
+                    renderChildren(goal, all, childrenContainer);
+
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
+                    calendarContent.appendChild(wrapper);
+                });
+                delete byDate[key];
+            }
             d.setDate(d.getDate() + 1);
         }
-    }
-
-    function createDayHeader(date, weatherMap) {
-        const header = document.createElement('h3');
-        const dowLabel = date.toLocaleDateString(undefined, { weekday: 'short' });
-        const dateStr = date.toLocaleDateString();
-        const key = date.toISOString().slice(0, 10);
-        const w = weatherMap[key];
-        const weatherInfo = w ? ` ${window.chooseWeatherIcon?.(w.rain) || ''} ${w.high}\u00B0/${w.low}\u00B0` : '';
-        header.textContent = `${dowLabel} ${dateStr}${weatherInfo}`;
-        return header;
     }
 }
 
