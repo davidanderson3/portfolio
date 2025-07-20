@@ -174,3 +174,19 @@ describe('parent-summary display', () => {
     expect(row.classList.contains('parent-summary')).toBe(false);
   });
 });
+
+describe('subgoal rendering', () => {
+  it('shows the first subgoal only once when expanded', async () => {
+    const parent = { id: 'p1', type: 'goal', text: 'P', notes: '', completed: false, parentGoalId: null };
+    const child1 = { id: 'c1', type: 'goal', text: 'C1', notes: '', completed: false, parentGoalId: 'p1' };
+    const child2 = { id: 'c2', type: 'goal', text: 'C2', notes: '', completed: false, parentGoalId: 'p1' };
+    helpers.loadDecisions.mockResolvedValue([parent, child1, child2]);
+
+    window.openGoalIds.add('p1');
+    await renderGoalsAndSubitems();
+
+    const card = document.querySelector('#goalList .goal-card');
+    const preview = card.querySelector('.first-subgoal-row');
+    expect(preview).toBeNull();
+  });
+});
