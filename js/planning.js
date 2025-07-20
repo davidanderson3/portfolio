@@ -24,6 +24,15 @@ export function calculateHappinessScore({ hobbyHours, workHours }) {
   return Math.round(hobbyHours * 2 - workHours);
 }
 
+export const happinessSources = [
+  'Family',
+  'Friends',
+  'Health',
+  'Hobbies',
+  'Learning',
+  'Helping others'
+];
+
 let planningInitialized = false;
 
 export function initPlanningPanel() {
@@ -51,6 +60,8 @@ export function initPlanningPanel() {
       <button type="submit">Calculate</button>
     </form>
     <div id="happyResult" style="margin-top:1em;"></div>
+    <h3 style="margin-top:2em;">Sources of Happiness</h3>
+    <ul id="happySourcesList" style="margin-top:0;"></ul>
   `;
 
   const financeForm = container.querySelector('#financeForm');
@@ -80,6 +91,11 @@ export function initPlanningPanel() {
     });
     happyResult.textContent = `Happiness Score: ${score}`;
   });
+
+  const srcList = container.querySelector('#happySourcesList');
+  if (srcList) {
+    srcList.innerHTML = happinessSources.map(s => `<li>${s}</li>`).join('');
+  }
 }
 
 if (typeof window !== 'undefined') {
