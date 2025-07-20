@@ -1,6 +1,7 @@
 export async function fetchWeatherData() {
   let coords = null;
   let usingDefault = false;
+  let usingIp = false;
   if (navigator.geolocation) {
     try {
       coords = await new Promise((resolve) => {
@@ -16,6 +17,21 @@ export async function fetchWeatherData() {
   }
 
   if (!coords) {
+    try {
+      const ipResp = await fetch('https://ipapi.co/json/');
+      if (ipResp.ok) {
+        const ipData = await ipResp.json();
+        if (ipData.latitude && ipData.longitude) {
+          coords = { lat: ipData.latitude, lon: ipData.longitude };
+          usingIp = true;
+        }
+      }
+    } catch {
+      coords = null;
+    }
+  }
+
+  if (!coords) {
     coords = { lat: 37.7749, lon: -122.4194 };
     usingDefault = true;
   }
@@ -24,7 +40,7 @@ export async function fetchWeatherData() {
   const resp = await fetch(url);
   const data = await resp.json();
   extendHourlyForecast(data);
-  return { data, usingDefault };
+  return { data, usingDefault, usingIp };
 }
 
 window.fetchWeatherData = fetchWeatherData;
@@ -36,8 +52,8 @@ export async function initWeatherPanel(targetId = 'weatherPanel', options = {}) 
   panel.innerHTML = '<div class="full-column">Loading...</div>';
 
   try {
-    const { data, usingDefault } = await fetchWeatherData();
-    renderWeather(panel, data, usingDefault, options);
+    const { data, usingDefault, usingIp } = await fetchWeatherData();
+    renderWeather(panel, data, usingDefault, usingIp, options);
   } catch (err) {
     console.error('Weather fetch failed', err);
     panel.innerHTML = '<div class="full-column">Failed to fetch weather data.</div>';
@@ -75,7 +91,7 @@ function extendHourlyForecast(data) {
   });
 }
 
-function renderWeather(panel, data, usingDefault, opts = {}) {
+function renderWeather(panel, data, usingDefault, usingIp, opts = {}) {
   const { showHourly = true } = opts;
   if (!data) return;
 
@@ -88,6 +104,11 @@ function renderWeather(panel, data, usingDefault, opts = {}) {
   if (usingDefault) {
     const note = document.createElement('div');
     note.textContent = 'Location unavailable; showing San Francisco weather.';
+    note.style.fontStyle = 'italic';
+    container.appendChild(note);
+  } else if (usingIp) {
+    const note = document.createElement('div');
+    note.textContent = 'Using approximate location based on your IP address.';
     note.style.fontStyle = 'italic';
     container.appendChild(note);
   }
