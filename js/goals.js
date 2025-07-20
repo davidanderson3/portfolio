@@ -411,7 +411,7 @@ export function renderTodaySchedule(all, listEl, weather) {
                 cell.appendChild(ul);
             }
             cell.addEventListener('click', async e => {
-                if (e.target.tagName === 'LI' || cell.querySelector('input.hour-input')) return;
+                if (cell.querySelector('input.hour-input')) return;
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.placeholder = 'Schedule item';
