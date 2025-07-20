@@ -1050,16 +1050,6 @@ h2 {
   flex: 1 1 100%;
 }
 
-#weatherPanel.main-layout {
-  justify-content: flex-start !important;
-  max-width: none !important;
-  margin: 0 !important;
-  width: 100% !important;
-}
-
-#weatherPanel .full-column {
-  flex: 1 1 100%;
-}
 
 /* Layout for daily panel: allow tasks columns side-by-side with report below */
 #dailyPanel.main-layout {
@@ -1231,36 +1221,6 @@ h2 {
   overflow-x: auto;
 }
 
-#weatherPanel table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-}
-
-#weatherPanel th,
-#weatherPanel td {
-  border: 1px solid #d0decf;
-  padding: 6px;
-  text-align: left;
-  word-wrap: break-word;
-  overflow-wrap: anywhere;
-}
-
-#weatherPanel tbody tr:nth-child(even) {
-  background-color: #f8f5f0;
-}
-
-/* highlight pleasant temperature rows */
-#weatherPanel tbody tr.comfortable-temp {
-  background-color: #e0f8e0;
-}
-
-#todaySchedule .hour-row.comfortable-temp {
-  background-color: #e0f8e0;
-}
-
-#weatherPanel .full-column {
-  overflow-x: auto;
 }
 
 
@@ -1672,6 +1632,10 @@ h2 {
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 2px;
+}
+
+#todaySchedule .hour-row.comfortable-temp {
+  background-color: #e0f8e0;
 }
 
 #todaySchedule ul {
