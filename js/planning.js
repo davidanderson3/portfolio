@@ -110,6 +110,7 @@ export async function initPlanningPanel() {
   container.innerHTML = `
     <h3>Profiles</h3>
     <button type="button" id="addProfile">+ Add Profile</button>
+    <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
     <div id="profilesList" style="margin-top:1em;"></div>
     <h3 style="margin-top:2em;">Sources of Happiness</h3>
     <ul id="happySourcesList" style="margin-top:0;"></ul>
@@ -125,20 +126,20 @@ export async function initPlanningPanel() {
     wrap.dataset.index = index;
     wrap.innerHTML = `
       <div class="profile-header">
-        <input type="text" class="profile-name" placeholder="Profile Name" value="${initial.name ?? ''}" />
+        <input type="text" class="profile-name" placeholder="e.g. Alex" value="${initial.name ?? ''}" />
       </div>
       <form class="finance-form" style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
-        <label>Current Age <input type="number" name="curAge" placeholder="30" value="${initial.finance?.curAge ?? ''}" /></label>
-        <label>Retirement Age <input type="number" name="retAge" placeholder="65" value="${initial.finance?.retAge ?? ''}" /></label>
-        <label>Current Savings <input type="number" name="savings" placeholder="0" value="${initial.finance?.savings ?? ''}" /></label>
-        <label>Annual Income <input type="number" name="income" placeholder="50000" value="${initial.finance?.income ?? ''}" /></label>
-        <label>Annual Expenses <input type="number" name="expenses" placeholder="40000" value="${initial.finance?.expenses ?? ''}" /></label>
-        <label>Return Rate % <input type="number" name="returnRate" placeholder="5" value="${initial.finance?.returnRate ?? ''}" /></label>
+        <label>Current Age <input type="number" name="curAge" placeholder="e.g. 30" value="${initial.finance?.curAge ?? ''}" /></label>
+        <label>Retirement Age <input type="number" name="retAge" placeholder="e.g. 65" value="${initial.finance?.retAge ?? ''}" /></label>
+        <label>Current Savings <input type="number" name="savings" placeholder="e.g. 0" value="${initial.finance?.savings ?? ''}" /></label>
+        <label>Annual Income <input type="number" name="income" placeholder="e.g. 50000" value="${initial.finance?.income ?? ''}" /></label>
+        <label>Annual Expenses <input type="number" name="expenses" placeholder="e.g. 40000" value="${initial.finance?.expenses ?? ''}" /></label>
+        <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${initial.finance?.returnRate ?? ''}" /></label>
       </form>
       <div class="financeResult" style="margin-top:1em;"></div>
       <form class="happy-form" style="display:flex;flex-direction:column;gap:4px;max-width:260px;margin-top:1em;">
-        <label>Hours on Hobbies/week <input type="number" name="hobbyHours" placeholder="10" value="${initial.happiness?.hobbyHours ?? ''}" /></label>
-        <label>Hours Working/week <input type="number" name="workHours" placeholder="40" value="${initial.happiness?.workHours ?? ''}" /></label>
+        <label>Hours on Hobbies/week <input type="number" name="hobbyHours" placeholder="e.g. 10" value="${initial.happiness?.hobbyHours ?? ''}" /></label>
+        <label>Hours Working/week <input type="number" name="workHours" placeholder="e.g. 40" value="${initial.happiness?.workHours ?? ''}" /></label>
       </form>
       <div class="happyResult" style="margin-top:1em;"></div>
     `;
