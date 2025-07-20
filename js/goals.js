@@ -401,7 +401,7 @@ export function renderTodaySchedule(_all, listEl, weather) {
                 cell.appendChild(span);
             }
 
-            cell.addEventListener('click', () => {
+            const openInput = () => {
                 if (cell.querySelector('input.hour-input')) return;
 
                 const input = document.createElement('input');
@@ -434,6 +434,11 @@ export function renderTodaySchedule(_all, listEl, weather) {
 
                 input.addEventListener('input', save);
                 input.addEventListener('blur', save);
+            };
+            cell.addEventListener('click', openInput);
+            cell.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                openInput();
             });
             row.appendChild(cell);
             section.appendChild(row);
