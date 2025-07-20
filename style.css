@@ -1679,5 +1679,27 @@ h2 {
   padding-left: 20px;
 }
 
+/* Planning panel finance profiles */
+#financeProfiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.finance-profile {
+  flex: 1 1 300px;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
 
 

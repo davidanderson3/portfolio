@@ -1,4 +1,5 @@
 import { getCurrentUser, db } from './auth.js';
+import { makeIconBtn } from './helpers.js';
 
 export function calculateFinanceProjection({ currentAge, retirementAge, savings, income, expenses, returnRate }) {
   currentAge = Number(currentAge);
@@ -99,9 +100,9 @@ export async function initPlanningPanel() {
     const index = profileCount++;
     const wrap = document.createElement('div');
     wrap.className = 'finance-profile';
-    wrap.style.marginBottom = '1em';
+    wrap.dataset.index = index;
     wrap.innerHTML = `
-      <h4>Profile ${profileCount}</h4>
+      <div class="profile-header"><h4>Profile ${index + 1}</h4></div>
       <form style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
         <label>Current Age <input type="number" name="curAge" value="${initial.curAge ?? 30}" /></label>
         <label>Retirement Age <input type="number" name="retAge" value="${initial.retAge ?? 65}" /></label>
@@ -113,6 +114,20 @@ export async function initPlanningPanel() {
       </form>
       <div class="financeResult" style="margin-top:1em;"></div>
     `;
+    const header = wrap.querySelector('.profile-header');
+    const delBtn = makeIconBtn('❌', 'Delete profile', () => {
+      if (!confirm('Delete this profile?')) return;
+      const idx = Number(wrap.dataset.index);
+      profilesDiv.removeChild(wrap);
+      currentData.financeProfiles.splice(idx, 1);
+      profileCount--;
+      Array.from(profilesDiv.children).forEach((child, i) => {
+        child.dataset.index = i;
+        child.querySelector('h4').textContent = `Profile ${i + 1}`;
+      });
+      savePlanningData(currentData);
+    });
+    header.appendChild(delBtn);
     const form = wrap.querySelector('form');
     const resultDiv = wrap.querySelector('.financeResult');
 
