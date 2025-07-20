@@ -36,5 +36,8 @@ npm run e2e
 
 This starts the local server, launches a browser, and exercises basic UI flows.
 
+## Android location snippet
 
-
+The `android/WeatherLocationHelper.kt` file demonstrates how to obtain the user's current
+location with the Fused Location Provider API. It first checks the last known
+location and, if unavailable, requests a single high accuracy update.
