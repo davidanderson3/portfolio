@@ -1,9 +1,4 @@
-export async function initWeatherPanel(targetId = 'weatherPanel', options = {}) {
-  const panel = document.getElementById(targetId);
-  if (!panel) return;
-
-  panel.innerHTML = '<div class="full-column">Loading...</div>';
-
+export async function fetchWeatherData() {
   let coords = null;
   let usingDefault = false;
   if (navigator.geolocation) {
@@ -21,16 +16,27 @@ export async function initWeatherPanel(targetId = 'weatherPanel', options = {}) 
   }
 
   if (!coords) {
-    // fallback to a default location (San Francisco) if permission denied
     coords = { lat: 37.7749, lon: -122.4194 };
     usingDefault = true;
   }
 
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=16&timezone=auto&temperature_unit=fahrenheit`;
+  const resp = await fetch(url);
+  const data = await resp.json();
+  extendHourlyForecast(data);
+  return { data, usingDefault };
+}
+
+window.fetchWeatherData = fetchWeatherData;
+
+export async function initWeatherPanel(targetId = 'weatherPanel', options = {}) {
+  const panel = document.getElementById(targetId);
+  if (!panel) return;
+
+  panel.innerHTML = '<div class="full-column">Loading...</div>';
+
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=temperature_2m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=16&timezone=auto&temperature_unit=fahrenheit`;
-    const resp = await fetch(url);
-    const data = await resp.json();
-    extendHourlyForecast(data);
+    const { data, usingDefault } = await fetchWeatherData();
     renderWeather(panel, data, usingDefault, options);
   } catch (err) {
     console.error('Weather fetch failed', err);
@@ -132,7 +138,12 @@ function renderWeather(panel, data, usingDefault, opts = {}) {
 }
 
 window.initWeatherPanel = initWeatherPanel;
-export function initCalendarWeather() {
-  return initWeatherPanel('calendarWeather', { showHourly: false });
+
+export function chooseWeatherIcon(rainProb) {
+  if (rainProb === undefined || rainProb === null) return '☀️';
+  if (rainProb >= 60) return '🌧️';
+  if (rainProb >= 20) return '⛅';
+  return '☀️';
 }
-window.initCalendarWeather = initCalendarWeather;
+
+window.chooseWeatherIcon = chooseWeatherIcon;

@@ -166,12 +166,14 @@ export async function renderGoalsAndSubitems() {
   // 1) Render the calendar on the left
   const calendarContent = initCalendarSection();
   const todayList = initTodayScheduleSection();
-  initCalendarWeatherSection();
-  renderCalendarSection(allDecisions, calendarContent);
-  renderTodaySchedule(allDecisions, todayList);
-  if (window.initCalendarWeather) {
-    window.initCalendarWeather().catch(err => console.error('Weather init failed', err));
+  let weatherData = null;
+  try {
+    weatherData = (await window.fetchWeatherData?.())?.data || null;
+  } catch (err) {
+    console.error('Weather fetch failed', err);
   }
+  renderCalendarSection(allDecisions, calendarContent, weatherData);
+  renderTodaySchedule(allDecisions, todayList, weatherData);
 
   // 3) Hidden & completed goals below
   const hiddenContent = initHiddenSection();
@@ -311,28 +313,8 @@ function initTodayScheduleSection() {
     return container.querySelector('#todayScheduleList');
 }
 
-function initCalendarWeatherSection() {
-    let container = document.getElementById('calendarWeather');
-    if (!container) {
-        const panel = document.getElementById('calendarPanel');
-        const parent =
-            panel?.querySelector('.right-column') ||
-            panel?.querySelector('.full-column') ||
-            document.body;
-        container = document.createElement('div');
-        container.id = 'calendarWeather';
-        const todayEl = document.getElementById('todaySchedule');
-        if (todayEl && todayEl.parentElement === parent) {
-            parent.insertBefore(container, todayEl);
-        } else {
-            parent.appendChild(container);
-        }
-    }
-    container.innerHTML = '<div id="calendarWeatherContent"></div>';
-    return container.querySelector('#calendarWeatherContent');
-}
 
-export function renderTodaySchedule(all, listEl) {
+export function renderTodaySchedule(all, listEl, weather) {
     if (!listEl) return;
     const todayKey = new Date().toISOString().slice(0, 10);
     const todays = all.filter(g => g.scheduled && g.scheduled.startsWith(todayKey));
@@ -342,6 +324,21 @@ export function renderTodaySchedule(all, listEl) {
         (byHour[h] = byHour[h] || []).push(g);
     });
 
+    const weatherByHour = {};
+    if (weather && weather.hourly && weather.hourly.time) {
+        weather.hourly.time.forEach((t, idx) => {
+            const d = new Date(t);
+            if (t.startsWith(todayKey)) {
+                weatherByHour[d.getHours()] = {
+                    temp: weather.hourly.temperature_2m[idx],
+                    rain: weather.hourly.precipitation_probability
+                        ? weather.hourly.precipitation_probability[idx]
+                        : undefined
+                };
+            }
+        });
+    }
+
     listEl.innerHTML = '';
     for (let h = 0; h < 24; h++) {
         const row = document.createElement('div');
@@ -349,6 +346,14 @@ export function renderTodaySchedule(all, listEl) {
         const label = document.createElement('div');
         label.className = 'hour-label';
         label.textContent = `${String(h).padStart(2, '0')}:00`;
+        const w = weatherByHour[h];
+        if (w) {
+            const span = document.createElement('span');
+            span.className = 'hour-weather';
+            const icon = window.chooseWeatherIcon ? window.chooseWeatherIcon(w.rain) : '';
+            span.textContent = ` ${icon} ${w.temp}\u00B0`;
+            label.appendChild(span);
+        }
         row.appendChild(label);
 
         const cell = document.createElement('div');
@@ -401,7 +406,7 @@ function initCompletedSection() {
     goalList.parentNode.appendChild(completedSection);
 }
 
-function renderCalendarSection(all, calendarContent) {
+function renderCalendarSection(all, calendarContent, weather) {
     const scheduled = all
         .filter(
             g =>
@@ -430,6 +435,19 @@ function renderCalendarSection(all, calendarContent) {
 
     function keyFromDate(date) {
         return date.toISOString().slice(0, 10);
+    }
+
+    const dailyWeather = {};
+    if (weather && weather.daily && weather.daily.time) {
+        weather.daily.time.forEach((t, idx) => {
+            dailyWeather[t] = {
+                high: weather.daily.temperature_2m_max[idx],
+                low: weather.daily.temperature_2m_min[idx],
+                rain: weather.daily.precipitation_probability_max
+                    ? weather.daily.precipitation_probability_max[idx]
+                    : undefined
+            };
+        });
     }
 
     const dateKeys = Object.keys(byDate).sort();
@@ -473,7 +491,11 @@ function renderCalendarSection(all, calendarContent) {
             const sunLabel = sun.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
             const isCurrentWeekend = today >= sat && today <= sun;
             if (isCurrentWeekend) section.classList.add('current-weekend');
-            hdr.textContent = `Weekend: ${satLabel} - ${sunLabel}`;
+            const satW = dailyWeather[key];
+            const sunW = dailyWeather[sunKey];
+            const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
+            const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
+            hdr.textContent = `Weekend: ${satLabel}${satInfo} - ${sunLabel}${sunInfo}`;
             section.appendChild(hdr);
 
             [key, sunKey].forEach(k => {
@@ -514,7 +536,11 @@ function renderCalendarSection(all, calendarContent) {
             const sunLabel = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
             const isCurrentWeekend = today >= sat && today <= d;
             if (isCurrentWeekend) section.classList.add('current-weekend');
-            hdr.textContent = `Weekend: ${satLabel} - ${sunLabel}`;
+            const satW = dailyWeather[satKey];
+            const sunW = dailyWeather[key];
+            const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
+            const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
+            hdr.textContent = `Weekend: ${satLabel}${satInfo} - ${sunLabel}${sunInfo}`;
             section.appendChild(hdr);
 
             [satKey, key].forEach(k => {
@@ -543,7 +569,9 @@ function renderCalendarSection(all, calendarContent) {
                 const dowLabel = d.toLocaleDateString(undefined, { weekday: 'short' });
                 const dateStr = d.toLocaleDateString();
                 const daysText = formatDaysUntil(key);
-                header.textContent = `${dowLabel} ${dateStr} (${daysText})`;
+                const w = dailyWeather[key];
+                const weatherInfo = w ? ` ${window.chooseWeatherIcon?.(w.rain) || ''} ${w.high}\u00B0/${w.low}\u00B0` : '';
+                header.textContent = `${dowLabel} ${dateStr} (${daysText})${weatherInfo}`;
                 calendarContent.appendChild(header);
 
                 byDate[key].forEach(goal => {
