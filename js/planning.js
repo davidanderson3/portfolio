@@ -137,31 +137,33 @@ export async function initPlanningPanel() {
   addFinanceProfile();
   const financeForm = container.querySelector('#financeForm');
   const financeResult = container.querySelector('#financeResult');
-  if (saved.finance) {
-    financeForm.curAge.value = saved.finance.curAge ?? financeForm.curAge.value;
-    financeForm.retAge.value = saved.finance.retAge ?? financeForm.retAge.value;
-    financeForm.savings.value = saved.finance.savings ?? financeForm.savings.value;
-    financeForm.income.value = saved.finance.income ?? financeForm.income.value;
-    financeForm.expenses.value = saved.finance.expenses ?? financeForm.expenses.value;
-    financeForm.returnRate.value = saved.finance.returnRate ?? financeForm.returnRate.value;
+  if (financeForm) {
+    if (saved.finance) {
+      financeForm.curAge.value = saved.finance.curAge ?? financeForm.curAge.value;
+      financeForm.retAge.value = saved.finance.retAge ?? financeForm.retAge.value;
+      financeForm.savings.value = saved.finance.savings ?? financeForm.savings.value;
+      financeForm.income.value = saved.finance.income ?? financeForm.income.value;
+      financeForm.expenses.value = saved.finance.expenses ?? financeForm.expenses.value;
+      financeForm.returnRate.value = saved.finance.returnRate ?? financeForm.returnRate.value;
+    }
+    financeForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const input = {
+        currentAge: financeForm.curAge.value,
+        retirementAge: financeForm.retAge.value,
+        savings: financeForm.savings.value,
+        income: financeForm.income.value,
+        expenses: financeForm.expenses.value,
+        returnRate: financeForm.returnRate.value
+      };
+      const data = calculateFinanceProjection(input);
+      financeResult.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
+        data.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
+        '</tbody></table>';
+      currentData = { ...currentData, finance: input };
+      savePlanningData(currentData);
+    });
   }
-  financeForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const input = {
-      currentAge: financeForm.curAge.value,
-      retirementAge: financeForm.retAge.value,
-      savings: financeForm.savings.value,
-      income: financeForm.income.value,
-      expenses: financeForm.expenses.value,
-      returnRate: financeForm.returnRate.value
-    };
-    const data = calculateFinanceProjection(input);
-    financeResult.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
-      data.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
-      '</tbody></table>';
-    currentData = { ...currentData, finance: input };
-    savePlanningData(currentData);
-  });
 
   const happyForm = container.querySelector('#happyForm');
   const happyResult = container.querySelector('#happyResult');
