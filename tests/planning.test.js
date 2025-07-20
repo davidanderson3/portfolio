@@ -67,25 +67,25 @@ beforeEach(() => {
 
 describe('planning persistence', () => {
   it('loads data from Firestore', async () => {
-    getMock.mockResolvedValue({ exists: true, data: () => ({ finance: { curAge: 20 } }) });
+    getMock.mockResolvedValue({ exists: true, data: () => ({ profiles: [{ name: 'p1' }] }) });
     const { loadPlanningData } = await import('../js/planning.js');
     const res = await loadPlanningData();
-    expect(res).toEqual({ finance: { curAge: 20 } });
+    expect(res).toEqual({ profiles: [{ name: 'p1' }] });
     expect(getMock).toHaveBeenCalled();
   });
 
   it('saves data to Firestore', async () => {
     const { savePlanningData } = await import('../js/planning.js');
-    await savePlanningData({ happiness: { workHours: 5 } });
-    expect(setMock).toHaveBeenCalledWith({ happiness: { workHours: 5 } }, { merge: true });
+    await savePlanningData({ profiles: [{ name: 'p1' }] });
+    expect(setMock).toHaveBeenCalledWith({ profiles: [{ name: 'p1' }] }, { merge: true });
   });
 
   it('uses localStorage when anonymous', async () => {
     vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
     const { savePlanningData, loadPlanningData } = await import('../js/planning.js');
-    await savePlanningData({ foo: 'bar' });
-    expect(JSON.parse(localStorage.getItem('planningData'))).toEqual({ foo: 'bar' });
+    await savePlanningData({ profiles: [{ name: 'local' }] });
+    expect(JSON.parse(localStorage.getItem('planningData'))).toEqual({ profiles: [{ name: 'local' }] });
     const data = await loadPlanningData();
-    expect(data).toEqual({ foo: 'bar' });
+    expect(data).toEqual({ profiles: [{ name: 'local' }] });
   });
 });
