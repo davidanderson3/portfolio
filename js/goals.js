@@ -406,40 +406,69 @@ export function renderTodaySchedule(all, listEl, weather) {
                 events.forEach(ev => {
                     const li = document.createElement('li');
                     li.textContent = ev.text;
+                    li.dataset.goalId = ev.id;
                     ul.appendChild(li);
                 });
                 cell.appendChild(ul);
             }
             cell.addEventListener('click', async e => {
                 if (cell.querySelector('input.hour-input')) return;
+
+                const li = e.target.closest('li');
+                const editingId = li ? li.dataset.goalId : null;
+                if (li) li.style.display = 'none';
+
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.placeholder = 'Schedule item';
                 input.className = 'hour-input';
-                cell.appendChild(input);
+                if (li) input.value = li.textContent;
+                if (li) li.after(input); else cell.appendChild(input);
                 input.focus();
+
+                const cancelInput = () => {
+                    input.remove();
+                    if (li) li.style.display = '';
+                };
 
                 const saveInput = async () => {
                     const text = input.value.trim();
                     input.remove();
-                    if (!text) return;
-                    const sched = `${cell.dataset.date}T${String(cell.dataset.hour).padStart(2, '0')}:00:00`;
-                    const all = await loadDecisions();
-                    const newGoal = {
-                        id: generateId(),
-                        type: 'goal',
-                        text,
-                        notes: '',
-                        completed: false,
-                        resolution: '',
-                        dateCompleted: '',
-                        parentGoalId: null,
-                        hiddenUntil: null,
-                        scheduled: sched,
-                        scheduledEnd: ''
-                    };
-                    await saveDecisions([...all, newGoal]);
-                    renderGoalsAndSubitems();
+                    if (editingId) {
+                        const all = await loadDecisions();
+                        const idx = all.findIndex(d => d.id === editingId);
+                        if (idx !== -1) {
+                            if (text) {
+                                all[idx].text = text;
+                            } else {
+                                all.splice(idx, 1);
+                            }
+                            await saveDecisions(all);
+                            await renderGoalsAndSubitems();
+                        } else {
+                            cancelInput();
+                        }
+                    } else if (text) {
+                        const sched = `${cell.dataset.date}T${String(cell.dataset.hour).padStart(2, '0')}:00:00`;
+                        const all = await loadDecisions();
+                        const newGoal = {
+                            id: generateId(),
+                            type: 'goal',
+                            text,
+                            notes: '',
+                            completed: false,
+                            resolution: '',
+                            dateCompleted: '',
+                            parentGoalId: null,
+                            hiddenUntil: null,
+                            scheduled: sched,
+                            scheduledEnd: ''
+                        };
+                        await saveDecisions([...all, newGoal]);
+                        await renderGoalsAndSubitems();
+                    } else {
+                        cancelInput();
+                    }
                 };
 
                 input.addEventListener('keydown', async ev => {
@@ -447,10 +476,10 @@ export function renderTodaySchedule(all, listEl, weather) {
                         ev.preventDefault();
                         await saveInput();
                     } else if (ev.key === 'Escape') {
-                        input.remove();
+                        cancelInput();
                     }
                 });
-                input.addEventListener('blur', saveInput);
+                input.addEventListener('blur', cancelInput);
             });
             row.appendChild(cell);
             section.appendChild(row);
