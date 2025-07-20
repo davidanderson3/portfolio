@@ -39,7 +39,10 @@ describe('planning UI persistence', () => {
     global.window = dom.window;
     global.document = dom.window.document;
 
-    const names = ['curAge', 'retAge', 'savings', 'income', 'expenses', 'returnRate', 'hobbyHours', 'workHours'];
+    const names = [
+      'curAge', 'retAge', 'savings', 'income', 'expenses', 'returnRate',
+      'hobbyHours', 'workHours', 'realEstate', 'carValue', 'assetSavings', 'investment'
+    ];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -52,6 +55,7 @@ describe('planning UI persistence', () => {
 
     const financeForm = document.querySelector('.finance-form');
     const happyForm = document.querySelector('.happy-form');
+    const assetsForm = document.querySelector('#assetsForm');
 
     const nameInput = document.querySelector('.profile-name');
     nameInput.value = 'Tester';
@@ -65,8 +69,21 @@ describe('planning UI persistence', () => {
     hobbyInput.value = '5';
     hobbyInput.dispatchEvent(new window.Event('input', { bubbles: true }));
 
+    assetsForm.realEstate.value = '100000';
+    assetsForm.realEstate.dispatchEvent(new window.Event('input', { bubbles: true }));
+    assetsForm.carValue.value = '10000';
+    assetsForm.carValue.dispatchEvent(new window.Event('input', { bubbles: true }));
+    assetsForm.assetSavings.value = '5000';
+    assetsForm.assetSavings.dispatchEvent(new window.Event('input', { bubbles: true }));
+    assetsForm.investment.value = '20000';
+    assetsForm.investment.dispatchEvent(new window.Event('input', { bubbles: true }));
+
     const saved = JSON.parse(localStorage.getItem('planningData'));
     expect(saved.profiles[0].finance.curAge).toBe('30');
+    expect(saved.assets.realEstate).toBe(100000);
+    expect(saved.assets.carValue).toBe(10000);
+    expect(saved.assets.assetSavings).toBe(5000);
+    expect(saved.assets.investment).toBe(20000);
 
     // simulate login and page reload
     mod1.clearPlanningCache();
@@ -90,9 +107,18 @@ describe('planning UI persistence', () => {
     const name2 = document.querySelector('.profile-name').value;
     const age2 = document.querySelector('.finance-form input[name="curAge"]').value;
     const hobby2 = document.querySelector('.happy-form input[name="hobbyHours"]').value;
+    const assetsForm2 = document.querySelector('#assetsForm');
+    const realEstate2 = assetsForm2.realEstate.value;
+    const car2 = assetsForm2.carValue.value;
+    const saving2 = assetsForm2.assetSavings.value;
+    const invest2 = assetsForm2.investment.value;
 
     expect(name2).toBe('Tester');
     expect(age2).toBe('30');
     expect(hobby2).toBe('5');
+    expect(realEstate2).toBe('100000');
+    expect(car2).toBe('10000');
+    expect(saving2).toBe('5000');
+    expect(invest2).toBe('20000');
   });
 });
