@@ -1,5 +1,6 @@
+
+import { calculateFinanceProjection, calculateHappinessScore, happinessSources } from '../js/planning.js';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { calculateFinanceProjection, calculateHappinessScore } from '../js/planning.js';
 
 describe('planning calculations', () => {
   it('projects finances over years', () => {
@@ -21,6 +22,10 @@ describe('planning calculations', () => {
   it('calculates happiness score', () => {
     const score = calculateHappinessScore({ hobbyHours: 10, workHours: 40 });
     expect(score).toBe(-20);
+  });
+
+  it('lists common happiness sources', () => {
+    expect(happinessSources).toContain('Family');
   });
 });
 
