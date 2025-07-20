@@ -980,9 +980,9 @@ h1 {
 }
 
 #goalsView .navbar .tabs button.active {
-  background: #ffffff !important;
+  background: #e4ede8 !important; /* subtle highlight */
   color: #000000 !important;
-  border-color: #000000;
+  border-color: #7aa68c;
   border-bottom-width: 2px;
   font-weight: 600;
 }
