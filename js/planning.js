@@ -166,14 +166,21 @@ export async function initPlanningPanel() {
 
     function renderFinance() {
       const values = {
-        currentAge: financeForm.curAge.value,
-        retirementAge: financeForm.retAge.value,
+        curAge: financeForm.curAge.value,
+        retAge: financeForm.retAge.value,
         savings: financeForm.savings.value,
         income: financeForm.income.value,
         expenses: financeForm.expenses.value,
         returnRate: financeForm.returnRate.value
       };
-      const data = calculateFinanceProjection(values);
+      const data = calculateFinanceProjection({
+        currentAge: values.curAge,
+        retirementAge: values.retAge,
+        savings: values.savings,
+        income: values.income,
+        expenses: values.expenses,
+        returnRate: values.returnRate
+      });
       financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
         data.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
         '</tbody></table>';
