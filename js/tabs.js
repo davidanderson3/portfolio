@@ -1,5 +1,16 @@
 import { currentUser } from './auth.js';
 
+export const PANELS = [
+  'goalsPanel',
+  'decisionsPanel',
+  'calendarPanel',
+  'dailyPanel',
+  'metricsPanel',
+  'listsPanel',
+  'travelPanel',
+  'planningPanel'
+];
+
 let tabsInitialized = false;
 
 export function initTabs(user, db) {
@@ -8,7 +19,7 @@ export function initTabs(user, db) {
   tabsInitialized = true;
 
   const tabButtons = document.querySelectorAll('.tab-button');
-  const panels    = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel','planningPanel'];
+  const panels    = PANELS;
 
   tabButtons.forEach(btn => {
     btn.addEventListener('click', async () => {
