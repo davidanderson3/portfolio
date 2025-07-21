@@ -436,10 +436,10 @@ export function renderTodaySchedule(_all, listEl, weather) {
                 input.addEventListener('blur', save);
             };
             cell.addEventListener('click', openInput);
-            cell.addEventListener('touchend', (e) => {
+            row.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 openInput();
-            });
+            }, { passive: false });
             row.appendChild(cell);
             section.appendChild(row);
         }

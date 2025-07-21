@@ -124,4 +124,19 @@ describe('renderTodaySchedule', () => {
     expect(stored[todayStr]).toBeUndefined();
     vi.useRealTimers();
   });
+
+  it('opens an input on touchstart', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T10:00:00Z'));
+
+    const container = document.getElementById('test');
+    renderTodaySchedule([], container, null);
+
+    const row = container.querySelector('.hour-row');
+    row.dispatchEvent(new window.Event('touchstart', { bubbles: true, cancelable: true }));
+
+    const input = container.querySelector('input.hour-input');
+    expect(input).not.toBeNull();
+    vi.useRealTimers();
+  });
 });
