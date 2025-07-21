@@ -499,32 +499,6 @@ button:hover {
 .indent-1 {
   margin-left: 20px;
 }
-
-/* ------------------------------
-   Collapsed parent row for goals with active subgoals
------------------------------- */
-.parent-summary {
-  padding: 0 6px;
-  font-size: 0.8em;
-  background: #f3f3f3;
-}
-
-.parent-summary .button-row,
-.parent-summary .due-column,
-.parent-summary .note-text {
-  display: none;
-}
-
-.first-subgoal-row {
-  display: none;
-  border-left-color: #7aa68c;
-  font-weight: bolder;
-}
-
-.parent-summary+.first-subgoal-row {
-  display: block;
-}
-
 /* ------------------------------
    Animation
 ------------------------------ */
