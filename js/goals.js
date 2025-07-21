@@ -176,20 +176,27 @@ export async function renderGoalsAndSubitems() {
   // 1) Render the calendar on the left
   const calendarContent = initCalendarSection();
   const todayList = initTodayScheduleSection();
-  let weatherData = null;
-  try {
-    weatherData = (await window.fetchWeatherData?.())?.data || null;
-  } catch (err) {
-    console.error('Weather fetch failed', err);
-  }
-  renderCalendarSection(allDecisions, calendarContent, weatherData);
-  renderTodaySchedule(allDecisions, todayList, weatherData);
 
-  // 3) Hidden & completed goals below
+  // kick off weather fetch but don't block UI
+  const weatherPromise = window.fetchWeatherData?.();
+
+  // 2) Hidden & completed goals below
   const hiddenContent = initHiddenSection();
   initCompletedSection();
   await renderRemainingGoals(allDecisions, sortedGoals, hiddenContent);
   updateGoalCounts(allDecisions);
+
+  // wait for weather and render calendar once data is ready
+  let weatherData = null;
+  if (weatherPromise) {
+    try {
+      weatherData = (await weatherPromise)?.data || null;
+    } catch (err) {
+      console.error('Weather fetch failed', err);
+    }
+  }
+  renderCalendarSection(allDecisions, calendarContent, weatherData);
+  renderTodaySchedule(allDecisions, todayList, weatherData);
 }
 
 
