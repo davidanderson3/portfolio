@@ -1667,6 +1667,7 @@ h2 {
 #todaySchedule .hour-events {
   min-height: 24px;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 #todaySchedule .hour-input {
