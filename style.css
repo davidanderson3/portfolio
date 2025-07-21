@@ -1668,6 +1668,8 @@ h2 {
   min-height: 24px;
   cursor: pointer;
   touch-action: manipulation;
+  flex: 1;
+  min-width: 0;
 }
 
 #todaySchedule .hour-input {
