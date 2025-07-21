@@ -158,15 +158,15 @@ describe('editing scheduled date', () => {
   });
 });
 
-describe('parent-summary display', () => {
-  it('applies compact class when collapsed and removes it when expanded', async () => {
+describe('parent goal styling', () => {
+  it('uses the same row layout whether collapsed or expanded', async () => {
     const parent = { id: 'p1', type: 'goal', text: 'P', notes: '', completed: false, parentGoalId: null };
     const child = { id: 'c1', type: 'goal', text: 'C', notes: '', completed: false, parentGoalId: 'p1' };
     helpers.loadDecisions.mockResolvedValue([parent, child]);
 
     await renderGoalsAndSubitems();
     let row = document.querySelector('#goalList .decision-row');
-    expect(row.classList.contains('parent-summary')).toBe(true);
+    expect(row.classList.contains('parent-summary')).toBe(false);
 
     window.openGoalIds.add('p1');
     await renderGoalsAndSubitems();
@@ -175,57 +175,3 @@ describe('parent-summary display', () => {
   });
 });
 
-describe('subgoal rendering', () => {
-  it('shows the first subgoal only once when expanded', async () => {
-    const parent = { id: 'p1', type: 'goal', text: 'P', notes: '', completed: false, parentGoalId: null };
-    const child1 = { id: 'c1', type: 'goal', text: 'C1', notes: '', completed: false, parentGoalId: 'p1' };
-    const child2 = { id: 'c2', type: 'goal', text: 'C2', notes: '', completed: false, parentGoalId: 'p1' };
-    helpers.loadDecisions.mockResolvedValue([parent, child1, child2]);
-
-    window.openGoalIds.add('p1');
-    await renderGoalsAndSubitems();
-
-    const card = document.querySelector('#goalList .goal-card');
-    const preview = card.querySelector('.first-subgoal-row');
-    expect(preview).toBeNull();
-  });
-
-  it('replaces preview with next subgoal without rerendering the page', async () => {
-    const parent = { id: 'p1', type: 'goal', text: 'P', notes: '', completed: false, parentGoalId: null };
-    const child1 = { id: 'c1', type: 'goal', text: 'C1', notes: '', completed: false, parentGoalId: 'p1', dateCompleted: '' };
-    const child2 = { id: 'c2', type: 'goal', text: 'C2', notes: '', completed: false, parentGoalId: 'p1', dateCompleted: '' };
-    helpers.loadDecisions.mockResolvedValue([parent, child1, child2]);
-
-    await renderGoalsAndSubitems();
-
-    const wrapper = document.querySelector('#goalList .goal-card');
-    const cb = wrapper.querySelector('.first-subgoal-row input[type="checkbox"]');
-    const before = wrapper;
-    cb.checked = true;
-    cb.dispatchEvent(new window.Event('change', { bubbles: true }));
-    await Promise.resolve();
-
-    expect(document.querySelector('#goalList .goal-card')).toBe(before);
-    const title = wrapper.querySelector('.first-subgoal-row .title-column');
-    expect(title.textContent).toBe('C2');
-  });
-
-  it('toggles preview row in and out of the DOM', async () => {
-    const parent = { id: 'p1', type: 'goal', text: 'P', notes: '', completed: false, parentGoalId: null };
-    const child = { id: 'c1', type: 'goal', text: 'C1', notes: '', completed: false, parentGoalId: 'p1' };
-    helpers.loadDecisions.mockResolvedValue([parent, child]);
-
-    await renderGoalsAndSubitems();
-
-    const wrapper = document.querySelector('#goalList .goal-card');
-    const row = wrapper.querySelector('.decision-row');
-    const toggle = row.querySelector('.toggle-triangle');
-    expect(wrapper.querySelector('.first-subgoal-row')).not.toBeNull();
-
-    toggle.click();
-    expect(wrapper.querySelector('.first-subgoal-row')).toBeNull();
-
-    toggle.click();
-    expect(wrapper.querySelector('.first-subgoal-row')).not.toBeNull();
-  });
-});

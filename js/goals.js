@@ -597,7 +597,7 @@ function renderCalendarSection(all, calendarContent, weather) {
                     wrapper.appendChild(childrenContainer);
                     renderChildren(goal, all, childrenContainer);
 
-                    setupToggle(wrapper, row, childrenContainer, goal.id, { current: null });
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
                     section.appendChild(wrapper);
                 });
                 delete byDate[k];
@@ -644,7 +644,7 @@ function renderCalendarSection(all, calendarContent, weather) {
                     wrapper.appendChild(childrenContainer);
                     renderChildren(goal, all, childrenContainer);
 
-                    setupToggle(wrapper, row, childrenContainer, goal.id, { current: null });
+                    setupToggle(wrapper, row, childrenContainer, goal.id);
                     section.appendChild(wrapper);
                 });
                 delete byDate[k];
@@ -674,7 +674,7 @@ function renderCalendarSection(all, calendarContent, weather) {
                 wrapper.appendChild(childrenContainer);
                 renderChildren(goal, all, childrenContainer);
 
-                setupToggle(wrapper, row, childrenContainer, goal.id, { current: null });
+                setupToggle(wrapper, row, childrenContainer, goal.id);
                 calendarContent.appendChild(wrapper);
             });
             delete byDate[key];
@@ -704,38 +704,7 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
         wrapper.appendChild(childrenContainer);
         renderChildren(goal, all, childrenContainer);
 
-        // If this goal has active subgoals, show the first one prominently
-        const subs = all.filter(it =>
-            it.parentGoalId === goal.id &&
-            it.type === 'goal' &&
-            !it.completed &&
-            (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
-        );
-        let firstRowRef = { current: null };
-        const isOpen = openGoalIds.has(goal.id);
-        if (subs.length) {
-            if (!isOpen) {
-                row.classList.add('parent-summary');
-                const handler = createFirstSubgoalHandler(
-                    goal,
-                    all,
-                    wrapper,
-                    row,
-                    childrenContainer,
-                    firstRowRef
-                );
-                firstRowRef.current = createGoalRow(subs[0], {
-                    hideScheduled: true,
-                    stayPut: true,
-                    itemsRef: all,
-                    onToggle: handler
-                });
-                firstRowRef.current.classList.add('first-subgoal-row');
-                wrapper.appendChild(firstRowRef.current);
-            }
-        }
-
-        setupToggle(wrapper, row, childrenContainer, goal.id, firstRowRef);
+        setupToggle(wrapper, row, childrenContainer, goal.id);
 
         const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
         const isHidden = hideUntil && now < hideUntil;
@@ -767,7 +736,7 @@ function makeGoalWrapper(goal) {
     return wrapper;
 }
 
-function setupToggle(wrapper, row, childrenContainer, id, firstRowRef) {
+function setupToggle(wrapper, row, childrenContainer, id) {
     const toggle = row.querySelector('.toggle-triangle');
     toggle.onclick = () => {
         const open = childrenContainer.style.display === 'block';
@@ -775,65 +744,9 @@ function setupToggle(wrapper, row, childrenContainer, id, firstRowRef) {
         childrenContainer.style.display = open ? 'none' : 'block';
         wrapper.setAttribute('draggable', open ? 'true' : 'false');
         open ? openGoalIds.delete(id) : openGoalIds.add(id);
-        const fr = firstRowRef?.current;
-        if (!open) {
-            // expanding: detach the preview row but keep reference
-            if (fr && fr.parentNode) {
-                wrapper._firstRow = fr;
-                fr.remove();
-            }
-        } else {
-            // collapsing: reinsert the stored preview row
-            if (wrapper._firstRow) {
-                wrapper.insertBefore(wrapper._firstRow, childrenContainer);
-            }
-        }
-        row.classList.toggle('parent-summary', open);
     };
 }
 
-function createFirstSubgoalHandler(goal, all, wrapper, parentRow, childContainer, firstRowRef) {
-    return async function (_checked, items) {
-        if (Array.isArray(items)) {
-            all.splice(0, all.length, ...items);
-        }
-        renderChildren(goal, all, childContainer);
-
-        const now = Date.now();
-        const subs = all.filter(it =>
-            it.parentGoalId === goal.id &&
-            it.type === 'goal' &&
-            !it.completed &&
-            (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
-        );
-
-        if (subs.length) {
-            const newRow = createGoalRow(subs[0], {
-                hideScheduled: true,
-                stayPut: true,
-                itemsRef: all,
-                onToggle: createFirstSubgoalHandler(goal, all, wrapper, parentRow, childContainer, firstRowRef)
-            });
-            newRow.classList.add('first-subgoal-row');
-            if (firstRowRef.current && firstRowRef.current.parentNode === wrapper) {
-                wrapper.replaceChild(newRow, firstRowRef.current);
-            } else if (wrapper._firstRow === firstRowRef.current) {
-                wrapper._firstRow = newRow;
-            } else {
-                wrapper.appendChild(newRow);
-            }
-            firstRowRef.current = newRow;
-            parentRow.classList.add('parent-summary');
-        } else {
-            if (firstRowRef.current) {
-                firstRowRef.current.remove();
-                firstRowRef.current = null;
-                wrapper._firstRow = null;
-            }
-            parentRow.classList.remove('parent-summary');
-        }
-    };
-}
 
 
 function addHiddenControls(wrapper, row, goal, hiddenContent) {
@@ -915,31 +828,7 @@ export function appendGoalToDOM(goal, allItems) {
         !it.completed &&
         (!it.hiddenUntil || now >= (Date.parse(it.hiddenUntil) || 0))
     );
-    let firstRowRef = { current: null };
-    const isOpen = openGoalIds.has(goal.id);
-    if (subs.length) {
-        if (!isOpen) {
-            row.classList.add('parent-summary');
-            const handler = createFirstSubgoalHandler(
-                goal,
-                allItems,
-                wrapper,
-                row,
-                childrenContainer,
-                firstRowRef
-            );
-            firstRowRef.current = createGoalRow(subs[0], {
-                hideScheduled: true,
-                stayPut: true,
-                itemsRef: allItems,
-                onToggle: handler
-            });
-            firstRowRef.current.classList.add('first-subgoal-row');
-            wrapper.appendChild(firstRowRef.current);
-        }
-    }
-
-    setupToggle(wrapper, row, childrenContainer, goal.id, firstRowRef);
+    setupToggle(wrapper, row, childrenContainer, goal.id);
 
     goalList.appendChild(wrapper);
     updateGoalCounts(allItems);
