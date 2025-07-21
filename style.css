@@ -328,7 +328,7 @@ button:hover {
   flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 0px 16px;
   border-top: 1px solid #dde4dd;
   background-color: #fbfdfc;
   border-radius: 6px;
@@ -378,7 +378,6 @@ button:hover {
 }
 
 .title-column {
-  font-weight: 500;
   font-size: 1.05em;
   padding-left: 8px;
 }
@@ -391,11 +390,11 @@ button:hover {
   padding-left: 8px;
 }
 
-  .due-column {
-    text-align: right;
-    white-space: nowrap;
-    color: #777;
-  }
+.due-column {
+  text-align: right;
+  white-space: nowrap;
+  color: #777;
+}
 
 /* ------------------------------
    Decision Card
@@ -509,16 +508,20 @@ button:hover {
   font-size: 0.8em;
   background: #f3f3f3;
 }
+
 .parent-summary .button-row,
 .parent-summary .due-column,
 .parent-summary .note-text {
   display: none;
 }
+
 .first-subgoal-row {
   display: none;
   border-left-color: #7aa68c;
+  font-weight: bolder;
 }
-.parent-summary + .first-subgoal-row {
+
+.parent-summary+.first-subgoal-row {
   display: block;
 }
 
@@ -564,7 +567,7 @@ button:hover {
       "due middle";
     align-items: center !important;
     gap: 6px;
-    padding: 8px 10px !important;
+    padding: 10px !important;
   }
 
   .left-group {
@@ -648,6 +651,7 @@ button:hover {
       "left middle"
       "due due";
   }
+
   .decision-row.editing .due-column {
     grid-column: 1 / -1;
     display: flex;
@@ -673,7 +677,7 @@ button:hover {
     gap: 8px;
   }
 
-h1 {
+  h1 {
     font-size: 1.5em;
     margin-bottom: 10px;
   }
@@ -686,7 +690,7 @@ h1 {
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px !important;
+    padding: 6px 16px !important;
   }
 
   .left-group {
@@ -698,22 +702,27 @@ h1 {
     flex-direction: row;
     align-items: center;
   }
+
   .goal-card .decision-row {
     position: relative;
   }
+
   .goal-card .button-row {
     position: absolute;
     right: 16px;
     top: 50%;
     transform: translateY(-50%);
   }
+
   .goal-card .decision-row.editing .button-row {
     position: static;
     transform: none;
   }
+
   .goal-card .due-column {
     margin-right: 120px;
   }
+
   .goal-card .decision-row.editing .due-column {
     margin-right: 0;
   }
@@ -984,7 +993,8 @@ h1 {
 }
 
 #goalsView .navbar .tabs button.active {
-  background: #e4ede8 !important; /* subtle highlight */
+  background: #e4ede8 !important;
+  /* subtle highlight */
   color: #000000 !important;
   border-color: #7aa68c;
   border-bottom-width: 2px;
@@ -1436,6 +1446,7 @@ h2 {
   margin-bottom: 20px;
   border-radius: 6px;
 }
+
 .weekend-section.current-weekend {
   background-color: #ffffe0;
 }
@@ -1526,7 +1537,8 @@ h2 {
   .navbar .tabs {
     order: 2;
     width: 100%;
-    margin: 0; /* occupy full width without side margins */
+    margin: 0;
+    /* occupy full width without side margins */
   }
 
   .navbar-right {
@@ -1594,7 +1606,7 @@ h2 {
   border-top: 1px solid #ccc;
 }
 
-.tree > li::before {
+.tree>li::before {
   border-left: none;
 }
 
@@ -1737,13 +1749,12 @@ h2 {
   .calendar-mobile-tabs {
     display: flex;
   }
+
   #calendarPanel.mobile-daily #todaySchedule {
     display: none;
   }
+
   #calendarPanel.mobile-hourly #calendarContent {
     display: none;
   }
 }
-
-
-
