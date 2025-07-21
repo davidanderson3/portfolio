@@ -432,8 +432,11 @@ export function renderTodaySchedule(_all, listEl, weather) {
                     }
                 };
 
-                input.addEventListener('input', save);
+                // save once editing finishes
                 input.addEventListener('blur', save);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') input.blur();
+                });
             };
             cell.addEventListener('click', openInput);
             row.addEventListener('touchstart', (e) => {
