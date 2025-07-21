@@ -1639,7 +1639,8 @@ h2 {
 }
 
 #todaySchedule .hour-label {
-  width: 72px;
+  /* widen to prevent overlap with hourly notes */
+  width: 90px;
   font-weight: bold;
   white-space: nowrap;
 }
