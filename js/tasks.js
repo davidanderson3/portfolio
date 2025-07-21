@@ -208,7 +208,6 @@ export async function renderChildren(goal, all, container) {
                     all.splice(0, all.length, ...items);
                 }
                 renderChildren(goal, all, container);
-                renderGoalsAndSubitems();
             }
         });
         wrap.appendChild(row);
@@ -414,7 +413,6 @@ export async function renderChildren(goal, all, container) {
                     itemsRef: all,
                     onToggle: () => {
                         renderChildren(goal, all, container);
-                        renderGoalsAndSubitems();
                     }
                 });
                 Object.assign(row.style, {
