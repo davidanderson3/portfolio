@@ -1,4 +1,5 @@
 import { auth, db, getCurrentUser } from './auth.js';
+import { PANELS } from './tabs.js';
 
 const KEY = 'hiddenTabs';
 
@@ -71,7 +72,7 @@ export async function initSettingsPage() {
   listDiv?.classList.add('settings-list');
   const saveBtn = document.getElementById('settingsSaveBtn');
   const emailSpan = document.getElementById('settingsEmail');
-  const panels = ['goalsPanel','decisionsPanel','calendarPanel','dailyPanel','metricsPanel','listsPanel','travelPanel'];
+  const panels = PANELS;
 
   if (listDiv && listDiv.children.length === 0) {
     panels.forEach(id => {
