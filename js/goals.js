@@ -446,10 +446,15 @@ export function renderTodaySchedule(_all, listEl, weather) {
                 });
             };
             cell.addEventListener('click', openInput);
+            let pressTimer;
             row.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                openInput();
+                pressTimer = setTimeout(openInput, 500);
             }, { passive: false });
+            const cancelTimer = () => clearTimeout(pressTimer);
+            row.addEventListener('touchend', cancelTimer);
+            row.addEventListener('touchmove', cancelTimer);
+            row.addEventListener('touchcancel', cancelTimer);
             row.appendChild(cell);
             section.appendChild(row);
         }
