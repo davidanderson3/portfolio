@@ -120,6 +120,7 @@ export async function initPlanningPanel() {
   let currentData = saved || {};
   currentData.profiles = currentData.profiles || [];
   currentData.assets = currentData.assets || {};
+  currentData.profiles.forEach(p => { p.history = p.history || []; });
 
   const container = document.getElementById('planningContainer');
   container.innerHTML = `
@@ -161,6 +162,7 @@ export async function initPlanningPanel() {
         <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${initial.finance?.returnRate ?? ''}" /></label>
       </form>
       <div class="financeResult" style="margin-top:1em;"></div>
+      <div class="financeHistory" style="margin-top:1em;"></div>
       <form class="happy-form" style="display:flex;flex-direction:column;gap:4px;max-width:260px;margin-top:1em;">
         <label>Hours on Hobbies/week <input type="number" name="hobbyHours" placeholder="e.g. 10" value="${initial.happiness?.hobbyHours ?? ''}" /></label>
         <label>Hours Working/week <input type="number" name="workHours" placeholder="e.g. 40" value="${initial.happiness?.workHours ?? ''}" /></label>
@@ -185,8 +187,20 @@ export async function initPlanningPanel() {
 
     const financeForm = wrap.querySelector('.finance-form');
     const financeResultDiv = wrap.querySelector('.financeResult');
+    const financeHistoryDiv = wrap.querySelector('.financeHistory');
     const happyForm = wrap.querySelector('.happy-form');
     const happyResultDiv = wrap.querySelector('.happyResult');
+
+    function renderHistory() {
+      const hist = (currentData.profiles[index]?.history) || [];
+      if (!hist.length) {
+        financeHistoryDiv.textContent = '';
+        return;
+      }
+      financeHistoryDiv.innerHTML = '<table><thead><tr><th>Date</th><th>Balance</th></tr></thead><tbody>' +
+        hist.map(h => `<tr><td>${h.date}</td><td>$${h.balance.toLocaleString()}</td></tr>`).join('') +
+        '</tbody></table>';
+    }
 
     function renderFinance() {
       const values = {
@@ -212,6 +226,19 @@ export async function initPlanningPanel() {
       const assetTotal =
         assetVals.realEstate + assetVals.carValue + assetVals.assetSavings + assetVals.investment;
 
+      // record daily finance history
+      currentData.profiles[index] = currentData.profiles[index] || {};
+      const hist = currentData.profiles[index].history || [];
+      const today = new Date().toISOString().slice(0, 10);
+      const last = hist[hist.length - 1];
+      if (!last || last.date !== today) {
+        hist.push({ date: today, age: values.curAge, balance: assetTotal });
+      } else {
+        last.age = values.curAge;
+        last.balance = assetTotal;
+      }
+      currentData.profiles[index].history = hist;
+
       const data = calculateFinanceProjection({
         currentAge: values.curAge,
         retirementAge: values.retAge,
@@ -225,6 +252,7 @@ export async function initPlanningPanel() {
         '</tbody></table>';
       currentData.profiles[index] = currentData.profiles[index] || {};
       currentData.profiles[index].finance = { ...values };
+      renderHistory();
       savePlanningData(currentData);
     }
 
@@ -250,6 +278,7 @@ export async function initPlanningPanel() {
     happyForm.addEventListener('input', renderHappiness);
 
     if (initial.finance) renderFinance();
+    if (initial.history) renderHistory();
     if (initial.happiness) renderHappiness();
 
     profilesDiv.appendChild(wrap);

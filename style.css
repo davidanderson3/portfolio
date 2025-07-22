@@ -1693,6 +1693,25 @@ h2 {
   padding: 8px;
 }
 
+.finance-history table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.finance-history th,
+.finance-history td {
+  border: 1px solid #d0decf;
+  padding: 4px;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.finance-history tbody tr:nth-child(even) {
+  background-color: #f8f5f0;
+}
+
 .profile-header {
   display: flex;
   justify-content: space-between;
