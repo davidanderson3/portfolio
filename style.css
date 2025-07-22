@@ -1667,7 +1667,10 @@ h2 {
 
 #todaySchedule .hour-note {
   white-space: pre-wrap;
-  margin-left: 4px;
+  display: block;
+  margin-left: auto;
+  margin-right: 4px;
+  text-align: right;
 }
 
 #todaySchedule .hour-row.comfortable-temp {
