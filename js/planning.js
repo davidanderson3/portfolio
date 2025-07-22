@@ -124,11 +124,7 @@ export async function initPlanningPanel() {
 
   const container = document.getElementById('planningContainer');
   container.innerHTML = `
-    <h3>Profiles</h3>
-    <button type="button" id="addProfile">+ Add Profile</button>
-    <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
-    <div id="profilesList" style="margin-top:1em;"></div>
-    <h3 style="margin-top:2em;">Assets</h3>
+    <h3>Assets</h3>
     <form id="assetsForm" style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
@@ -136,6 +132,10 @@ export async function initPlanningPanel() {
       <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
     </form>
     <div id="assetsTotal" style="margin-top:1em;"></div>
+    <h3 style="margin-top:2em;">Profiles</h3>
+    <button type="button" id="addProfile">+ Add Profile</button>
+    <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
+    <div id="profilesList" style="margin-top:1em;"></div>
     <h3 style="margin-top:2em;">Sources of Happiness</h3>
     <ul id="happySourcesList" style="margin-top:0;"></ul>
   `;
