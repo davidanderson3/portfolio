@@ -127,8 +127,6 @@ export async function initPlanningPanel() {
     <button type="button" id="addProfile">+ Add Profile</button>
     <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
     <div id="profilesList" style="margin-top:1em;"></div>
-    <h3 style="margin-top:2em;">Sources of Happiness</h3>
-    <ul id="happySourcesList" style="margin-top:0;"></ul>
     <h3 style="margin-top:2em;">Assets</h3>
     <form id="assetsForm" style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
@@ -137,10 +135,14 @@ export async function initPlanningPanel() {
       <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
     </form>
     <div id="assetsTotal" style="margin-top:1em;"></div>
+    <h3 style="margin-top:2em;">Sources of Happiness</h3>
+    <ul id="happySourcesList" style="margin-top:0;"></ul>
   `;
 
   const profilesDiv = container.querySelector('#profilesList');
   let profileCount = 0;
+  let assetsForm;
+  let assetsTotalDiv;
 
   function addProfile(initial = {}) {
     const index = profileCount++;
@@ -154,7 +156,6 @@ export async function initPlanningPanel() {
       <form class="finance-form" style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
         <label>Current Age <input type="number" name="curAge" placeholder="e.g. 30" value="${initial.finance?.curAge ?? ''}" /></label>
         <label>Retirement Age <input type="number" name="retAge" placeholder="e.g. 65" value="${initial.finance?.retAge ?? ''}" /></label>
-        <label>Current Savings <input type="number" name="savings" placeholder="e.g. 0" value="${initial.finance?.savings ?? ''}" /></label>
         <label>Annual Income <input type="number" name="income" placeholder="e.g. 50000" value="${initial.finance?.income ?? ''}" /></label>
         <label>Annual Expenses <input type="number" name="expenses" placeholder="e.g. 40000" value="${initial.finance?.expenses ?? ''}" /></label>
         <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${initial.finance?.returnRate ?? ''}" /></label>
@@ -191,15 +192,30 @@ export async function initPlanningPanel() {
       const values = {
         curAge: financeForm.curAge.value,
         retAge: financeForm.retAge.value,
-        savings: financeForm.savings.value,
         income: financeForm.income.value,
         expenses: financeForm.expenses.value,
         returnRate: financeForm.returnRate.value
       };
+
+      const assetVals = assetsForm ? {
+        realEstate: Number(assetsForm.realEstate.value || 0),
+        carValue: Number(assetsForm.carValue.value || 0),
+        assetSavings: Number(assetsForm.assetSavings.value || 0),
+        investment: Number(assetsForm.investment.value || 0)
+      } : {
+        realEstate: Number(currentData.assets.realEstate || 0),
+        carValue: Number(currentData.assets.carValue || 0),
+        assetSavings: Number(currentData.assets.assetSavings || 0),
+        investment: Number(currentData.assets.investment || 0)
+      };
+
+      const assetTotal =
+        assetVals.realEstate + assetVals.carValue + assetVals.assetSavings + assetVals.investment;
+
       const data = calculateFinanceProjection({
         currentAge: values.curAge,
         retirementAge: values.retAge,
-        savings: values.savings,
+        savings: assetTotal,
         income: values.income,
         expenses: values.expenses,
         returnRate: values.returnRate
@@ -252,8 +268,8 @@ export async function initPlanningPanel() {
     srcList.innerHTML = happinessSources.map(s => `<li>${s}</li>`).join('');
   }
 
-  const assetsForm = container.querySelector('#assetsForm');
-  const assetsTotalDiv = container.querySelector('#assetsTotal');
+  assetsForm = container.querySelector('#assetsForm');
+  assetsTotalDiv = container.querySelector('#assetsTotal');
   if (assetsForm && assetsTotalDiv) {
     function renderAssets() {
       const values = {
@@ -267,6 +283,11 @@ export async function initPlanningPanel() {
       assetsTotalDiv.textContent = `Total Assets: $${total.toLocaleString()}`;
       currentData.assets = { ...values };
       savePlanningData(currentData);
+      if (typeof window !== 'undefined' && window.Event) {
+        document.querySelectorAll('.finance-form').forEach(f => {
+          f.dispatchEvent(new window.Event('input', { bubbles: true }));
+        });
+      }
     }
     assetsForm.addEventListener('input', renderAssets);
     renderAssets();

@@ -40,7 +40,7 @@ describe('planning UI persistence', () => {
     global.document = dom.window.document;
 
     const names = [
-      'curAge', 'retAge', 'savings', 'income', 'expenses', 'returnRate',
+      'curAge', 'retAge', 'income', 'expenses', 'returnRate',
       'hobbyHours', 'workHours', 'realEstate', 'carValue', 'assetSavings', 'investment'
     ];
     names.forEach(n => {
