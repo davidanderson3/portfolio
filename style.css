@@ -1667,6 +1667,7 @@ h2 {
 
 #todaySchedule .hour-note {
   white-space: pre-wrap;
+  margin-left: 4px;
 }
 
 #todaySchedule .hour-row.comfortable-temp {
