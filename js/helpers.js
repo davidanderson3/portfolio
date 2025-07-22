@@ -3,13 +3,15 @@ import { SAMPLE_DECISIONS, SAMPLE_LISTS } from './sampleData.js';
 
 // Demo data for visitors stored in sampleData.js
 
-// Cache decisions in-memory to avoid repeated Firestore reads
+// Cache decisions in-memory and persist a copy in localStorage
 let decisionsCache = null;
 const DECISIONS_LOCAL_KEY = 'pendingDecisions';
+const DECISIONS_CACHE_KEY = 'cachedDecisions';
 let saveTimer = null;
 
 export function clearDecisionsCache() {
   decisionsCache = null;
+  localStorage.removeItem(DECISIONS_CACHE_KEY);
 }
 
 export function generateId() {
@@ -19,6 +21,22 @@ export function generateId() {
 export async function loadDecisions(forceRefresh = false) {
   if (decisionsCache && !forceRefresh) {
     return decisionsCache;
+  }
+
+  if (!forceRefresh) {
+    const cached = localStorage.getItem(DECISIONS_CACHE_KEY);
+    if (cached) {
+      try {
+        decisionsCache = JSON.parse(cached);
+      } catch {
+        decisionsCache = null;
+      }
+    }
+    if (decisionsCache) {
+      // start refresh in background but return cached copy
+      refreshFromCloud().catch(() => {});
+      return decisionsCache;
+    }
   }
 
   const currentUser = getCurrentUser();
@@ -48,16 +66,21 @@ export async function loadDecisions(forceRefresh = false) {
       }
     }
   }
-  const snap = await db.collection('decisions').doc(currentUser.uid).get();
-  const data = snap.data();
-  const rawItems = data && Array.isArray(data.items) ? data.items : [];
-  decisionsCache = rawItems.map(it => {
-    if (it && it.hiddenUntil && typeof it.hiddenUntil.toDate === 'function') {
-      return { ...it, hiddenUntil: it.hiddenUntil.toDate().toISOString() };
-    }
-    return it;
-  });
-  return decisionsCache;
+  return refreshFromCloud();
+
+  async function refreshFromCloud() {
+    const snap = await db.collection('decisions').doc(currentUser.uid).get();
+    const data = snap.data();
+    const rawItems = data && Array.isArray(data.items) ? data.items : [];
+    decisionsCache = rawItems.map(it => {
+      if (it && it.hiddenUntil && typeof it.hiddenUntil.toDate === 'function') {
+        return { ...it, hiddenUntil: it.hiddenUntil.toDate().toISOString() };
+      }
+      return it;
+    });
+    localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(decisionsCache));
+    return decisionsCache;
+  }
 }
 
 export async function saveDecisions(items) {
@@ -73,6 +96,7 @@ export async function saveDecisions(items) {
     return;
   }
   localStorage.setItem(DECISIONS_LOCAL_KEY, JSON.stringify(items));
+  localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
   decisionsCache = items;
 
   if (saveTimer) clearTimeout(saveTimer);
@@ -107,6 +131,7 @@ export async function flushPendingDecisions() {
       .doc(currentUser.uid)
       .set({ items }, { merge: true });
     localStorage.removeItem(DECISIONS_LOCAL_KEY);
+    localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
     decisionsCache = items;
   } catch (err) {
     console.error('Failed to save decisions:', err);
