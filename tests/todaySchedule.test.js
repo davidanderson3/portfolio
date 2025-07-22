@@ -125,7 +125,7 @@ describe('renderTodaySchedule', () => {
     vi.useRealTimers();
   });
 
-  it('opens an input on touchstart', () => {
+  it('opens an input on long press', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2023-01-01T10:00:00Z'));
 
@@ -134,6 +134,7 @@ describe('renderTodaySchedule', () => {
 
     const row = container.querySelector('.hour-row');
     row.dispatchEvent(new window.Event('touchstart', { bubbles: true, cancelable: true }));
+    vi.advanceTimersByTime(500);
 
     const input = container.querySelector('input.hour-input');
     expect(input).not.toBeNull();
