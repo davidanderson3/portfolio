@@ -84,6 +84,8 @@ describe('planning UI persistence', () => {
     expect(saved.assets.carValue).toBe(10000);
     expect(saved.assets.assetSavings).toBe(5000);
     expect(saved.assets.investment).toBe(20000);
+    expect(saved.profiles[0].history.length).toBe(1);
+    expect(saved.profiles[0].history[0].balance).toBe(135000);
 
     // simulate login and page reload
     mod1.clearPlanningCache();
@@ -112,6 +114,7 @@ describe('planning UI persistence', () => {
     const car2 = assetsForm2.carValue.value;
     const saving2 = assetsForm2.assetSavings.value;
     const invest2 = assetsForm2.investment.value;
+    const savedAfter = JSON.parse(localStorage.getItem('planningData'));
 
     expect(name2).toBe('Tester');
     expect(age2).toBe('30');
@@ -120,5 +123,7 @@ describe('planning UI persistence', () => {
     expect(car2).toBe('10000');
     expect(saving2).toBe('5000');
     expect(invest2).toBe('20000');
+    expect(savedAfter.profiles[0].history.length).toBe(1);
+    expect(savedAfter.profiles[0].history[0].balance).toBe(135000);
   });
 });
