@@ -125,7 +125,7 @@ export async function initPlanningPanel() {
   const container = document.getElementById('planningContainer');
   container.innerHTML = `
     <h3>Assets</h3>
-    <form id="assetsForm" style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
+    <form id="assetsForm" class="planning-form">
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
       <label>Savings <input type="number" name="assetSavings" placeholder="e.g. 10000" value="${currentData.assets.assetSavings ?? ''}" /></label>
@@ -154,7 +154,7 @@ export async function initPlanningPanel() {
       <div class="profile-header">
         <input type="text" class="profile-name" placeholder="e.g. Alex" value="${initial.name ?? ''}" />
       </div>
-      <form class="finance-form" style="display:flex;flex-direction:column;gap:4px;max-width:260px;">
+      <form class="finance-form planning-form">
         <label>Current Age <input type="number" name="curAge" placeholder="e.g. 30" value="${initial.finance?.curAge ?? ''}" /></label>
         <label>Retirement Age <input type="number" name="retAge" placeholder="e.g. 65" value="${initial.finance?.retAge ?? ''}" /></label>
         <label>Annual Income <input type="number" name="income" placeholder="e.g. 50000" value="${initial.finance?.income ?? ''}" /></label>
@@ -163,7 +163,7 @@ export async function initPlanningPanel() {
       </form>
       <div class="financeResult" style="margin-top:1em;"></div>
       <div class="financeHistory" style="margin-top:1em;"></div>
-      <form class="happy-form" style="display:flex;flex-direction:column;gap:4px;max-width:260px;margin-top:1em;">
+      <form class="happy-form planning-form" style="margin-top:1em;">
         <label>Hours on Hobbies/week <input type="number" name="hobbyHours" placeholder="e.g. 10" value="${initial.happiness?.hobbyHours ?? ''}" /></label>
         <label>Hours Working/week <input type="number" name="workHours" placeholder="e.g. 40" value="${initial.happiness?.workHours ?? ''}" /></label>
       </form>

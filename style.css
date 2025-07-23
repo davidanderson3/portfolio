@@ -1725,6 +1725,18 @@ h2 {
   padding: 8px;
 }
 
+/* Planning panel form layout */
+.planning-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 400px;
+}
+
+.planning-form label {
+  flex: 1 1 160px;
+}
+
 .finance-history table {
   width: 100%;
   table-layout: fixed;
