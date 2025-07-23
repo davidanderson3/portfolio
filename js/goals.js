@@ -839,6 +839,32 @@ export function appendGoalToDOM(goal, allItems) {
     updateGoalCounts(allItems);
 }
 
+export function refreshGoalInDOM(goal, allItems) {
+    const wrapper = document.querySelector(`[data-goal-id="${goal.id}"]`);
+    if (!wrapper) return;
+
+    const wasOpen = openGoalIds.has(goal.id);
+    const target = goal.parentGoalId
+        ? document.querySelector(`[data-goal-id="${goal.parentGoalId}"] .goal-children`)
+        : goalList;
+
+    wrapper.innerHTML = '';
+    const row = createGoalRow(goal, { hideScheduled: true, itemsRef: allItems });
+    wrapper.appendChild(row);
+
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'goal-children';
+    childrenContainer.style.display = wasOpen ? 'block' : 'none';
+    wrapper.appendChild(childrenContainer);
+    renderChildren(goal, allItems, childrenContainer);
+    setupToggle(wrapper, row, childrenContainer, goal.id);
+
+    if (wrapper.parentElement !== target && target) {
+        target.appendChild(wrapper);
+    }
+    updateGoalCounts(allItems);
+}
+
 /**
  * Attach ✏️, 🕒, ❌ buttons to a goal-row.
  *
@@ -1029,7 +1055,9 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
             } catch (err) {
                 console.error('Failed to sync with Google Calendar', err);
             }
-            renderGoalsAndSubitems();
+            item.scheduled = range.start.trim();
+            item.scheduledEnd = range.end.trim();
+            refreshGoalInDOM(item, all);
         }
     });
     buttonWrap.appendChild(calendarBtn);
@@ -1190,7 +1218,12 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                         : (newScheduled || '');
                     due.textContent = item.completed ? item.dateCompleted : rangeText;
                 } else {
-                    await renderGoalsAndSubitems();
+                    item.text = newText;
+                    item.notes = newNotes;
+                    item.scheduled = newScheduled;
+                    item.scheduledEnd = newScheduledEnd;
+                    item.parentGoalId = newParent || null;
+                    refreshGoalInDOM(item, all);
                 }
             }
 
