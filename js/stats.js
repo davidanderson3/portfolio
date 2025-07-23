@@ -502,9 +502,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     let avg = '—';
     if (numericVals.length) {
       const sum = numericVals.reduce((s, v) => s + v, 0);
-      const denom = cfg.unit === 'count'
-        ? Object.keys(allStats).length || numericVals.length
-        : numericVals.length;
+      const denom = numericVals.length;
       avg = (sum / denom).toFixed(2);
     }
     const tdAvg = document.createElement('td');
