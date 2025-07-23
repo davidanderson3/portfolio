@@ -377,9 +377,16 @@ button:hover {
   gap: 8px;
 }
 
+
 .decision-row.editing .middle-group,
 .decision-row.editing .due-column {
   width: 100%;
+}
+
+.decision-row.editing .due-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .decision-row.editing .due-column input,
