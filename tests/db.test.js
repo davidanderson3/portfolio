@@ -134,6 +134,7 @@ describe('database helpers', () => {
     const { saveDecisions } = await import('../js/helpers.js');
     await saveDecisions([{ id: 'x', text: 'y' }]);
     expect(alertSpy).toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual([{ id: 'x', text: 'y' }]);
   });
 
   it('saves lists for anonymous users to localStorage', async () => {
