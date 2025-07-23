@@ -1112,9 +1112,10 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
 
             textInput.value = item.text;
             textInput.style.width = '100%';
+            textInput.style.marginTop = '4px';
 
             notesInput.value = item.notes || '';
-            notesInput.rows = 2;
+            notesInput.rows = 4; // give extra space for editing notes
             notesInput.style.width = '100%';
             notesInput.style.marginTop = '4px';
 

@@ -370,6 +370,27 @@ button:hover {
   align-items: center;
 }
 
+/* More room when editing a goal */
+.decision-row.editing {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.decision-row.editing .middle-group,
+.decision-row.editing .due-column {
+  width: 100%;
+}
+
+.decision-row.editing .due-column input,
+.decision-row.editing .due-column select {
+  width: 100%;
+}
+
+.decision-row.editing textarea {
+  min-height: 4em;
+}
+
 /* Other rules remain unchanged below... */
 
 .check-column input {
