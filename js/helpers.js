@@ -85,14 +85,17 @@ export async function loadDecisions(forceRefresh = false) {
 
 export async function saveDecisions(items) {
   const currentUser = getCurrentUser();
-  if (!currentUser) {
-    alert('⚠️ Please sign in to save your changes.');
-    return;
-  }
   if (!Array.isArray(items)) return;
   // ensure at least one valid decision exists
   if (!items.some(i => i.id && i.text)) {
     console.warn('⚠️ Refusing to save empty or invalid decisions');
+    return;
+  }
+  if (!currentUser) {
+    alert('⚠️ Please sign in to save your changes.');
+    localStorage.setItem(DECISIONS_LOCAL_KEY, JSON.stringify(items));
+    localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
+    decisionsCache = items;
     return;
   }
   localStorage.setItem(DECISIONS_LOCAL_KEY, JSON.stringify(items));
