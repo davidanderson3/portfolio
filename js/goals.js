@@ -1096,6 +1096,8 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
     let editing = false;
     editBtn.addEventListener('click', async () => {
         const row = editBtn.closest('.decision-row');
+        const wrapper = editBtn.closest('.goal-card');
+        const childrenContainer = wrapper?.querySelector('.goal-children');
         const middle = row.querySelector('.middle-group');
         const due = row.querySelector('.due-column');
         if (!middle || !due) return;
@@ -1103,6 +1105,9 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
         if (!editing) {
             editing = true;
             editBtn.innerHTML = '💾';
+            if (wrapper) {
+                wrapper.setAttribute('draggable', 'false');
+            }
 
             const textInput = document.createElement('input');
             const notesInput = document.createElement('textarea');
@@ -1229,6 +1234,10 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
 
             row.classList.remove('editing');
             editBtn.innerHTML = '✏️';
+            if (wrapper) {
+                const open = childrenContainer && childrenContainer.style.display === 'block';
+                wrapper.setAttribute('draggable', open ? 'false' : 'true');
+            }
         }
     });
 }
