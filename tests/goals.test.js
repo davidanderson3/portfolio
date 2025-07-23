@@ -154,7 +154,7 @@ describe('editing scheduled date', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-  expect(document.getElementById('goalList').contains(wrapper)).toBe(false);
+  expect(document.getElementById('goalList').contains(wrapper)).toBe(true);
   });
 });
 
