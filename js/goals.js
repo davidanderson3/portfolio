@@ -844,9 +844,6 @@ export function refreshGoalInDOM(goal, allItems) {
     if (!wrapper) return;
 
     const wasOpen = openGoalIds.has(goal.id);
-    const target = goal.parentGoalId
-        ? document.querySelector(`[data-goal-id="${goal.parentGoalId}"] .goal-children`)
-        : goalList;
 
     wrapper.innerHTML = '';
     const row = createGoalRow(goal, { hideScheduled: true, itemsRef: allItems });
@@ -859,9 +856,21 @@ export function refreshGoalInDOM(goal, allItems) {
     renderChildren(goal, allItems, childrenContainer);
     setupToggle(wrapper, row, childrenContainer, goal.id);
 
-    if (wrapper.parentElement !== target && target) {
-        target.appendChild(wrapper);
+    const hideUntil = goal.hiddenUntil ? Date.parse(goal.hiddenUntil) || 0 : 0;
+    const isHidden = hideUntil && Date.now() < hideUntil;
+
+    if (isHidden) {
+        const hiddenContent = document.getElementById('hiddenContent');
+        if (hiddenContent) addHiddenControls(wrapper, row, goal, hiddenContent);
+    } else {
+        const target = goal.parentGoalId
+            ? document.querySelector(`[data-goal-id="${goal.parentGoalId}"] .goal-children`)
+            : goalList;
+        if (wrapper.parentElement !== target && target) {
+            target.appendChild(wrapper);
+        }
     }
+
     updateGoalCounts(allItems);
 }
 
