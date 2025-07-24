@@ -153,7 +153,7 @@ export async function saveGoalOrder(order) {
     await db
       .collection('decisions')
       .doc(currentUser.uid)
-      .update({ goalOrder: order });
+      .set({ goalOrder: order }, { merge: true });
   } catch (err) {
     console.error('Failed to save goal order:', err);
     alert('⚠️ Failed to save changes.');
