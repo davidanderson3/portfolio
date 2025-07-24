@@ -266,6 +266,11 @@ export function makeIconBtn(symbol, title, fn) {
 }
 
 export function pickDate(initial = '') {
+  // Fallback for browsers lacking <dialog> support
+  if (!window.HTMLDialogElement || !document.createElement('dialog').showModal) {
+    const val = prompt('Select date (YYYY-MM-DD):', initial);
+    return Promise.resolve(val ? val.trim() : '');
+  }
   return new Promise(resolve => {
     const dialog = document.createElement('dialog');
     const form = document.createElement('form');
@@ -304,6 +309,13 @@ export function pickDate(initial = '') {
 }
 
 export function pickDateRange(start = '', end = '') {
+  // Fallback for browsers lacking <dialog> support
+  if (!window.HTMLDialogElement || !document.createElement('dialog').showModal) {
+    const startVal = prompt('Start date (YYYY-MM-DD):', start) || '';
+    if (!startVal) return Promise.resolve({ start: '', end: '' });
+    const endVal = prompt('End date (optional):', end) || '';
+    return Promise.resolve({ start: startVal.trim(), end: endVal.trim() });
+  }
   return new Promise(resolve => {
     const dialog = document.createElement('dialog');
     const form = document.createElement('form');
