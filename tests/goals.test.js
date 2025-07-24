@@ -114,6 +114,27 @@ describe('addCalendarGoal', () => {
     // goal should also appear in the main goal list
     expect(document.getElementById('goalList').children.length).toBe(1);
   });
+
+  it('saves goal order when user signed in', async () => {
+    helpers.loadDecisions.mockResolvedValue([]);
+    global.prompt = vi.fn()
+      .mockReturnValueOnce('Cal goal')
+      .mockReturnValueOnce('');
+    helpers.pickDateRange.mockResolvedValue({ start: '2024-01-02', end: '' });
+
+    global.firebase = { auth: () => ({ currentUser: { uid: 'u1' } }) };
+    const { db } = await import('../js/auth.js');
+    const get = vi.fn().mockResolvedValue({ data: () => ({ goalOrder: ['a'] }) });
+    const doc = vi.fn(() => ({ get }));
+    const collection = vi.fn(() => ({ doc }));
+    db.collection = collection;
+
+    const mod = await import('../js/goals.js');
+    const { addCalendarGoal } = mod;
+    await addCalendarGoal('2024-01-02');
+
+    expect(helpers.saveGoalOrder).toHaveBeenCalledWith(['a', 'g1']);
+  });
 });
 
 describe('editing scheduled date', () => {

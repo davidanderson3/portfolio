@@ -65,6 +65,20 @@ export async function addCalendarGoal(date = '') {
         scheduledEnd: range.end.trim() || ''
     };
     await saveDecisions([...all, newGoal]);
+
+    const user = firebase?.auth()?.currentUser;
+    if (user) {
+        const snap = await db
+            .collection('decisions')
+            .doc(user.uid)
+            .get();
+        const order = Array.isArray(snap.data()?.goalOrder)
+            ? snap.data().goalOrder
+            : [];
+        if (!order.includes(newGoal.id)) {
+            await saveGoalOrder([...order, newGoal.id]);
+        }
+    }
     const recur = prompt('Repeat how often? (daily/weekly/monthly or blank for none):', '') || '';
     try {
         await createCalendarEvent(newGoal.text, newGoal.scheduled, newGoal.scheduledEnd || newGoal.scheduled, recur);
