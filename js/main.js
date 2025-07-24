@@ -9,7 +9,7 @@ import { initTabs } from './tabs.js';
 import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
 import { initGoogleCalendar } from './googleCalendar.js';
-import { loadHiddenTabs, applyHiddenTabs } from './settings.js';
+import { loadHiddenTabs, applyHiddenTabs, saveHiddenTabs } from './settings.js';
 import { clearPlanningCache } from './planning.js';
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -25,6 +25,7 @@ window.addEventListener('DOMContentLoaded', () => {
     calendarAddGoalBtn: document.getElementById('calendarAddGoalBtn'),
     addGoalBtn: document.getElementById('addGoalBtn'),
     bottomAddBtn: document.getElementById('bottomAddBtn'),
+    bottomHideTabBtn: document.getElementById('bottomHideTabBtn'),
     bottomLogoutBtn: document.getElementById('bottomLogoutBtn'),
     bottomAddModal: document.getElementById('bottomAddModal'),
     bottomAddTitle: document.getElementById('bottomAddTitle'),
@@ -59,6 +60,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (uiRefs.bottomAddBtn) {
     uiRefs.bottomAddBtn.addEventListener('click', handleBottomAdd);
+  }
+  if (uiRefs.bottomHideTabBtn) {
+    setupHideTabButton(uiRefs.bottomHideTabBtn);
   }
 
   document.addEventListener('keydown', e => {
@@ -154,6 +158,68 @@ window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('addPlaceBtn')?.click();
       return;
     }
+  }
+
+  function setupHideTabButton(btn) {
+    const menu = document.createElement('div');
+    Object.assign(menu.style, {
+      position: 'absolute',
+      background: '#fff',
+      border: '1px solid #ccc',
+      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+      zIndex: 9999,
+      minWidth: '120px',
+      display: 'none'
+    });
+    document.body.appendChild(menu);
+
+    const options = [
+      { label: '1 hour', value: 1 },
+      { label: '2 hours', value: 2 },
+      { label: '4 hours', value: 4 },
+      { label: '8 hours', value: 8 },
+      { label: '1 day', value: 24 },
+      { label: '2 days', value: 48 },
+      { label: '3 days', value: 72 },
+      { label: '4 days', value: 96 },
+      { label: '1 week', value: 168 },
+      { label: '2 weeks', value: 336 },
+      { label: '1 month', value: 720 },
+      { label: '2 months', value: 1440 },
+      { label: '3 months', value: 2160 }
+    ];
+
+    options.forEach(opt => {
+      const optBtn = document.createElement('button');
+      optBtn.type = 'button';
+      optBtn.textContent = opt.label;
+      optBtn.classList.add('postpone-option');
+      optBtn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const active = document.querySelector('.tab-button.active')?.dataset.target;
+        if (!active) return;
+        const hidden = await loadHiddenTabs();
+        hidden[active] = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+        await saveHiddenTabs(hidden);
+        applyHiddenTabs(hidden);
+        menu.style.display = 'none';
+      });
+      menu.appendChild(optBtn);
+    });
+
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const rect = btn.getBoundingClientRect();
+      menu.style.top = `${rect.top - menu.offsetHeight + window.scrollY}px`;
+      menu.style.left = `${rect.left + window.scrollX}px`;
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', e => {
+      if (!menu.contains(e.target) && e.target !== btn) {
+        menu.style.display = 'none';
+      }
+    });
   }
 
   function initCalendarMobileTabs() {
