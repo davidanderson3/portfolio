@@ -151,6 +151,10 @@ body.mild-glow {
   padding: 0;
 }
 
+.tab-hide-btn {
+  margin: 16px auto 0;
+}
+
 /* horizontally scrollable tab list */
 .scroll-tabs {
   display: flex;

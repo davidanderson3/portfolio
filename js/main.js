@@ -25,7 +25,6 @@ window.addEventListener('DOMContentLoaded', () => {
     calendarAddGoalBtn: document.getElementById('calendarAddGoalBtn'),
     addGoalBtn: document.getElementById('addGoalBtn'),
     bottomAddBtn: document.getElementById('bottomAddBtn'),
-    bottomHideTabBtn: document.getElementById('bottomHideTabBtn'),
     bottomLogoutBtn: document.getElementById('bottomLogoutBtn'),
     bottomAddModal: document.getElementById('bottomAddModal'),
     bottomAddTitle: document.getElementById('bottomAddTitle'),
@@ -61,9 +60,9 @@ window.addEventListener('DOMContentLoaded', () => {
   if (uiRefs.bottomAddBtn) {
     uiRefs.bottomAddBtn.addEventListener('click', handleBottomAdd);
   }
-  if (uiRefs.bottomHideTabBtn) {
-    setupHideTabButton(uiRefs.bottomHideTabBtn);
-  }
+  document.querySelectorAll('.tab-hide-btn').forEach(btn => {
+    setupHideTabButton(btn);
+  });
 
   document.addEventListener('keydown', e => {
     if (e.key === 'A' && e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
