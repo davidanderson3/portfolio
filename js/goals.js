@@ -200,17 +200,20 @@ export async function renderGoalsAndSubitems() {
   await renderRemainingGoals(allDecisions, sortedGoals, hiddenContent);
   updateGoalCounts(allDecisions);
 
-  // wait for weather and render calendar once data is ready
-  let weatherData = null;
+  // first render without waiting on weather data
+  renderCalendarSection(allDecisions, calendarContent, null);
+  renderTodaySchedule(allDecisions, todayList, null);
+
+  // update once weather data is ready
   if (weatherPromise) {
     try {
-      weatherData = (await weatherPromise)?.data || null;
+      const weatherData = (await weatherPromise)?.data || null;
+      renderCalendarSection(allDecisions, calendarContent, weatherData);
+      renderTodaySchedule(allDecisions, todayList, weatherData);
     } catch (err) {
       console.error('Weather fetch failed', err);
     }
   }
-  renderCalendarSection(allDecisions, calendarContent, weatherData);
-  renderTodaySchedule(allDecisions, todayList, weatherData);
 }
 
 
