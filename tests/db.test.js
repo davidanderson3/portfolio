@@ -78,7 +78,7 @@ describe('database helpers', () => {
   it('saves goal order', async () => {
     const { saveGoalOrder } = await import('../js/helpers.js');
     await saveGoalOrder(['a', 'b']);
-    expect(updateMock).toHaveBeenCalledWith({ goalOrder: ['a', 'b'] });
+    expect(setMock).toHaveBeenCalledWith({ goalOrder: ['a', 'b'] }, { merge: true });
   });
 
   it('ignores empty decisions array', async () => {
@@ -103,7 +103,7 @@ describe('database helpers', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { saveGoalOrder } = await import('../js/helpers.js');
     await saveGoalOrder([]);
-    expect(updateMock).not.toHaveBeenCalled();
+    expect(setMock).not.toHaveBeenCalled();
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
   });
@@ -119,7 +119,7 @@ describe('database helpers', () => {
   });
 
   it('alerts when saveGoalOrder fails', async () => {
-    updateMock.mockRejectedValueOnce(new Error('fail'));
+    setMock.mockRejectedValueOnce(new Error('fail'));
     const alertSpy = vi.fn();
     global.alert = alertSpy;
     const { saveGoalOrder } = await import('../js/helpers.js');
