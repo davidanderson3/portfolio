@@ -96,6 +96,9 @@ async function initListsPanel() {
   const panel = document.getElementById('listsPanel');
   if (!panel) return;
 
+  // Preserve existing hide button (added in index.html)
+  const panelHideBtn = panel.querySelector('.tab-hide-btn');
+
   // ─── 1) Clear & style the panel ─────────────────────────────
   panel.innerHTML = '';
   panel.style.display = 'flex';
@@ -1070,6 +1073,9 @@ function openRowEditor(rowIdx) {
       content.style.display = 'block';
     }
   }
+
+  // Re-append the preserved hide button
+  if (panelHideBtn) panel.append(panelHideBtn);
 }
 
 
