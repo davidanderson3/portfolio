@@ -397,7 +397,13 @@ async function initListsPanel() {
 
     // Body
     const tbody = document.createElement('tbody');
+    const hiddenRows = [];
     items.forEach((item, rowIdx) => {
+      const hideUntil = item.hiddenUntil ? Date.parse(item.hiddenUntil) || 0 : 0;
+      if (hideUntil && Date.now() < hideUntil) {
+        hiddenRows.push({ item, rowIdx });
+        return;
+      }
       const tr = tbody.insertRow();
 
       // Data cells
@@ -495,10 +501,124 @@ async function initListsPanel() {
         await addListItemGoal(rowIdx);
       });
       actionCell.append(goalBtn);
+
+      const hideBtn = document.createElement('button');
+      hideBtn.textContent = '🕒';
+      hideBtn.title = 'Hide item';
+      Object.assign(hideBtn.style, { background: 'none', border: 'none', cursor: 'pointer' });
+
+      const menu = document.createElement('div');
+      Object.assign(menu.style, {
+        position: 'absolute',
+        background: '#fff',
+        border: '1px solid #ccc',
+        borderRadius: '6px',
+        boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+        padding: '6px 0',
+        fontSize: '0.9em',
+        display: 'none',
+        zIndex: '9999',
+        minWidth: '120px'
+      });
+      document.body.appendChild(menu);
+
+      const options = [
+        { label: '1 hour', value: 1 },
+        { label: '2 hours', value: 2 },
+        { label: '4 hours', value: 4 },
+        { label: '8 hours', value: 8 },
+        { label: '1 day', value: 24 },
+        { label: '2 days', value: 48 },
+        { label: '3 days', value: 72 },
+        { label: '4 days', value: 96 },
+        { label: '1 week', value: 168 },
+        { label: '2 weeks', value: 336 },
+        { label: '1 month', value: 720 },
+        { label: '2 months', value: 1440 },
+        { label: '3 months', value: 2160 }
+      ];
+      options.forEach(opt => {
+        const optBtn = document.createElement('button');
+        optBtn.type = 'button';
+        optBtn.textContent = opt.label;
+        optBtn.classList.add('postpone-option');
+        Object.assign(optBtn.style, {
+          display: 'block',
+          width: '100%',
+          padding: '4px 12px',
+          border: 'none',
+          background: 'white',
+          color: '#333',
+          textAlign: 'left',
+          cursor: 'pointer'
+        });
+        optBtn.addEventListener('click', async e => {
+          e.stopPropagation();
+          listsArray[selectedListIndex].items[rowIdx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+          await persist();
+          menu.style.display = 'none';
+          renderSelectedList();
+        });
+        menu.appendChild(optBtn);
+      });
+
+      hideBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const rect = hideBtn.getBoundingClientRect();
+        menu.style.top = `${rect.bottom + window.scrollY}px`;
+        menu.style.left = `${rect.left + window.scrollX}px`;
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      });
+
+      document.addEventListener('click', e => {
+        if (!menu.contains(e.target) && e.target !== hideBtn) {
+          menu.style.display = 'none';
+        }
+      });
+
+      actionCell.append(hideBtn);
     });
 
     table.append(tbody);
     listsContainer.append(table);
+
+    if (hiddenRows.length) {
+      const hiddenDiv = document.createElement('div');
+      hiddenDiv.innerHTML = `
+        <h4 style="margin-top:16px" id="hiddenItemsHeader">
+          <span id="toggleHiddenItems" style="cursor:pointer">▶</span>
+          <span id="hiddenItemsLabel">Hidden Items (${hiddenRows.length})</span>
+        </h4>
+        <div id="hiddenItemsContent" style="display:none"></div>
+      `;
+      const toggle = hiddenDiv.querySelector('#toggleHiddenItems');
+      const content = hiddenDiv.querySelector('#hiddenItemsContent');
+      toggle.onclick = () => {
+        const open = content.style.display === 'block';
+        toggle.textContent = open ? '▶' : '▼';
+        content.style.display = open ? 'none' : 'block';
+      };
+      hiddenRows.forEach(({ item, rowIdx }) => {
+        const div = document.createElement('div');
+        div.style.margin = '4px 0';
+        const first = columns[0];
+        const label = item[first.name + '_label'] || item[first.name] || '';
+        const until = new Date(Date.parse(item.hiddenUntil)).toLocaleString();
+        div.textContent = `${label} (hidden until ${until})`;
+        const unhide = document.createElement('button');
+        unhide.type = 'button';
+        unhide.textContent = 'Unhide';
+        Object.assign(unhide.style, { marginLeft: '8px', cursor: 'pointer' });
+        unhide.addEventListener('click', async () => {
+          listsArray[selectedListIndex].items[rowIdx].hiddenUntil = null;
+          await persist();
+          renderSelectedList();
+        });
+        div.appendChild(unhide);
+        content.appendChild(div);
+      });
+      listsContainer.append(hiddenDiv);
+    }
     setTimeout(() => {
       ulsToCheck.forEach(({ ul, td }) => {
         if (ul.scrollHeight > MAX_LIST_HEIGHT) {
@@ -784,7 +904,7 @@ function openRowEditor(rowIdx) {
       padding: '.25rem .75rem', fontSize: '.9rem', cursor: 'pointer', marginTop: '.5rem'
     });
     addBtn.addEventListener('click', async () => {
-      const newItem = {};
+      const newItem = { hiddenUntil: null };
       inputsContainer.querySelectorAll('input,textarea').forEach(i => {
         newItem[i.name] = i.value.trim();
         i.value = '';
