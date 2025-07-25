@@ -17,6 +17,7 @@ vi.mock('../js/helpers.js', () => ({
   loadDecisions: vi.fn(),
   saveDecisions: vi.fn(),
   saveGoalOrder: vi.fn(),
+  loadGoalOrder: vi.fn(async () => []),
   generateId: vi.fn(() => 'g1'),
   pickDate: vi.fn(async () => ''),
   pickDateRange: vi.fn(async () => ({ start: '', end: '' })),
@@ -123,17 +124,14 @@ describe('addCalendarGoal', () => {
     helpers.pickDateRange.mockResolvedValue({ start: '2024-01-02', end: '' });
 
     global.firebase = { auth: () => ({ currentUser: { uid: 'u1' } }) };
-    const { db } = await import('../js/auth.js');
-    const get = vi.fn().mockResolvedValue({ data: () => ({ goalOrder: ['a'] }) });
-    const doc = vi.fn(() => ({ get }));
-    const collection = vi.fn(() => ({ doc }));
-    db.collection = collection;
+    helpers.loadGoalOrder.mockResolvedValue(['a']);
 
     const mod = await import('../js/goals.js');
     const { addCalendarGoal } = mod;
     await addCalendarGoal('2024-01-02');
 
-    expect(helpers.saveGoalOrder).toHaveBeenCalledWith(['a', 'g1']);
+    const calls = helpers.saveGoalOrder.mock.calls.map(c => c[0]);
+    expect(calls).toContainEqual(['a', 'g1']);
   });
 });
 

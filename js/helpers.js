@@ -7,11 +7,19 @@ import { SAMPLE_DECISIONS, SAMPLE_LISTS } from './sampleData.js';
 let decisionsCache = null;
 const DECISIONS_LOCAL_KEY = 'pendingDecisions';
 const DECISIONS_CACHE_KEY = 'cachedDecisions';
+// Cache goal order similarly to decisions
+const GOAL_ORDER_CACHE_KEY = 'cachedGoalOrder';
+let goalOrderCache = null;
 let saveTimer = null;
 
 export function clearDecisionsCache() {
   decisionsCache = null;
   localStorage.removeItem(DECISIONS_CACHE_KEY);
+}
+
+export function clearGoalOrderCache() {
+  goalOrderCache = null;
+  localStorage.removeItem(GOAL_ORDER_CACHE_KEY);
 }
 
 export function generateId() {
@@ -117,6 +125,43 @@ export async function saveDecisions(items) {
   }, 200);
 }
 
+export async function loadGoalOrder(forceRefresh = false) {
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    return [];
+  }
+
+  if (goalOrderCache && !forceRefresh) {
+    return goalOrderCache;
+  }
+
+  if (!forceRefresh) {
+    const cached = localStorage.getItem(GOAL_ORDER_CACHE_KEY);
+    if (cached) {
+      try {
+        goalOrderCache = JSON.parse(cached);
+      } catch {
+        goalOrderCache = null;
+      }
+    }
+    if (goalOrderCache) {
+      refreshFromCloud().catch(() => {});
+      return goalOrderCache;
+    }
+  }
+
+  return refreshFromCloud();
+
+  async function refreshFromCloud() {
+    const snap = await db.collection('decisions').doc(currentUser.uid).get();
+    goalOrderCache = Array.isArray(snap.data()?.goalOrder)
+      ? snap.data().goalOrder
+      : [];
+    localStorage.setItem(GOAL_ORDER_CACHE_KEY, JSON.stringify(goalOrderCache));
+    return goalOrderCache;
+  }
+}
+
 export async function flushPendingDecisions() {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
@@ -154,6 +199,8 @@ export async function saveGoalOrder(order) {
       .collection('decisions')
       .doc(currentUser.uid)
       .set({ goalOrder: order }, { merge: true });
+    goalOrderCache = order;
+    localStorage.setItem(GOAL_ORDER_CACHE_KEY, JSON.stringify(order));
   } catch (err) {
     console.error('Failed to save goal order:', err);
     alert('⚠️ Failed to save changes.');

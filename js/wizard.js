@@ -1,8 +1,7 @@
-import { parseNaturalDate, generateId, loadDecisions, saveDecisions, saveGoalOrder } from './helpers.js';
+import { parseNaturalDate, generateId, loadDecisions, saveDecisions, saveGoalOrder, loadGoalOrder } from './helpers.js';
 import { renderGoalsAndSubitems, appendGoalToDOM, refreshGoalInDOM } from './goals.js';
 import { createCalendarEvent } from './googleCalendar.js';
 
-const db = firebase.firestore();
 
 export const wizardState = {
   step: 0,
@@ -198,8 +197,7 @@ async function saveGoalWizard() {
     }
   }
 
-  const snap = await db.collection('decisions').doc(firebase.auth().currentUser.uid).get();
-  const currentGoalOrder = snap.data()?.goalOrder || [];
+  const currentGoalOrder = await loadGoalOrder();
   const newGoalOrder = isEdit ? currentGoalOrder : [...currentGoalOrder, goalId];
   await saveGoalOrder(newGoalOrder);
 
