@@ -7,6 +7,7 @@ import {
     loadDecisions,
     saveDecisions,
     saveGoalOrder,
+    loadGoalOrder,
     generateId,
     makeIconBtn,
     formatDaysUntil,
@@ -14,8 +15,6 @@ import {
     pickDate,
     pickDateRange
 } from './helpers.js';
-
-import { db } from './auth.js';
 
 import {
     attachTaskButtons,
@@ -66,18 +65,9 @@ export async function addCalendarGoal(date = '') {
     };
     await saveDecisions([...all, newGoal]);
 
-    const user = firebase?.auth()?.currentUser;
-    if (user) {
-        const snap = await db
-            .collection('decisions')
-            .doc(user.uid)
-            .get();
-        const order = Array.isArray(snap.data()?.goalOrder)
-            ? snap.data().goalOrder
-            : [];
-        if (!order.includes(newGoal.id)) {
-            await saveGoalOrder([...order, newGoal.id]);
-        }
+    const order = await loadGoalOrder();
+    if (!order.includes(newGoal.id)) {
+        await saveGoalOrder([...order, newGoal.id]);
     }
     const recur = prompt('Repeat how often? (daily/weekly/monthly or blank for none):', '') || '';
     try {
@@ -264,14 +254,7 @@ async function loadAndSyncGoals() {
     let goalOrder = [];
 
     if (user) {
-        const snap = await db
-            .collection('decisions')
-            .doc(user.uid)
-            .get();
-
-        goalOrder = Array.isArray(snap.data()?.goalOrder)
-            ? snap.data().goalOrder
-            : [];
+        goalOrder = await loadGoalOrder();
 
         const missing = goals.map(g => g.id).filter(id => !goalOrder.includes(id));
         if (missing.length) {
