@@ -19,14 +19,13 @@ export function calculateFinanceProjection({ currentAge, retirementAge, savings,
   return data;
 }
 
-export function calculateBudgetAllocation({ income, taxRate, mortgage, other }) {
+export function calculateBudgetAllocation({ income, taxRate, mortgage }) {
   income = Number(income);
   taxRate = Number(taxRate) / 100;
   mortgage = Number(mortgage);
-  other = Number(other);
   const taxes = Math.round(income * taxRate);
-  const leftover = income - taxes - mortgage - other;
-  return { taxes, mortgage, other, leftover };
+  const leftover = income - taxes - mortgage;
+  return { taxes, mortgage, leftover };
 }
 
 const PLANNING_KEY = 'planningData';
@@ -144,10 +143,12 @@ export async function initPlanningPanel() {
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
       <label>Savings <input type="number" name="assetSavings" placeholder="e.g. 10000" value="${currentData.assets.assetSavings ?? ''}" /></label>
+      <label>Checking <input type="number" name="checking" placeholder="e.g. 2000" value="${currentData.assets.checking ?? ''}" /></label>
       <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
+      <label>Roth IRA <input type="number" name="roth" placeholder="e.g. 10000" value="${currentData.assets.roth ?? ''}" /></label>
+      <label>Crypto <input type="number" name="crypto" placeholder="e.g. 1000" value="${currentData.assets.crypto ?? ''}" /></label>
       <label>Tax Rate % <input type="number" name="taxRate" placeholder="e.g. 25" value="${currentData.budget.taxRate ?? ''}" /></label>
       <label>Mortgage/year <input type="number" name="mortgage" placeholder="e.g. 12000" value="${currentData.budget.mortgage ?? ''}" /></label>
-      <label>Other Expenses <input type="number" name="other" placeholder="e.g. 5000" value="${currentData.budget.other ?? ''}" /></label>
     </form>
     <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
     <div id="assetsTotal" style="margin-top:1em;"></div>
@@ -169,14 +170,17 @@ export async function initPlanningPanel() {
       realEstate: Number(form.realEstate.value || 0),
       carValue: Number(form.carValue.value || 0),
       assetSavings: Number(form.assetSavings.value || 0),
+      checking: Number(form.checking.value || 0),
       investment: Number(form.investment.value || 0),
+      roth: Number(form.roth.value || 0),
+      crypto: Number(form.crypto.value || 0),
       taxRate: form.taxRate.value,
-      mortgage: form.mortgage.value,
-      other: form.other.value
+      mortgage: form.mortgage.value
     };
 
     const assetTotal =
-      values.realEstate + values.carValue + values.assetSavings + values.investment;
+      values.realEstate + values.carValue + values.assetSavings + values.checking +
+      values.investment + values.roth + values.crypto;
     assetsTotalDiv.textContent = `Total Assets: $${assetTotal.toLocaleString()}`;
 
     const finData = calculateFinanceProjection({
@@ -193,13 +197,11 @@ export async function initPlanningPanel() {
     const budget = calculateBudgetAllocation({
       income: values.income,
       taxRate: values.taxRate,
-      mortgage: values.mortgage,
-      other: values.other
+      mortgage: values.mortgage
     });
     budgetResultDiv.innerHTML =
       `Taxes: $${budget.taxes.toLocaleString()}<br>` +
       `Mortgage: $${budget.mortgage.toLocaleString()}<br>` +
-      `Other: $${budget.other.toLocaleString()}<br>` +
       `Leftover: $${budget.leftover.toLocaleString()}`;
 
     currentData.finance = {
@@ -212,12 +214,14 @@ export async function initPlanningPanel() {
       realEstate: values.realEstate,
       carValue: values.carValue,
       assetSavings: values.assetSavings,
-      investment: values.investment
+      checking: values.checking,
+      investment: values.investment,
+      roth: values.roth,
+      crypto: values.crypto
     };
     currentData.budget = {
       taxRate: values.taxRate,
-      mortgage: values.mortgage,
-      other: values.other
+      mortgage: values.mortgage
     };
 
     const hist = currentData.history;

@@ -256,6 +256,7 @@ export async function initTravelPanel() {
       const visitedTd = document.createElement('td');
       visitedTd.textContent = p.visited ? '✅' : '';
       visitedTd.dataset.label = 'Visited';
+      if (p.visited) visitedTd.classList.add('visited-icon');
       const distTd = document.createElement('td');
       distTd.dataset.label = 'Distance (mi)';
       if (userCoords) {
