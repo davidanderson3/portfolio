@@ -209,7 +209,11 @@ async function initListsPanel() {
         const unhide = document.createElement('button');
         unhide.type = 'button';
         unhide.textContent = 'Unhide';
-        Object.assign(unhide.style, { marginLeft: '8px', cursor: 'pointer' });
+        Object.assign(unhide.style, {
+          marginLeft: '8px',
+          marginTop: '0',
+          cursor: 'pointer'
+        });
         unhide.addEventListener('click', async () => {
           listsArray[idx].hiddenUntil = null;
           await persist();
@@ -611,7 +615,11 @@ async function initListsPanel() {
         const unhide = document.createElement('button');
         unhide.type = 'button';
         unhide.textContent = 'Unhide';
-        Object.assign(unhide.style, { marginLeft: '8px', cursor: 'pointer' });
+        Object.assign(unhide.style, {
+          marginLeft: '8px',
+          marginTop: '0',
+          cursor: 'pointer'
+        });
         unhide.addEventListener('click', () => unhideListItem(selectedListIndex, rowIdx));
         div.appendChild(unhide);
         content.appendChild(div);
