@@ -59,11 +59,10 @@ describe('budget calculations', () => {
         prime: 15,
         tolls: 30,
         tsp: 300,
-        hsa: 200,
         dentalInsurance: 50
       }
     });
-    const expectedExpenses = 1500 + 500 + 15 + 30 + 50 + 300 + 200 + 2100;
+    const expectedExpenses = 1500 + 500 + 15 + 30 + 50 + 300 + 2100;
     expect(res.federalTax).toBe(1000);
     expect(res.stateTax).toBe(1100);
     expect(res.tax).toBe(2100);
