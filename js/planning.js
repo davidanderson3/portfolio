@@ -19,14 +19,13 @@ export function calculateFinanceProjection({ currentAge, retirementAge, savings,
   return data;
 }
 
-export function calculateBudgetAllocation({ income, taxRate, mortgage, other }) {
+export function calculateBudgetAllocation({ income, taxRate, mortgage }) {
   income = Number(income);
   taxRate = Number(taxRate) / 100;
   mortgage = Number(mortgage);
-  other = Number(other);
   const taxes = Math.round(income * taxRate);
-  const leftover = income - taxes - mortgage - other;
-  return { taxes, mortgage, other, leftover };
+  const leftover = income - taxes - mortgage;
+  return { taxes, mortgage, leftover };
 }
 
 const PLANNING_KEY = 'planningData';
@@ -147,7 +146,6 @@ export async function initPlanningPanel() {
       <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
       <label>Tax Rate % <input type="number" name="taxRate" placeholder="e.g. 25" value="${currentData.budget.taxRate ?? ''}" /></label>
       <label>Mortgage/year <input type="number" name="mortgage" placeholder="e.g. 12000" value="${currentData.budget.mortgage ?? ''}" /></label>
-      <label>Other Expenses <input type="number" name="other" placeholder="e.g. 5000" value="${currentData.budget.other ?? ''}" /></label>
     </form>
     <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
     <div id="assetsTotal" style="margin-top:1em;"></div>
@@ -171,8 +169,7 @@ export async function initPlanningPanel() {
       assetSavings: Number(form.assetSavings.value || 0),
       investment: Number(form.investment.value || 0),
       taxRate: form.taxRate.value,
-      mortgage: form.mortgage.value,
-      other: form.other.value
+      mortgage: form.mortgage.value
     };
 
     const assetTotal =
@@ -193,13 +190,11 @@ export async function initPlanningPanel() {
     const budget = calculateBudgetAllocation({
       income: values.income,
       taxRate: values.taxRate,
-      mortgage: values.mortgage,
-      other: values.other
+      mortgage: values.mortgage
     });
     budgetResultDiv.innerHTML =
       `Taxes: $${budget.taxes.toLocaleString()}<br>` +
       `Mortgage: $${budget.mortgage.toLocaleString()}<br>` +
-      `Other: $${budget.other.toLocaleString()}<br>` +
       `Leftover: $${budget.leftover.toLocaleString()}`;
 
     currentData.finance = {
@@ -216,8 +211,7 @@ export async function initPlanningPanel() {
     };
     currentData.budget = {
       taxRate: values.taxRate,
-      mortgage: values.mortgage,
-      other: values.other
+      mortgage: values.mortgage
     };
 
     const hist = currentData.history;
