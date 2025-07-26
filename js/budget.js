@@ -70,7 +70,7 @@ export async function initBudgetPanel() {
         <label>Cell Phone <input type="number" name="cell" value="${saved.cell ?? ''}" /></label>
         <label>Food <input type="number" name="food" value="${saved.food ?? ''}" /></label>
         <label>Transportation <input type="number" name="transport" value="${saved.transport ?? ''}" /></label>
-        <label>Insurance <input type="number" name="insurance" value="${saved.insurance ?? ''}" /></label>
+        <label>Car Insurance <input type="number" name="insurance" value="${saved.insurance ?? ''}" /></label>
         <label>Healthcare <input type="number" name="healthcare" value="${saved.healthcare ?? ''}" /></label>
         <label>Savings <input type="number" name="savings" value="${saved.savings ?? ''}" /></label>
 
