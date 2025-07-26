@@ -62,7 +62,7 @@ export async function initBudgetPanel() {
         <div class="section-title">Recurring Expenses</div>
         <label>Mortgage Interest <input type="number" name="mortgageInterest" value="${saved.mortgageInterest ?? ''}" /></label>
         <label>Mortgage Principal <input type="number" name="mortgagePrincipal" value="${saved.mortgagePrincipal ?? ''}" /></label>
-        <label>Home Insurance <input type="number" name="homeInsurance" value="${saved.homeInsurance ?? ''}" /></label>
+        <label>Escrow <input type="number" name="escrow" value="${saved.escrow ?? ''}" /></label>
         <label>Electric <input type="number" name="electric" value="${saved.electric ?? ''}" /></label>
         <label>Water <input type="number" name="water" value="${saved.water ?? ''}" /></label>
         <label>Gas <input type="number" name="gas" value="${saved.gas ?? ''}" /></label>
@@ -88,7 +88,7 @@ export async function initBudgetPanel() {
   const form = panel.querySelector('#budgetForm');
   const summary = panel.querySelector('#budgetSummary');
   function render() {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'homeInsurance', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transport', 'insurance', 'healthcare', 'savings', 'prime', 'spotify', 'misc'];
+    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transport', 'insurance', 'healthcare', 'savings', 'prime', 'spotify', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
     const state = form.state.value.trim();
