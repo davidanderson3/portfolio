@@ -73,6 +73,7 @@ export async function initBudgetPanel() {
         <label>Car Payment <input type="number" name="carPayment" value="${saved.carPayment ?? ''}" /></label>
         <label>Tolls <input type="number" name="tolls" value="${saved.tolls ?? ''}" /></label>
         <label>Car Insurance <input type="number" name="insurance" value="${saved.insurance ?? ''}" /></label>
+        <label>Health Insurance <input type="number" name="healthInsurance" value="${saved.healthInsurance ?? ''}" /></label>
         <label>Healthcare <input type="number" name="healthcare" value="${saved.healthcare ?? ''}" /></label>
         <label>Savings <input type="number" name="savings" value="${saved.savings ?? ''}" /></label>
 
@@ -90,7 +91,7 @@ export async function initBudgetPanel() {
   const form = panel.querySelector('#budgetForm');
   const summary = panel.querySelector('#budgetSummary');
   function render() {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'homeInsurance', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthcare', 'savings', 'prime', 'spotify', 'misc'];
+    const fields = ['mortgageInterest', 'mortgagePrincipal', 'homeInsurance', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'healthcare', 'savings', 'prime', 'spotify', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
     const state = form.state.value.trim();
