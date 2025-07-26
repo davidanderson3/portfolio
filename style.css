@@ -1850,3 +1850,8 @@ h2 {
   margin-top: 8px;
   font-weight: bold;
 }
+
+/* Align budget panel content to the left instead of centering */
+#budgetPanel.main-layout {
+  justify-content: flex-start;
+}

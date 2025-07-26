@@ -103,6 +103,7 @@ export async function initBudgetPanel() {
     saveBudgetData(saveData);
   }
   form.addEventListener('input', render);
+  form.addEventListener('change', render);
   render();
 }
 
