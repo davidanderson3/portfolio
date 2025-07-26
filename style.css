@@ -1603,6 +1603,11 @@ h2 {
     padding: 0;
   }
 
+  /* Add breathing room for the budget tab */
+  #budgetPanel.main-layout {
+    padding: 0 10px;
+  }
+
   /* Ensure list items span the full width on small screens */
   li {
     width: 100%;
