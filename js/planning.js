@@ -147,7 +147,6 @@ export async function initPlanningPanel() {
       <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
       <label>Roth IRA <input type="number" name="roth" placeholder="e.g. 10000" value="${currentData.assets.roth ?? ''}" /></label>
       <label>Crypto <input type="number" name="crypto" placeholder="e.g. 1000" value="${currentData.assets.crypto ?? ''}" /></label>
-      <label>Tax Rate % <input type="number" name="taxRate" placeholder="e.g. 25" value="${currentData.budget.taxRate ?? ''}" /></label>
       <label>Mortgage/year <input type="number" name="mortgage" placeholder="e.g. 12000" value="${currentData.budget.mortgage ?? ''}" /></label>
     </form>
     <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
@@ -174,7 +173,6 @@ export async function initPlanningPanel() {
       investment: Number(form.investment.value || 0),
       roth: Number(form.roth.value || 0),
       crypto: Number(form.crypto.value || 0),
-      taxRate: form.taxRate.value,
       mortgage: form.mortgage.value
     };
 
@@ -196,7 +194,7 @@ export async function initPlanningPanel() {
 
     const budget = calculateBudgetAllocation({
       income: values.income,
-      taxRate: values.taxRate,
+      taxRate: 0,
       mortgage: values.mortgage
     });
     budgetResultDiv.innerHTML =
@@ -220,7 +218,6 @@ export async function initPlanningPanel() {
       crypto: values.crypto
     };
     currentData.budget = {
-      taxRate: values.taxRate,
       mortgage: values.mortgage
     };
 
