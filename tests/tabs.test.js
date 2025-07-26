@@ -18,6 +18,7 @@ describe('initTabs persistence', () => {
       <button class="tab-button" data-target="listsPanel"></button>
       <button class="tab-button" data-target="travelPanel"></button>
       <button class="tab-button" data-target="planningPanel"></button>
+      <button class="tab-button" data-target="budgetPanel"></button>
       <div id="goalsPanel"></div>
       <div id="decisionsPanel"></div>
       <div id="calendarPanel"></div>
@@ -26,6 +27,7 @@ describe('initTabs persistence', () => {
       <div id="listsPanel"></div>
       <div id="travelPanel"></div>
       <div id="planningPanel"></div>
+      <div id="budgetPanel"></div>
     `, { url: 'http://localhost/' });
     global.window = dom.window;
     global.document = dom.window.document;
