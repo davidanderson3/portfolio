@@ -167,7 +167,7 @@ export async function initBudgetPanel() {
   const form = panel.querySelector('#budgetForm');
   const summary = panel.querySelector('#budgetSummary');
   function render() {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'homeInsurance', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'healthcare', 'savings', 'tsp', 'hsa', 'prime', 'spotify', 'misc'];
+    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'healthcare', 'savings', 'tsp', 'hsa', 'prime', 'spotify', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
     const state = form.state.value.trim();
