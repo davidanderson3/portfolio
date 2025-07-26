@@ -146,6 +146,7 @@ export async function initPlanningPanel() {
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
       <label>Savings <input type="number" name="assetSavings" placeholder="e.g. 10000" value="${currentData.assets.assetSavings ?? ''}" /></label>
+      <label>Checking <input type="number" name="checking" placeholder="e.g. 2000" value="${currentData.assets.checking ?? ''}" /></label>
       <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
       <label>Tax Rate % <input type="number" name="taxRate" placeholder="e.g. 25" value="${currentData.budget.taxRate ?? ''}" /></label>
       <label>Mortgage/year <input type="number" name="mortgage" placeholder="e.g. 12000" value="${currentData.budget.mortgage ?? ''}" /></label>
@@ -172,6 +173,7 @@ export async function initPlanningPanel() {
       realEstate: Number(form.realEstate.value || 0),
       carValue: Number(form.carValue.value || 0),
       assetSavings: Number(form.assetSavings.value || 0),
+      checking: Number(form.checking.value || 0),
       investment: Number(form.investment.value || 0),
       taxRate: form.taxRate.value,
       mortgage: form.mortgage.value,
@@ -179,7 +181,7 @@ export async function initPlanningPanel() {
     };
 
     const assetTotal =
-      values.realEstate + values.carValue + values.assetSavings + values.investment;
+      values.realEstate + values.carValue + values.assetSavings + values.checking + values.investment;
     assetsTotalDiv.textContent = `Total Assets: $${assetTotal.toLocaleString()}`;
 
     const finData = calculateFinanceProjection({
@@ -217,6 +219,7 @@ export async function initPlanningPanel() {
       realEstate: values.realEstate,
       carValue: values.carValue,
       assetSavings: values.assetSavings,
+      checking: values.checking,
       investment: values.investment
     };
     currentData.budget = {
