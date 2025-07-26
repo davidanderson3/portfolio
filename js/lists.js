@@ -336,6 +336,8 @@ async function initListsPanel() {
     await persist();
     renderTabs();
     selectList(listsArray.length - 1);
+    const modal = document.getElementById('listsFormModal');
+    if (modal) modal.style.display = 'none';
   }
 
   // Then immediately bind it (and column-input) in the same scope:
