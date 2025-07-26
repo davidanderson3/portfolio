@@ -1150,6 +1150,7 @@ h2 {
 #listsPanel button[title="Delete row"] {
   background: none !important;
   border: none !important;
+  color: #0077cc !important;
   cursor: pointer !important;
 }
 
