@@ -36,7 +36,7 @@ describe('planning UI persistence', () => {
     global.window = dom.window;
     global.document = dom.window.document;
 
-    const names = ['curAge', 'retAge', 'income', 'expenses', 'returnRate', 'realEstate', 'carValue', 'assetSavings', 'investment', 'roth', 'crypto', 'taxRate', 'mortgage', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'expenses', 'returnRate', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'taxRate', 'mortgage', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -50,11 +50,13 @@ describe('planning UI persistence', () => {
     const form = document.querySelector('#planningForm');
     form.curAge.value = '30';
     form.realEstate.value = '100000';
+    form.checking.value = '2500';
     form.dispatchEvent(new window.Event('input', { bubbles: true }));
 
     const saved = JSON.parse(localStorage.getItem('planningData'));
     expect(saved.finance.curAge).toBe('30');
     expect(saved.assets.realEstate).toBe(100000);
+    expect(saved.assets.checking).toBe(2500);
 
     mod1.clearPlanningCache();
     currentUser = { uid: 'u1' };
@@ -74,7 +76,9 @@ describe('planning UI persistence', () => {
 
     const age2 = document.querySelector('#planningForm input[name="curAge"]').value;
     const estate2 = document.querySelector('#planningForm input[name="realEstate"]').value;
+    const checking2 = document.querySelector('#planningForm input[name="checking"]').value;
     expect(age2).toBe('30');
     expect(estate2).toBe('100000');
+    expect(checking2).toBe('2500');
   });
 });

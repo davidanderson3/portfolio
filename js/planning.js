@@ -143,6 +143,7 @@ export async function initPlanningPanel() {
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
       <label>Savings <input type="number" name="assetSavings" placeholder="e.g. 10000" value="${currentData.assets.assetSavings ?? ''}" /></label>
+      <label>Checking <input type="number" name="checking" placeholder="e.g. 2000" value="${currentData.assets.checking ?? ''}" /></label>
       <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
       <label>Roth IRA <input type="number" name="roth" placeholder="e.g. 10000" value="${currentData.assets.roth ?? ''}" /></label>
       <label>Crypto <input type="number" name="crypto" placeholder="e.g. 1000" value="${currentData.assets.crypto ?? ''}" /></label>
@@ -169,6 +170,7 @@ export async function initPlanningPanel() {
       realEstate: Number(form.realEstate.value || 0),
       carValue: Number(form.carValue.value || 0),
       assetSavings: Number(form.assetSavings.value || 0),
+      checking: Number(form.checking.value || 0),
       investment: Number(form.investment.value || 0),
       roth: Number(form.roth.value || 0),
       crypto: Number(form.crypto.value || 0),
@@ -177,7 +179,7 @@ export async function initPlanningPanel() {
     };
 
     const assetTotal =
-      values.realEstate + values.carValue + values.assetSavings +
+      values.realEstate + values.carValue + values.assetSavings + values.checking +
       values.investment + values.roth + values.crypto;
     assetsTotalDiv.textContent = `Total Assets: $${assetTotal.toLocaleString()}`;
 
@@ -212,6 +214,7 @@ export async function initPlanningPanel() {
       realEstate: values.realEstate,
       carValue: values.carValue,
       assetSavings: values.assetSavings,
+      checking: values.checking,
       investment: values.investment,
       roth: values.roth,
       crypto: values.crypto
