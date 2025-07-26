@@ -33,20 +33,89 @@ export function calculateMonthlyBudget({ salary, state, city, categories }) {
 }
 
 import { loadPlanningData } from './planning.js';
+import { getCurrentUser, db } from './auth.js';
 
 const BUDGET_KEY = 'budgetConfig';
+let budgetCache = null;
 
-function loadBudgetData() {
-  try {
-    return JSON.parse(localStorage.getItem(BUDGET_KEY)) || {};
-  } catch (err) {
-    console.warn('Failed to parse budget data:', err);
-    return {};
-  }
+function isObject(val) {
+  return val && typeof val === 'object' && !Array.isArray(val);
 }
 
-function saveBudgetData(data) {
-  localStorage.setItem(BUDGET_KEY, JSON.stringify(data));
+function deepMerge(base = {}, override = {}) {
+  const out = { ...base };
+  for (const key of Object.keys(override)) {
+    const bVal = base[key];
+    const oVal = override[key];
+    if (isObject(bVal) && isObject(oVal)) {
+      out[key] = deepMerge(bVal, oVal);
+    } else {
+      out[key] = oVal;
+    }
+  }
+  return out;
+}
+
+export async function loadBudgetData() {
+  const user = getCurrentUser?.();
+
+  let localData = {};
+  const stored = localStorage.getItem(BUDGET_KEY);
+  if (stored) {
+    try {
+      localData = JSON.parse(stored) || {};
+    } catch (err) {
+      console.warn('Failed to parse budget data:', err);
+    }
+  }
+
+  if (!user) {
+    budgetCache = localData;
+    return budgetCache;
+  }
+
+  let cloudData = {};
+  try {
+    const snap = await db
+      .collection('users').doc(user.uid)
+      .collection('settings').doc(BUDGET_KEY)
+      .get();
+    if (snap) {
+      cloudData = snap.exists ? snap.data() : {};
+    }
+  } catch (err) {
+    console.error('Failed to fetch budget data:', err);
+  }
+
+  budgetCache = deepMerge(cloudData, localData);
+  try {
+    await db
+      .collection('users').doc(user.uid)
+      .collection('settings').doc(BUDGET_KEY)
+      .set(budgetCache, { merge: true });
+  } catch (err) {
+    console.error('Failed to save budget data:', err);
+  }
+
+  localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetCache));
+  return budgetCache;
+}
+
+export async function saveBudgetData(data) {
+  budgetCache = data || {};
+  const user = getCurrentUser?.();
+  localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetCache));
+  if (!user) {
+    return;
+  }
+  try {
+    await db
+      .collection('users').doc(user.uid)
+      .collection('settings').doc(BUDGET_KEY)
+      .set(budgetCache, { merge: true });
+  } catch (err) {
+    console.error('Failed to save budget data:', err);
+  }
 }
 
 export async function initBudgetPanel() {
@@ -54,7 +123,7 @@ export async function initBudgetPanel() {
   if (!panel) return;
   const planning = await loadPlanningData();
   const salary = Number(planning?.finance?.income || 0);
-  const saved = loadBudgetData();
+  const saved = await loadBudgetData();
   panel.innerHTML = `
     <div id="budgetLayout">
       <form id="budgetForm" class="budget-form">
