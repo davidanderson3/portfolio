@@ -1294,6 +1294,11 @@ h2 {
   margin-left: 8px;
 }
 
+#travelTable td.visited-icon {
+  color: green;
+  text-align: center;
+}
+
 @media (max-width: 600px) {
   #showVisitedLabel {
     margin-left: 0;

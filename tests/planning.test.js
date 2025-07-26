@@ -9,19 +9,18 @@ describe('planning calculations', () => {
       retirementAge: 32,
       savings: 1000,
       income: 100,
-      expenses: 50,
       returnRate: 0
     });
     expect(res).toEqual([
       { age: 30, balance: 1000 },
-      { age: 31, balance: 1050 },
-      { age: 32, balance: 1100 }
+      { age: 31, balance: 1100 },
+      { age: 32, balance: 1200 }
     ]);
   });
 
   it('calculates budget allocation', () => {
-    const res = calculateBudgetAllocation({ income: 1000, taxRate: 10, mortgage: 300, other: 200 });
-    expect(res).toEqual({ taxes: 100, mortgage: 300, other: 200, leftover: 400 });
+    const res = calculateBudgetAllocation({ income: 1000, taxRate: 10, mortgage: 300 });
+    expect(res).toEqual({ taxes: 100, mortgage: 300, leftover: 600 });
   });
 });
 

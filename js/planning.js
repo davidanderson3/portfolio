@@ -1,18 +1,17 @@
 import { getCurrentUser, db } from './auth.js';
 
-export function calculateFinanceProjection({ currentAge, retirementAge, savings, income, expenses, returnRate }) {
+export function calculateFinanceProjection({ currentAge, retirementAge, savings, income, returnRate }) {
   currentAge = Number(currentAge);
   retirementAge = Number(retirementAge);
   savings = Number(savings);
   income = Number(income);
-  expenses = Number(expenses);
   returnRate = Number(returnRate) / 100;
   const years = retirementAge - currentAge;
   const data = [];
   let balance = savings;
   for (let i = 0; i <= years; i++) {
     if (i > 0) {
-      balance += income - expenses;
+      balance += income;
       balance *= 1 + returnRate;
     }
     data.push({ age: currentAge + i, balance: Math.round(balance) });
@@ -20,14 +19,13 @@ export function calculateFinanceProjection({ currentAge, retirementAge, savings,
   return data;
 }
 
-export function calculateBudgetAllocation({ income, taxRate, mortgage, other }) {
+export function calculateBudgetAllocation({ income, taxRate, mortgage }) {
   income = Number(income);
   taxRate = Number(taxRate) / 100;
   mortgage = Number(mortgage);
-  other = Number(other);
   const taxes = Math.round(income * taxRate);
-  const leftover = income - taxes - mortgage - other;
-  return { taxes, mortgage, other, leftover };
+  const leftover = income - taxes - mortgage;
+  return { taxes, mortgage, leftover };
 }
 
 const PLANNING_KEY = 'planningData';
@@ -141,7 +139,6 @@ export async function initPlanningPanel() {
       <label>Current Age <input type="number" name="curAge" placeholder="e.g. 30" value="${currentData.finance.curAge ?? ''}" /></label>
       <label>Retirement Age <input type="number" name="retAge" placeholder="e.g. 65" value="${currentData.finance.retAge ?? ''}" /></label>
       <label>Annual Income <input type="number" name="income" placeholder="e.g. 50000" value="${currentData.finance.income ?? ''}" /></label>
-      <label>Annual Expenses <input type="number" name="expenses" placeholder="e.g. 40000" value="${currentData.finance.expenses ?? ''}" /></label>
       <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${currentData.finance.returnRate ?? ''}" /></label>
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
@@ -151,7 +148,6 @@ export async function initPlanningPanel() {
       <label>Crypto <input type="number" name="crypto" placeholder="e.g. 1000" value="${currentData.assets.crypto ?? ''}" /></label>
       <label>Tax Rate % <input type="number" name="taxRate" placeholder="e.g. 25" value="${currentData.budget.taxRate ?? ''}" /></label>
       <label>Mortgage/year <input type="number" name="mortgage" placeholder="e.g. 12000" value="${currentData.budget.mortgage ?? ''}" /></label>
-      <label>Other Expenses <input type="number" name="other" placeholder="e.g. 5000" value="${currentData.budget.other ?? ''}" /></label>
     </form>
     <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
     <div id="assetsTotal" style="margin-top:1em;"></div>
@@ -169,7 +165,6 @@ export async function initPlanningPanel() {
       curAge: form.curAge.value,
       retAge: form.retAge.value,
       income: form.income.value,
-      expenses: form.expenses.value,
       returnRate: form.returnRate.value,
       realEstate: Number(form.realEstate.value || 0),
       carValue: Number(form.carValue.value || 0),
@@ -178,8 +173,7 @@ export async function initPlanningPanel() {
       roth: Number(form.roth.value || 0),
       crypto: Number(form.crypto.value || 0),
       taxRate: form.taxRate.value,
-      mortgage: form.mortgage.value,
-      other: form.other.value
+      mortgage: form.mortgage.value
     };
 
     const assetTotal =
@@ -192,7 +186,6 @@ export async function initPlanningPanel() {
       retirementAge: values.retAge,
       savings: assetTotal,
       income: values.income,
-      expenses: values.expenses,
       returnRate: values.returnRate
     });
     financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
@@ -202,20 +195,17 @@ export async function initPlanningPanel() {
     const budget = calculateBudgetAllocation({
       income: values.income,
       taxRate: values.taxRate,
-      mortgage: values.mortgage,
-      other: values.other
+      mortgage: values.mortgage
     });
     budgetResultDiv.innerHTML =
       `Taxes: $${budget.taxes.toLocaleString()}<br>` +
       `Mortgage: $${budget.mortgage.toLocaleString()}<br>` +
-      `Other: $${budget.other.toLocaleString()}<br>` +
       `Leftover: $${budget.leftover.toLocaleString()}`;
 
     currentData.finance = {
       curAge: values.curAge,
       retAge: values.retAge,
       income: values.income,
-      expenses: values.expenses,
       returnRate: values.returnRate
     };
     currentData.assets = {
@@ -228,8 +218,7 @@ export async function initPlanningPanel() {
     };
     currentData.budget = {
       taxRate: values.taxRate,
-      mortgage: values.mortgage,
-      other: values.other
+      mortgage: values.mortgage
     };
 
     const hist = currentData.history;
