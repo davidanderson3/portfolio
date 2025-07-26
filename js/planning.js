@@ -147,7 +147,6 @@ export async function initPlanningPanel() {
       <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
       <label>Roth IRA <input type="number" name="roth" placeholder="e.g. 10000" value="${currentData.assets.roth ?? ''}" /></label>
       <label>Crypto <input type="number" name="crypto" placeholder="e.g. 1000" value="${currentData.assets.crypto ?? ''}" /></label>
-      <label>Mortgage/year <input type="number" name="mortgage" placeholder="e.g. 12000" value="${currentData.budget.mortgage ?? ''}" /></label>
       <label>Rolling Credit <input type="number" name="rollingCredit" placeholder="e.g. 5000" value="${currentData.budget.rollingCredit ?? ''}" /></label>
     </form>
     <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
@@ -174,8 +173,8 @@ export async function initPlanningPanel() {
       investment: Number(form.investment.value || 0),
       roth: Number(form.roth.value || 0),
       crypto: Number(form.crypto.value || 0),
-      mortgage: form.mortgage.value,
-      rollingCredit: form.rollingCredit.value
+      rollingCredit: form.rollingCredit.value,
+      mortgage: 0
     };
 
     const assetTotal =
@@ -201,7 +200,6 @@ export async function initPlanningPanel() {
     });
     budgetResultDiv.innerHTML =
       `Taxes: $${budget.taxes.toLocaleString()}<br>` +
-      `Mortgage: $${budget.mortgage.toLocaleString()}<br>` +
       `Rolling Credit: $${Number(values.rollingCredit || 0).toLocaleString()}<br>` +
       `Leftover: $${budget.leftover.toLocaleString()}`;
 
@@ -221,7 +219,6 @@ export async function initPlanningPanel() {
       crypto: values.crypto
     };
     currentData.budget = {
-      mortgage: values.mortgage,
       rollingCredit: values.rollingCredit
     };
 
