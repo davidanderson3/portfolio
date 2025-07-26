@@ -20,8 +20,8 @@ describe('planning calculations', () => {
   });
 
   it('calculates budget allocation', () => {
-    const res = calculateBudgetAllocation({ income: 1000, taxRate: 10, mortgage: 300, other: 200 });
-    expect(res).toEqual({ taxes: 100, mortgage: 300, other: 200, leftover: 400 });
+    const res = calculateBudgetAllocation({ income: 1000, taxRate: 10, mortgage: 300 });
+    expect(res).toEqual({ taxes: 100, mortgage: 300, leftover: 600 });
   });
 });
 
