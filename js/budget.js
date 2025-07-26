@@ -27,9 +27,10 @@ export function calculateMonthlyBudget({ salary, state, city, categories }) {
   const tax = federalTax + stateTax;
 
   const monthlyIncome = salary / 12;
+  const netPay = monthlyIncome - tax;
   const expenses = Object.values(cats).reduce((s, v) => s + v, 0) + tax;
   const leftover = monthlyIncome - expenses;
-  return { federalTax, stateTax, tax, monthlyIncome, expenses, leftover };
+  return { federalTax, stateTax, tax, netPay, monthlyIncome, expenses, leftover };
 }
 
 import { loadPlanningData } from './planning.js';
@@ -182,6 +183,7 @@ export async function initBudgetPanel() {
     summary.innerHTML =
       `Federal Tax: $${result.federalTax.toLocaleString()}<br>` +
       `State Tax: $${result.stateTax.toLocaleString()}<br>` +
+      `Net Pay: $${result.netPay.toLocaleString()}<br>` +
       `Total Expenses: $${result.expenses.toLocaleString()}<br>` +
       `Leftover: $${result.leftover.toLocaleString()}`;
     const saveData = { state, city };
