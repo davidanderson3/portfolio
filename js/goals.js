@@ -75,12 +75,8 @@ export async function addCalendarGoal(date = '') {
     } catch (err) {
         console.error('Failed to create calendar event', err);
     }
-    appendGoalToDOM(newGoal, [...all, newGoal]);
-    const calendarContent = document.getElementById('calendarContent');
-    if (calendarContent) {
-        const refreshed = initCalendarSection();
-        renderCalendarSection([...all, newGoal], refreshed);
-    }
+    // Re-render all goal views so calendar refreshes with latest data
+    await renderGoalsAndSubitems();
 }
 
 export function createGoalRow(goal, options = {}) {
