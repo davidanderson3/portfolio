@@ -20,6 +20,8 @@ describe('budget calculations', () => {
         mortgageInterest: 500,
         prime: 15,
         tolls: 30,
+        tsp: 300,
+        hsa: 200
         dentalInsurance: 50
       }
     });
@@ -28,7 +30,7 @@ describe('budget calculations', () => {
     expect(res.federalTax).toBe(1000);
     expect(res.stateTax).toBe(1100);
     expect(res.tax).toBe(2100);
-    const expectedExpenses = 1500 + 500 + 15 + 30 + 50 + 2100;
+    const expectedExpenses = 1500 + 500 + 15 + 30 + 50 + 300 + 200 + 2100;
     expect(res.expenses).toBe(expectedExpenses);
     expect(res.monthlyIncome).toBe(10000);
     expect(res.leftover).toBe(10000 - expectedExpenses);

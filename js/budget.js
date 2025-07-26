@@ -81,6 +81,8 @@ export async function initBudgetPanel() {
         <label>Dental Insurance <input type="number" name="dentalInsurance" value="${saved.dentalInsurance ?? ''}" /></label>
         <label>Healthcare <input type="number" name="healthcare" value="${saved.healthcare ?? ''}" /></label>
         <label>Savings <input type="number" name="savings" value="${saved.savings ?? ''}" /></label>
+        <label>TSP <input type="number" name="tsp" value="${saved.tsp ?? ''}" /></label>
+        <label>Health Savings Account <input type="number" name="hsa" value="${saved.hsa ?? ''}" /></label>
 
         <div class="section-title">Entertainment</div>
         <label>Amazon Prime <input type="number" name="prime" value="${saved.prime ?? ''}" /></label>
@@ -96,7 +98,7 @@ export async function initBudgetPanel() {
   const form = panel.querySelector('#budgetForm');
   const summary = panel.querySelector('#budgetSummary');
   function render() {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'homeInsurance', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'healthcare', 'savings', 'prime', 'spotify', 'misc'];
+    const fields = ['mortgageInterest', 'mortgagePrincipal', 'homeInsurance', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'healthcare', 'savings', 'tsp', 'hsa', 'prime', 'spotify', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
     const state = form.state.value.trim();
