@@ -34,6 +34,24 @@ const PLANNING_KEY = 'planningData';
 let planningCache = null;
 let planningInitialized = false;
 
+function isObject(val) {
+  return val && typeof val === 'object' && !Array.isArray(val);
+}
+
+function deepMerge(base = {}, override = {}) {
+  const out = { ...base };
+  for (const key of Object.keys(override)) {
+    const bVal = base[key];
+    const oVal = override[key];
+    if (isObject(bVal) && isObject(oVal)) {
+      out[key] = deepMerge(bVal, oVal);
+    } else {
+      out[key] = oVal;
+    }
+  }
+  return out;
+}
+
 export function clearPlanningCache() {
   planningCache = null;
   planningInitialized = false;
@@ -74,7 +92,7 @@ export async function loadPlanningData() {
   }
 
   // Merge cloud and local (local wins) and sync back
-  planningCache = { ...cloudData, ...localData };
+  planningCache = deepMerge(cloudData, localData);
   try {
     await db
       .collection('users').doc(user.uid)

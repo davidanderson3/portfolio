@@ -40,7 +40,7 @@ const storage = (() => {
 })();
 global.localStorage = storage;
 
-vi.mock('../js/auth.js', () => {
+function createAuthMock() {
   const docFn = vi.fn(() => ({
     collection: collectionFn,
     doc: docFn,
@@ -52,12 +52,14 @@ vi.mock('../js/auth.js', () => {
     getCurrentUser: () => ({ uid: 'u1' }),
     db: { collection: collectionFn }
   };
-});
+}
+vi.mock('../js/auth.js', createAuthMock);
 
 beforeEach(() => {
   setMock.mockClear();
   getMock.mockClear();
   vi.resetModules();
+  vi.doMock('../js/auth.js', createAuthMock);
   localStorage.clear();
 });
 
@@ -84,5 +86,13 @@ describe('planning persistence', () => {
     expect(JSON.parse(localStorage.getItem('planningData'))).toEqual({ finance: { curAge: '25' } });
     const data = await loadPlanningData();
     expect(data).toEqual({ finance: { curAge: '25' } });
+  });
+
+  it('deep merges cloud and local data', async () => {
+    getMock.mockResolvedValue({ exists: true, data: () => ({ finance: { curAge: '30', retAge: '60' } }) });
+    localStorage.setItem('planningData', JSON.stringify({ finance: { curAge: '35' }, assets: { realEstate: 100 } }));
+    const { loadPlanningData } = await import('../js/planning.js');
+    const res = await loadPlanningData();
+    expect(res).toEqual({ finance: { curAge: '35', retAge: '60' }, assets: { realEstate: 100 } });
   });
 });
