@@ -19,6 +19,8 @@ export function initTabs(user, db) {
   if (tabsInitialized) return;
   tabsInitialized = true;
 
+  const LAST_PANEL_KEY = 'lastPanel';
+
   const tabButtons = document.querySelectorAll('.tab-button');
   const panels    = PANELS;
 
@@ -34,6 +36,9 @@ export function initTabs(user, db) {
         const el = document.getElementById(id);
         el.style.display = (id === target) ? 'flex' : 'none';
       });
+
+      // Remember selected panel
+      try { localStorage.setItem(LAST_PANEL_KEY, target); } catch {}
 
       // 3) update URL hash
       history.pushState(null, '', `#${target}`);
@@ -65,9 +70,13 @@ export function initTabs(user, db) {
 
   // initial activation from hash or default
   const hash    = window.location.hash.substring(1);
+  let saved     = null;
+  try { saved = localStorage.getItem(LAST_PANEL_KEY); } catch {}
   const initial = (hash && panels.includes(hash))
     ? hash
-    : document.querySelector('.tab-button.active')?.dataset.target || panels[0];
+    : (saved && panels.includes(saved))
+      ? saved
+      : document.querySelector('.tab-button.active')?.dataset.target || panels[0];
 
   tabButtons.forEach(b => b.classList.remove('active'));
   document.querySelector(`.tab-button[data-target="${initial}"]`)?.classList.add('active');
@@ -75,6 +84,8 @@ export function initTabs(user, db) {
     const el = document.getElementById(id);
     el.style.display = (id === initial) ? 'flex' : 'none';
   });
+
+  try { localStorage.setItem(LAST_PANEL_KEY, initial); } catch {}
 
   // on load, fire any needed init. If DOMContentLoaded already fired,
   // run immediately instead of waiting for the event.
