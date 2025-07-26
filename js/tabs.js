@@ -8,7 +8,8 @@ export const PANELS = [
   'metricsPanel',
   'listsPanel',
   'travelPanel',
-  'planningPanel'
+  'planningPanel',
+  'budgetPanel'
 ];
 
 let tabsInitialized = false;
@@ -56,6 +57,9 @@ export function initTabs(user, db) {
       else if (target === 'planningPanel') {
         await window.initPlanningPanel();
       }
+      else if (target === 'budgetPanel') {
+        await window.initBudgetPanel();
+      }
     });
   });
 
@@ -89,6 +93,9 @@ export function initTabs(user, db) {
     }
     else if (initial === 'planningPanel') {
       window.initPlanningPanel();
+    }
+    else if (initial === 'budgetPanel') {
+      window.initBudgetPanel();
     }
   };
 
