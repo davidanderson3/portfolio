@@ -67,6 +67,7 @@ describe('budget calculations', () => {
     expect(res.federalTax).toBe(1000);
     expect(res.stateTax).toBe(1100);
     expect(res.tax).toBe(2100);
+    expect(res.netPay).toBe(7900);
     expect(res.expenses).toBe(expectedExpenses);
     expect(res.monthlyIncome).toBe(10000);
     expect(res.leftover).toBe(10000 - expectedExpenses);
