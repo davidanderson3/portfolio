@@ -9,13 +9,12 @@ describe('planning calculations', () => {
       retirementAge: 32,
       savings: 1000,
       income: 100,
-      expenses: 50,
       returnRate: 0
     });
     expect(res).toEqual([
       { age: 30, balance: 1000 },
-      { age: 31, balance: 1050 },
-      { age: 32, balance: 1100 }
+      { age: 31, balance: 1100 },
+      { age: 32, balance: 1200 }
     ]);
   });
 
