@@ -86,3 +86,29 @@ describe('addListItemGoal', () => {
     });
   });
 });
+
+describe('unhideListItem button', () => {
+  it('clears hiddenUntil when clicked', async () => {
+    const hideTime = '2030-01-01T00:00:00.000Z';
+    document.getElementById('listsPanel').innerHTML = '';
+    vi.resetModules();
+    const [h, g] = await Promise.all([
+      import('../js/helpers.js'),
+      import('../js/goals.js'),
+      import('../js/lists.js')
+    ]);
+    helpers = h;
+    goals = g;
+    helpers.loadLists.mockResolvedValue([{ name: 'Test', columns: [{ name: 'Item', type: 'text' }], items: [{ Item: 'One', hiddenUntil: hideTime }], hiddenUntil: null }]);
+    vi.useFakeTimers();
+    await window.initListsPanel();
+
+    const btn = document.querySelector('#hiddenItemsContent button');
+    expect(btn).toBeTruthy();
+    btn.click();
+    vi.advanceTimersByTime(300);
+    const saved = helpers.saveLists.mock.calls.at(-1)[0][0].items[0];
+    expect(saved.hiddenUntil).toBe(null);
+    vi.useRealTimers();
+  });
+});
