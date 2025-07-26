@@ -360,7 +360,8 @@ async function initListsPanel() {
     const table = document.createElement('table');
     table.style.width = '100%';
     table.style.borderCollapse = 'collapse';
-    const ulsToCheck = [];
+    // Map rows to any list elements they contain
+    const ulsToCheck = new Map();
 
     // Header
     const thead = table.createTHead();
@@ -477,7 +478,9 @@ async function initListsPanel() {
             });
             td.style.position = 'relative';
             td.append(ul);
-            ulsToCheck.push({ ul, td });
+            const arr = ulsToCheck.get(tr) || [];
+            arr.push(ul);
+            ulsToCheck.set(tr, arr);
           }
         }
         else {
@@ -657,29 +660,38 @@ async function initListsPanel() {
       listsContainer.append(hiddenDiv);
     }
     setTimeout(() => {
-      ulsToCheck.forEach(({ ul, td }) => {
-        if (ul.scrollHeight > MAX_LIST_HEIGHT) {
-          ul.style.maxHeight = `${MAX_LIST_HEIGHT}px`;
-          ul.style.overflow = 'hidden';
-          const resizer = document.createElement('div');
-          resizer.className = 'list-resizer';
-          resizer.addEventListener('mousedown', e => {
-            e.preventDefault();
-            const startY = e.clientY;
-            const startHeight = parseInt(ul.style.maxHeight) || MAX_LIST_HEIGHT;
-            const onMove = evt => {
-              const newHeight = Math.max(40, startHeight + evt.clientY - startY);
+      ulsToCheck.forEach((uls, row) => {
+        const needs = uls.some(ul => ul.scrollHeight > MAX_LIST_HEIGHT);
+        if (!needs) return;
+
+        uls.forEach(ul => {
+          if (ul.scrollHeight > MAX_LIST_HEIGHT) {
+            ul.style.maxHeight = `${MAX_LIST_HEIGHT}px`;
+            ul.style.overflow = 'hidden';
+          }
+        });
+
+        const resizer = document.createElement('div');
+        resizer.className = 'list-resizer';
+        resizer.addEventListener('mousedown', e => {
+          e.preventDefault();
+          const startY = e.clientY;
+          const startHeight = parseInt(uls[0].style.maxHeight) || MAX_LIST_HEIGHT;
+          const onMove = evt => {
+            const newHeight = Math.max(40, startHeight + evt.clientY - startY);
+            uls.forEach(ul => {
               ul.style.maxHeight = `${newHeight}px`;
-            };
-            const onUp = () => {
-              document.removeEventListener('mousemove', onMove);
-              document.removeEventListener('mouseup', onUp);
-            };
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
-          });
-          td.append(resizer);
-        }
+            });
+          };
+          const onUp = () => {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          };
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+        row.style.position = 'relative';
+        row.append(resizer);
       });
     }, 0);
   }
