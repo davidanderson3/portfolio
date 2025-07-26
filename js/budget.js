@@ -159,6 +159,10 @@ export async function initBudgetPanel() {
 
         <div class="section-title">Other Spending</div>
         <label>Misc <input type="number" name="misc" value="${saved.misc ?? ''}" /></label>
+
+        <div class="section-title">Taxes</div>
+        <label>Federal Tax <input type="number" name="federalTax" disabled /></label>
+        <label>State Tax <input type="number" name="stateTax" disabled /></label>
       </form>
       <div id="budgetSummary" class="budget-summary"></div>
     </div>
@@ -173,6 +177,8 @@ export async function initBudgetPanel() {
     const state = form.state.value.trim();
     const city = form.city.value.trim();
     const result = calculateMonthlyBudget({ salary, state, city, categories });
+    form.federalTax.value = result.federalTax;
+    form.stateTax.value = result.stateTax;
     summary.innerHTML =
       `Federal Tax: $${result.federalTax.toLocaleString()}<br>` +
       `State Tax: $${result.stateTax.toLocaleString()}<br>` +
