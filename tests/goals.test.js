@@ -99,7 +99,23 @@ describe('goal postponing', () => {
 
 describe('addCalendarGoal', () => {
   it('renders goal in calendar section and main list', async () => {
-    helpers.loadDecisions.mockResolvedValue([]);
+    helpers.loadDecisions
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          id: 'g1',
+          type: 'goal',
+          text: 'My calendar goal',
+          notes: '',
+          completed: false,
+          resolution: '',
+          dateCompleted: '',
+          parentGoalId: null,
+          hiddenUntil: null,
+          scheduled: '2024-01-02',
+          scheduledEnd: ''
+        }
+      ]);
     const mod = await import('../js/goals.js');
     const { addCalendarGoal } = mod;
 
@@ -117,7 +133,9 @@ describe('addCalendarGoal', () => {
   });
 
   it('saves goal order when user signed in', async () => {
-    helpers.loadDecisions.mockResolvedValue([]);
+    helpers.loadDecisions
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
     global.prompt = vi.fn()
       .mockReturnValueOnce('Cal goal')
       .mockReturnValueOnce('');
