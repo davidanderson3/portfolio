@@ -81,7 +81,7 @@ export async function renderDailyTasks(currentUser, db) {
       }
       @keyframes flash {
         0%   { background-color: #ffff99; }
-        100% { background-color: #eef; }
+        100% { background-color: transparent; }
       }
       .flash {
         animation: flash 1s ease-out;
@@ -217,7 +217,6 @@ export async function renderDailyTasks(currentUser, db) {
       userSelect: 'none',
       touchAction: 'auto',
       minHeight: '120px',
-      background: '#eef',
       position: 'relative',
       zIndex: '1'
     });
