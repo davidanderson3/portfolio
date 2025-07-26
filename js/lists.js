@@ -186,7 +186,7 @@ async function initListsPanel() {
 
 
   // ─── 5) Load data & wire persistence ─────────────────────────
-  let listsArray = await loadLists();
+  listsArray = await loadLists();
   const persist = debounce(() => saveLists(listsArray), 250);
 
   function isHidden(list) {
@@ -612,11 +612,7 @@ async function initListsPanel() {
         unhide.type = 'button';
         unhide.textContent = 'Unhide';
         Object.assign(unhide.style, { marginLeft: '8px', cursor: 'pointer' });
-        unhide.addEventListener('click', async () => {
-          listsArray[selectedListIndex].items[rowIdx].hiddenUntil = null;
-          await persist();
-          renderSelectedList();
-        });
+        unhide.addEventListener('click', () => unhideListItem(selectedListIndex, rowIdx));
         div.appendChild(unhide);
         content.appendChild(div);
       });
@@ -844,6 +840,12 @@ function openRowEditor(rowIdx) {
     const updated = [...all, newGoal];
     await saveDecisions(updated);
     appendGoalToDOM(newGoal, updated);
+  }
+
+  async function unhideListItem(listIdx, rowIdx) {
+    listsArray[listIdx].items[rowIdx].hiddenUntil = null;
+    await persist();
+    renderSelectedList();
   }
 
 
