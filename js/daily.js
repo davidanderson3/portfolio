@@ -19,6 +19,15 @@ const skipOptions = [
   { label: '3 months', value: 2160 }
 ];
 
+function tempToColor(temp) {
+  const min = 20;
+  const max = 100;
+  const t = Math.max(min, Math.min(max, temp));
+  const ratio = (t - min) / (max - min);
+  const hue = 240 - ratio * 240;
+  return `hsl(${hue}, 90%, 85%)`;
+}
+
 export async function quickAddTask(recurs, text) {
   const newTask = {
     id: generateId(),
@@ -169,6 +178,35 @@ export async function renderDailyTasks(currentUser, db) {
 
   for (const t of monthlyActive)
     monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
+
+  // Fetch today's weather after the tasks render
+  const weatherEl = panel.querySelector('#dailyWeather');
+  if (weatherEl && window.fetchWeatherData) {
+    weatherEl.textContent = 'Loading weather...';
+    window.fetchWeatherData()
+      .then(({ data }) => {
+        const todayKey = new Date().toISOString().slice(0, 10);
+        const idx = data.daily.time.indexOf(todayKey);
+        if (idx !== -1) {
+          const high = data.daily.temperature_2m_max[idx];
+          const low = data.daily.temperature_2m_min[idx];
+          const rain = data.daily.precipitation_probability_max
+            ? data.daily.precipitation_probability_max[idx]
+            : undefined;
+          const icon = window.chooseWeatherIcon
+            ? window.chooseWeatherIcon(rain)
+            : '';
+          weatherEl.textContent = `${icon} ${high}\u00B0/${low}\u00B0`;
+          weatherEl.style.backgroundColor = tempToColor(high);
+        } else {
+          weatherEl.textContent = '';
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch weather for daily view', err);
+        weatherEl.textContent = '';
+      });
+  }
 
 
   // ——— Helpers —————————————————————————
