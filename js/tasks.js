@@ -57,7 +57,7 @@ export function attachTaskButtons(item, row, listContainer, allDecisions) {
 
             const notesInput = document.createElement('textarea');
             notesInput.value = item.notes || '';
-            notesInput.rows = 2;
+            notesInput.rows = 4;
             notesInput.style.width = '100%';
             notesInput.style.marginTop = '4px';
 
