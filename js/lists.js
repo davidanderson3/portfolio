@@ -370,6 +370,7 @@ async function initListsPanel() {
       th.style.padding = '8px';
       th.style.cursor = 'pointer';
       if (col.width) th.style.width = col.width + 'px';
+      th.style.position = 'relative';
 
       const sortState = listSortStates[selectedListIndex];
       if (sortState && sortState.colIdx === colIdx) {
@@ -393,6 +394,32 @@ async function initListsPanel() {
         await persist();
         renderSelectedList();
       });
+
+      // ─── Resizer to adjust column width ────────────────────────
+      const resizer = document.createElement('div');
+      resizer.className = 'col-resizer';
+      resizer.addEventListener('mousedown', e => {
+        e.stopPropagation();
+        const startX = e.clientX;
+        const startWidth = th.offsetWidth;
+        const onMouseMove = evt => {
+          const newWidth = Math.max(40, startWidth + evt.clientX - startX);
+          th.style.width = newWidth + 'px';
+          Array.from(table.rows).forEach(row => {
+            const cell = row.cells[colIdx];
+            if (cell) cell.style.width = newWidth + 'px';
+          });
+        };
+        const onMouseUp = () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          col.width = parseInt(th.style.width, 10);
+          persist();
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+      th.append(resizer);
 
       headerRow.append(th);
     });

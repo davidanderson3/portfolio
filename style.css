@@ -1220,6 +1220,16 @@ h2 {
   font-size: 0.85em;
 }
 
+/* Handle for resizing list columns */
+#listsPanel .col-resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+}
+
 /* Metrics summary table */
 #genericStatsSummary table {
   width: 100%;
@@ -1436,6 +1446,9 @@ h2 {
     display: block;
     width: auto;
     margin-bottom: 4px;
+  }
+  #listsPanel .col-resizer {
+    display: none;
   }
 }
 
