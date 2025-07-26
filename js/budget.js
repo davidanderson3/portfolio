@@ -21,11 +21,15 @@ export function calculateMonthlyBudget({ salary, state, city, categories }) {
   const cats = { ...categories };
   Object.keys(cats).forEach(k => { cats[k] = Number(cats[k]) || 0; });
   const { stateRate, cityRate } = getTaxRates(state, city);
-  const tax = Math.round(salary * (FEDERAL_TAX_RATE + stateRate + cityRate) / 12);
+
+  const federalTax = Math.round(salary * FEDERAL_TAX_RATE / 12);
+  const stateTax = Math.round(salary * (stateRate + cityRate) / 12);
+  const tax = federalTax + stateTax;
+
   const monthlyIncome = salary / 12;
   const expenses = Object.values(cats).reduce((s, v) => s + v, 0) + tax;
   const leftover = monthlyIncome - expenses;
-  return { tax, monthlyIncome, expenses, leftover };
+  return { federalTax, stateTax, tax, monthlyIncome, expenses, leftover };
 }
 
 import { loadPlanningData } from './planning.js';
@@ -74,6 +78,7 @@ export async function initBudgetPanel() {
         <label>Tolls <input type="number" name="tolls" value="${saved.tolls ?? ''}" /></label>
         <label>Insurance <input type="number" name="insurance" value="${saved.insurance ?? ''}" /></label>
         <label>Health Insurance <input type="number" name="healthInsurance" value="${saved.healthInsurance ?? ''}" /></label>
+        <label>Dental Insurance <input type="number" name="dentalInsurance" value="${saved.dentalInsurance ?? ''}" /></label>
         <label>Healthcare <input type="number" name="healthcare" value="${saved.healthcare ?? ''}" /></label>
         <label>Savings <input type="number" name="savings" value="${saved.savings ?? ''}" /></label>
 
@@ -91,14 +96,15 @@ export async function initBudgetPanel() {
   const form = panel.querySelector('#budgetForm');
   const summary = panel.querySelector('#budgetSummary');
   function render() {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'homeInsurance', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'healthcare', 'savings', 'prime', 'spotify', 'misc'];
+    const fields = ['mortgageInterest', 'mortgagePrincipal', 'homeInsurance', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'healthcare', 'savings', 'prime', 'spotify', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
     const state = form.state.value.trim();
     const city = form.city.value.trim();
     const result = calculateMonthlyBudget({ salary, state, city, categories });
     summary.innerHTML =
-      `Taxes: $${result.tax.toLocaleString()}<br>` +
+      `Federal Tax: $${result.federalTax.toLocaleString()}<br>` +
+      `State Tax: $${result.stateTax.toLocaleString()}<br>` +
       `Total Expenses: $${result.expenses.toLocaleString()}<br>` +
       `Leftover: $${result.leftover.toLocaleString()}`;
     const saveData = { state, city };
