@@ -36,7 +36,7 @@ describe('planning UI persistence', () => {
     global.window = dom.window;
     global.document = dom.window.document;
 
-    const names = ['curAge', 'retAge', 'income', 'expenses', 'returnRate', 'realEstate', 'carValue', 'assetSavings', 'investment', 'taxRate', 'mortgage', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'expenses', 'returnRate', 'realEstate', 'carValue', 'assetSavings', 'investment', 'roth', 'crypto', 'taxRate', 'mortgage', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
