@@ -15,11 +15,15 @@ describe('budget calculations', () => {
       salary: 120000,
       state: 'CA',
       city: 'Los Angeles',
-      categories: { housing: 2000, food: 500 }
+      categories: {
+        mortgagePrincipal: 1500,
+        mortgageInterest: 500,
+        prime: 15
+      }
     });
     // tax = (120000*(0.1+0.09+0.02))/12 = 2100
     expect(res.tax).toBe(2100);
-    const expectedExpenses = 2000 + 500 + 2100;
+    const expectedExpenses = 1500 + 500 + 15 + 2100;
     expect(res.expenses).toBe(expectedExpenses);
     expect(res.monthlyIncome).toBe(10000);
     expect(res.leftover).toBe(10000 - expectedExpenses);
