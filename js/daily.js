@@ -216,7 +216,7 @@ export async function renderDailyTasks(currentUser, db) {
       pointerEvents: 'auto',
       userSelect: 'none',
       touchAction: 'auto',
-      minHeight: '40px',
+      minHeight: '120px',
       background: '#eef',
       position: 'relative',
       zIndex: '1'
