@@ -400,7 +400,13 @@ button:hover {
 }
 
 .decision-row.editing textarea {
-  min-height: 4em;
+  min-height: 6em;
+}
+
+.decision-row.editing .middle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 /* Other rules remain unchanged below... */
