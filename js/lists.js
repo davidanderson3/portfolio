@@ -473,6 +473,7 @@ async function initListsPanel() {
               li.textContent = line;
               ul.append(li);
             });
+            td.style.position = 'relative';
             td.append(ul);
             ulsToCheck.push({ ul, td });
           }
@@ -658,18 +659,24 @@ async function initListsPanel() {
         if (ul.scrollHeight > MAX_LIST_HEIGHT) {
           ul.style.maxHeight = `${MAX_LIST_HEIGHT}px`;
           ul.style.overflow = 'hidden';
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'expand-btn';
-          btn.textContent = 'Show more';
-          const toggle = () => {
-            const collapsed = ul.style.maxHeight !== '';
-            ul.style.maxHeight = collapsed ? '' : `${MAX_LIST_HEIGHT}px`;
-            btn.textContent = collapsed ? 'Show less' : 'Show more';
-          };
-          btn.addEventListener('click', toggle);
-          ul.addEventListener('dblclick', toggle);
-          td.append(btn);
+          const resizer = document.createElement('div');
+          resizer.className = 'list-resizer';
+          resizer.addEventListener('mousedown', e => {
+            e.preventDefault();
+            const startY = e.clientY;
+            const startHeight = parseInt(ul.style.maxHeight) || MAX_LIST_HEIGHT;
+            const onMove = evt => {
+              const newHeight = Math.max(40, startHeight + evt.clientY - startY);
+              ul.style.maxHeight = `${newHeight}px`;
+            };
+            const onUp = () => {
+              document.removeEventListener('mousemove', onMove);
+              document.removeEventListener('mouseup', onUp);
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+          });
+          td.append(resizer);
         }
       });
     }, 0);
