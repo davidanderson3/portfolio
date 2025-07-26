@@ -11,7 +11,7 @@ import { auth } from './auth.js';
 let listsArray = [];
 // Track sort state for each list { [idx]: { colIdx:number, dir:1|-1 } }
 const listSortStates = {};
-const MAX_LIST_HEIGHT = 150; // px
+const MAX_LIST_HEIGHT = 450; // px
 
 auth.onAuthStateChanged(async () => {
   listsArray = await loadLists();

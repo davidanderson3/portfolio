@@ -232,7 +232,7 @@ export async function renderDailyTasks(currentUser, db) {
       borderRadius: '8px',
       background: '#fffaf0',
       borderLeft: '4px solid #ffbb55',
-      marginBottom: '6px',
+      marginBottom: '0',
       opacity: isDone ? '0.6' : '1'
     });
 

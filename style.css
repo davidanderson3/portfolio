@@ -812,7 +812,7 @@ button:hover {
   border-left: 4px solid #ffa726;
   padding: 10px 14px;
   border-radius: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
