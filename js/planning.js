@@ -145,6 +145,8 @@ export async function initPlanningPanel() {
       <label>Savings <input type="number" name="assetSavings" placeholder="e.g. 10000" value="${currentData.assets.assetSavings ?? ''}" /></label>
       <label>Checking <input type="number" name="checking" placeholder="e.g. 2000" value="${currentData.assets.checking ?? ''}" /></label>
       <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
+      <label>Roth IRA <input type="number" name="roth" placeholder="e.g. 10000" value="${currentData.assets.roth ?? ''}" /></label>
+      <label>Crypto <input type="number" name="crypto" placeholder="e.g. 1000" value="${currentData.assets.crypto ?? ''}" /></label>
       <label>Tax Rate % <input type="number" name="taxRate" placeholder="e.g. 25" value="${currentData.budget.taxRate ?? ''}" /></label>
       <label>Mortgage/year <input type="number" name="mortgage" placeholder="e.g. 12000" value="${currentData.budget.mortgage ?? ''}" /></label>
     </form>
@@ -170,12 +172,15 @@ export async function initPlanningPanel() {
       assetSavings: Number(form.assetSavings.value || 0),
       checking: Number(form.checking.value || 0),
       investment: Number(form.investment.value || 0),
+      roth: Number(form.roth.value || 0),
+      crypto: Number(form.crypto.value || 0),
       taxRate: form.taxRate.value,
       mortgage: form.mortgage.value
     };
 
     const assetTotal =
-      values.realEstate + values.carValue + values.assetSavings + values.checking + values.investment;
+      values.realEstate + values.carValue + values.assetSavings + values.checking +
+      values.investment + values.roth + values.crypto;
     assetsTotalDiv.textContent = `Total Assets: $${assetTotal.toLocaleString()}`;
 
     const finData = calculateFinanceProjection({
@@ -210,7 +215,9 @@ export async function initPlanningPanel() {
       carValue: values.carValue,
       assetSavings: values.assetSavings,
       checking: values.checking,
-      investment: values.investment
+      investment: values.investment,
+      roth: values.roth,
+      crypto: values.crypto
     };
     currentData.budget = {
       taxRate: values.taxRate,
