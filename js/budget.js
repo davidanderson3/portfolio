@@ -71,6 +71,7 @@ export async function initBudgetPanel() {
         <label>Food <input type="number" name="food" value="${saved.food ?? ''}" /></label>
         <label>Transportation <input type="number" name="transport" value="${saved.transport ?? ''}" /></label>
         <label>Insurance <input type="number" name="insurance" value="${saved.insurance ?? ''}" /></label>
+        <label>Health Insurance <input type="number" name="healthInsurance" value="${saved.healthInsurance ?? ''}" /></label>
         <label>Healthcare <input type="number" name="healthcare" value="${saved.healthcare ?? ''}" /></label>
         <label>Savings <input type="number" name="savings" value="${saved.savings ?? ''}" /></label>
 
@@ -88,7 +89,7 @@ export async function initBudgetPanel() {
   const form = panel.querySelector('#budgetForm');
   const summary = panel.querySelector('#budgetSummary');
   function render() {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transport', 'insurance', 'healthcare', 'savings', 'prime', 'spotify', 'misc'];
+    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transport', 'insurance', 'healthInsurance', 'healthcare', 'savings', 'prime', 'spotify', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
     const state = form.state.value.trim();
