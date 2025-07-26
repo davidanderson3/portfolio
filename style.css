@@ -1807,3 +1807,27 @@ h2 {
     display: none;
   }
 }
+
+/* Budget layout */
+#budgetLayout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.budget-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 200px;
+}
+
+.budget-form label {
+  display: flex;
+  justify-content: space-between;
+}
+
+.budget-form .section-title {
+  margin-top: 8px;
+  font-weight: bold;
+}
