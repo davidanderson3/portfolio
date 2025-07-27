@@ -8,7 +8,7 @@ describe('planning calculations', () => {
       currentAge: 30,
       retirementAge: 32,
       savings: 1000,
-      income: 100,
+      annualSavings: 100,
       returnRate: 0
     });
     expect(res).toEqual([
