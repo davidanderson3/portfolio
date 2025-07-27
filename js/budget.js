@@ -57,6 +57,19 @@ function deepMerge(base = {}, override = {}) {
   return out;
 }
 
+function migrateSubscriptions(data = {}) {
+  data.subscriptions = data.subscriptions || {};
+  if (data.prime) {
+    data.subscriptions['Amazon Prime'] = data.prime;
+    delete data.prime;
+  }
+  if (data.spotify) {
+    data.subscriptions['Spotify'] = data.spotify;
+    delete data.spotify;
+  }
+  return data;
+}
+
 export async function loadBudgetData() {
   const user = getCurrentUser?.();
 
@@ -88,7 +101,7 @@ export async function loadBudgetData() {
     console.error('Failed to fetch budget data:', err);
   }
 
-  budgetCache = deepMerge(cloudData, localData);
+  budgetCache = migrateSubscriptions(deepMerge(cloudData, localData));
   try {
     await db
       .collection('users').doc(user.uid)
@@ -103,7 +116,7 @@ export async function loadBudgetData() {
 }
 
 export async function saveBudgetData(data) {
-  budgetCache = data || {};
+  budgetCache = migrateSubscriptions(data || {});
   const user = getCurrentUser?.();
   localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetCache));
   if (!user) {
@@ -154,9 +167,9 @@ export async function initBudgetPanel() {
         <label>TSP <input type="number" name="tsp" value="${saved.tsp ?? ''}" /></label>
         <label>Health Savings Account <input type="number" name="hsa" value="${saved.hsa ?? ''}" /></label>
 
-        <div class="section-title">Entertainment</div>
-        <label>Amazon Prime <input type="number" name="prime" value="${saved.prime ?? ''}" /></label>
-        <label>Spotify <input type="number" name="spotify" value="${saved.spotify ?? ''}" /></label>
+        <div class="section-title">Subscriptions</div>
+        <div id="subsContainer" class="subscriptions-list"></div>
+        <button type="button" id="addSubBtn">+ Add Subscription</button>
 
         <div class="section-title">Other Spending</div>
         <label>Misc <input type="number" name="misc" value="${saved.misc ?? ''}" /></label>
@@ -171,10 +184,43 @@ export async function initBudgetPanel() {
 
   const form = panel.querySelector('#budgetForm');
   const summary = panel.querySelector('#budgetSummary');
+  const subsContainer = form.querySelector('#subsContainer');
+  const addSubBtn = form.querySelector('#addSubBtn');
+
+  function addSubscriptionRow(name = '', cost = '') {
+    const row = document.createElement('div');
+    row.className = 'subscription-row';
+    row.innerHTML = `
+      <input type="text" class="sub-name" placeholder="Name" value="${name}">
+      <input type="number" class="sub-cost" value="${cost}" style="width:80px;">
+    `;
+    const rem = document.createElement('button');
+    rem.type = 'button';
+    rem.textContent = '❌';
+    rem.onclick = () => { row.remove(); render(); };
+    row.append(rem);
+    subsContainer.append(row);
+  }
+
+  const initialSubs = Object.keys(saved.subscriptions || {}).length
+    ? saved.subscriptions
+    : { 'Amazon Prime': '', 'Spotify': '' };
+  Object.entries(initialSubs).forEach(([n, c]) => addSubscriptionRow(n, c));
+  addSubBtn.addEventListener('click', () => { addSubscriptionRow(); });
+
   function render() {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'healthcare', 'savings', 'tsp', 'hsa', 'prime', 'spotify', 'misc'];
+    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'healthcare', 'savings', 'tsp', 'hsa', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
+    const subs = {};
+    subsContainer.querySelectorAll('.subscription-row').forEach(row => {
+      const n = row.querySelector('.sub-name').value.trim();
+      const v = row.querySelector('.sub-cost').value;
+      if (n) {
+        categories[n] = v;
+        subs[n] = v;
+      }
+    });
     const state = form.state.value.trim();
     const city = form.city.value.trim();
     const result = calculateMonthlyBudget({ salary, state, city, categories });
@@ -186,7 +232,7 @@ export async function initBudgetPanel() {
       `Net Pay: $${result.netPay.toLocaleString()}<br>` +
       `Total Expenses: $${result.expenses.toLocaleString()}<br>` +
       `Leftover: $${result.leftover.toLocaleString()}`;
-    const saveData = { state, city };
+    const saveData = { state, city, subscriptions: subs };
     fields.forEach(f => { saveData[f] = form[f].value; });
     saveBudgetData(saveData);
   }
