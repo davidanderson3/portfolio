@@ -1,38 +1,19 @@
 export const FEDERAL_TAX_RATE = 0.10;
-export const STATE_TAX_RATES = {
-  'CA': 0.09,
-  'NY': 0.06,
-  'TX': 0.00
-};
-export const CITY_TAX_RATES = {
-  'Los Angeles': 0.02,
-  'San Francisco': 0.013,
-  'New York': 0.03
-};
-
-export function getTaxRates(state, city) {
-  const stateRate = STATE_TAX_RATES[state] || 0;
-  const cityRate = CITY_TAX_RATES[city] || 0;
-  return { stateRate, cityRate };
-}
-
-export function calculateMonthlyBudget({ salary, netPay, state, city, categories }) {
+export function calculateMonthlyBudget({ salary, netPay, categories }) {
   salary = Number(salary) || 0;
   netPay = Number(netPay) || 0;
   const cats = { ...categories };
   Object.keys(cats).forEach(k => { cats[k] = Number(cats[k]) || 0; });
-  const { stateRate, cityRate } = getTaxRates(state, city);
 
   const federalTax = Math.round(salary * FEDERAL_TAX_RATE / 12);
-  const stateTax = Math.round(salary * (stateRate + cityRate) / 12);
-  const tax = salary ? federalTax + stateTax : 0;
+  const tax = salary ? federalTax : 0;
 
   const monthlyIncome = salary ? salary / 12 : netPay;
   const calculatedNetPay = netPay || (monthlyIncome - tax);
   const categoryTotal = Object.values(cats).reduce((s, v) => s + v, 0);
   const expenses = categoryTotal + tax;
   const leftover = calculatedNetPay - categoryTotal;
-  return { federalTax, stateTax, tax, netPay: calculatedNetPay, monthlyIncome, expenses, leftover };
+  return { federalTax, tax, netPay: calculatedNetPay, monthlyIncome, expenses, leftover };
 }
 
 import { loadPlanningData } from './planning.js';
@@ -144,9 +125,9 @@ export async function calculateCurrentMonthlyBudget() {
   const planning = await loadPlanningData();
   const budget = await loadBudgetData();
   const salary = Number(planning?.finance?.income || 0);
-  const { state, city, netPay, subscriptions = {}, ...rest } = budget;
+  const { netPay, subscriptions = {}, ...rest } = budget;
   const categories = { ...rest, ...subscriptions };
-  return calculateMonthlyBudget({ salary, netPay, state, city, categories });
+  return calculateMonthlyBudget({ salary, netPay, categories });
 }
 
 export async function initBudgetPanel() {
@@ -155,14 +136,12 @@ export async function initBudgetPanel() {
   const planning = await loadPlanningData();
   const salary = Number(planning?.finance?.income || 0);
   const saved = await loadBudgetData();
-  const defaultNet = calculateMonthlyBudget({ salary, state: saved.state, city: saved.city, categories: {} }).netPay;
+  const defaultNet = calculateMonthlyBudget({ salary, categories: {} }).netPay;
   panel.innerHTML = `
     <div id="budgetLayout">
       <form id="budgetForm" class="budget-form">
         <div>Annual Salary: <span id="budgetSalary">$${salary.toLocaleString()}</span></div>
         <div class="section-title">Configuration</div>
-        <label>State <input type="text" name="state" value="${saved.state ?? ''}" /></label>
-        <label>City <input type="text" name="city" value="${saved.city ?? ''}" /></label>
         <label>Net Monthly Pay <input type="number" name="netPay" value="${saved.netPay ?? defaultNet}" /></label>
 
         <div class="section-title">Recurring Expenses</div>
@@ -235,15 +214,13 @@ export async function initBudgetPanel() {
         subs[n] = v;
       }
     });
-    const state = form.state.value.trim();
-    const city = form.city.value.trim();
     const netPay = form.netPay.value;
-    const result = calculateMonthlyBudget({ salary, netPay, state, city, categories });
+    const result = calculateMonthlyBudget({ salary, netPay, categories });
     summary.innerHTML =
       `Net Pay: $${result.netPay.toLocaleString()}<br>` +
       `Total Expenses: $${result.expenses.toLocaleString()}<br>` +
       `Leftover: $${result.leftover.toLocaleString()}`;
-    const saveData = { state, city, netPay: form.netPay.value };
+    const saveData = { netPay: form.netPay.value };
     fields.forEach(f => { saveData[f] = form[f].value; });
     saveData.subscriptions = subs;
     saveBudgetData(saveData);
