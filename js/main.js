@@ -222,7 +222,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function initCalendarMobileTabs() {
-    if (!window.matchMedia || !window.matchMedia('(max-width: 768px)').matches) return;
     const panel = document.getElementById('calendarPanel');
     const dailyBtn = document.getElementById('calendarDailyTab');
     const hourlyBtn = document.getElementById('calendarHourlyTab');
