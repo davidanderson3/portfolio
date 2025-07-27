@@ -35,7 +35,7 @@ function createAuthMock() {
 
 vi.mock('../js/auth.js', createAuthMock);
 
-import { getTaxRates, calculateMonthlyBudget, calculateCurrentMonthlyBudget } from '../js/budget.js';
+import { calculateMonthlyBudget, calculateCurrentMonthlyBudget } from '../js/budget.js';
 
 beforeEach(() => {
   setMock.mockClear();
@@ -46,16 +46,9 @@ beforeEach(() => {
 });
 
 describe('budget calculations', () => {
-  it('returns tax rates for state and city', () => {
-    const rates = getTaxRates('CA', 'Los Angeles');
-    expect(rates).toEqual({ stateRate: 0.09, cityRate: 0.02 });
-  });
-
   it('calculates monthly budget', () => {
     const res = calculateMonthlyBudget({
       salary: 120000,
-      state: 'CA',
-      city: 'Los Angeles',
       categories: {
         mortgagePrincipal: 1500,
         mortgageInterest: 500,
@@ -65,21 +58,18 @@ describe('budget calculations', () => {
         dentalInsurance: 50
       }
     });
-    const expectedExpenses = 1500 + 500 + 15 + 30 + 50 + 300 + 2100;
+    const expectedExpenses = 1500 + 500 + 15 + 30 + 300 + 50 + 1000;
     expect(res.federalTax).toBe(1000);
-    expect(res.stateTax).toBe(1100);
-    expect(res.tax).toBe(2100);
-    expect(res.netPay).toBe(7900);
+    expect(res.tax).toBe(1000);
+    expect(res.netPay).toBe(9000);
     expect(res.expenses).toBe(expectedExpenses);
     expect(res.monthlyIncome).toBe(10000);
-    expect(res.leftover).toBe(10000 - expectedExpenses);
+    expect(res.leftover).toBe(6605);
   });
 
   it('uses provided net pay', () => {
     const res = calculateMonthlyBudget({
       netPay: 6000,
-      state: 'CA',
-      city: 'Los Angeles',
       categories: { prime: 15, tolls: 30 }
     });
     const expectedExpenses = 15 + 30;
@@ -92,27 +82,23 @@ describe('budget calculations', () => {
   it('calculates the current monthly budget from saved data', async () => {
     planningMock = { finance: { income: 120000 } };
     const stored = {
-      state: 'CA',
-      city: 'Los Angeles',
       subscriptions: { Netflix: 15 },
       tsp: 300
     };
     localStorage.setItem('budgetConfig', JSON.stringify(stored));
     const res = await calculateCurrentMonthlyBudget();
-    // net income after tax: 7900 (from salary 120000 -> monthly 10000, tax 2100)
-    // expenses: tsp + subscription
-    const expectedExpenses = 300 + 15 + 2100;
+    const expectedExpenses = 300 + 15 + 1000;
     expect(res.expenses).toBe(expectedExpenses);
-    expect(res.leftover).toBe(10000 - expectedExpenses);
+    expect(res.leftover).toBe(8685);
   });
 });
 
 describe('budget persistence', () => {
   it('loads data from Firestore', async () => {
-    getMock.mockResolvedValue({ exists: true, data: () => ({ state: 'CA' }) });
+    getMock.mockResolvedValue({ exists: true, data: () => ({ escrow: 50 }) });
     const { loadBudgetData } = await import('../js/budget.js');
     const res = await loadBudgetData();
-    expect(res.state).toBe('CA');
+    expect(res.escrow).toBe(50);
     expect(res.subscriptions).toEqual({});
     expect(typeof res.lastUpdated).toBe('number');
     expect(getMock).toHaveBeenCalled();
@@ -120,9 +106,9 @@ describe('budget persistence', () => {
 
   it('saves data to Firestore', async () => {
     const { saveBudgetData } = await import('../js/budget.js');
-    await saveBudgetData({ city: 'SF' });
+    await saveBudgetData({ escrow: 75 });
     const saved = JSON.parse(localStorage.getItem('budgetConfig'));
-    expect(saved.city).toBe('SF');
+    expect(saved.escrow).toBe(75);
     expect(saved.subscriptions).toEqual({});
     expect(typeof saved.lastUpdated).toBe('number');
     expect(setMock).toHaveBeenCalledWith(saved, { merge: true });
@@ -131,20 +117,19 @@ describe('budget persistence', () => {
   it('uses localStorage when anonymous', async () => {
     vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
     const { saveBudgetData, loadBudgetData } = await import('../js/budget.js');
-    await saveBudgetData({ city: 'Austin' });
+    await saveBudgetData({ escrow: 80 });
     const stored = JSON.parse(localStorage.getItem('budgetConfig'));
-    expect(stored.city).toBe('Austin');
+    expect(stored.escrow).toBe(80);
     expect(typeof stored.lastUpdated).toBe('number');
     const data = await loadBudgetData();
-    expect(data.city).toBe('Austin');
+    expect(data.escrow).toBe(80);
   });
 
   it('prefers newer data source when merging', async () => {
-    getMock.mockResolvedValue({ exists: true, data: () => ({ city: 'Dallas', state: 'TX', lastUpdated: 200 }) });
-    localStorage.setItem('budgetConfig', JSON.stringify({ state: 'TX', escrow: 100, lastUpdated: 100 }));
+    getMock.mockResolvedValue({ exists: true, data: () => ({ lastUpdated: 200 }) });
+    localStorage.setItem('budgetConfig', JSON.stringify({ escrow: 100, lastUpdated: 100 }));
     const { loadBudgetData } = await import('../js/budget.js');
     const res = await loadBudgetData();
-    expect(res.city).toBe('Dallas');
     expect(res.escrow).toBe(100);
     expect(res.lastUpdated).toBe(200);
   });
