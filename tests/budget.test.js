@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+let planningMock = { finance: { income: 0 } };
+vi.mock('../js/planning.js', () => ({ loadPlanningData: () => planningMock }));
+
 const setMock = vi.fn();
 const getMock = vi.fn();
 
@@ -32,7 +35,7 @@ function createAuthMock() {
 
 vi.mock('../js/auth.js', createAuthMock);
 
-import { getTaxRates, calculateMonthlyBudget } from '../js/budget.js';
+import { getTaxRates, calculateMonthlyBudget, calculateCurrentMonthlyBudget } from '../js/budget.js';
 
 beforeEach(() => {
   setMock.mockClear();
@@ -84,6 +87,23 @@ describe('budget calculations', () => {
     expect(res.netPay).toBe(6000);
     expect(res.expenses).toBe(expectedExpenses);
     expect(res.leftover).toBe(6000 - expectedExpenses);
+  });
+
+  it('calculates the current monthly budget from saved data', async () => {
+    planningMock = { finance: { income: 120000 } };
+    const stored = {
+      state: 'CA',
+      city: 'Los Angeles',
+      subscriptions: { Netflix: 15 },
+      tsp: 300
+    };
+    localStorage.setItem('budgetConfig', JSON.stringify(stored));
+    const res = await calculateCurrentMonthlyBudget();
+    // net income after tax: 7900 (from salary 120000 -> monthly 10000, tax 2100)
+    // expenses: tsp + subscription
+    const expectedExpenses = 300 + 15 + 2100;
+    expect(res.expenses).toBe(expectedExpenses);
+    expect(res.leftover).toBe(10000 - expectedExpenses);
   });
 });
 
