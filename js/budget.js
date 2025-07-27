@@ -192,7 +192,7 @@ export async function initBudgetPanel() {
     row.className = 'subscription-row';
     row.innerHTML = `
       <input type="text" class="sub-name" placeholder="Name" value="${name}">
-      <input type="number" class="sub-cost" value="${cost}" style="width:80px;">
+      <input type="number" class="sub-cost" value="${cost}">
     `;
     const rem = document.createElement('button');
     rem.type = 'button';
