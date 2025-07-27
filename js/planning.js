@@ -155,7 +155,6 @@ export async function initPlanningPanel() {
       <label>Crypto <input type="number" name="crypto" placeholder="e.g. 1000" value="${currentData.assets.crypto ?? ''}" /></label>
       <label>Rolling Credit <input type="number" name="rollingCredit" placeholder="e.g. 5000" value="${currentData.budget.rollingCredit ?? ''}" /></label>
     </form>
-    <div class="note-text" style="margin-top:4px;">Values load once you're signed in.</div>
     <div id="assetsTotal" style="margin-top:1em;"></div>
     <div id="financeResult" style="margin-top:1em;"></div>
     <div id="budgetResult" style="margin-top:1em;"></div>
