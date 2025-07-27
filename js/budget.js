@@ -245,6 +245,7 @@ export async function initBudgetPanel() {
       `Leftover: $${result.leftover.toLocaleString()}`;
     const saveData = { state, city, netPay: form.netPay.value };
     fields.forEach(f => { saveData[f] = form[f].value; });
+    saveData.subscriptions = subs;
     saveBudgetData(saveData);
   }
   form.addEventListener('input', render);
