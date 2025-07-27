@@ -1866,3 +1866,19 @@ h2 {
 #budgetPanel.main-layout {
   justify-content: flex-start;
 }
+
+.subscriptions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subscription-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.subscription-row input[type="text"] {
+  flex: 1;
+}

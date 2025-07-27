@@ -56,7 +56,7 @@ describe('budget calculations', () => {
       categories: {
         mortgagePrincipal: 1500,
         mortgageInterest: 500,
-        prime: 15,
+        'Amazon Prime': 15,
         tolls: 30,
         tsp: 300,
         dentalInsurance: 50
@@ -78,24 +78,24 @@ describe('budget persistence', () => {
     getMock.mockResolvedValue({ exists: true, data: () => ({ state: 'CA' }) });
     const { loadBudgetData } = await import('../js/budget.js');
     const res = await loadBudgetData();
-    expect(res).toEqual({ state: 'CA' });
+    expect(res).toEqual({ state: 'CA', subscriptions: {} });
     expect(getMock).toHaveBeenCalled();
   });
 
   it('saves data to Firestore', async () => {
     const { saveBudgetData } = await import('../js/budget.js');
     await saveBudgetData({ city: 'SF' });
-    expect(setMock).toHaveBeenCalledWith({ city: 'SF' }, { merge: true });
-    expect(JSON.parse(localStorage.getItem('budgetConfig'))).toEqual({ city: 'SF' });
+    expect(setMock).toHaveBeenCalledWith({ city: 'SF', subscriptions: {} }, { merge: true });
+    expect(JSON.parse(localStorage.getItem('budgetConfig'))).toEqual({ city: 'SF', subscriptions: {} });
   });
 
   it('uses localStorage when anonymous', async () => {
     vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
     const { saveBudgetData, loadBudgetData } = await import('../js/budget.js');
     await saveBudgetData({ city: 'Austin' });
-    expect(JSON.parse(localStorage.getItem('budgetConfig'))).toEqual({ city: 'Austin' });
+    expect(JSON.parse(localStorage.getItem('budgetConfig'))).toEqual({ city: 'Austin', subscriptions: {} });
     const data = await loadBudgetData();
-    expect(data).toEqual({ city: 'Austin' });
+    expect(data).toEqual({ city: 'Austin', subscriptions: {} });
   });
 
   it('deep merges cloud and local data', async () => {
@@ -103,6 +103,6 @@ describe('budget persistence', () => {
     localStorage.setItem('budgetConfig', JSON.stringify({ state: 'TX', escrow: 100 }));
     const { loadBudgetData } = await import('../js/budget.js');
     const res = await loadBudgetData();
-    expect(res).toEqual({ state: 'TX', city: 'Dallas', escrow: 100 });
+    expect(res).toEqual({ state: 'TX', city: 'Dallas', escrow: 100, subscriptions: {} });
   });
 });
