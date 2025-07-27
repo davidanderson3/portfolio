@@ -134,6 +134,15 @@ export async function saveBudgetData(data) {
   }
 }
 
+export async function calculateCurrentMonthlyBudget() {
+  const planning = await loadPlanningData();
+  const budget = await loadBudgetData();
+  const salary = Number(planning?.finance?.income || 0);
+  const { state, city, netPay, subscriptions = {}, ...rest } = budget;
+  const categories = { ...rest, ...subscriptions };
+  return calculateMonthlyBudget({ salary, netPay, state, city, categories });
+}
+
 export async function initBudgetPanel() {
   const panel = document.getElementById('budgetPanel');
   if (!panel) return;
