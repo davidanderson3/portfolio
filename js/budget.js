@@ -162,6 +162,8 @@ export async function initBudgetPanel() {
         <label>Dental Insurance <input type="number" name="dentalInsurance" value="${saved.dentalInsurance ?? ''}" /></label>
         <label>Savings <input type="number" name="savings" value="${saved.savings ?? ''}" /></label>
         <label>TSP <input type="number" name="tsp" value="${saved.tsp ?? ''}" /></label>
+        <label>Federal Deductions <input type="number" name="federalDeductions" value="${saved.federalDeductions ?? ''}" /></label>
+        <label>State Taxes <input type="number" name="stateTaxes" value="${saved.stateTaxes ?? ''}" /></label>
 
         <div class="section-title">Subscriptions</div>
         <div id="subsContainer" class="subscriptions-list"></div>
@@ -202,7 +204,7 @@ export async function initBudgetPanel() {
   addSubBtn.addEventListener('click', () => { addSubscriptionRow(); });
 
   function render() {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'savings', 'tsp', 'misc'];
+    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'savings', 'tsp', 'federalDeductions', 'stateTaxes', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
     const subs = {};
