@@ -1,17 +1,17 @@
 import { getCurrentUser, db } from './auth.js';
 
-export function calculateFinanceProjection({ currentAge, retirementAge, savings, income, returnRate }) {
+export function calculateFinanceProjection({ currentAge, retirementAge, savings, annualSavings = 0, income = 0, returnRate }) {
   currentAge = Number(currentAge);
   retirementAge = Number(retirementAge);
   savings = Number(savings);
-  income = Number(income);
+  annualSavings = Number(annualSavings !== undefined ? annualSavings : income);
   returnRate = Number(returnRate) / 100;
   const years = retirementAge - currentAge;
   const data = [];
   let balance = savings;
   for (let i = 0; i <= years; i++) {
     if (i > 0) {
-      balance += income;
+      balance += annualSavings;
       balance *= 1 + returnRate;
     }
     data.push({ age: currentAge + i, balance: Math.round(balance) });
@@ -139,6 +139,7 @@ export async function initPlanningPanel() {
       <label>Current Age <input type="number" name="curAge" placeholder="e.g. 30" value="${currentData.finance.curAge ?? ''}" /></label>
       <label>Retirement Age <input type="number" name="retAge" placeholder="e.g. 65" value="${currentData.finance.retAge ?? ''}" /></label>
       <label>Net Income <input type="number" name="income" placeholder="e.g. 50000" value="${currentData.finance.income ?? ''}" /></label>
+      <label>Annual Savings <input type="number" name="annualSavings" placeholder="e.g. 5000" value="${currentData.finance.annualSavings ?? ''}" /></label>
       <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${currentData.finance.returnRate ?? ''}" /></label>
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
@@ -165,6 +166,7 @@ export async function initPlanningPanel() {
       curAge: form.curAge.value,
       retAge: form.retAge.value,
       income: form.income.value,
+      annualSavings: Number(form.annualSavings.value || 0),
       returnRate: form.returnRate.value,
       realEstate: Number(form.realEstate.value || 0),
       carValue: Number(form.carValue.value || 0),
@@ -186,7 +188,7 @@ export async function initPlanningPanel() {
       currentAge: values.curAge,
       retirementAge: values.retAge,
       savings: assetTotal,
-      income: values.income,
+      annualSavings: values.annualSavings,
       returnRate: values.returnRate
     });
     financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
@@ -207,6 +209,7 @@ export async function initPlanningPanel() {
       curAge: values.curAge,
       retAge: values.retAge,
       income: values.income,
+      annualSavings: values.annualSavings,
       returnRate: values.returnRate
     };
     currentData.assets = {
