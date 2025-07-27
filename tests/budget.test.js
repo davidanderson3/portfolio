@@ -71,6 +71,20 @@ describe('budget calculations', () => {
     expect(res.monthlyIncome).toBe(10000);
     expect(res.leftover).toBe(10000 - expectedExpenses);
   });
+
+  it('uses provided net pay', () => {
+    const res = calculateMonthlyBudget({
+      netPay: 6000,
+      state: 'CA',
+      city: 'Los Angeles',
+      categories: { prime: 15, tolls: 30 }
+    });
+    const expectedExpenses = 15 + 30;
+    expect(res.tax).toBe(0);
+    expect(res.netPay).toBe(6000);
+    expect(res.expenses).toBe(expectedExpenses);
+    expect(res.leftover).toBe(6000 - expectedExpenses);
+  });
 });
 
 describe('budget persistence', () => {
