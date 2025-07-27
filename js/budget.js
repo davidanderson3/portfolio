@@ -203,7 +203,7 @@ export async function initBudgetPanel() {
   Object.entries(initialSubs).forEach(([n, c]) => addSubscriptionRow(n, c));
   addSubBtn.addEventListener('click', () => { addSubscriptionRow(); });
 
-  function render() {
+  function render(save = true) {
     const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'savings', 'tsp', 'federalDeductions', 'stateTaxes', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
@@ -225,11 +225,13 @@ export async function initBudgetPanel() {
     const saveData = { netPay: form.netPay.value };
     fields.forEach(f => { saveData[f] = form[f].value; });
     saveData.subscriptions = subs;
-    saveBudgetData(saveData);
+    if (save) {
+      saveBudgetData(saveData);
+    }
   }
-  form.addEventListener('input', render);
-  form.addEventListener('change', render);
-  render();
+  form.addEventListener('input', () => render(false));
+  form.addEventListener('change', () => render(true));
+  render(false);
 }
 
 if (typeof window !== 'undefined') {
