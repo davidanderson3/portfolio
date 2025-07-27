@@ -16,21 +16,23 @@ export function getTaxRates(state, city) {
   return { stateRate, cityRate };
 }
 
-export function calculateMonthlyBudget({ salary, state, city, categories }) {
+export function calculateMonthlyBudget({ salary, netPay, state, city, categories }) {
   salary = Number(salary) || 0;
+  netPay = Number(netPay) || 0;
   const cats = { ...categories };
   Object.keys(cats).forEach(k => { cats[k] = Number(cats[k]) || 0; });
   const { stateRate, cityRate } = getTaxRates(state, city);
 
   const federalTax = Math.round(salary * FEDERAL_TAX_RATE / 12);
   const stateTax = Math.round(salary * (stateRate + cityRate) / 12);
-  const tax = federalTax + stateTax;
+  const tax = salary ? federalTax + stateTax : 0;
 
-  const monthlyIncome = salary / 12;
-  const netPay = monthlyIncome - tax;
-  const expenses = Object.values(cats).reduce((s, v) => s + v, 0) + tax;
-  const leftover = monthlyIncome - expenses;
-  return { federalTax, stateTax, tax, netPay, monthlyIncome, expenses, leftover };
+  const monthlyIncome = salary ? salary / 12 : netPay;
+  const calculatedNetPay = netPay || (monthlyIncome - tax);
+  const categoryTotal = Object.values(cats).reduce((s, v) => s + v, 0);
+  const expenses = categoryTotal + tax;
+  const leftover = calculatedNetPay - categoryTotal;
+  return { federalTax, stateTax, tax, netPay: calculatedNetPay, monthlyIncome, expenses, leftover };
 }
 
 import { loadPlanningData } from './planning.js';
@@ -138,6 +140,7 @@ export async function initBudgetPanel() {
   const planning = await loadPlanningData();
   const salary = Number(planning?.finance?.income || 0);
   const saved = await loadBudgetData();
+  const defaultNet = calculateMonthlyBudget({ salary, state: saved.state, city: saved.city, categories: {} }).netPay;
   panel.innerHTML = `
     <div id="budgetLayout">
       <form id="budgetForm" class="budget-form">
@@ -145,6 +148,7 @@ export async function initBudgetPanel() {
         <div class="section-title">Configuration</div>
         <label>State <input type="text" name="state" value="${saved.state ?? ''}" /></label>
         <label>City <input type="text" name="city" value="${saved.city ?? ''}" /></label>
+        <label>Net Monthly Pay <input type="number" name="netPay" value="${saved.netPay ?? defaultNet}" /></label>
 
         <div class="section-title">Recurring Expenses</div>
         <label>Mortgage Interest <input type="number" name="mortgageInterest" value="${saved.mortgageInterest ?? ''}" /></label>
@@ -219,12 +223,13 @@ export async function initBudgetPanel() {
     });
     const state = form.state.value.trim();
     const city = form.city.value.trim();
-    const result = calculateMonthlyBudget({ salary, state, city, categories });
+    const netPay = form.netPay.value;
+    const result = calculateMonthlyBudget({ salary, netPay, state, city, categories });
     summary.innerHTML =
       `Net Pay: $${result.netPay.toLocaleString()}<br>` +
       `Total Expenses: $${result.expenses.toLocaleString()}<br>` +
       `Leftover: $${result.leftover.toLocaleString()}`;
-    const saveData = { state, city, subscriptions: subs };
+    const saveData = { state, city, netPay: form.netPay.value };
     fields.forEach(f => { saveData[f] = form[f].value; });
     saveBudgetData(saveData);
   }
