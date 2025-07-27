@@ -138,7 +138,7 @@ export async function initPlanningPanel() {
     <form id="planningForm" class="planning-form">
       <label>Current Age <input type="number" name="curAge" placeholder="e.g. 30" value="${currentData.finance.curAge ?? ''}" /></label>
       <label>Retirement Age <input type="number" name="retAge" placeholder="e.g. 65" value="${currentData.finance.retAge ?? ''}" /></label>
-      <label>Annual Income <input type="number" name="income" placeholder="e.g. 50000" value="${currentData.finance.income ?? ''}" /></label>
+      <label>Net Income <input type="number" name="income" placeholder="e.g. 50000" value="${currentData.finance.income ?? ''}" /></label>
       <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${currentData.finance.returnRate ?? ''}" /></label>
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
