@@ -223,7 +223,7 @@ export async function initBudgetPanel() {
   addSubBtn.addEventListener('click', () => { addSubscriptionRow(); });
 
   function render() {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'savings', 'tsp', 'prime', 'spotify', 'misc'];
+    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'savings', 'tsp', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
     const subs = {};
