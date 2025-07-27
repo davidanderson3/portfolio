@@ -89,8 +89,12 @@ export async function loadPlanningData() {
     console.error('Failed to fetch planning data:', err);
   }
 
-  // Merge cloud and local (local wins) and sync back
-  planningCache = deepMerge(cloudData, localData);
+  const localTs = localData.lastUpdated || 0;
+  const cloudTs = cloudData.lastUpdated || 0;
+  const older = cloudTs >= localTs ? localData : cloudData;
+  const newer = cloudTs >= localTs ? cloudData : localData;
+  planningCache = deepMerge(older, newer);
+  planningCache.lastUpdated = Math.max(localTs, cloudTs);
   try {
     await db
       .collection('users').doc(user.uid)
@@ -105,7 +109,8 @@ export async function loadPlanningData() {
 }
 
 export async function savePlanningData(data) {
-  planningCache = data || {};
+  planningCache = { ...(data || {}) };
+  planningCache.lastUpdated = Date.now();
   const user = getCurrentUser?.();
   localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
   if (!user) {

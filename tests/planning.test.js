@@ -67,31 +67,38 @@ describe('planning persistence', () => {
     getMock.mockResolvedValue({ exists: true, data: () => ({ finance: { curAge: '30' } }) });
     const { loadPlanningData } = await import('../js/planning.js');
     const res = await loadPlanningData();
-    expect(res).toEqual({ finance: { curAge: '30' } });
+    expect(res.finance.curAge).toBe('30');
+    expect(typeof res.lastUpdated).toBe('number');
     expect(getMock).toHaveBeenCalled();
   });
 
   it('saves data to Firestore', async () => {
     const { savePlanningData } = await import('../js/planning.js');
     await savePlanningData({ finance: { curAge: '30' } });
-    expect(setMock).toHaveBeenCalledWith({ finance: { curAge: '30' } }, { merge: true });
-    expect(JSON.parse(localStorage.getItem('planningData'))).toEqual({ finance: { curAge: '30' } });
+    const saved = JSON.parse(localStorage.getItem('planningData'));
+    expect(saved.finance.curAge).toBe('30');
+    expect(typeof saved.lastUpdated).toBe('number');
+    expect(setMock).toHaveBeenCalledWith(saved, { merge: true });
   });
 
   it('uses localStorage when anonymous', async () => {
     vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
     const { savePlanningData, loadPlanningData } = await import('../js/planning.js');
     await savePlanningData({ finance: { curAge: '25' } });
-    expect(JSON.parse(localStorage.getItem('planningData'))).toEqual({ finance: { curAge: '25' } });
+    const stored = JSON.parse(localStorage.getItem('planningData'));
+    expect(stored.finance.curAge).toBe('25');
+    expect(typeof stored.lastUpdated).toBe('number');
     const data = await loadPlanningData();
-    expect(data).toEqual({ finance: { curAge: '25' } });
+    expect(data.finance.curAge).toBe('25');
   });
 
-  it('deep merges cloud and local data', async () => {
-    getMock.mockResolvedValue({ exists: true, data: () => ({ finance: { curAge: '30', retAge: '60' } }) });
-    localStorage.setItem('planningData', JSON.stringify({ finance: { curAge: '35' }, assets: { realEstate: 100 } }));
+  it('prefers newer data source when merging', async () => {
+    getMock.mockResolvedValue({ exists: true, data: () => ({ finance: { curAge: '30', retAge: '60' }, lastUpdated: 200 }) });
+    localStorage.setItem('planningData', JSON.stringify({ finance: { curAge: '35' }, assets: { realEstate: 100 }, lastUpdated: 100 }));
     const { loadPlanningData } = await import('../js/planning.js');
     const res = await loadPlanningData();
-    expect(res).toEqual({ finance: { curAge: '35', retAge: '60' }, assets: { realEstate: 100 } });
+    expect(res.finance.curAge).toBe('30');
+    expect(res.assets.realEstate).toBe(100);
+    expect(res.lastUpdated).toBe(200);
   });
 });

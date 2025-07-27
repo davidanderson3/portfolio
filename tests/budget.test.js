@@ -112,31 +112,40 @@ describe('budget persistence', () => {
     getMock.mockResolvedValue({ exists: true, data: () => ({ state: 'CA' }) });
     const { loadBudgetData } = await import('../js/budget.js');
     const res = await loadBudgetData();
-    expect(res).toEqual({ state: 'CA', subscriptions: {} });
+    expect(res.state).toBe('CA');
+    expect(res.subscriptions).toEqual({});
+    expect(typeof res.lastUpdated).toBe('number');
     expect(getMock).toHaveBeenCalled();
   });
 
   it('saves data to Firestore', async () => {
     const { saveBudgetData } = await import('../js/budget.js');
     await saveBudgetData({ city: 'SF' });
-    expect(setMock).toHaveBeenCalledWith({ city: 'SF', subscriptions: {} }, { merge: true });
-    expect(JSON.parse(localStorage.getItem('budgetConfig'))).toEqual({ city: 'SF', subscriptions: {} });
+    const saved = JSON.parse(localStorage.getItem('budgetConfig'));
+    expect(saved.city).toBe('SF');
+    expect(saved.subscriptions).toEqual({});
+    expect(typeof saved.lastUpdated).toBe('number');
+    expect(setMock).toHaveBeenCalledWith(saved, { merge: true });
   });
 
   it('uses localStorage when anonymous', async () => {
     vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
     const { saveBudgetData, loadBudgetData } = await import('../js/budget.js');
     await saveBudgetData({ city: 'Austin' });
-    expect(JSON.parse(localStorage.getItem('budgetConfig'))).toEqual({ city: 'Austin', subscriptions: {} });
+    const stored = JSON.parse(localStorage.getItem('budgetConfig'));
+    expect(stored.city).toBe('Austin');
+    expect(typeof stored.lastUpdated).toBe('number');
     const data = await loadBudgetData();
-    expect(data).toEqual({ city: 'Austin', subscriptions: {} });
+    expect(data.city).toBe('Austin');
   });
 
-  it('deep merges cloud and local data', async () => {
-    getMock.mockResolvedValue({ exists: true, data: () => ({ city: 'Dallas', state: 'TX' }) });
-    localStorage.setItem('budgetConfig', JSON.stringify({ state: 'TX', escrow: 100 }));
+  it('prefers newer data source when merging', async () => {
+    getMock.mockResolvedValue({ exists: true, data: () => ({ city: 'Dallas', state: 'TX', lastUpdated: 200 }) });
+    localStorage.setItem('budgetConfig', JSON.stringify({ state: 'TX', escrow: 100, lastUpdated: 100 }));
     const { loadBudgetData } = await import('../js/budget.js');
     const res = await loadBudgetData();
-    expect(res).toEqual({ state: 'TX', city: 'Dallas', escrow: 100, subscriptions: {} });
+    expect(res.city).toBe('Dallas');
+    expect(res.escrow).toBe(100);
+    expect(res.lastUpdated).toBe(200);
   });
 });

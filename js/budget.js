@@ -103,7 +103,12 @@ export async function loadBudgetData() {
     console.error('Failed to fetch budget data:', err);
   }
 
-  budgetCache = migrateSubscriptions(deepMerge(cloudData, localData));
+  const localTs = localData.lastUpdated || 0;
+  const cloudTs = cloudData.lastUpdated || 0;
+  const older = cloudTs >= localTs ? localData : cloudData;
+  const newer = cloudTs >= localTs ? cloudData : localData;
+  budgetCache = migrateSubscriptions(deepMerge(older, newer));
+  budgetCache.lastUpdated = Math.max(localTs, cloudTs);
   try {
     await db
       .collection('users').doc(user.uid)
@@ -119,6 +124,7 @@ export async function loadBudgetData() {
 
 export async function saveBudgetData(data) {
   budgetCache = migrateSubscriptions(data || {});
+  budgetCache.lastUpdated = Date.now();
   const user = getCurrentUser?.();
   localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetCache));
   if (!user) {
