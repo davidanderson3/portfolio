@@ -134,6 +134,8 @@ async function recordMetric(metricId, value, extra = null, dayKey = activeMetric
     extra
   };
 
+  const isPostponed = extra && extra.postponed;
+
   if (!user) {
     let all = JSON.parse(localStorage.getItem(STATS_KEY) || 'null');
     if (!all || !Object.keys(all).length) {
@@ -141,7 +143,13 @@ async function recordMetric(metricId, value, extra = null, dayKey = activeMetric
     }
     const day = dayKey;
     all[day] = all[day] || {};
-    all[day][metricId] = [entry];
+    if (isPostponed) {
+      const arr = all[day][metricId] || [];
+      arr.push(entry);
+      all[day][metricId] = arr;
+    } else {
+      all[day][metricId] = [entry];
+    }
     localStorage.setItem(STATS_KEY, JSON.stringify(all));
     return;
   }
@@ -151,17 +159,35 @@ async function recordMetric(metricId, value, extra = null, dayKey = activeMetric
     .collection('users').doc(user.uid)
     .collection('dailyStats').doc(dayKey);
   try {
-    await ref.set({
-      metrics: {
-        [metricId]: [entry]
-      }
-    }, { merge: true });
+    if (isPostponed) {
+      const snap = await ref.get();
+      const prev = snap.exists && snap.data().metrics && Array.isArray(snap.data().metrics[metricId])
+        ? snap.data().metrics[metricId]
+        : [];
+      await ref.set({
+        metrics: {
+          [metricId]: [...prev, entry]
+        }
+      }, { merge: true });
+    } else {
+      await ref.set({
+        metrics: {
+          [metricId]: [entry]
+        }
+      }, { merge: true });
+    }
   } catch (err) {
     console.warn('Falling back to local metric cache:', err);
     const all = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
     const day = dayKey;
     all[day] = all[day] || {};
-    all[day][metricId] = [entry];
+    if (isPostponed) {
+      const arr = all[day][metricId] || [];
+      arr.push(entry);
+      all[day][metricId] = arr;
+    } else {
+      all[day][metricId] = [entry];
+    }
     localStorage.setItem(STATS_KEY, JSON.stringify(all));
   }
 }
