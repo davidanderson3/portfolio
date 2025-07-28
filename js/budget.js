@@ -1,15 +1,21 @@
 export const FEDERAL_TAX_RATE = 0.10;
+/**
+ * Calculates a monthly budget summary.
+ *
+ * When no annual salary is provided, the `netPay` argument is treated as the
+ * gross monthly income and taxes are deducted from it.
+ */
 export function calculateMonthlyBudget({ salary, netPay, categories }) {
   salary = Number(salary) || 0;
   netPay = Number(netPay) || 0;
   const cats = { ...categories };
   Object.keys(cats).forEach(k => { cats[k] = Number(cats[k]) || 0; });
 
-  const federalTax = Math.round(salary * FEDERAL_TAX_RATE / 12);
-  const tax = salary ? federalTax : 0;
-
   const monthlyIncome = salary ? salary / 12 : netPay;
-  const calculatedNetPay = netPay || (monthlyIncome - tax);
+  const federalTax = Math.round(monthlyIncome * FEDERAL_TAX_RATE);
+  const tax = federalTax;
+
+  const calculatedNetPay = monthlyIncome - tax;
   const categoryTotal = Object.values(cats).reduce((s, v) => s + v, 0);
   const expenses = categoryTotal + tax;
   const leftover = calculatedNetPay - categoryTotal;
@@ -142,7 +148,7 @@ export async function initBudgetPanel() {
       <form id="budgetForm" class="budget-form">
         <div>Annual Salary: <span id="budgetSalary">$${salary.toLocaleString()}</span></div>
         <div class="section-title">Configuration</div>
-        <label>Net Monthly Pay <input type="number" name="netPay" value="${saved.netPay ?? defaultNet}" /></label>
+        <label>Gross Monthly Pay <input type="number" name="netPay" value="${saved.netPay ?? defaultNet}" /></label>
 
         <div class="section-title">Recurring Expenses</div>
         <label>Mortgage Interest <input type="number" name="mortgageInterest" value="${saved.mortgageInterest ?? ''}" /></label>

@@ -67,16 +67,16 @@ describe('budget calculations', () => {
     expect(res.leftover).toBe(6605);
   });
 
-  it('uses provided net pay', () => {
+  it('uses provided gross pay', () => {
     const res = calculateMonthlyBudget({
       netPay: 6000,
       categories: { prime: 15, tolls: 30 }
     });
-    const expectedExpenses = 15 + 30;
-    expect(res.tax).toBe(0);
-    expect(res.netPay).toBe(6000);
+    const expectedExpenses = 15 + 30 + 600; // includes tax
+    expect(res.tax).toBe(600);
+    expect(res.netPay).toBe(5400);
     expect(res.expenses).toBe(expectedExpenses);
-    expect(res.leftover).toBe(6000 - expectedExpenses);
+    expect(res.leftover).toBe(5400 - 45);
   });
 
   it('calculates the current monthly budget from saved data', async () => {
