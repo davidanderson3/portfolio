@@ -730,6 +730,7 @@ function openRowEditor(rowIdx) {
       colsDiv.innerHTML = '';
       columns.forEach((col, i) => {
         const row = document.createElement('div');
+        row.className = 'editor-row';
         Object.assign(row.style, { display: 'flex', alignItems: 'center', marginBottom: '0.5rem' });
 
         // 1) column name
