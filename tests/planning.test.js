@@ -18,6 +18,22 @@ describe('planning calculations', () => {
     ]);
   });
 
+  it('accounts for steady income increases', () => {
+    const res = calculateFinanceProjection({
+      currentAge: 30,
+      retirementAge: 32,
+      savings: 1000,
+      annualSavings: 100,
+      annualRaise: 10,
+      returnRate: 0
+    });
+    expect(res).toEqual([
+      { age: 30, balance: 1000 },
+      { age: 31, balance: 1100 },
+      { age: 32, balance: 1210 }
+    ]);
+  });
+
   it('calculates budget allocation', () => {
     const res = calculateBudgetAllocation({ income: 1000, taxRate: 10, mortgage: 300 });
     expect(res).toEqual({ taxes: 100, mortgage: 300, leftover: 600 });
