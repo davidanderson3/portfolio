@@ -31,6 +31,29 @@ import { getCurrentUser, db } from './auth.js';
 const BUDGET_KEY = 'budgetConfig';
 let budgetCache = null;
 
+const DEFAULT_RECURRING = [
+  ['mortgageInterest', 'Mortgage Interest'],
+  ['mortgagePrincipal', 'Mortgage Principal'],
+  ['escrow', 'Escrow'],
+  ['electric', 'Electric'],
+  ['water', 'Water'],
+  ['gas', 'Gas'],
+  ['internet', 'Internet'],
+  ['cell', 'Cell Phone'],
+  ['food', 'Food'],
+  ['transGas', 'Gas (Car)'],
+  ['carPayment', 'Car Payment'],
+  ['tolls', 'Tolls'],
+  ['insurance', 'Car Insurance'],
+  ['healthInsurance', 'Health Insurance'],
+  ['dentalInsurance', 'Dental Insurance'],
+  ['savings', 'Savings'],
+  ['tsp', 'TSP'],
+  ['federalDeductions', 'Federal Deductions'],
+  ['stateTaxes', 'State Taxes'],
+  ['misc', 'Misc']
+];
+
 function isObject(val) {
   return val && typeof val === 'object' && !Array.isArray(val);
 }
@@ -151,35 +174,12 @@ export async function initBudgetPanel() {
     <div id="budgetLayout">
       <form id="budgetForm" class="budget-form">
         <div class="section-title">Recurring Expenses</div>
-        <label>Mortgage Interest <input type="number" name="mortgageInterest" value="${saved.mortgageInterest ?? ''}" /></label>
-        <label>Mortgage Principal <input type="number" name="mortgagePrincipal" value="${saved.mortgagePrincipal ?? ''}" /></label>
-        <label>Escrow <input type="number" name="escrow" value="${saved.escrow ?? ''}" /></label>
-        <label>Electric <input type="number" name="electric" value="${saved.electric ?? ''}" /></label>
-        <label>Water <input type="number" name="water" value="${saved.water ?? ''}" /></label>
-        <label>Gas <input type="number" name="gas" value="${saved.gas ?? ''}" /></label>
-        <label>Internet <input type="number" name="internet" value="${saved.internet ?? ''}" /></label>
-        <label>Cell Phone <input type="number" name="cell" value="${saved.cell ?? ''}" /></label>
-        <label>Food <input type="number" name="food" value="${saved.food ?? ''}" /></label>
-        <label>Gas (Car) <input type="number" name="transGas" value="${saved.transGas ?? ''}" /></label>
-        <label>Car Payment <input type="number" name="carPayment" value="${saved.carPayment ?? ''}" /></label>
-        <label>Tolls <input type="number" name="tolls" value="${saved.tolls ?? ''}" /></label>
-        <label>Car Insurance <input type="number" name="insurance" value="${saved.insurance ?? ''}" /></label>
-        <label>Health Insurance <input type="number" name="healthInsurance" value="${saved.healthInsurance ?? ''}" /></label>
-        <label>Dental Insurance <input type="number" name="dentalInsurance" value="${saved.dentalInsurance ?? ''}" /></label>
-        <label>Savings <input type="number" name="savings" value="${saved.savings ?? ''}" /></label>
-        <label>TSP <input type="number" name="tsp" value="${saved.tsp ?? ''}" /></label>
-        <label>Federal Deductions <input type="number" name="federalDeductions" value="${saved.federalDeductions ?? ''}" /></label>
-        <label>State Taxes <input type="number" name="stateTaxes" value="${saved.stateTaxes ?? ''}" /></label>
         <div id="recurContainer" class="recurring-list"></div>
         <button type="button" id="addRecurBtn">+ Add Category</button>
 
         <div class="section-title">Subscriptions</div>
         <div id="subsContainer" class="subscriptions-list"></div>
         <button type="button" id="addSubBtn">+ Add Subscription</button>
-
-        <div class="section-title">Other Spending</div>
-        <label>Misc <input type="number" name="misc" value="${saved.misc ?? ''}" /></label>
-
       </form>
       <div id="budgetSummary" class="budget-summary"></div>
     </div>
@@ -191,6 +191,7 @@ export async function initBudgetPanel() {
   const addSubBtn = form.querySelector('#addSubBtn');
   const recurContainer = form.querySelector('#recurContainer');
   const addRecurBtn = form.querySelector('#addRecurBtn');
+  const removedBuiltIns = new Set(saved.removedBuiltIns || []);
 
   function addSubscriptionRow(name = '', cost = '') {
     const row = document.createElement('div');
@@ -207,17 +208,22 @@ export async function initBudgetPanel() {
     subsContainer.append(row);
   }
 
-  function addRecurRow(name = '', cost = '') {
+  function addRecurRow(name = '', cost = '', fixed = false, key = '') {
     const row = document.createElement('div');
     row.className = 'recurring-row';
+    if (key) row.dataset.field = key;
     row.innerHTML = `
-      <input type="text" class="recur-name" placeholder="Name" value="${name}">
+      <input type="text" class="recur-name" placeholder="Name" value="${name}" ${fixed ? 'readonly' : ''}>
       <input type="number" class="recur-cost" value="${cost}">
     `;
     const rem = document.createElement('button');
     rem.type = 'button';
     rem.textContent = '❌';
-    rem.onclick = () => { row.remove(); render(); };
+    rem.onclick = () => {
+      if (key) removedBuiltIns.add(key);
+      row.remove();
+      render();
+    };
     row.append(rem);
     recurContainer.append(row);
   }
@@ -229,19 +235,28 @@ export async function initBudgetPanel() {
   addSubBtn.addEventListener('click', () => { addSubscriptionRow(); });
 
   const initialRecur = saved.recurring || {};
+  DEFAULT_RECURRING.forEach(([key, label]) => {
+    if (!removedBuiltIns.has(key)) {
+      addRecurRow(label, saved[key] ?? '', true, key);
+    }
+  });
   Object.entries(initialRecur).forEach(([n, c]) => addRecurRow(n, c));
   addRecurBtn.addEventListener('click', () => { addRecurRow(); });
 
   function render(save = true) {
-    const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'savings', 'tsp', 'federalDeductions', 'stateTaxes', 'misc'];
     const categories = {};
-    fields.forEach(f => { categories[f] = form[f].value; });
     const recur = {};
+    const saveData = { removedBuiltIns: Array.from(removedBuiltIns) };
     recurContainer.querySelectorAll('.recurring-row').forEach(row => {
-      const n = row.querySelector('.recur-name').value.trim();
+      const nameEl = row.querySelector('.recur-name');
+      const n = nameEl.value.trim();
       const v = row.querySelector('.recur-cost').value;
-      if (n) {
-        categories[n] = v;
+      if (!n) return;
+      categories[n] = v;
+      const key = row.dataset.field;
+      if (key) {
+        saveData[key] = v;
+      } else {
         recur[n] = v;
       }
     });
@@ -258,8 +273,6 @@ export async function initBudgetPanel() {
     summary.innerHTML =
       `Total Expenses: $${result.expenses.toLocaleString()}<br>` +
       `Leftover: $${result.leftover.toLocaleString()}`;
-    const saveData = {};
-    fields.forEach(f => { saveData[f] = form[f].value; });
     saveData.subscriptions = subs;
     saveData.recurring = recur;
     if (save) {
