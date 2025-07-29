@@ -98,6 +98,7 @@ export async function loadBudgetData() {
   const older = cloudTs >= localTs ? localData : cloudData;
   const newer = cloudTs >= localTs ? cloudData : localData;
   budgetCache = migrateSubscriptions(deepMerge(older, newer));
+  budgetCache.recurring = budgetCache.recurring || {};
   budgetCache.lastUpdated = Math.max(localTs, cloudTs);
   try {
     await db
@@ -114,6 +115,7 @@ export async function loadBudgetData() {
 
 export async function saveBudgetData(data) {
   budgetCache = migrateSubscriptions(data || {});
+  budgetCache.recurring = budgetCache.recurring || {};
   budgetCache.lastUpdated = Date.now();
   const user = getCurrentUser?.();
   localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetCache));
@@ -134,9 +136,9 @@ export async function calculateCurrentMonthlyBudget() {
   const planning = await loadPlanningData();
   const budget = await loadBudgetData();
   const salary = Number(planning?.finance?.income || 0);
-  const { netPay, subscriptions = {}, ...rest } = budget;
-  const categories = { ...rest, ...subscriptions };
-  return calculateMonthlyBudget({ salary, netPay, categories });
+  const { subscriptions = {}, recurring = {}, netPay: _ignore, ...rest } = budget;
+  const categories = { ...rest, ...recurring, ...subscriptions };
+  return calculateMonthlyBudget({ salary, categories });
 }
 
 export async function initBudgetPanel() {
@@ -145,14 +147,9 @@ export async function initBudgetPanel() {
   const planning = await loadPlanningData();
   const salary = Number(planning?.finance?.income || 0);
   const saved = await loadBudgetData();
-  const defaultNet = salary ? Math.round(salary / 12) : 0;
   panel.innerHTML = `
     <div id="budgetLayout">
       <form id="budgetForm" class="budget-form">
-        <div>Annual Salary: <span id="budgetSalary">$${salary.toLocaleString()}</span></div>
-        <div class="section-title">Configuration</div>
-        <label>Gross Monthly Pay <input type="number" name="netPay" value="${saved.netPay ?? defaultNet}" /></label>
-
         <div class="section-title">Recurring Expenses</div>
         <label>Mortgage Interest <input type="number" name="mortgageInterest" value="${saved.mortgageInterest ?? ''}" /></label>
         <label>Mortgage Principal <input type="number" name="mortgagePrincipal" value="${saved.mortgagePrincipal ?? ''}" /></label>
@@ -173,6 +170,8 @@ export async function initBudgetPanel() {
         <label>TSP <input type="number" name="tsp" value="${saved.tsp ?? ''}" /></label>
         <label>Federal Deductions <input type="number" name="federalDeductions" value="${saved.federalDeductions ?? ''}" /></label>
         <label>State Taxes <input type="number" name="stateTaxes" value="${saved.stateTaxes ?? ''}" /></label>
+        <div id="recurContainer" class="recurring-list"></div>
+        <button type="button" id="addRecurBtn">+ Add Category</button>
 
         <div class="section-title">Subscriptions</div>
         <div id="subsContainer" class="subscriptions-list"></div>
@@ -190,6 +189,8 @@ export async function initBudgetPanel() {
   const summary = panel.querySelector('#budgetSummary');
   const subsContainer = form.querySelector('#subsContainer');
   const addSubBtn = form.querySelector('#addSubBtn');
+  const recurContainer = form.querySelector('#recurContainer');
+  const addRecurBtn = form.querySelector('#addRecurBtn');
 
   function addSubscriptionRow(name = '', cost = '') {
     const row = document.createElement('div');
@@ -206,16 +207,44 @@ export async function initBudgetPanel() {
     subsContainer.append(row);
   }
 
+  function addRecurRow(name = '', cost = '') {
+    const row = document.createElement('div');
+    row.className = 'recurring-row';
+    row.innerHTML = `
+      <input type="text" class="recur-name" placeholder="Name" value="${name}">
+      <input type="number" class="recur-cost" value="${cost}">
+    `;
+    const rem = document.createElement('button');
+    rem.type = 'button';
+    rem.textContent = '❌';
+    rem.onclick = () => { row.remove(); render(); };
+    row.append(rem);
+    recurContainer.append(row);
+  }
+
   const initialSubs = Object.keys(saved.subscriptions || {}).length
     ? saved.subscriptions
     : { 'Amazon Prime': '', 'Spotify': '' };
   Object.entries(initialSubs).forEach(([n, c]) => addSubscriptionRow(n, c));
   addSubBtn.addEventListener('click', () => { addSubscriptionRow(); });
 
+  const initialRecur = saved.recurring || {};
+  Object.entries(initialRecur).forEach(([n, c]) => addRecurRow(n, c));
+  addRecurBtn.addEventListener('click', () => { addRecurRow(); });
+
   function render(save = true) {
     const fields = ['mortgageInterest', 'mortgagePrincipal', 'escrow', 'electric', 'water', 'gas', 'internet', 'cell', 'food', 'transGas', 'carPayment', 'tolls', 'insurance', 'healthInsurance', 'dentalInsurance', 'savings', 'tsp', 'federalDeductions', 'stateTaxes', 'misc'];
     const categories = {};
     fields.forEach(f => { categories[f] = form[f].value; });
+    const recur = {};
+    recurContainer.querySelectorAll('.recurring-row').forEach(row => {
+      const n = row.querySelector('.recur-name').value.trim();
+      const v = row.querySelector('.recur-cost').value;
+      if (n) {
+        categories[n] = v;
+        recur[n] = v;
+      }
+    });
     const subs = {};
     subsContainer.querySelectorAll('.subscription-row').forEach(row => {
       const n = row.querySelector('.sub-name').value.trim();
@@ -225,15 +254,14 @@ export async function initBudgetPanel() {
         subs[n] = v;
       }
     });
-    const netPay = form.netPay.value;
-    const result = calculateMonthlyBudget({ salary, netPay, categories });
+    const result = calculateMonthlyBudget({ salary, categories });
     summary.innerHTML =
-      `Net Pay: $${result.netPay.toLocaleString()}<br>` +
       `Total Expenses: $${result.expenses.toLocaleString()}<br>` +
       `Leftover: $${result.leftover.toLocaleString()}`;
-    const saveData = { netPay: form.netPay.value };
+    const saveData = {};
     fields.forEach(f => { saveData[f] = form[f].value; });
     saveData.subscriptions = subs;
+    saveData.recurring = recur;
     if (save) {
       saveBudgetData(saveData);
     }

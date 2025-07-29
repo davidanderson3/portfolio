@@ -1855,6 +1855,12 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  width: 100%;
+}
+
+.budget-form label input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .budget-form .section-title {
@@ -1884,6 +1890,38 @@ h2 {
 }
 .subscription-row input.sub-cost {
   width: 120px;
+}
+
+.recurring-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recurring-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.recurring-row input[type="text"] {
+  flex: 1;
+}
+
+.recurring-row input.recur-cost {
+  width: 120px;
+}
+
+@media (max-width: 600px) {
+  #budgetLayout {
+    flex-direction: column;
+  }
+  .budget-form {
+    width: 100%;
+  }
+  #budgetSummary {
+    width: 100%;
+  }
 }
 
 /* Layout for list row editor */
