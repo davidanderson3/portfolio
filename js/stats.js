@@ -547,26 +547,9 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     td6.dataset.label = 'Actions';
     Object.assign(td6.style, { padding: '8px', borderBottom: '1px solid #ddd' });
 
-    const postpone = document.createElement('span');
-    postpone.textContent = '⏭️';
-    postpone.style.cursor = 'pointer';
-    postpone.addEventListener('click', async () => {
-      const allStats = await loadAllStats();
-      const entriesToday = ((allStats[activeMetricsDate] || {})[cfg.id]) || [];
-      let existingVal = null;
-      if (entriesToday.length) {
-        const latest = entriesToday.reduce((a, b) => a.timestamp > b.timestamp ? a : b);
-        existingVal = latest.value;
-      }
-      await recordMetric(cfg.id, existingVal, { postponed: true }, activeMetricsDate);
-      await renderStatsSummary();
-    });
-    td6.appendChild(postpone);
-
     const clockBtn = document.createElement('span');
     clockBtn.textContent = '🕒';
     clockBtn.style.cursor = 'pointer';
-    clockBtn.style.marginLeft = '8px';
     td6.appendChild(clockBtn);
 
     const menu = document.createElement('div');
@@ -642,7 +625,6 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
         menu.style.display = 'none';
       }
     });
-
     const configEdit = document.createElement('span');
     configEdit.textContent = '✏️';
     configEdit.style.cursor = 'pointer';
