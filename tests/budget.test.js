@@ -58,7 +58,7 @@ describe('budget calculations', () => {
         dentalInsurance: 50
       }
     });
-    const expectedExpenses = 1500 + 500 + 15 + 30 + 300 + 50 + 1000;
+    const expectedExpenses = 1500 + 500 + 15 + 30 + 300 + 50;
     expect(res.federalTax).toBe(1000);
     expect(res.tax).toBe(1000);
     expect(res.netPay).toBe(9000);
@@ -72,7 +72,7 @@ describe('budget calculations', () => {
       netPay: 6000,
       categories: { prime: 15, tolls: 30 }
     });
-    const expectedExpenses = 15 + 30 + 600; // includes tax
+    const expectedExpenses = 15 + 30; // tax excluded
     expect(res.tax).toBe(600);
     expect(res.netPay).toBe(5400);
     expect(res.expenses).toBe(expectedExpenses);
@@ -87,7 +87,7 @@ describe('budget calculations', () => {
     };
     localStorage.setItem('budgetConfig', JSON.stringify(stored));
     const res = await calculateCurrentMonthlyBudget();
-    const expectedExpenses = 300 + 15 + 1000;
+    const expectedExpenses = 300 + 15;
     expect(res.expenses).toBe(expectedExpenses);
     expect(res.leftover).toBe(8685);
   });
