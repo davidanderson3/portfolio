@@ -21,7 +21,7 @@ export function calculateMonthlyBudget({ salary, netPay, categories }) {
   const calculatedNetPay = monthlyIncome - tax;
   const categoryTotal = Object.values(cats).reduce((s, v) => s + v, 0);
   const expenses = categoryTotal;
-  const leftover = calculatedNetPay - categoryTotal;
+  const leftover = monthlyIncome - categoryTotal;
   return { federalTax, tax, netPay: calculatedNetPay, monthlyIncome, expenses, leftover };
 }
 
