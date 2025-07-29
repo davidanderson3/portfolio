@@ -93,6 +93,7 @@
         <button class="tab-button" data-target="travelPanel">Places</button>
         <button class="tab-button" data-target="planningPanel">Planning</button>
         <button class="tab-button" data-target="budgetPanel">Budget</button>
+        <button class="tab-button" data-target="transactionsPanel">Transactions</button>
       </div>
     </nav>
 
@@ -259,6 +260,14 @@
       </div>
     </div>
 
+    <div id="transactionsPanel" class="main-layout" style="display:none">
+      <div class="full-column">
+        <h2>Transactions</h2>
+        <div id="transactionsContainer"></div>
+        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+      </div>
+    </div>
+
   </section>
 
   <nav id="bottomNav" class="bottom-nav">
@@ -292,8 +301,9 @@
   <script type="module" src="js/weather.js"></script>
   <script type="module" src="js/planning.js"></script>
   <script type="module" src="js/budget.js"></script>
+  <script type="module" src="js/transactions.js"></script>
   <script type="module" src="js/decisionTree.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
-</html>
+</html
