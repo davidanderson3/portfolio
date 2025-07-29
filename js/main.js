@@ -1,4 +1,4 @@
-import { loadDecisions, saveDecisions, generateId } from './helpers.js';
+import { loadDecisions, saveDecisions, generateId, flushPendingDecisions } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
 import { renderGoalsAndSubitems, addCalendarGoal } from './goals.js';
 import { initAuth, db, currentUser } from './auth.js';
@@ -314,6 +314,13 @@ window.addEventListener('DOMContentLoaded', () => {
   initCalendarMobileTabs();
   initButtonStyles();
   initGoogleCalendar();
+
+  // Persist any unsaved decisions when the page is hidden or closed
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      flushPendingDecisions().catch(() => {});
+    }
+  });
 });
 
 window.renderDailyTasks = renderDailyTasks;
