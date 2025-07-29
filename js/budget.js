@@ -142,7 +142,7 @@ export async function initBudgetPanel() {
   const planning = await loadPlanningData();
   const salary = Number(planning?.finance?.income || 0);
   const saved = await loadBudgetData();
-  const defaultNet = calculateMonthlyBudget({ salary, categories: {} }).netPay;
+  const defaultNet = salary ? Math.round(salary / 12) : 0;
   panel.innerHTML = `
     <div id="budgetLayout">
       <form id="budgetForm" class="budget-form">
