@@ -4,7 +4,10 @@ export const FEDERAL_TAX_RATE = 0.10;
  *
  * When no annual salary is provided, the `netPay` argument is treated as the
  * gross monthly income and taxes are deducted from it.
- */
+ *
+ * The returned expenses exclude federal taxes and represent only recurring
+ * expenses and subscriptions.
+*/
 export function calculateMonthlyBudget({ salary, netPay, categories }) {
   salary = Number(salary) || 0;
   netPay = Number(netPay) || 0;
@@ -17,7 +20,7 @@ export function calculateMonthlyBudget({ salary, netPay, categories }) {
 
   const calculatedNetPay = monthlyIncome - tax;
   const categoryTotal = Object.values(cats).reduce((s, v) => s + v, 0);
-  const expenses = categoryTotal + tax;
+  const expenses = categoryTotal;
   const leftover = calculatedNetPay - categoryTotal;
   return { federalTax, tax, netPay: calculatedNetPay, monthlyIncome, expenses, leftover };
 }
