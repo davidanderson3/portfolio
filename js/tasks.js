@@ -296,7 +296,11 @@ export async function renderChildren(goal, all, container) {
             completed: false,
             dateCompleted: '',
             parentGoalId: goal.id,
-            type: 'goal'
+            type: 'goal',
+            hiddenUntil: null,
+            deadline: '',
+            scheduled: '',
+            scheduledEnd: ''
         };
         all.push(newGoal);
         renderChildren(goal, all, container);

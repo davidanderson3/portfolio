@@ -7,6 +7,9 @@ export const SAMPLE_DECISIONS = [
     resolution: '',
     dateCompleted: '',
     parentGoalId: null,
+    deadline: '',
+    scheduled: '',
+    scheduledEnd: ''
   },
   {
     id: 'demo-task-1',
@@ -43,6 +46,9 @@ export const SAMPLE_DECISIONS = [
     resolution: '',
     dateCompleted: '',
     parentGoalId: null,
+    deadline: '',
+    scheduled: '',
+    scheduledEnd: ''
   },
   {
     id: 'demo-task-2a',
@@ -79,6 +85,9 @@ export const SAMPLE_DECISIONS = [
     resolution: '',
     dateCompleted: '2025-06-15',
     parentGoalId: null,
+    deadline: '',
+    scheduled: '',
+    scheduledEnd: ''
   },
   {
     id: 'demo-task-3a',
@@ -107,6 +116,8 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     scheduled: '2025-07-10',
     parentGoalId: null,
+    deadline: '',
+    scheduledEnd: ''
   },
   {
     id: 'demo-task-4a',
@@ -244,6 +255,9 @@ export const SAMPLE_DECISIONS = [
     resolution: '',
     dateCompleted: '',
     parentGoalId: null,
+    deadline: '',
+    scheduled: '',
+    scheduledEnd: '',
     outcomes: [
       { text: 'Mac', nextSteps: ['Read reviews'] },
       { text: 'Windows', nextSteps: ['Visit stores'] },

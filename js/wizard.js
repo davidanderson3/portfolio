@@ -152,6 +152,7 @@ async function saveGoalWizard() {
     dateCompleted: '',
     parentGoalId: null,
     hiddenUntil: null,
+    deadline: '',
     scheduled: wizardState.calendarStartDate || '',
     scheduledEnd: wizardState.calendarEndDate || ''
   };
@@ -169,6 +170,7 @@ async function saveGoalWizard() {
       dateCompleted: '',
       parentGoalId: goalId,
       hiddenUntil: null,
+      deadline: '',
       scheduled: '',
       scheduledEnd: ''
     });
