@@ -349,19 +349,6 @@ export async function renderDailyTasks(currentUser, db) {
     });
     btns.append(clockBtn);
 
-    // Skip until next day
-    btns.append(makeIconBtn('⏭️', 'Skip until next day', async () => {
-      try {
-        const allDecs = await loadDecisions();
-        const idx = allDecs.findIndex(t => t.id === task.id);
-        if (idx === -1) return;
-        const now = new Date();
-        const tm = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-        allDecs[idx].skipUntil = tm.toISOString();
-        await saveDecisions(allDecs);
-        wrapper.remove();
-      } catch { alert('⚠️ Could not skip task.'); }
-    }));
 
     // Add to calendar for weekly tasks
     if (period === 'weekly') {
