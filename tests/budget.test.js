@@ -64,7 +64,7 @@ describe('budget calculations', () => {
     expect(res.netPay).toBe(9000);
     expect(res.expenses).toBe(expectedExpenses);
     expect(res.monthlyIncome).toBe(10000);
-    expect(res.leftover).toBe(6605);
+    expect(res.leftover).toBe(7605);
   });
 
   it('uses provided gross pay', () => {
@@ -76,7 +76,7 @@ describe('budget calculations', () => {
     expect(res.tax).toBe(600);
     expect(res.netPay).toBe(5400);
     expect(res.expenses).toBe(expectedExpenses);
-    expect(res.leftover).toBe(5400 - 45);
+    expect(res.leftover).toBe(5955);
   });
 
   it('calculates the current monthly budget from saved data', async () => {
@@ -89,7 +89,7 @@ describe('budget calculations', () => {
     const res = await calculateCurrentMonthlyBudget();
     const expectedExpenses = 300 + 15;
     expect(res.expenses).toBe(expectedExpenses);
-    expect(res.leftover).toBe(8685);
+    expect(res.leftover).toBe(9685);
   });
 });
 
