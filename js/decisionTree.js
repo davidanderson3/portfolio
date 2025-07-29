@@ -150,7 +150,9 @@ export async function addDecision(parentId = null) {
     dateCompleted: '',
     parentGoalId: parentId,
     hiddenUntil: null,
+    deadline: '',
     scheduled: '',
+    scheduledEnd: '',
     outcomes,
     considerations: cons.trim()
   };

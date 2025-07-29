@@ -891,7 +891,9 @@ function openRowEditor(rowIdx) {
       dateCompleted: '',
       parentGoalId: null,
       hiddenUntil: null,
-      scheduled: ''
+      deadline: '',
+      scheduled: '',
+      scheduledEnd: ''
     };
 
     const updated = [...all, newGoal];

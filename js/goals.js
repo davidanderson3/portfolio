@@ -60,6 +60,7 @@ export async function addCalendarGoal(date = '') {
         dateCompleted: '',
         parentGoalId: null,
         hiddenUntil: null,
+        deadline: '',
         scheduled: range.start.trim(),
         scheduledEnd: range.end.trim() || ''
     };
@@ -162,7 +163,11 @@ export function createGoalRow(goal, options = {}) {
     const rangeText = goal.scheduledEnd && goal.scheduledEnd !== goal.scheduled
         ? `${goal.scheduled} - ${goal.scheduledEnd}`
         : (goal.scheduled || '');
-    due.textContent = goal.completed ? goal.dateCompleted : rangeText;
+    let dueContent = goal.completed ? goal.dateCompleted : rangeText;
+    if (!goal.completed && goal.deadline) {
+        dueContent += (rangeText ? '<br>' : '') + `Due: ${goal.deadline}`;
+    }
+    due.innerHTML = dueContent;
     row.appendChild(due);
     return row;
 }
@@ -1067,6 +1072,21 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
     });
     buttonWrap.appendChild(calendarBtn);
 
+    // ⌛ Deadline button
+    const deadlineBtn = makeIconBtn('⌛', 'Set deadline', async () => {
+        const date = await pickDate(item.deadline || '');
+        if (!date) return;
+        const all = await loadDecisions();
+        const idx = all.findIndex(d => d.id === item.id);
+        if (idx !== -1) {
+            all[idx].deadline = date.trim();
+            await saveDecisions(all);
+            item.deadline = date.trim();
+            refreshGoalInDOM(item, all);
+        }
+    });
+    buttonWrap.appendChild(deadlineBtn);
+
     // ❌ Delete icon button for goals
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
@@ -1116,6 +1136,7 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
 
             const textInput = document.createElement('input');
             const notesInput = document.createElement('textarea');
+            const deadlineInput = document.createElement('input');
             const scheduledInput = document.createElement('input');
             const scheduledEndInput = document.createElement('input');
             const parentSelect = document.createElement('select');
@@ -1128,6 +1149,10 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
             notesInput.rows = 4; // give extra space for editing notes
             notesInput.style.width = '100%';
             notesInput.style.marginTop = '4px';
+
+            deadlineInput.type = 'date';
+            deadlineInput.value = item.deadline || '';
+            deadlineInput.style.width = '100%';
 
             scheduledInput.type = 'date';
             scheduledInput.value = item.scheduled || '';
@@ -1165,6 +1190,7 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
             middle.appendChild(notesInput);
 
             due.innerHTML = '';
+            due.appendChild(deadlineInput);
             due.appendChild(scheduledInput);
             due.appendChild(scheduledEndInput);
             due.appendChild(parentSelect);
@@ -1177,7 +1203,8 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
         } else {
             const newText = middle.querySelector('input')?.value.trim();
             const newNotes = middle.querySelector('textarea')?.value.trim();
-            const [startInput, endInput] = due.querySelectorAll('input');
+            const [deadlineInputEl, startInput, endInput] = due.querySelectorAll('input');
+            const newDeadline = deadlineInputEl?.value.trim();
             const newScheduled = startInput?.value.trim();
             const newScheduledEnd = endInput?.value.trim();
             const newParent = due.querySelector('select')?.value || null;
@@ -1196,6 +1223,7 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                     (all[idx].scheduledEnd || '') !== newScheduledEnd;
                 all[idx].text = newText;
                 all[idx].notes = newNotes;
+                all[idx].deadline = newDeadline;
                 all[idx].scheduled = newScheduled;
                 all[idx].scheduledEnd = newScheduledEnd;
                 all[idx].parentGoalId = newParent || null;
@@ -1205,6 +1233,7 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                 if (!needsMove) {
                     item.text = newText;
                     item.notes = newNotes;
+                    item.deadline = newDeadline;
                     item.scheduled = newScheduled;
                     item.scheduledEnd = newScheduledEnd;
                     item.parentGoalId = newParent || null;
@@ -1227,10 +1256,15 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                     const rangeText = newScheduledEnd && newScheduledEnd !== newScheduled
                         ? `${newScheduled} - ${newScheduledEnd}`
                         : (newScheduled || '');
-                    due.textContent = item.completed ? item.dateCompleted : rangeText;
+                    let dueContent = item.completed ? item.dateCompleted : rangeText;
+                    if (!item.completed && newDeadline) {
+                        dueContent += (rangeText ? '<br>' : '') + `Due: ${newDeadline}`;
+                    }
+                    due.innerHTML = dueContent;
                 } else {
                     item.text = newText;
                     item.notes = newNotes;
+                    item.deadline = newDeadline;
                     item.scheduled = newScheduled;
                     item.scheduledEnd = newScheduledEnd;
                     item.parentGoalId = newParent || null;

@@ -500,7 +500,9 @@ export async function initTravelPanel() {
       dateCompleted: '',
       parentGoalId: null,
       hiddenUntil: null,
-      scheduled: place.Date || ''
+      deadline: '',
+      scheduled: place.Date || '',
+      scheduledEnd: ''
     };
     await saveDecisions([...all, newGoal]);
     appendGoalToDOM(newGoal, [...all, newGoal]);
