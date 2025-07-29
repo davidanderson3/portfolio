@@ -1,24 +1,57 @@
 import { getCurrentUser, db } from './auth.js';
 
-export function calculateFinanceProjection({ currentAge, retirementAge, savings, annualSavings = 0, income = 0, returnRate, annualRaise = 0 }) {
+export function calculateFinanceProjection({
+  currentAge,
+  retirementAge,
+  savings,
+  annualSavings = 0,
+  income = 0,
+  returnRate,
+  annualRaise = 0,
+  high3 = 0,
+  serviceYears = 0,
+  socialSecurity = 0,
+  postYears = 0,
+  withdrawalRate = 4
+}) {
   currentAge = Number(currentAge);
   retirementAge = Number(retirementAge);
   savings = Number(savings);
   annualSavings = Number(annualSavings !== undefined ? annualSavings : income);
   returnRate = Number(returnRate) / 100;
   annualRaise = Number(annualRaise) / 100;
-  const years = retirementAge - currentAge;
+  high3 = Number(high3);
+  serviceYears = Number(serviceYears);
+  socialSecurity = Number(socialSecurity);
+  postYears = Number(postYears);
+  withdrawalRate = Number(withdrawalRate) / 100;
+
   const data = [];
   let balance = savings;
   let contribution = annualSavings;
+  const years = retirementAge - currentAge;
   for (let i = 0; i <= years; i++) {
     if (i > 0) {
       balance += contribution;
       balance *= 1 + returnRate;
       contribution *= 1 + annualRaise;
     }
-    data.push({ age: currentAge + i, balance: Math.round(balance) });
+    data.push({ age: currentAge + i, balance: Math.round(balance), income: 0 });
   }
+
+  const fersRate = retirementAge >= 62 && serviceYears >= 20 ? 0.011 : 0.01;
+  const fers = Math.round(high3 * fersRate * serviceYears);
+
+  let postBalance = balance;
+  for (let i = 1; i <= postYears; i++) {
+    const age = retirementAge + i;
+    postBalance *= 1 + returnRate;
+    const withdrawal = Math.round(postBalance * withdrawalRate);
+    postBalance -= withdrawal;
+    const incomeYear = withdrawal + fers + socialSecurity;
+    data.push({ age, balance: Math.round(postBalance), income: Math.round(incomeYear) });
+  }
+
   return data;
 }
 
@@ -150,6 +183,9 @@ export async function initPlanningPanel() {
       <label>Annual Savings <input type="number" name="annualSavings" placeholder="e.g. 5000" value="${currentData.finance.annualSavings ?? ''}" /></label>
       <label>Annual Raise % <input type="number" name="annualRaise" placeholder="e.g. 3" value="${currentData.finance.annualRaise ?? ''}" /></label>
       <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${currentData.finance.returnRate ?? ''}" /></label>
+      <label>High-3 Salary <input type="number" name="high3" placeholder="e.g. 80000" value="${currentData.finance.high3 ?? ''}" /></label>
+      <label>Service Years <input type="number" name="serviceYears" placeholder="e.g. 35" value="${currentData.finance.serviceYears ?? ''}" /></label>
+      <label>Social Security <input type="number" name="socialSecurity" placeholder="e.g. 20000" value="${currentData.finance.socialSecurity ?? ''}" /></label>
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
       <label>Savings <input type="number" name="assetSavings" placeholder="e.g. 10000" value="${currentData.assets.assetSavings ?? ''}" /></label>
@@ -175,6 +211,9 @@ export async function initPlanningPanel() {
       annualSavings: Number(form.annualSavings.value || 0),
       annualRaise: form.annualRaise.value,
       returnRate: form.returnRate.value,
+      high3: Number(form.high3.value || 0),
+      serviceYears: Number(form.serviceYears.value || 0),
+      socialSecurity: Number(form.socialSecurity.value || 0),
       realEstate: Number(form.realEstate.value || 0),
       carValue: Number(form.carValue.value || 0),
       assetSavings: Number(form.assetSavings.value || 0),
@@ -197,10 +236,13 @@ export async function initPlanningPanel() {
       savings: assetTotal,
       annualSavings: values.annualSavings,
       annualRaise: values.annualRaise,
-      returnRate: values.returnRate
+      returnRate: values.returnRate,
+      high3: values.high3,
+      serviceYears: values.serviceYears,
+      socialSecurity: values.socialSecurity
     });
-    financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
-      finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
+    financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th></tr></thead><tbody>' +
+      finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td></tr>`).join('') +
       '</tbody></table>';
     currentData.finance = {
       curAge: values.curAge,
@@ -208,7 +250,10 @@ export async function initPlanningPanel() {
       income: values.income,
       annualSavings: values.annualSavings,
       annualRaise: values.annualRaise,
-      returnRate: values.returnRate
+      returnRate: values.returnRate,
+      high3: values.high3,
+      serviceYears: values.serviceYears,
+      socialSecurity: values.socialSecurity
     };
     currentData.assets = {
       realEstate: values.realEstate,

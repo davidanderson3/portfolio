@@ -12,9 +12,9 @@ describe('planning calculations', () => {
       returnRate: 0
     });
     expect(res).toEqual([
-      { age: 30, balance: 1000 },
-      { age: 31, balance: 1100 },
-      { age: 32, balance: 1200 }
+      { age: 30, balance: 1000, income: 0 },
+      { age: 31, balance: 1100, income: 0 },
+      { age: 32, balance: 1200, income: 0 }
     ]);
   });
 
@@ -28,9 +28,29 @@ describe('planning calculations', () => {
       returnRate: 0
     });
     expect(res).toEqual([
-      { age: 30, balance: 1000 },
-      { age: 31, balance: 1100 },
-      { age: 32, balance: 1210 }
+      { age: 30, balance: 1000, income: 0 },
+      { age: 31, balance: 1100, income: 0 },
+      { age: 32, balance: 1210, income: 0 }
+    ]);
+  });
+
+  it('projects retirement income after retirement age', () => {
+    const res = calculateFinanceProjection({
+      currentAge: 30,
+      retirementAge: 31,
+      savings: 1000,
+      annualSavings: 100,
+      returnRate: 0,
+      high3: 100,
+      serviceYears: 10,
+      socialSecurity: 50,
+      postYears: 1,
+      withdrawalRate: 4
+    });
+    expect(res).toEqual([
+      { age: 30, balance: 1000, income: 0 },
+      { age: 31, balance: 1100, income: 0 },
+      { age: 32, balance: 1056, income: 104 }
     ]);
   });
 
