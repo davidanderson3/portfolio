@@ -161,13 +161,11 @@ export async function initPlanningPanel() {
     </form>
     <div id="assetsTotal" style="margin-top:1em;"></div>
     <div id="financeResult" style="margin-top:1em;"></div>
-    <div id="budgetResult" style="margin-top:1em;"></div>
   `;
 
   const form = container.querySelector('#planningForm');
   const assetsTotalDiv = container.querySelector('#assetsTotal');
   const financeResultDiv = container.querySelector('#financeResult');
-  const budgetResultDiv = container.querySelector('#budgetResult');
 
   function renderAll() {
     const values = {
@@ -204,17 +202,6 @@ export async function initPlanningPanel() {
     financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th></tr></thead><tbody>' +
       finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
       '</tbody></table>';
-
-    const budget = calculateBudgetAllocation({
-      income: values.income,
-      taxRate: 0,
-      mortgage: values.mortgage
-    });
-    budgetResultDiv.innerHTML =
-      `Taxes: $${budget.taxes.toLocaleString()}<br>` +
-      `Rolling Credit: $${Number(values.rollingCredit || 0).toLocaleString()}<br>` +
-      `Leftover: $${budget.leftover.toLocaleString()}`;
-
     currentData.finance = {
       curAge: values.curAge,
       retAge: values.retAge,
