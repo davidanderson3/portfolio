@@ -89,4 +89,42 @@ describe('planning UI persistence', () => {
     expect(annual2).toBe('5000');
     expect(raise2).toBe('5');
   });
+
+  it('records history when asset totals change', async () => {
+    vi.resetModules();
+    const dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    localStorage.clear();
+
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'returnRate', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    names.forEach(n => {
+      Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
+        get() { return this.elements.namedItem(n); },
+        configurable: true
+      });
+    });
+
+    const mod = await import('../js/planning.js');
+    await mod.initPlanningPanel();
+
+    const form = document.querySelector('#planningForm');
+    form.curAge.value = '30';
+    form.realEstate.value = '1000';
+    form.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+    let saved = JSON.parse(localStorage.getItem('planningData'));
+    expect(saved.history.length).toBe(2);
+    const firstTs = saved.history[0].timestamp;
+    expect(typeof firstTs).toBe('string');
+
+    form.realEstate.value = '2000';
+    form.dispatchEvent(new window.Event('input', { bubbles: true }));
+    saved = JSON.parse(localStorage.getItem('planningData'));
+    expect(saved.history.length).toBe(3);
+    const last = saved.history[saved.history.length - 1];
+    expect(last.balance).toBe(2000);
+    expect(typeof last.timestamp).toBe('string');
+    expect(last.timestamp).not.toBe(firstTs);
+  });
 });

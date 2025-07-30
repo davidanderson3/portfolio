@@ -304,13 +304,13 @@ export async function initPlanningPanel() {
     };
 
     const hist = currentData.history;
-    const today = new Date().toISOString().slice(0, 10);
     const last = hist[hist.length - 1];
-    if (!last || last.date !== today) {
-      hist.push({ date: today, age: values.curAge, balance: assetTotal });
+    const now = new Date().toISOString();
+    if (!last || last.balance !== assetTotal) {
+      hist.push({ timestamp: now, age: values.curAge, balance: assetTotal });
     } else {
+      last.timestamp = now;
       last.age = values.curAge;
-      last.balance = assetTotal;
     }
 
     savePlanningData(currentData);
