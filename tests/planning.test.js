@@ -67,7 +67,14 @@ describe('planning calculations', () => {
     expect(res).toEqual([
       { age: 30, balance: 1000, income: 0 },
       { age: 31, balance: 1100, income: 0 },
-      { age: 32, balance: 1056, income: 104 }
+      {
+        age: 32,
+        balance: 1056,
+        income: 104,
+        withdrawal: 44,
+        fers: 10,
+        socialSecurity: 50
+      }
     ]);
   });
 
@@ -81,8 +88,8 @@ describe('planning calculations', () => {
       withdrawalRate: 4
     });
     expect(res.slice(-2)).toEqual([
-      { age: 32, balance: 960, income: 40 },
-      { age: 33, balance: 919, income: 41 }
+      { age: 32, balance: 960, income: 40, withdrawal: 40, fers: 0, socialSecurity: 0 },
+      { age: 33, balance: 919, income: 41, withdrawal: 41, fers: 0, socialSecurity: 0 }
     ]);
   });
 

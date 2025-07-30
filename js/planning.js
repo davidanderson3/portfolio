@@ -61,7 +61,14 @@ export function calculateFinanceProjection({
     const withdrawal = Math.round(withdrawalAmount);
     postBalance -= withdrawal;
     const incomeYear = withdrawal + fers + socialSecurity;
-    data.push({ age, balance: Math.round(postBalance), income: Math.round(incomeYear) });
+    data.push({
+      age,
+      balance: Math.round(postBalance),
+      income: Math.round(incomeYear),
+      withdrawal,
+      fers,
+      socialSecurity
+    });
   }
 
   return data;
@@ -276,8 +283,8 @@ export async function initPlanningPanel() {
       socialSecurity: values.socialSecurity,
       postYears: 30
     });
-    financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th></tr></thead><tbody>' +
-      finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td></tr>`).join('') +
+    financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Withdrawals</th><th>FERS</th><th>Social Security</th></tr></thead><tbody>' +
+      finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.fers ? '$' + r.fers.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
       '</tbody></table>';
     currentData.finance = {
       curAge: values.curAge,
