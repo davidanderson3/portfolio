@@ -239,7 +239,8 @@ export async function initPlanningPanel() {
       returnRate: values.returnRate,
       high3: values.high3,
       serviceYears: values.serviceYears,
-      socialSecurity: values.socialSecurity
+      socialSecurity: values.socialSecurity,
+      postYears: 30
     });
     financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th></tr></thead><tbody>' +
       finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td></tr>`).join('') +
