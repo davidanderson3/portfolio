@@ -43,10 +43,16 @@ export function calculateFinanceProjection({
   const fers = Math.round(high3 * fersRate * serviceYears);
 
   let postBalance = balance;
+  let withdrawalAmount = 0;
   for (let i = 1; i <= postYears; i++) {
     const age = retirementAge + i;
     postBalance *= 1 + returnRate;
-    const withdrawal = Math.round(postBalance * withdrawalRate);
+    if (i === 1) {
+      withdrawalAmount = postBalance * withdrawalRate;
+    } else {
+      withdrawalAmount *= 1.03; // increase withdrawals by 3% yearly
+    }
+    const withdrawal = Math.round(withdrawalAmount);
     postBalance -= withdrawal;
     const incomeYear = withdrawal + fers + socialSecurity;
     data.push({ age, balance: Math.round(postBalance), income: Math.round(incomeYear) });

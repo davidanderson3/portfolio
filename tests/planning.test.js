@@ -54,6 +54,21 @@ describe('planning calculations', () => {
     ]);
   });
 
+  it('increases withdrawals by 3% each year', () => {
+    const res = calculateFinanceProjection({
+      currentAge: 30,
+      retirementAge: 31,
+      savings: 1000,
+      returnRate: 0,
+      postYears: 2,
+      withdrawalRate: 4
+    });
+    expect(res.slice(-2)).toEqual([
+      { age: 32, balance: 960, income: 40 },
+      { age: 33, balance: 919, income: 41 }
+    ]);
+  });
+
   it('calculates budget allocation', () => {
     const res = calculateBudgetAllocation({ income: 1000, taxRate: 10, mortgage: 300 });
     expect(res).toEqual({ taxes: 100, mortgage: 300, leftover: 600 });
