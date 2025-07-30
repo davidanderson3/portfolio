@@ -13,6 +13,19 @@ export const PANELS = [
   'transactionsPanel'
 ];
 
+export const PANEL_NAMES = {
+  goalsPanel: 'Goals',
+  decisionsPanel: 'Decisions',
+  calendarPanel: 'Calendar',
+  dailyPanel: 'Recurring',
+  metricsPanel: 'Metrics',
+  listsPanel: 'Lists',
+  travelPanel: 'Places',
+  planningPanel: 'Planning',
+  budgetPanel: 'Budget',
+  transactionsPanel: 'Transactions'
+};
+
 let tabsInitialized = false;
 
 export function initTabs(user, db) {
