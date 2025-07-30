@@ -1200,6 +1200,24 @@ h2 {
   max-width: 100%;
 }
 
+/* Green dot indicators for task completions */
+.completion-dots {
+  display: flex;
+  gap: 6px;
+  padding-top: 8px;
+}
+
+.completion-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.completion-dot.completed {
+  background: #4caf50;
+}
+
 /* Ensure list tables remain readable on mobile */
 #listsPanel table {
   width: 100%;

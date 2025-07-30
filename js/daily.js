@@ -1,5 +1,6 @@
 import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify, pickDate } from './helpers.js';
 import { db, currentUser } from './auth.js';
+import { updateCompletionDots } from './tabReports.js';
 import { createCalendarEvent } from './googleCalendar.js';
 
 // Shared skip intervals (same as goals)
@@ -196,6 +197,7 @@ export async function renderDailyTasks(currentUser, db) {
       } else {
         localStorage.setItem(COMPLETION_KEY, JSON.stringify(completionMap));
       }
+      updateCompletionDots(completionMap);
       if (cb.checked) {
         wrapper.remove();
       } else {
