@@ -1,5 +1,5 @@
 
-import { calculateFinanceProjection, calculateBudgetAllocation } from '../js/planning.js';
+import { calculateFinanceProjection, calculateBudgetAllocation, estimateSocialSecurity } from '../js/planning.js';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('planning calculations', () => {
@@ -89,6 +89,11 @@ describe('planning calculations', () => {
   it('calculates budget allocation', () => {
     const res = calculateBudgetAllocation({ income: 1000, taxRate: 10, mortgage: 300 });
     expect(res).toEqual({ taxes: 100, mortgage: 300, leftover: 600 });
+  });
+
+  it('estimates social security from lifetime income', () => {
+    const est = estimateSocialSecurity({ income: 50000, currentAge: 30, retirementAge: 65 });
+    expect(est).toBe(20000);
   });
 });
 
