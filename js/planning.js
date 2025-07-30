@@ -29,14 +29,20 @@ export function calculateFinanceProjection({
   const data = [];
   let balance = savings;
   let contribution = annualSavings;
+  let yearIncome = Number(income);
   const years = retirementAge - currentAge;
   for (let i = 0; i <= years; i++) {
     if (i > 0) {
       balance += contribution;
       balance *= 1 + returnRate;
       contribution *= 1 + annualRaise;
+      yearIncome *= 1 + annualRaise;
     }
-    data.push({ age: currentAge + i, balance: Math.round(balance), income: 0 });
+    data.push({
+      age: currentAge + i,
+      balance: Math.round(balance),
+      income: Math.round(yearIncome)
+    });
   }
 
   const fersRate = retirementAge >= 62 && serviceYears >= 20 ? 0.011 : 0.01;

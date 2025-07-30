@@ -18,19 +18,36 @@ describe('planning calculations', () => {
     ]);
   });
 
+  it('includes income before retirement', () => {
+    const res = calculateFinanceProjection({
+      currentAge: 30,
+      retirementAge: 32,
+      savings: 1000,
+      annualSavings: 100,
+      income: 50000,
+      returnRate: 0
+    });
+    expect(res).toEqual([
+      { age: 30, balance: 1000, income: 50000 },
+      { age: 31, balance: 1100, income: 50000 },
+      { age: 32, balance: 1200, income: 50000 }
+    ]);
+  });
+
   it('accounts for steady income increases', () => {
     const res = calculateFinanceProjection({
       currentAge: 30,
       retirementAge: 32,
       savings: 1000,
       annualSavings: 100,
+      income: 50000,
       annualRaise: 10,
       returnRate: 0
     });
     expect(res).toEqual([
-      { age: 30, balance: 1000, income: 0 },
-      { age: 31, balance: 1100, income: 0 },
-      { age: 32, balance: 1210, income: 0 }
+      { age: 30, balance: 1000, income: 50000 },
+      { age: 31, balance: 1100, income: 55000 },
+      { age: 32, balance: 1210, income: 60500 }
     ]);
   });
 
