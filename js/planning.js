@@ -64,6 +64,16 @@ export function calculateBudgetAllocation({ income, taxRate, mortgage }) {
   return { taxes, mortgage, leftover };
 }
 
+export function estimateSocialSecurity({ income = 0, currentAge = 0, retirementAge = 0 }) {
+  income = Number(income);
+  currentAge = Number(currentAge);
+  retirementAge = Number(retirementAge);
+  const years = Math.min(35, Math.max(0, retirementAge - currentAge));
+  if (!income || years === 0) return 0;
+  const averageIncome = (income * years) / 35;
+  return Math.round(averageIncome * 0.4);
+}
+
 const PLANNING_KEY = 'planningData';
 let planningCache = null;
 let planningInitialized = false;
@@ -186,6 +196,7 @@ export async function initPlanningPanel() {
       <label>High-3 Salary <input type="number" name="high3" placeholder="e.g. 80000" value="${currentData.finance.high3 ?? ''}" /></label>
       <label>Service Years <input type="number" name="serviceYears" placeholder="e.g. 35" value="${currentData.finance.serviceYears ?? ''}" /></label>
       <label>Social Security <input type="number" name="socialSecurity" placeholder="e.g. 20000" value="${currentData.finance.socialSecurity ?? ''}" /></label>
+      <div id="ssEstimate" style="margin-bottom:0.5em;font-style:italic"></div>
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
       <label>Savings <input type="number" name="assetSavings" placeholder="e.g. 10000" value="${currentData.assets.assetSavings ?? ''}" /></label>
@@ -202,6 +213,7 @@ export async function initPlanningPanel() {
   const form = container.querySelector('#planningForm');
   const assetsTotalDiv = container.querySelector('#assetsTotal');
   const financeResultDiv = container.querySelector('#financeResult');
+  const ssEstimateDiv = container.querySelector('#ssEstimate');
 
   function renderAll() {
     const values = {
@@ -224,6 +236,16 @@ export async function initPlanningPanel() {
       rollingCredit: form.rollingCredit.value,
       mortgage: 0
     };
+
+    const estimatedSS = estimateSocialSecurity({
+      income: values.income,
+      currentAge: values.curAge,
+      retirementAge: values.retAge
+    });
+    values.socialSecurity = values.socialSecurity || estimatedSS;
+    ssEstimateDiv.textContent = values.socialSecurity === estimatedSS && estimatedSS
+      ? `Estimated Social Security: $${estimatedSS.toLocaleString()}`
+      : '';
 
     const assetTotal =
       values.realEstate + values.carValue + values.assetSavings + values.checking +
