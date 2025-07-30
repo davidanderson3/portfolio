@@ -29,27 +29,30 @@ export function renderGoalsReport(items) {
 async function renderDailyReport(items, user, db) {
   const container = document.getElementById('dailyReport');
   if (!container) return;
-  container.innerHTML = '<h3>Daily Completions</h3><canvas></canvas>';
-  const ctx = container.querySelector('canvas').getContext('2d');
+  container.innerHTML = '<h3>Daily Completions</h3><div class="completion-dots"></div>';
   let completionMap = {};
   if (user && db) {
     const snap = await db.collection('taskCompletions').doc(user.uid).get();
     completionMap = snap.exists ? snap.data() : {};
   }
   const labels = getLastNDates(7);
-  const data = labels.map(d => (completionMap[d] || []).length);
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Tasks Done',
-        data,
-        fill: false,
-        borderColor: '#3e95cd'
-      }]
-    },
-    options: { responsive: true }
+  const row = container.querySelector('.completion-dots');
+  for (const date of labels) {
+    const dot = document.createElement('span');
+    dot.className = 'completion-dot';
+    dot.dataset.date = date;
+    if ((completionMap[date] || []).length) dot.classList.add('completed');
+    row.appendChild(dot);
+  }
+}
+
+export function updateCompletionDots(map) {
+  const container = document.getElementById('dailyReport');
+  if (!container) return;
+  container.querySelectorAll('.completion-dot').forEach(dot => {
+    const date = dot.dataset.date;
+    if (map[date] && map[date].length) dot.classList.add('completed');
+    else dot.classList.remove('completed');
   });
 }
 
