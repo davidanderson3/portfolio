@@ -41,6 +41,18 @@ export async function saveHiddenTabs(tabs) {
     .set({ tabs: obj }, { merge: true });
 }
 
+export async function clearHiddenTabs() {
+  const user = getCurrentUser?.();
+  if (!user) {
+    localStorage.removeItem(KEY);
+    return;
+  }
+  await db
+    .collection('users').doc(user.uid)
+    .collection('settings').doc(KEY)
+    .delete();
+}
+
 export function applyHiddenTabs(tabs) {
   const obj = normalize(tabs);
   const buttons = document.querySelectorAll('.tab-button');
@@ -71,6 +83,7 @@ export async function initSettingsPage() {
   const listDiv = document.getElementById('settingsTabsList');
   listDiv?.classList.add('settings-list');
   const saveBtn = document.getElementById('settingsSaveBtn');
+  const resetBtn = document.getElementById('settingsResetBtn');
   const emailSpan = document.getElementById('settingsEmail');
   const panels = PANELS;
 
@@ -106,6 +119,11 @@ export async function initSettingsPage() {
       }
     });
     await saveHiddenTabs(hidden);
+    window.location.href = 'index.html';
+  });
+
+  resetBtn?.addEventListener('click', async () => {
+    await clearHiddenTabs();
     window.location.href = 'index.html';
   });
 
