@@ -577,7 +577,7 @@ button:hover {
     grid-template-columns: auto 1fr;
     grid-template-areas:
       "left middle"
-      "due middle";
+      "due due";
     align-items: center !important;
     gap: 6px;
     padding: 10px !important;
@@ -733,7 +733,7 @@ button:hover {
   }
 
   .goal-card .due-column {
-    margin-right: 120px;
+    margin-right: 170px;
   }
 
   .goal-card .decision-row.editing .due-column {
