@@ -1,5 +1,5 @@
 import { auth, db, getCurrentUser } from './auth.js';
-import { PANELS } from './tabs.js';
+import { PANELS, PANEL_NAMES } from './tabs.js';
 
 const KEY = 'hiddenTabs';
 
@@ -82,7 +82,8 @@ export async function initSettingsPage() {
       cb.type = 'checkbox';
       cb.value = id;
       label.appendChild(cb);
-      label.appendChild(document.createTextNode(' ' + id.replace('Panel','')));
+      const name = PANEL_NAMES[id] || id.replace('Panel','');
+      label.appendChild(document.createTextNode(' ' + name));
       listDiv.appendChild(label);
     });
   }
