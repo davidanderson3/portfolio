@@ -12,6 +12,7 @@ An app for tracking goals and tasks.
 - Lists can be sorted by clicking column headers.
 - Tabs can be temporarily hidden via Settings.
 - Planning tab includes an Annual Savings field.
+- Planning tab records total assets history with timestamps whenever the balance changes.
 
 👉 **Live App:** [https://davidanderson3.github.io/dashboard/](https://davidanderson3.github.io/dashboard/)
 
