@@ -12,6 +12,8 @@ import { initGoogleCalendar } from './googleCalendar.js';
 import { loadHiddenTabs, applyHiddenTabs, saveHiddenTabs } from './settings.js';
 import { clearPlanningCache } from './planning.js';
 
+let hiddenTabsTimer = null;
+
 window.addEventListener('DOMContentLoaded', () => {
   const uiRefs = {
     loginBtn: document.getElementById('loginBtn'),
@@ -255,6 +257,11 @@ window.addEventListener('DOMContentLoaded', () => {
       initTabs(null, db);
       const hidden = await loadHiddenTabs();
       applyHiddenTabs(hidden);
+      if (hiddenTabsTimer) clearInterval(hiddenTabsTimer);
+      hiddenTabsTimer = setInterval(async () => {
+        const h = await loadHiddenTabs();
+        applyHiddenTabs(h);
+      }, 60 * 1000);
       const tabsEl = document.getElementById('tabsContainer');
       if (tabsEl) tabsEl.style.visibility = 'visible';
       renderGoalsAndSubitems();
@@ -271,6 +278,11 @@ window.addEventListener('DOMContentLoaded', () => {
     initTabs(user, db);
     const hidden = await loadHiddenTabs();
     applyHiddenTabs(hidden);
+    if (hiddenTabsTimer) clearInterval(hiddenTabsTimer);
+    hiddenTabsTimer = setInterval(async () => {
+      const h = await loadHiddenTabs();
+      applyHiddenTabs(h);
+    }, 60 * 1000);
     const tabsEl = document.getElementById('tabsContainer');
     if (tabsEl) tabsEl.style.visibility = 'visible';
     renderGoalsAndSubitems(user, db);
