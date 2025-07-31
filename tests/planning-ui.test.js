@@ -36,7 +36,7 @@ describe('planning UI persistence', () => {
     global.window = dom.window;
     global.document = dom.window.document;
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'returnRate', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'returnRate', 'withdrawalRate', 'postYears', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -53,6 +53,8 @@ describe('planning UI persistence', () => {
     form.checking.value = '2500';
     form.annualSavings.value = '5000';
     form.annualRaise.value = '5';
+    form.withdrawalRate.value = '6';
+    form.postYears.value = '20';
     form.dispatchEvent(new window.Event('input', { bubbles: true }));
 
     const saved = JSON.parse(localStorage.getItem('planningData'));
@@ -61,6 +63,8 @@ describe('planning UI persistence', () => {
     expect(saved.assets.checking).toBe(2500);
     expect(saved.finance.annualSavings).toBe(5000);
     expect(saved.finance.annualRaise).toBe('5');
+    expect(saved.finance.withdrawalRate).toBe(6);
+    expect(saved.finance.postYears).toBe(20);
 
     mod1.clearPlanningCache();
     currentUser = { uid: 'u1' };
@@ -83,11 +87,15 @@ describe('planning UI persistence', () => {
     const checking2 = document.querySelector('#planningForm input[name="checking"]').value;
     const annual2 = document.querySelector('#planningForm input[name="annualSavings"]').value;
     const raise2 = document.querySelector('#planningForm input[name="annualRaise"]').value;
+    const wd2 = document.querySelector('#planningForm input[name="withdrawalRate"]').value;
+    const post2 = document.querySelector('#planningForm input[name="postYears"]').value;
     expect(age2).toBe('30');
     expect(estate2).toBe('100000');
     expect(checking2).toBe('2500');
     expect(annual2).toBe('5000');
     expect(raise2).toBe('5');
+    expect(wd2).toBe('6');
+    expect(post2).toBe('20');
   });
 
   it('records history when asset totals change', async () => {
@@ -97,7 +105,7 @@ describe('planning UI persistence', () => {
     global.document = dom.window.document;
     localStorage.clear();
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'returnRate', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'returnRate', 'withdrawalRate', 'postYears', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
