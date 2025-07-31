@@ -214,6 +214,8 @@ export async function initPlanningPanel() {
       <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${currentData.finance.returnRate ?? ''}" /></label>
       <label>High-3 Salary <input type="number" name="high3" placeholder="e.g. 80000" value="${currentData.finance.high3 ?? ''}" /></label>
       <label>Service Years <input type="number" name="serviceYears" placeholder="e.g. 35" value="${currentData.finance.serviceYears ?? ''}" /></label>
+      <label>Withdrawal Rate % <input type="number" name="withdrawalRate" placeholder="e.g. 4" value="${currentData.finance.withdrawalRate ?? 4}" /></label>
+      <label>Post Years <input type="number" name="postYears" placeholder="e.g. 30" value="${currentData.finance.postYears ?? 30}" /></label>
       <label>Social Security <input type="number" name="socialSecurity" placeholder="e.g. 20000" value="${currentData.finance.socialSecurity ?? ''}" /></label>
       <div id="ssEstimate" style="margin-bottom:0.5em;font-style:italic"></div>
       <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
@@ -244,6 +246,8 @@ export async function initPlanningPanel() {
       returnRate: form.returnRate.value,
       high3: Number(form.high3.value || 0),
       serviceYears: Number(form.serviceYears.value || 0),
+      withdrawalRate: Number(form.withdrawalRate.value || 4),
+      postYears: Number(form.postYears.value || 30),
       socialSecurity: Number(form.socialSecurity.value || 0),
       realEstate: Number(form.realEstate.value || 0),
       carValue: Number(form.carValue.value || 0),
@@ -281,9 +285,10 @@ export async function initPlanningPanel() {
         returnRate: values.returnRate,
         high3: values.high3,
         serviceYears: values.serviceYears,
-      socialSecurity: values.socialSecurity,
-      postYears: 30
-    });
+        socialSecurity: values.socialSecurity,
+        postYears: values.postYears,
+        withdrawalRate: values.withdrawalRate
+      });
     financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Withdrawals</th><th>FERS</th><th>Social Security</th></tr></thead><tbody>' +
       finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.fers ? '$' + r.fers.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
       '</tbody></table>';
@@ -296,6 +301,8 @@ export async function initPlanningPanel() {
       returnRate: values.returnRate,
       high3: values.high3,
       serviceYears: values.serviceYears,
+      withdrawalRate: values.withdrawalRate,
+      postYears: values.postYears,
       socialSecurity: values.socialSecurity
     };
     currentData.assets = {
