@@ -165,35 +165,58 @@ export async function calculateCurrentMonthlyBudget() {
 }
 
 export async function initBudgetPanel() {
-  const panel = document.getElementById('budgetPanel');
+  const panel = document.getElementById('budgetContainer');
   if (!panel) return;
   const planning = await loadPlanningData();
   const salary = Number(planning?.finance?.income || 0);
   const saved = await loadBudgetData();
   panel.innerHTML = `
     <div id="budgetLayout">
-      <form id="budgetForm" class="budget-form">
-        <div class="section-title">Recurring Expenses</div>
-        <div id="recurContainer" class="recurring-list"></div>
-        <button type="button" id="addRecurBtn">+ Add Category</button>
+      <div class="scenario" id="scenarioA">
+        <div class="scenario-title">Scenario A</div>
+        <form id="budgetFormA" class="budget-form">
+          <div class="section-title">Recurring Expenses</div>
+          <div id="recurContainerA" class="recurring-list"></div>
+          <button type="button" id="addRecurBtnA">+ Add Category</button>
 
-        <div class="section-title">Subscriptions</div>
-        <div id="subsContainer" class="subscriptions-list"></div>
-        <button type="button" id="addSubBtn">+ Add Subscription</button>
-      </form>
-      <div id="budgetSummary" class="budget-summary"></div>
+          <div class="section-title">Subscriptions</div>
+          <div id="subsContainerA" class="subscriptions-list"></div>
+          <button type="button" id="addSubBtnA">+ Add Subscription</button>
+        </form>
+        <div id="budgetSummaryA" class="budget-summary"></div>
+      </div>
+      <div class="scenario" id="scenarioB">
+        <div class="scenario-title">Scenario B</div>
+        <form id="budgetFormB" class="budget-form">
+          <div class="section-title">Recurring Expenses</div>
+          <div id="recurContainerB" class="recurring-list"></div>
+          <button type="button" id="addRecurBtnB">+ Add Category</button>
+
+          <div class="section-title">Subscriptions</div>
+          <div id="subsContainerB" class="subscriptions-list"></div>
+          <button type="button" id="addSubBtnB">+ Add Subscription</button>
+        </form>
+        <div id="budgetSummaryB" class="budget-summary"></div>
+      </div>
     </div>
   `;
 
-  const form = panel.querySelector('#budgetForm');
-  const summary = panel.querySelector('#budgetSummary');
-  const subsContainer = form.querySelector('#subsContainer');
-  const addSubBtn = form.querySelector('#addSubBtn');
-  const recurContainer = form.querySelector('#recurContainer');
-  const addRecurBtn = form.querySelector('#addRecurBtn');
-  const removedBuiltIns = new Set(saved.removedBuiltIns || []);
+  const formA = panel.querySelector('#budgetFormA');
+  const summaryA = panel.querySelector('#budgetSummaryA');
+  const subsContainerA = formA.querySelector('#subsContainerA');
+  const addSubBtnA = formA.querySelector('#addSubBtnA');
+  const recurContainerA = formA.querySelector('#recurContainerA');
+  const addRecurBtnA = formA.querySelector('#addRecurBtnA');
+  const removedBuiltInsA = new Set(saved.removedBuiltIns || []);
 
-  function addSubscriptionRow(name = '', cost = '') {
+  const formB = panel.querySelector('#budgetFormB');
+  const summaryB = panel.querySelector('#budgetSummaryB');
+  const subsContainerB = formB.querySelector('#subsContainerB');
+  const addSubBtnB = formB.querySelector('#addSubBtnB');
+  const recurContainerB = formB.querySelector('#recurContainerB');
+  const addRecurBtnB = formB.querySelector('#addRecurBtnB');
+
+  function addSubscriptionRow(container, name = '', cost = '') {
     const row = document.createElement('div');
     row.className = 'subscription-row';
     row.innerHTML = `
@@ -205,10 +228,10 @@ export async function initBudgetPanel() {
     rem.textContent = '❌';
     rem.onclick = () => { row.remove(); render(); };
     row.append(rem);
-    subsContainer.append(row);
+    container.append(row);
   }
 
-  function addRecurRow(name = '', cost = '', fixed = false, key = '') {
+  function addRecurRow(container, removedSet, name = '', cost = '', fixed = false, key = '') {
     const row = document.createElement('div');
     row.className = 'recurring-row';
     if (key) row.dataset.field = key;
@@ -220,33 +243,41 @@ export async function initBudgetPanel() {
     rem.type = 'button';
     rem.textContent = '❌';
     rem.onclick = () => {
-      if (key) removedBuiltIns.add(key);
+      if (key) removedSet.add(key);
       row.remove();
       render();
     };
     row.append(rem);
-    recurContainer.append(row);
+    container.append(row);
   }
 
   const initialSubs = Object.keys(saved.subscriptions || {}).length
     ? saved.subscriptions
     : { 'Amazon Prime': '', 'Spotify': '' };
-  Object.entries(initialSubs).forEach(([n, c]) => addSubscriptionRow(n, c));
-  addSubBtn.addEventListener('click', () => { addSubscriptionRow(); });
+  Object.entries(initialSubs).forEach(([n, c]) => addSubscriptionRow(subsContainerA, n, c));
+  addSubBtnA.addEventListener('click', () => { addSubscriptionRow(subsContainerA); });
+
+  addSubBtnB.addEventListener('click', () => { addSubscriptionRow(subsContainerB); });
 
   const initialRecur = saved.recurring || {};
   DEFAULT_RECURRING.forEach(([key, label]) => {
-    if (!removedBuiltIns.has(key)) {
-      addRecurRow(label, saved[key] ?? '', true, key);
+    if (!removedBuiltInsA.has(key)) {
+      addRecurRow(recurContainerA, removedBuiltInsA, label, saved[key] ?? '', true, key);
     }
   });
-  Object.entries(initialRecur).forEach(([n, c]) => addRecurRow(n, c));
-  addRecurBtn.addEventListener('click', () => { addRecurRow(); });
+  Object.entries(initialRecur).forEach(([n, c]) => addRecurRow(recurContainerA, removedBuiltInsA, n, c));
+  addRecurBtnA.addEventListener('click', () => { addRecurRow(recurContainerA, removedBuiltInsA); });
 
-  function render(save = true) {
+  DEFAULT_RECURRING.forEach(([key, label]) => {
+    addRecurRow(recurContainerB, new Set(), label, '', true, key);
+  });
+  addRecurBtnB.addEventListener('click', () => { addRecurRow(recurContainerB, new Set()); });
+
+  function collectScenario(recurContainer, subsContainer, removedSet) {
     const categories = {};
     const recur = {};
-    const saveData = { removedBuiltIns: Array.from(removedBuiltIns) };
+    const subs = {};
+    const saveData = { removedBuiltIns: Array.from(removedSet) };
     recurContainer.querySelectorAll('.recurring-row').forEach(row => {
       const nameEl = row.querySelector('.recur-name');
       const n = nameEl.value.trim();
@@ -260,7 +291,6 @@ export async function initBudgetPanel() {
         recur[n] = v;
       }
     });
-    const subs = {};
     subsContainer.querySelectorAll('.subscription-row').forEach(row => {
       const n = row.querySelector('.sub-name').value.trim();
       const v = row.querySelector('.sub-cost').value;
@@ -269,18 +299,33 @@ export async function initBudgetPanel() {
         subs[n] = v;
       }
     });
-    const result = calculateMonthlyBudget({ salary, categories });
-    summary.innerHTML =
-      `Total Expenses: $${result.expenses.toLocaleString()}<br>` +
-      `Leftover: $${result.leftover.toLocaleString()}`;
-    saveData.subscriptions = subs;
-    saveData.recurring = recur;
+    return { categories, recur, subs, saveData };
+  }
+
+  function render(save = true) {
+    const aData = collectScenario(recurContainerA, subsContainerA, removedBuiltInsA);
+    const bData = collectScenario(recurContainerB, subsContainerB, new Set());
+
+    const resultA = calculateMonthlyBudget({ salary, categories: aData.categories });
+    const resultB = calculateMonthlyBudget({ salary, categories: bData.categories });
+
+    summaryA.innerHTML =
+      `Total Expenses: $${resultA.expenses.toLocaleString()}<br>` +
+      `Leftover: $${resultA.leftover.toLocaleString()}`;
+    summaryB.innerHTML =
+      `Total Expenses: $${resultB.expenses.toLocaleString()}<br>` +
+      `Leftover: $${resultB.leftover.toLocaleString()}`;
+
+    aData.saveData.subscriptions = aData.subs;
+    aData.saveData.recurring = aData.recur;
     if (save) {
-      saveBudgetData(saveData);
+      saveBudgetData(aData.saveData);
     }
   }
-  form.addEventListener('input', () => render(false));
-  form.addEventListener('change', () => render(true));
+  formA.addEventListener('input', () => render(false));
+  formA.addEventListener('change', () => render(true));
+  formB.addEventListener('input', () => render(false));
+  formB.addEventListener('change', () => render(false));
   render(false);
 }
 
