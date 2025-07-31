@@ -1862,6 +1862,17 @@ h2 {
   align-items: flex-start;
 }
 
+.scenario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scenario-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
 .budget-form {
   display: flex;
   flex-direction: column;
@@ -1937,7 +1948,7 @@ h2 {
   .budget-form {
     width: 100%;
   }
-  #budgetSummary {
+  .budget-summary {
     width: 100%;
   }
 }
