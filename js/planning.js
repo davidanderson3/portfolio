@@ -238,7 +238,7 @@ export async function initPlanningPanel() {
     const values = {
       curAge: form.curAge.value,
       retAge: form.retAge.value,
-      income: form.income.value,
+      income: Number(form.income.value || 0),
       annualSavings: Number(form.annualSavings.value || 0),
       annualRaise: form.annualRaise.value,
       returnRate: form.returnRate.value,
