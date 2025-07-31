@@ -58,6 +58,7 @@ export function applyHiddenTabs(tabs) {
   const buttons = document.querySelectorAll('.tab-button');
   let active = document.querySelector('.tab-button.active');
   const now = Date.now();
+  let changed = false;
   buttons.forEach(btn => {
     const target = btn.dataset.target;
     const panel = document.getElementById(target);
@@ -68,6 +69,10 @@ export function applyHiddenTabs(tabs) {
       if (panel) panel.style.display = 'none';
       if (btn === active) active = null;
     } else {
+      if (until && hideUntil && now >= hideUntil) {
+        delete obj[target];
+        changed = true;
+      }
       btn.style.display = '';
       if (panel) panel.style.display = btn === active ? 'flex' : 'none';
     }
@@ -76,6 +81,7 @@ export function applyHiddenTabs(tabs) {
     const first = Array.from(buttons).find(b => b.style.display !== 'none');
     if (first) first.click();
   }
+  if (changed) saveHiddenTabs(obj).catch(() => {});
 }
 
 
