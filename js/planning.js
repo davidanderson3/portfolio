@@ -271,15 +271,16 @@ export async function initPlanningPanel() {
       values.investment + values.roth + values.crypto;
     assetsTotalDiv.textContent = `Total Assets: $${assetTotal.toLocaleString()}`;
 
-    const finData = calculateFinanceProjection({
-      currentAge: values.curAge,
-      retirementAge: values.retAge,
-      savings: assetTotal,
-      annualSavings: values.annualSavings,
-      annualRaise: values.annualRaise,
-      returnRate: values.returnRate,
-      high3: values.high3,
-      serviceYears: values.serviceYears,
+      const finData = calculateFinanceProjection({
+        currentAge: values.curAge,
+        retirementAge: values.retAge,
+        savings: assetTotal,
+        income: values.income,
+        annualSavings: values.annualSavings,
+        annualRaise: values.annualRaise,
+        returnRate: values.returnRate,
+        high3: values.high3,
+        serviceYears: values.serviceYears,
       socialSecurity: values.socialSecurity,
       postYears: 30
     });
