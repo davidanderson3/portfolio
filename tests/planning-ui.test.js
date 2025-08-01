@@ -135,4 +135,42 @@ describe('planning UI persistence', () => {
     expect(typeof last.timestamp).toBe('string');
     expect(last.timestamp).not.toBe(firstTs);
   });
+
+  it('records a daily snapshot after the scheduled hour', async () => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T19:59:00Z'));
+
+    const dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    localStorage.clear();
+
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    names.forEach(n => {
+      Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
+        get() { return this.elements.namedItem(n); },
+        configurable: true
+      });
+    });
+
+    const mod = await import('../js/planning.js');
+    await mod.initPlanningPanel();
+
+    const form = document.querySelector('#planningForm');
+    form.curAge.value = '30';
+    form.realEstate.value = '1000';
+    form.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+    let saved = JSON.parse(localStorage.getItem('planningData'));
+    const beforeLen = saved.history.length;
+
+    vi.setSystemTime(new Date('2023-01-01T20:01:00Z'));
+    form.dispatchEvent(new window.Event('input', { bubbles: true }));
+    saved = JSON.parse(localStorage.getItem('planningData'));
+    expect(saved.history.length).toBe(beforeLen + 1);
+    const last = saved.history[saved.history.length - 1];
+    expect(last.balance).toBe(1000);
+    vi.useRealTimers();
+  });
 });
