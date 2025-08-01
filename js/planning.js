@@ -100,6 +100,7 @@ export function estimateSocialSecurity({ income = 0, currentAge = 0, retirementA
 const PLANNING_KEY = 'planningData';
 let planningCache = null;
 let planningInitialized = false;
+const DAILY_HISTORY_HOUR = 20; // hour of day to record snapshot
 
 function isObject(val) {
   return val && typeof val === 'object' && !Array.isArray(val);
@@ -328,11 +329,24 @@ export async function initPlanningPanel() {
 
     const hist = currentData.history;
     const last = hist[hist.length - 1];
-    const now = new Date().toISOString();
-    if (!last || last.balance !== assetTotal) {
-      hist.push({ timestamp: now, age: values.curAge, balance: assetTotal });
+    const nowDate = new Date();
+    const nowIso = nowDate.toISOString();
+    const schedulePassed = nowDate.getHours() >= DAILY_HISTORY_HOUR;
+    let addSnapshot = false;
+    if (!last) {
+      addSnapshot = true;
     } else {
-      last.timestamp = now;
+      const lastDate = new Date(last.timestamp);
+      const sameDay = lastDate.toDateString() === nowDate.toDateString();
+      const needDaily = schedulePassed && (!sameDay || lastDate.getHours() < DAILY_HISTORY_HOUR);
+      if (last.balance !== assetTotal || needDaily) {
+        addSnapshot = true;
+      }
+    }
+    if (addSnapshot) {
+      hist.push({ timestamp: nowIso, age: values.curAge, balance: assetTotal });
+    } else if (last) {
+      last.timestamp = nowIso;
       last.age = values.curAge;
     }
 
