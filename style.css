@@ -1585,7 +1585,7 @@ h2 {
 @media (max-width: 600px) {
   #goalsView {
     margin: 0;
-    padding: 0 8px;
+    padding: 0;
   }
 
   #goalsView .left-column,
