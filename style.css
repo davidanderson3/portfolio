@@ -1242,6 +1242,10 @@ h2 {
   word-wrap: break-word;
   overflow-wrap: anywhere;
 }
+#listsPanel li {
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
 
 
 
