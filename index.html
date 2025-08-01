@@ -85,7 +85,6 @@
       </div>
       <div class="tabs scroll-tabs" id="tabsContainer" style="visibility:hidden;">
         <button class="tab-button active" data-target="goalsPanel">Goals</button>
-        <button class="tab-button" data-target="decisionsPanel">Decisions</button>
         <button class="tab-button" data-target="calendarPanel">Calendar</button>
         <button class="tab-button" data-target="dailyPanel">Recurring</button>
         <button class="tab-button" data-target="metricsPanel">Metrics</button>
@@ -93,7 +92,6 @@
         <button class="tab-button" data-target="travelPanel">Places</button>
         <button class="tab-button" data-target="planningPanel">Planning</button>
         <button class="tab-button" data-target="budgetPanel">Budget</button>
-        <button class="tab-button" data-target="transactionsPanel">Transactions</button>
       </div>
     </nav>
 
@@ -127,13 +125,6 @@
       </div>
     </div>
 
-    <!-- DECISIONS PANEL -->
-    <div id="decisionsPanel" class="main-layout" style="display:none;">
-      <div class="full-column">
-        <div id="decisionTree" class="tree"></div>
-        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
-      </div>
-    </div>
 
     <!-- CALENDAR PANEL -->
     <div id="calendarPanel" class="main-layout" style="display:none;">
@@ -260,13 +251,6 @@
       </div>
     </div>
 
-    <div id="transactionsPanel" class="main-layout" style="display:none">
-      <div class="full-column">
-        <h2>Transactions</h2>
-        <div id="transactionsContainer"></div>
-        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
-      </div>
-    </div>
 
   </section>
 
@@ -301,9 +285,7 @@
   <script type="module" src="js/weather.js"></script>
   <script type="module" src="js/planning.js"></script>
   <script type="module" src="js/budget.js"></script>
-  <script type="module" src="js/transactions.js"></script>
-  <script type="module" src="js/decisionTree.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
-</html
+</html>

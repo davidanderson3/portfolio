@@ -2,28 +2,24 @@ import { currentUser } from './auth.js';
 
 export const PANELS = [
   'goalsPanel',
-  'decisionsPanel',
   'calendarPanel',
   'dailyPanel',
   'metricsPanel',
   'listsPanel',
   'travelPanel',
   'planningPanel',
-  'budgetPanel',
-  'transactionsPanel'
+  'budgetPanel'
 ];
 
 export const PANEL_NAMES = {
   goalsPanel: 'Goals',
-  decisionsPanel: 'Decisions',
   calendarPanel: 'Calendar',
   dailyPanel: 'Recurring',
   metricsPanel: 'Metrics',
   listsPanel: 'Lists',
   travelPanel: 'Places',
   planningPanel: 'Planning',
-  budgetPanel: 'Budget',
-  transactionsPanel: 'Transactions'
+  budgetPanel: 'Budget'
 };
 
 let tabsInitialized = false;
@@ -64,9 +60,6 @@ export function initTabs(user, db) {
       else if (target === 'metricsPanel') {
         await window.initMetricsUI();
       }
-      else if (target === 'decisionsPanel') {
-        await window.initDecisionsPanel();
-      }
       else if (target === 'listsPanel') {
         await window.initListsPanel(currentUser, db);
       }
@@ -78,9 +71,6 @@ export function initTabs(user, db) {
       }
       else if (target === 'budgetPanel') {
         await window.initBudgetPanel();
-      }
-      else if (target === 'transactionsPanel') {
-        await window.initTransactionsPanel();
       }
     });
   });
@@ -110,9 +100,6 @@ export function initTabs(user, db) {
     if (initial === 'metricsPanel') {
       window.initMetricsUI();
     }
-    else if (initial === 'decisionsPanel') {
-      window.initDecisionsPanel();
-    }
     else if (initial === 'listsPanel') {
       window.initListsPanel(currentUser, db);
     }
@@ -124,9 +111,6 @@ export function initTabs(user, db) {
     }
     else if (initial === 'budgetPanel') {
       window.initBudgetPanel();
-    }
-    else if (initial === 'transactionsPanel') {
-      window.initTransactionsPanel();
     }
   };
 

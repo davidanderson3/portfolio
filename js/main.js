@@ -124,10 +124,6 @@ window.addEventListener('DOMContentLoaded', () => {
       uiRefs.addGoalBtn?.click();
       return;
     }
-    if (active === 'decisionsPanel') {
-      window.addDecision?.();
-      return;
-    }
     if (active === 'calendarPanel') {
       addCalendarGoal();
       return;
