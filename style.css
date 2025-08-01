@@ -1812,9 +1812,12 @@ h2 {
   overflow-x: auto;
 }
 
+#financeResult {
+  overflow-x: auto;
+}
+
 #financeResult table {
-  width: 100%;
-  table-layout: fixed;
+  width: max-content;
   border-collapse: collapse;
 }
 
@@ -1823,8 +1826,7 @@ h2 {
   border: 1px solid #d0decf;
   padding: 4px;
   text-align: left;
-  word-wrap: break-word;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 #financeResult tbody tr:nth-child(even) {
