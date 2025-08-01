@@ -12,9 +12,9 @@ describe('planning calculations', () => {
       returnRate: 0
     });
     expect(res).toEqual([
-      { age: 30, balance: 1000, income: 0 },
-      { age: 31, balance: 1100, income: 0 },
-      { age: 32, balance: 1200, income: 0 }
+      { age: 30, balance: 1000, income: 0, realIncome: 0 },
+      { age: 31, balance: 1100, income: 0, realIncome: 0 },
+      { age: 32, balance: 1200, income: 0, realIncome: 0 }
     ]);
   });
 
@@ -28,9 +28,9 @@ describe('planning calculations', () => {
       returnRate: 0
     });
     expect(res).toEqual([
-      { age: 30, balance: 1000, income: 50000 },
-      { age: 31, balance: 1100, income: 50000 },
-      { age: 32, balance: 1200, income: 50000 }
+      { age: 30, balance: 1000, income: 50000, realIncome: 50000 },
+      { age: 31, balance: 1100, income: 50000, realIncome: 50000 },
+      { age: 32, balance: 1200, income: 50000, realIncome: 50000 }
     ]);
   });
 
@@ -45,9 +45,9 @@ describe('planning calculations', () => {
       returnRate: 0
     });
     expect(res).toEqual([
-      { age: 30, balance: 1000, income: 50000 },
-      { age: 31, balance: 1100, income: 55000 },
-      { age: 32, balance: 1210, income: 60500 }
+      { age: 30, balance: 1000, income: 50000, realIncome: 50000 },
+      { age: 31, balance: 1100, income: 55000, realIncome: 55000 },
+      { age: 32, balance: 1210, income: 60500, realIncome: 60500 }
     ]);
   });
 
@@ -65,12 +65,13 @@ describe('planning calculations', () => {
       withdrawalRate: 4
     });
     expect(res).toEqual([
-      { age: 30, balance: 1000, income: 0 },
-      { age: 31, balance: 1100, income: 0 },
+      { age: 30, balance: 1000, income: 0, realIncome: 0 },
+      { age: 31, balance: 1100, income: 0, realIncome: 0 },
       {
         age: 32,
         balance: 1056,
         income: 104,
+        realIncome: 104,
         withdrawal: 44,
         fers: 10,
         socialSecurity: 50
@@ -88,8 +89,8 @@ describe('planning calculations', () => {
       withdrawalRate: 4
     });
     expect(res.slice(-2)).toEqual([
-      { age: 32, balance: 960, income: 40, withdrawal: 40, fers: 0, socialSecurity: 0 },
-      { age: 33, balance: 919, income: 41, withdrawal: 41, fers: 0, socialSecurity: 0 }
+      { age: 32, balance: 960, income: 40, realIncome: 40, withdrawal: 40, fers: 0, socialSecurity: 0 },
+      { age: 33, balance: 919, income: 41, realIncome: 41, withdrawal: 41, fers: 0, socialSecurity: 0 }
     ]);
   });
 
