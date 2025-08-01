@@ -173,7 +173,7 @@ export async function initBudgetPanel() {
   panel.innerHTML = `
     <div id="budgetLayout">
       <div class="scenario" id="scenarioA">
-        <div class="scenario-title">Scenario A</div>
+        <div class="scenario-title">Current</div>
         <form id="budgetFormA" class="budget-form">
           <div class="section-title">Recurring Expenses</div>
           <div id="recurContainerA" class="recurring-list"></div>
@@ -186,7 +186,7 @@ export async function initBudgetPanel() {
         <div id="budgetSummaryA" class="budget-summary"></div>
       </div>
       <div class="scenario" id="scenarioB">
-        <div class="scenario-title">Scenario B</div>
+        <div class="scenario-title">Goal</div>
         <form id="budgetFormB" class="budget-form">
           <div class="section-title">Recurring Expenses</div>
           <div id="recurContainerB" class="recurring-list"></div>
@@ -322,8 +322,7 @@ export async function initBudgetPanel() {
       saveBudgetData(aData.saveData);
     }
   }
-  formA.addEventListener('input', () => render(false));
-  formA.addEventListener('change', () => render(true));
+  formA.addEventListener('input', () => render(true));
   formB.addEventListener('input', () => render(false));
   formB.addEventListener('change', () => render(false));
   render(false);
