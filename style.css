@@ -1795,6 +1795,29 @@ h2 {
   flex: 1 1 160px;
 }
 
+#planningPanel .full-column {
+  overflow-x: auto;
+}
+
+#financeResult table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+#financeResult th,
+#financeResult td {
+  border: 1px solid #d0decf;
+  padding: 4px;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+#financeResult tbody tr:nth-child(even) {
+  background-color: #f8f5f0;
+}
+
 .finance-history table {
   width: 100%;
   table-layout: fixed;
