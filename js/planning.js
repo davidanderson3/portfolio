@@ -12,7 +12,8 @@ export function calculateFinanceProjection({
   serviceYears = 0,
   socialSecurity = 0,
   postYears = 0,
-  withdrawalRate = 4
+  withdrawalRate = 4,
+  inflationRate = 0
 }) {
   currentAge = Number(currentAge);
   retirementAge = Number(retirementAge);
@@ -25,6 +26,7 @@ export function calculateFinanceProjection({
   socialSecurity = Number(socialSecurity);
   postYears = Number(postYears);
   withdrawalRate = Number(withdrawalRate) / 100;
+  inflationRate = Number(inflationRate) / 100;
 
   const data = [];
   let balance = savings;
@@ -41,7 +43,8 @@ export function calculateFinanceProjection({
     data.push({
       age: currentAge + i,
       balance: Math.round(balance),
-      income: Math.round(yearIncome)
+      income: Math.round(yearIncome),
+      realIncome: Math.round(yearIncome / Math.pow(1 + inflationRate, i))
     });
   }
 
@@ -65,6 +68,7 @@ export function calculateFinanceProjection({
       age,
       balance: Math.round(postBalance),
       income: Math.round(incomeYear),
+      realIncome: Math.round(incomeYear / Math.pow(1 + inflationRate, years + i)),
       withdrawal,
       fers,
       socialSecurity
@@ -211,6 +215,7 @@ export async function initPlanningPanel() {
       <label>Net Income <input type="number" name="income" placeholder="e.g. 50000" value="${currentData.finance.income ?? ''}" /></label>
       <label>Annual Savings <input type="number" name="annualSavings" placeholder="e.g. 5000" value="${currentData.finance.annualSavings ?? ''}" /></label>
       <label>Annual Raise % <input type="number" name="annualRaise" placeholder="e.g. 3" value="${currentData.finance.annualRaise ?? ''}" /></label>
+      <label>Inflation Rate % <input type="number" name="inflation" placeholder="e.g. 3" value="${currentData.finance.inflation ?? 0}" /></label>
       <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${currentData.finance.returnRate ?? ''}" /></label>
       <label>High-3 Salary <input type="number" name="high3" placeholder="e.g. 80000" value="${currentData.finance.high3 ?? ''}" /></label>
       <label>Service Years <input type="number" name="serviceYears" placeholder="e.g. 35" value="${currentData.finance.serviceYears ?? ''}" /></label>
@@ -243,6 +248,7 @@ export async function initPlanningPanel() {
       income: Number(form.income.value || 0),
       annualSavings: Number(form.annualSavings.value || 0),
       annualRaise: form.annualRaise.value,
+      inflation: form.inflation.value,
       returnRate: form.returnRate.value,
       high3: Number(form.high3.value || 0),
       serviceYears: Number(form.serviceYears.value || 0),
@@ -282,6 +288,7 @@ export async function initPlanningPanel() {
         income: values.income,
         annualSavings: values.annualSavings,
         annualRaise: values.annualRaise,
+        inflationRate: values.inflation,
         returnRate: values.returnRate,
         high3: values.high3,
         serviceYears: values.serviceYears,
@@ -289,8 +296,8 @@ export async function initPlanningPanel() {
         postYears: values.postYears,
         withdrawalRate: values.withdrawalRate
       });
-    financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Withdrawals</th><th>FERS</th><th>Social Security</th></tr></thead><tbody>' +
-      finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.fers ? '$' + r.fers.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
+    financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Income (Today)</th><th>Withdrawals</th><th>FERS</th><th>Social Security</th></tr></thead><tbody>' +
+      finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.realIncome ? '$' + r.realIncome.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.fers ? '$' + r.fers.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
       '</tbody></table>';
     currentData.finance = {
       curAge: values.curAge,
@@ -298,6 +305,7 @@ export async function initPlanningPanel() {
       income: values.income,
       annualSavings: values.annualSavings,
       annualRaise: values.annualRaise,
+      inflation: values.inflation,
       returnRate: values.returnRate,
       high3: values.high3,
       serviceYears: values.serviceYears,
