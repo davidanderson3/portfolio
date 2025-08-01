@@ -71,6 +71,7 @@ function parseKml(text) {
         name: pm.name?.trim() || 'Unknown',
         description: pm.description || '',
         styleUrl: pm.styleUrl || '',
+        visited: /icon-503-62AF44/.test(pm.styleUrl || ''),
         lat,
         lon,
         ...extended,
