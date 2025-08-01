@@ -27,10 +27,40 @@ export function generateId() {
 }
 
 export async function loadDecisions(forceRefresh = false) {
+  const currentUser = getCurrentUser();
+
+  // ---- 1) Sync any pending edits first ----
+  const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
+  if (pending) {
+    try {
+      const items = JSON.parse(pending);
+      if (currentUser) {
+        await db
+          .collection('decisions')
+          .doc(currentUser.uid)
+          .set({ items }, { merge: true });
+        localStorage.removeItem(DECISIONS_LOCAL_KEY);
+      }
+      decisionsCache = items;
+      localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
+      if (!forceRefresh) return decisionsCache;
+    } catch (err) {
+      console.warn('Failed to sync pending decisions:', err);
+      try {
+        decisionsCache = JSON.parse(pending);
+        if (!forceRefresh) return decisionsCache;
+      } catch {
+        // ignore parse failures and fall through
+      }
+    }
+  }
+
+  // ---- 2) Use in-memory cache when available ----
   if (decisionsCache && !forceRefresh) {
     return decisionsCache;
   }
 
+  // ---- 3) Fall back to localStorage cache ----
   if (!forceRefresh) {
     const cached = localStorage.getItem(DECISIONS_CACHE_KEY);
     if (cached) {
@@ -47,33 +77,12 @@ export async function loadDecisions(forceRefresh = false) {
     }
   }
 
-  const currentUser = getCurrentUser();
+  // ---- 4) If still no data, consult Firestore or sample data ----
   if (!currentUser) {
     console.warn('🚫 No current user — returning sample data');
     return SAMPLE_DECISIONS;
   }
 
-  const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
-  if (pending) {
-    try {
-      const items = JSON.parse(pending);
-      await db
-        .collection('decisions')
-        .doc(currentUser.uid)
-        .set({ items }, { merge: true });
-      localStorage.removeItem(DECISIONS_LOCAL_KEY);
-      decisionsCache = items;
-      return decisionsCache;
-    } catch (err) {
-      console.warn('Failed to sync pending decisions:', err);
-      try {
-        decisionsCache = JSON.parse(pending);
-        return decisionsCache;
-      } catch {
-        // fall through to fetching from Firestore
-      }
-    }
-  }
   return refreshFromCloud();
 
   async function refreshFromCloud() {
