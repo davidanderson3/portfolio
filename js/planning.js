@@ -340,6 +340,7 @@ export async function initPlanningPanel() {
   }
 
   form.addEventListener('input', renderAll);
+  form.addEventListener('change', renderAll);
   renderAll();
 }
 
