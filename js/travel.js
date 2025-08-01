@@ -42,6 +42,26 @@ let showVisited = false;
 const pageSize = 100;
 let currentPage = 0;
 
+// Simple circle markers for map points. Visited places are green.
+const createSvgUrl = color =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="${color}"/></svg>`
+  )}`;
+
+const defaultIcon = L.icon({
+  iconUrl: createSvgUrl('#DB4436'),
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -12],
+});
+
+const visitedIcon = L.icon({
+  iconUrl: createSvgUrl('#62AF44'),
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -12],
+});
+
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 3958.8; // miles
   const toRad = deg => (deg * Math.PI) / 180;
@@ -57,6 +77,12 @@ function haversine(lat1, lon1, lat2, lon2) {
 function ensureDefaultTag(place) {
   if (!Array.isArray(place.tags) || place.tags.length === 0) {
     place.tags = ['no tag'];
+  }
+}
+
+function applyVisitedFlag(place) {
+  if (typeof place.visited === 'undefined') {
+    place.visited = /icon-503-62AF44/.test(place.styleUrl || '');
   }
 }
 
@@ -109,6 +135,7 @@ export async function initTravelPanel() {
       travelData = snap.docs.map(doc => {
         const data = { id: doc.id, ...doc.data() };
         ensureDefaultTag(data);
+        applyVisitedFlag(data);
         return data;
       });
     } else {
@@ -121,7 +148,10 @@ export async function initTravelPanel() {
     travelData = cached ? JSON.parse(cached) : [];
   }
 
-  travelData.forEach(ensureDefaultTag);
+  travelData.forEach(p => {
+    ensureDefaultTag(p);
+    applyVisitedFlag(p);
+  });
   localStorage.setItem(storageKey(), JSON.stringify(travelData));
 
   allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
@@ -216,7 +246,11 @@ export async function initTravelPanel() {
     }
 
     pageItems.forEach((p, index) => {
-      const m = L.marker([p.lat, p.lon]).addTo(map).bindPopup(p.name);
+      const icon =
+        p.visited || /icon-503-62AF44/.test(p.styleUrl)
+          ? visitedIcon
+          : defaultIcon;
+      const m = L.marker([p.lat, p.lon], { icon }).addTo(map).bindPopup(p.name);
       markers.push(m);
       m.on('click', () => {
         if (searchInput) searchInput.value = p.name;
@@ -472,6 +506,7 @@ export async function initTravelPanel() {
   };
   async function storePlace(place) {
     ensureDefaultTag(place);
+    applyVisitedFlag(place);
     try {
       const user = getCurrentUser?.();
       if (user) {
@@ -552,7 +587,7 @@ export async function initTravelPanel() {
             const { lat, lon, display_name } = res;
             const latitude = parseFloat(lat);
             const longitude = parseFloat(lon);
-            const m = L.marker([latitude, longitude]).addTo(map);
+            const m = L.marker([latitude, longitude], { icon: defaultIcon }).addTo(map);
             resultMarkers.push(m);
             const popupDiv = document.createElement('div');
             const title = document.createElement('div');

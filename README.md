@@ -13,6 +13,7 @@ An app for tracking goals and tasks.
 - Tabs can be temporarily hidden via Settings.
 - Planning tab includes an Annual Savings field.
 - Planning tab records total assets history with timestamps whenever the balance changes.
+- Travel map shows green markers for visited places and red for others.
 
 👉 **Live App:** [https://davidanderson3.github.io/dashboard/](https://davidanderson3.github.io/dashboard/)
 
