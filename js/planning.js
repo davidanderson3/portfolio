@@ -263,7 +263,7 @@ export async function initPlanningPanel() {
       investment: Number(form.investment.value || 0),
       roth: Number(form.roth.value || 0),
       crypto: Number(form.crypto.value || 0),
-      rollingCredit: form.rollingCredit.value,
+      rollingCredit: Number(form.rollingCredit.value || 0),
       mortgage: 0
     };
 
@@ -279,7 +279,7 @@ export async function initPlanningPanel() {
 
     const assetTotal =
       values.realEstate + values.carValue + values.assetSavings + values.checking +
-      values.investment + values.roth + values.crypto;
+      values.investment + values.roth + values.crypto - values.rollingCredit;
     assetsTotalDiv.textContent = `Total Assets: $${assetTotal.toLocaleString()}`;
 
       const finData = calculateFinanceProjection({
