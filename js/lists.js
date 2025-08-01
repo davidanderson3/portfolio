@@ -107,6 +107,18 @@ async function initListsPanel() {
   panel.style.boxSizing = 'border-box';
   panel.style.padding = '0 1rem';
 
+  // Recreate header with hide button
+  const header = document.createElement('div');
+  header.className = 'panel-header';
+  const h = document.createElement('h2');
+  h.textContent = 'Lists';
+  header.appendChild(h);
+  const actions = document.createElement('div');
+  actions.className = 'header-actions';
+  if (panelHideBtn) actions.appendChild(panelHideBtn);
+  header.appendChild(actions);
+  panel.appendChild(header);
+
   // ─── 2) Create static scaffolding ──────────────────────────
   const tabsContainer = document.createElement('div');
   tabsContainer.id = 'listTabs';
@@ -1135,8 +1147,7 @@ function openRowEditor(rowIdx) {
     }
   }
 
-  // Re-append the preserved hide button
-  if (panelHideBtn) panel.append(panelHideBtn);
+  // Hide button already placed in header
 }
 
 

@@ -96,10 +96,13 @@
     </nav>
 
     <!-- TABS CONTENT PANELS -->
-    <div id="goalsPanel" class="main-layout">
+      <div id="goalsPanel" class="main-layout">
       <div class="full-column">
-        <div id="goalsHeaderRow">
+        <div id="goalsHeaderRow" class="panel-header">
           <h2 id="goalsHeader">Goals</h2>
+          <div class="header-actions">
+            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </div>
         </div>
 
         <div id="goalList" class="decision-container"></div>
@@ -121,7 +124,6 @@
         <hr style="margin: 40px 0;" />
 
         <div id="completedList" class="decision-container"></div>
-        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
       </div>
     </div>
 
@@ -133,9 +135,12 @@
         <button type="button" id="calendarHourlyTab" class="calendar-mobile-tab">Hourly</button>
       </div>
       <div class="left-column">
-        <div id="calendarHeaderRow">
+        <div id="calendarHeaderRow" class="panel-header">
           <h2>Calendar</h2>
-          <button id="calendarAddGoalBtn">+ Add Goal</button>
+          <div class="header-actions">
+            <button id="calendarAddGoalBtn">+ Add Goal</button>
+            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </div>
         </div>
         <div id="calendarContent"></div>
       </div>
@@ -143,14 +148,16 @@
         <div id="todaySchedule"></div>
       </div>
 
-      <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
 
     </div>
 
     <!-- DAILY PANEL -->
-    <div id="dailyPanel" class="main-layout" style="display:none;">
+      <div id="dailyPanel" class="main-layout" style="display:none;">
       <div class="full-column">
-        <h2>Recurring Tasks</h2>
+        <div class="panel-header">
+          <h2>Recurring Tasks</h2>
+          <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+        </div>
         <h3>Daily</h3>
         <div id="dailyTasksList" class="decision-container"></div>
         <h3>Weekly</h3>
@@ -158,23 +165,25 @@
         <h3 style="margin-top:2em;">Monthly</h3>
         <div id="monthlyTasksList" class="decision-container"></div>
         <div id="dailyReport" class="report-panel"></div>
-        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
       </div>
     </div>
 
 
     <!-- METRICS PANEL -->
-    <div id="metricsPanel" class="main-layout" style="display:none;">
+      <div id="metricsPanel" class="main-layout" style="display:none;">
       <div class="full-column">
-        <h2>Metrics
-          <button id="metricPrevDayBtn" class="icon-button">◀️</button>
-          <span id="metricsDateLabel"></span>
-          <button id="metricNextDayBtn" class="icon-button">▶️</button>
-        </h2>
+        <div class="panel-header">
+          <h2>Metrics</h2>
+          <div class="header-actions">
+            <button id="metricPrevDayBtn" class="icon-button">◀️</button>
+            <span id="metricsDateLabel"></span>
+            <button id="metricNextDayBtn" class="icon-button">▶️</button>
+            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </div>
+        </div>
         <div id="genericStatsSummary"></div>
         <div id="metricsConfigSection"></div>
         <div id="metricsReport" class="report-panel"></div>
-        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
       </div>
     </div>
 
@@ -186,20 +195,25 @@
     </div>
 
     <!-- LISTS PANEL -->
-    <div id="listsPanel" class="main-layout" style="display:none">
+      <div id="listsPanel" class="main-layout" style="display:none">
       <div class="full-column">
-        <h2>Lists</h2>
+        <div class="panel-header">
+          <h2>Lists</h2>
+          <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+        </div>
         <!-- lists.js will inject the form and rendered lists here -->
         <div id="listsReport" class="report-panel"></div>
-        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
       </div>
     </div>
 
     <!-- TRAVEL PANEL -->
       <div id="travelPanel" class="main-layout" style="display:none">
         <div class="full-column">
-          <h2>Places</h2>
-        <input id="placeSearch" type="text" placeholder="Search all places..." style="margin-bottom:8px;max-width:260px;">
+          <div class="panel-header">
+            <h2>Places</h2>
+            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </div>
+          <input id="placeSearch" type="text" placeholder="Search all places..." style="margin-bottom:8px;max-width:260px;">
         <ul id="placeResults" class="search-results"></ul>
         <div id="travelMap" style="height:360px; max-width:100%; border:1px solid #ccc;"></div>
         <input id="travelSearch" type="text" placeholder="Filter list..." style="margin:8px 0;max-width:260px;">
@@ -214,7 +228,7 @@
           <span id="pageInfo"></span>
           <button type="button" id="nextPageBtn">Next</button>
         </div>
-        <table id="travelTable">
+          <table id="travelTable">
           <thead>
             <tr>
               <th>Name</th>
@@ -228,28 +242,31 @@
             </tr>
           </thead>
           <tbody></tbody>
-        </table>
-        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </table>
       </div>
     </div>
 
 
     <!-- PLANNING PANEL -->
-    <div id="planningPanel" class="main-layout" style="display:none">
-      <div class="full-column">
-        <h2>Planning</h2>
-        <div id="planningContainer"></div>
-        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+      <div id="planningPanel" class="main-layout" style="display:none">
+        <div class="full-column">
+          <div class="panel-header">
+            <h2>Planning</h2>
+            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </div>
+          <div id="planningContainer"></div>
+        </div>
       </div>
-    </div>
 
-    <div id="budgetPanel" class="main-layout" style="display:none">
-      <div class="full-column">
-        <h2>Budget</h2>
-        <div id="budgetContainer"></div>
-        <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+      <div id="budgetPanel" class="main-layout" style="display:none">
+        <div class="full-column">
+          <div class="panel-header">
+            <h2>Budget</h2>
+            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </div>
+          <div id="budgetContainer"></div>
+        </div>
       </div>
-    </div>
 
 
   </section>
