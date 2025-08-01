@@ -101,6 +101,8 @@ describe('budget persistence', () => {
     expect(res.escrow).toBe(50);
     expect(res.subscriptions).toEqual({});
     expect(res.recurring).toEqual({});
+    expect(res.goalSubscriptions).toEqual({});
+    expect(res.goalRecurring).toEqual({});
     expect(typeof res.lastUpdated).toBe('number');
     expect(getMock).toHaveBeenCalled();
   });
@@ -112,6 +114,8 @@ describe('budget persistence', () => {
     expect(saved.escrow).toBe(75);
     expect(saved.subscriptions).toEqual({});
     expect(saved.recurring).toEqual({});
+    expect(saved.goalSubscriptions).toEqual({});
+    expect(saved.goalRecurring).toEqual({});
     expect(typeof saved.lastUpdated).toBe('number');
     expect(setMock).toHaveBeenCalledWith(saved, { merge: true });
   });
@@ -126,6 +130,8 @@ describe('budget persistence', () => {
     const data = await loadBudgetData();
     expect(data.escrow).toBe(80);
     expect(data.recurring).toEqual({});
+    expect(data.goalSubscriptions).toEqual({});
+    expect(data.goalRecurring).toEqual({});
   });
 
   it('prefers newer data source when merging', async () => {
