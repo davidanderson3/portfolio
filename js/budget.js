@@ -99,7 +99,10 @@ export async function loadBudgetData() {
   }
 
   if (!user) {
-    budgetCache = localData;
+    budgetCache = migrateSubscriptions({ ...(localData || {}) });
+    budgetCache.recurring = budgetCache.recurring || {};
+    budgetCache.goalRecurring = budgetCache.goalRecurring || {};
+    budgetCache.goalSubscriptions = budgetCache.goalSubscriptions || {};
     return budgetCache;
   }
 
@@ -122,6 +125,8 @@ export async function loadBudgetData() {
   const newer = cloudTs >= localTs ? cloudData : localData;
   budgetCache = migrateSubscriptions(deepMerge(older, newer));
   budgetCache.recurring = budgetCache.recurring || {};
+  budgetCache.goalRecurring = budgetCache.goalRecurring || {};
+  budgetCache.goalSubscriptions = budgetCache.goalSubscriptions || {};
   budgetCache.lastUpdated = Math.max(localTs, cloudTs);
   try {
     await db
@@ -139,6 +144,8 @@ export async function loadBudgetData() {
 export async function saveBudgetData(data) {
   budgetCache = migrateSubscriptions(data || {});
   budgetCache.recurring = budgetCache.recurring || {};
+  budgetCache.goalRecurring = budgetCache.goalRecurring || {};
+  budgetCache.goalSubscriptions = budgetCache.goalSubscriptions || {};
   budgetCache.lastUpdated = Date.now();
   const user = getCurrentUser?.();
   localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetCache));
@@ -159,8 +166,16 @@ export async function calculateCurrentMonthlyBudget() {
   const planning = await loadPlanningData();
   const budget = await loadBudgetData();
   const salary = Number(planning?.finance?.income || 0);
-  const { subscriptions = {}, recurring = {}, netPay: _ignore, ...rest } = budget;
+  const {
+    subscriptions = {},
+    recurring = {},
+    goalSubscriptions = {},
+    goalRecurring = {},
+    netPay: _ignore,
+    ...rest
+  } = budget;
   const categories = { ...rest, ...recurring, ...subscriptions };
+  Object.keys(categories).forEach(k => { if (k.startsWith('goal_')) delete categories[k]; });
   return calculateMonthlyBudget({ salary, categories });
 }
 
@@ -257,6 +272,8 @@ export async function initBudgetPanel() {
   Object.entries(initialSubs).forEach(([n, c]) => addSubscriptionRow(subsContainerA, n, c));
   addSubBtnA.addEventListener('click', () => { addSubscriptionRow(subsContainerA); });
 
+  const initialSubsB = saved.goalSubscriptions || {};
+  Object.entries(initialSubsB).forEach(([n, c]) => addSubscriptionRow(subsContainerB, n, c));
   addSubBtnB.addEventListener('click', () => { addSubscriptionRow(subsContainerB); });
 
   const initialRecur = saved.recurring || {};
@@ -268,12 +285,17 @@ export async function initBudgetPanel() {
   Object.entries(initialRecur).forEach(([n, c]) => addRecurRow(recurContainerA, removedBuiltInsA, n, c));
   addRecurBtnA.addEventListener('click', () => { addRecurRow(recurContainerA, removedBuiltInsA); });
 
+  const initialRecurB = saved.goalRecurring || {};
   DEFAULT_RECURRING.forEach(([key, label]) => {
-    addRecurRow(recurContainerB, new Set(), label, '', true, key);
+    addRecurRow(recurContainerB, new Set(), label, saved[`goal_${key}`] ?? '', true, key);
   });
+  Object.entries(initialRecurB).forEach(([n, c]) => addRecurRow(recurContainerB, new Set(), n, c));
   addRecurBtnB.addEventListener('click', () => { addRecurRow(recurContainerB, new Set()); });
 
-  function collectScenario(recurContainer, subsContainer, removedSet) {
+  function collectScenario(recurContainer, subsContainer, removedSet, options = {}) {
+    const prefix = options.prefix || '';
+    const recurField = options.recurringField || 'recurring';
+    const subsField = options.subscriptionsField || 'subscriptions';
     const categories = {};
     const recur = {};
     const subs = {};
@@ -286,7 +308,7 @@ export async function initBudgetPanel() {
       categories[n] = v;
       const key = row.dataset.field;
       if (key) {
-        saveData[key] = v;
+        saveData[prefix + key] = v;
       } else {
         recur[n] = v;
       }
@@ -299,12 +321,22 @@ export async function initBudgetPanel() {
         subs[n] = v;
       }
     });
+    saveData[recurField] = recur;
+    saveData[subsField] = subs;
     return { categories, recur, subs, saveData };
   }
 
   function render(save = true) {
-    const aData = collectScenario(recurContainerA, subsContainerA, removedBuiltInsA);
-    const bData = collectScenario(recurContainerB, subsContainerB, new Set());
+    const aData = collectScenario(recurContainerA, subsContainerA, removedBuiltInsA, {
+      prefix: '',
+      recurringField: 'recurring',
+      subscriptionsField: 'subscriptions'
+    });
+    const bData = collectScenario(recurContainerB, subsContainerB, new Set(), {
+      prefix: 'goal_',
+      recurringField: 'goalRecurring',
+      subscriptionsField: 'goalSubscriptions'
+    });
 
     const resultA = calculateMonthlyBudget({ salary, categories: aData.categories });
     const resultB = calculateMonthlyBudget({ salary, categories: bData.categories });
@@ -316,10 +348,9 @@ export async function initBudgetPanel() {
       `Total Expenses: $${resultB.expenses.toLocaleString()}<br>` +
       `Leftover: $${resultB.leftover.toLocaleString()}`;
 
-    aData.saveData.subscriptions = aData.subs;
-    aData.saveData.recurring = aData.recur;
     if (save) {
-      saveBudgetData(aData.saveData);
+      const dataToSave = { ...aData.saveData, ...bData.saveData };
+      saveBudgetData(dataToSave);
     }
   }
   formA.addEventListener('input', () => render(true));
