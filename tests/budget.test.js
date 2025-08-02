@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { JSDOM } from 'jsdom';
 
 let planningMock = { finance: { income: 0 } };
 vi.mock('../js/planning.js', () => ({ loadPlanningData: () => planningMock }));
@@ -141,5 +142,34 @@ describe('budget persistence', () => {
     const res = await loadBudgetData();
     expect(res.escrow).toBe(100);
     expect(res.lastUpdated).toBe(200);
+  });
+});
+
+describe('budget panel', () => {
+  it('saves goal recurring expenses', async () => {
+    getMock.mockResolvedValue({ exists: false });
+
+    const dom = new JSDOM('<div id="budgetContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.Event = dom.window.Event;
+
+    const { initBudgetPanel } = await import('../js/budget.js');
+    await initBudgetPanel();
+
+    document.getElementById('addRecurBtnB').click();
+
+    const nameInput = document.querySelector('#recurContainerB .recurring-row:last-child .recur-name');
+    const costInput = document.querySelector('#recurContainerB .recurring-row:last-child .recur-cost');
+    nameInput.value = 'Test Recurring';
+    costInput.value = '50';
+    nameInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    costInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+
+    await new Promise(res => setTimeout(res, 0));
+
+    const saved = JSON.parse(localStorage.getItem('budgetConfig'));
+    expect(saved.goalRecurring).toEqual({ 'Test Recurring': '50' });
+    expect(setMock).toHaveBeenCalled();
   });
 });

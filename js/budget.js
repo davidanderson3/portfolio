@@ -354,8 +354,8 @@ export async function initBudgetPanel() {
     }
   }
   formA.addEventListener('input', () => render(true));
-  formB.addEventListener('input', () => render(false));
-  formB.addEventListener('change', () => render(false));
+  formB.addEventListener('input', () => render(true));
+  formB.addEventListener('change', () => render(true));
   render(false);
 }
 
