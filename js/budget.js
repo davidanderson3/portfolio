@@ -192,11 +192,11 @@ export async function initBudgetPanel() {
         <form id="budgetFormA" class="budget-form">
           <div class="section-title">Recurring Expenses</div>
           <div id="recurContainerA" class="recurring-list"></div>
-          <button type="button" id="addRecurBtnA">+ Add Category</button>
+          <button type="button" id="addRecurBtn">+ Add Category</button>
 
           <div class="section-title">Subscriptions</div>
           <div id="subsContainerA" class="subscriptions-list"></div>
-          <button type="button" id="addSubBtnA">+ Add Subscription</button>
+          <button type="button" id="addSubBtn">+ Add Subscription</button>
         </form>
         <div id="budgetSummaryA" class="budget-summary"></div>
       </div>
@@ -205,11 +205,9 @@ export async function initBudgetPanel() {
         <form id="budgetFormB" class="budget-form">
           <div class="section-title">Recurring Expenses</div>
           <div id="recurContainerB" class="recurring-list"></div>
-          <button type="button" id="addRecurBtnB">+ Add Category</button>
 
           <div class="section-title">Subscriptions</div>
           <div id="subsContainerB" class="subscriptions-list"></div>
-          <button type="button" id="addSubBtnB">+ Add Subscription</button>
         </form>
         <div id="budgetSummaryB" class="budget-summary"></div>
       </div>
@@ -219,21 +217,20 @@ export async function initBudgetPanel() {
   const formA = panel.querySelector('#budgetFormA');
   const summaryA = panel.querySelector('#budgetSummaryA');
   const subsContainerA = formA.querySelector('#subsContainerA');
-  const addSubBtnA = formA.querySelector('#addSubBtnA');
+  const addSubBtn = formA.querySelector('#addSubBtn');
   const recurContainerA = formA.querySelector('#recurContainerA');
-  const addRecurBtnA = formA.querySelector('#addRecurBtnA');
-  const removedBuiltInsA = new Set(saved.removedBuiltIns || []);
+  const addRecurBtn = formA.querySelector('#addRecurBtn');
+  const removedBuiltIns = new Set(saved.removedBuiltIns || []);
 
   const formB = panel.querySelector('#budgetFormB');
   const summaryB = panel.querySelector('#budgetSummaryB');
   const subsContainerB = formB.querySelector('#subsContainerB');
-  const addSubBtnB = formB.querySelector('#addSubBtnB');
   const recurContainerB = formB.querySelector('#recurContainerB');
-  const addRecurBtnB = formB.querySelector('#addRecurBtnB');
 
-  function addSubscriptionRow(container, name = '', cost = '') {
+  function addSubscriptionRow(container, name = '', cost = '', id) {
     const row = document.createElement('div');
     row.className = 'subscription-row';
+    if (id) row.dataset.id = id;
     row.innerHTML = `
       <input type="text" class="sub-name" placeholder="Name" value="${name}">
       <input type="number" class="sub-cost" value="${cost}">
@@ -241,14 +238,30 @@ export async function initBudgetPanel() {
     const rem = document.createElement('button');
     rem.type = 'button';
     rem.textContent = '❌';
-    rem.onclick = () => { row.remove(); render(); };
+    rem.onclick = () => {
+      panel.querySelectorAll(`.subscription-row[data-id="${id}"]`).forEach(r => r.remove());
+      render();
+    };
+    const nameEl = row.querySelector('.sub-name');
+    nameEl.addEventListener('input', () => {
+      panel.querySelectorAll(`.subscription-row[data-id="${id}"] .sub-name`).forEach(el => {
+        if (el !== nameEl) el.value = nameEl.value;
+      });
+    });
     row.append(rem);
     container.append(row);
   }
 
-  function addRecurRow(container, removedSet, name = '', cost = '', fixed = false, key = '') {
+  function addSubscriptionRowPair(name = '', costA = '', costB = '') {
+    const id = Math.random().toString(36).slice(2);
+    addSubscriptionRow(subsContainerA, name, costA, id);
+    addSubscriptionRow(subsContainerB, name, costB, id);
+  }
+
+  function addRecurRow(container, name = '', cost = '', fixed = false, key = '', id) {
     const row = document.createElement('div');
     row.className = 'recurring-row';
+    if (id) row.dataset.id = id;
     if (key) row.dataset.field = key;
     row.innerHTML = `
       <input type="text" class="recur-name" placeholder="Name" value="${name}" ${fixed ? 'readonly' : ''}>
@@ -258,39 +271,50 @@ export async function initBudgetPanel() {
     rem.type = 'button';
     rem.textContent = '❌';
     rem.onclick = () => {
-      if (key) removedSet.add(key);
-      row.remove();
+      if (key) removedBuiltIns.add(key);
+      panel.querySelectorAll(`.recurring-row[data-id="${id}"]`).forEach(r => r.remove());
       render();
     };
+    const nameEl = row.querySelector('.recur-name');
+    if (!fixed) {
+      nameEl.addEventListener('input', () => {
+        panel.querySelectorAll(`.recurring-row[data-id="${id}"] .recur-name`).forEach(el => {
+          if (el !== nameEl) el.value = nameEl.value;
+        });
+      });
+    }
     row.append(rem);
     container.append(row);
   }
 
-  const initialSubs = Object.keys(saved.subscriptions || {}).length
-    ? saved.subscriptions
-    : { 'Amazon Prime': '', 'Spotify': '' };
-  Object.entries(initialSubs).forEach(([n, c]) => addSubscriptionRow(subsContainerA, n, c));
-  addSubBtnA.addEventListener('click', () => { addSubscriptionRow(subsContainerA); });
+  function addRecurRowPair(name = '', costA = '', costB = '', fixed = false, key = '') {
+    const id = key || Math.random().toString(36).slice(2);
+    addRecurRow(recurContainerA, name, costA, fixed, key, id);
+    addRecurRow(recurContainerB, name, costB, fixed, key, id);
+  }
 
-  const initialSubsB = saved.goalSubscriptions || {};
-  Object.entries(initialSubsB).forEach(([n, c]) => addSubscriptionRow(subsContainerB, n, c));
-  addSubBtnB.addEventListener('click', () => { addSubscriptionRow(subsContainerB); });
+  const subNames = new Set([
+    ...Object.keys(saved.subscriptions || {}),
+    ...Object.keys(saved.goalSubscriptions || {})
+  ]);
+  if (subNames.size === 0) {
+    subNames.add('Amazon Prime');
+    subNames.add('Spotify');
+  }
+  subNames.forEach(n => addSubscriptionRowPair(n, saved.subscriptions?.[n] ?? '', saved.goalSubscriptions?.[n] ?? ''));
+  addSubBtn.addEventListener('click', () => { addSubscriptionRowPair(); render(); });
 
-  const initialRecur = saved.recurring || {};
+  const recurNames = new Set([
+    ...Object.keys(saved.recurring || {}),
+    ...Object.keys(saved.goalRecurring || {})
+  ]);
   DEFAULT_RECURRING.forEach(([key, label]) => {
-    if (!removedBuiltInsA.has(key)) {
-      addRecurRow(recurContainerA, removedBuiltInsA, label, saved[key] ?? '', true, key);
+    if (!removedBuiltIns.has(key)) {
+      addRecurRowPair(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', true, key);
     }
   });
-  Object.entries(initialRecur).forEach(([n, c]) => addRecurRow(recurContainerA, removedBuiltInsA, n, c));
-  addRecurBtnA.addEventListener('click', () => { addRecurRow(recurContainerA, removedBuiltInsA); });
-
-  const initialRecurB = saved.goalRecurring || {};
-  DEFAULT_RECURRING.forEach(([key, label]) => {
-    addRecurRow(recurContainerB, new Set(), label, saved[`goal_${key}`] ?? '', true, key);
-  });
-  Object.entries(initialRecurB).forEach(([n, c]) => addRecurRow(recurContainerB, new Set(), n, c));
-  addRecurBtnB.addEventListener('click', () => { addRecurRow(recurContainerB, new Set()); });
+  recurNames.forEach(n => addRecurRowPair(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? ''));
+  addRecurBtn.addEventListener('click', () => { addRecurRowPair(); render(); });
 
   function collectScenario(recurContainer, subsContainer, removedSet, options = {}) {
     const prefix = options.prefix || '';
@@ -327,12 +351,12 @@ export async function initBudgetPanel() {
   }
 
   function render(save = true) {
-    const aData = collectScenario(recurContainerA, subsContainerA, removedBuiltInsA, {
+    const aData = collectScenario(recurContainerA, subsContainerA, removedBuiltIns, {
       prefix: '',
       recurringField: 'recurring',
       subscriptionsField: 'subscriptions'
     });
-    const bData = collectScenario(recurContainerB, subsContainerB, new Set(), {
+    const bData = collectScenario(recurContainerB, subsContainerB, removedBuiltIns, {
       prefix: 'goal_',
       recurringField: 'goalRecurring',
       subscriptionsField: 'goalSubscriptions'
