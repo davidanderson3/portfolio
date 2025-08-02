@@ -54,6 +54,7 @@ export function calculateFinanceProjection({
 
   let postBalance = balance;
   let withdrawalAmount = 0;
+  let socialSecurityAmount = socialSecurity;
   for (let i = 1; i <= postYears; i++) {
     const age = retirementAge + i;
     postBalance *= 1 + returnRate;
@@ -61,10 +62,12 @@ export function calculateFinanceProjection({
       withdrawalAmount = postBalance * withdrawalRate;
     } else {
       withdrawalAmount *= 1.03;
+      socialSecurityAmount *= 1 + inflationRate;
     }
     const withdrawal = Math.round(withdrawalAmount);
     postBalance -= withdrawal;
-    const incomeYear = withdrawal + fers + socialSecurity;
+    const ssYear = Math.round(socialSecurityAmount);
+    const incomeYear = withdrawal + fers + ssYear;
     data.push({
       age,
       balance: Math.round(postBalance),
@@ -72,7 +75,7 @@ export function calculateFinanceProjection({
       realIncome: Math.round(incomeYear / Math.pow(1 + inflationRate, years + i)),
       withdrawal,
       fers,
-      socialSecurity
+      socialSecurity: ssYear
     });
   }
 
