@@ -89,6 +89,19 @@ export function estimateSocialSecurity({ income = 0, currentAge = 0, retirementA
   return Math.round(averageIncome * 0.4);
 }
 
+// Simple budget allocation helper used by planning tests.  It breaks a monthly
+// income into basic categories of taxes, mortgage and leftover funds.
+export function calculateBudgetAllocation({ income = 0, taxRate = 0, mortgage = 0 }) {
+  income = Number(income) || 0;
+  taxRate = Number(taxRate) || 0;
+  mortgage = Number(mortgage) || 0;
+
+  const taxes = Math.round(income * (taxRate / 100));
+  const leftover = income - taxes - mortgage;
+
+  return { taxes, mortgage, leftover };
+}
+
 const PLANNING_KEY = 'planningData';
 let planningCache = null;
 let planningInitialized = false;
@@ -182,45 +195,18 @@ export async function savePlanningData(data) {
     console.error('Failed to save planning data:', err);
   }
 }
-
-
-async function saveAssetSnapshot(userId, snapshotData) {
-  const requiredFields = ["date", "age", "balance"]; // Add more if needed
-
-  // 1. Ensure all fields are populated
-  for (let field of requiredFields) {
-    if (!snapshotData[field] || snapshotData[field] === "Invalid Date") {
-      console.log(`Skipping snapshot: Missing field ${field}`);
-      return; // Don't save
-    }
+async function saveAssetSnapshotToDB(snapshot) {
+  const user = getCurrentUser?.();
+  if (!user) return;
+  try {
+    await db
+      .collection('users').doc(user.uid)
+      .collection('assetHistory').doc()
+      .set(snapshot);
+  } catch (err) {
+    console.error('Failed to save asset snapshot:', err);
   }
-
-  // 2. Normalize date to YYYY-MM-DD for comparison
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
-
-  // 3. Check if today's snapshot already exists
-  const existing = await AssetSnapshot.findOne({
-    userId,
-    date: todayStr
-  });
-
-  if (existing) {
-    console.log("Skipping snapshot: Already saved today");
-    return;
-  }
-
-  // 4. Save snapshot
-  await AssetSnapshot.create({
-    userId,
-    date: todayStr,
-    age: snapshotData.age,
-    balance: snapshotData.balance
-  });
-
-  console.log("Snapshot saved:", todayStr);
 }
-
 
 async function loadAssetHistoryFromDB() {
   const user = getCurrentUser?.();
