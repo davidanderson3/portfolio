@@ -238,6 +238,7 @@ export async function initPlanningPanel() {
   currentData.assets = currentData.assets || {};
   currentData.budget = currentData.budget || {};
   currentData.history = (currentData.history || [])
+    .filter(r => r.timestamp && !isNaN(new Date(r.timestamp).getTime()))
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
     .reduce((acc, cur) => {
       const day = new Date(cur.timestamp).toDateString();
@@ -285,6 +286,7 @@ export async function initPlanningPanel() {
   async function renderAssetHistory() {
     const dbHistory = await loadAssetHistoryFromDB();
     const combined = [...(currentData.history || []), ...dbHistory]
+      .filter(r => r.timestamp && !isNaN(new Date(r.timestamp).getTime()))
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       .reduce((acc, cur) => {
         const day = new Date(cur.timestamp).toDateString();
