@@ -38,7 +38,7 @@ let searchMarker = null;
 let resultMarkers = [];
 let sortByDistance = true;
 let userCoords = null;
-let showVisited = false;
+let showVisited = true;
 const pageSize = 100;
 let currentPage = 0;
 
@@ -125,29 +125,9 @@ export async function initTravelPanel() {
   setTimeout(() => map.invalidateSize(), 0);
 
   const user = getCurrentUser?.();
-  try {
-    if (user) {
-      const snap = await db
-        .collection('users')
-        .doc(user.uid)
-        .collection('travel')
-        .get();
-      travelData = snap.docs.map(doc => {
-        const data = { id: doc.id, ...doc.data() };
-        ensureDefaultTag(data);
-        applyVisitedFlag(data);
-        return data;
-      });
-    } else {
-      travelData = [];
-    }
-    localStorage.setItem(storageKey(), JSON.stringify(travelData));
-  } catch (err) {
-    console.error('Failed to load travel data', err);
-    const cached = localStorage.getItem(storageKey());
-    travelData = cached ? JSON.parse(cached) : [];
-  }
-
+  const cached = localStorage.getItem(storageKey());
+  travelData = cached ? JSON.parse(cached) : [];
+  if (!user) travelData = [];
   travelData.forEach(p => {
     ensureDefaultTag(p);
     applyVisitedFlag(p);
@@ -550,6 +530,30 @@ export async function initTravelPanel() {
       currentPage = 0;
       renderList(currentSearch);
     });
+  }
+
+  if (user) {
+    db
+      .collection('users')
+      .doc(user.uid)
+      .collection('travel')
+      .onSnapshot(
+        snap => {
+          travelData = snap.docs.map(doc => {
+            const data = { id: doc.id, ...doc.data() };
+            ensureDefaultTag(data);
+            applyVisitedFlag(data);
+            return data;
+          });
+          localStorage.setItem(storageKey(), JSON.stringify(travelData));
+          allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
+          renderTagFilters();
+          renderList(currentSearch);
+        },
+        err => {
+          console.error('Failed to sync travel data', err);
+        }
+      );
   }
 
 
