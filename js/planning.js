@@ -33,6 +33,7 @@ export function calculateFinanceProjection({
   let contribution = annualSavings;
   let yearIncome = Number(income);
   const years = retirementAge - currentAge;
+
   for (let i = 0; i <= years; i++) {
     if (i > 0) {
       balance += contribution;
@@ -59,7 +60,7 @@ export function calculateFinanceProjection({
     if (i === 1) {
       withdrawalAmount = postBalance * withdrawalRate;
     } else {
-      withdrawalAmount *= 1.03; // increase withdrawals by 3% yearly
+      withdrawalAmount *= 1.03;
     }
     const withdrawal = Math.round(withdrawalAmount);
     postBalance -= withdrawal;
@@ -78,15 +79,6 @@ export function calculateFinanceProjection({
   return data;
 }
 
-export function calculateBudgetAllocation({ income, taxRate, mortgage }) {
-  income = Number(income);
-  taxRate = Number(taxRate) / 100;
-  mortgage = Number(mortgage);
-  const taxes = Math.round(income * taxRate);
-  const leftover = income - taxes - mortgage;
-  return { taxes, mortgage, leftover };
-}
-
 export function estimateSocialSecurity({ income = 0, currentAge = 0, retirementAge = 0 }) {
   income = Number(income);
   currentAge = Number(currentAge);
@@ -100,7 +92,7 @@ export function estimateSocialSecurity({ income = 0, currentAge = 0, retirementA
 const PLANNING_KEY = 'planningData';
 let planningCache = null;
 let planningInitialized = false;
-const DAILY_HISTORY_HOUR = 20; // hour of day to record snapshot
+const DAILY_HISTORY_HOUR = 20;
 
 function isObject(val) {
   return val && typeof val === 'object' && !Array.isArray(val);
@@ -127,8 +119,6 @@ export function clearPlanningCache() {
 
 export async function loadPlanningData() {
   const user = getCurrentUser?.();
-
-  // Always try localStorage first
   let localData = {};
   const stored = localStorage.getItem(PLANNING_KEY);
   if (stored) {
@@ -139,13 +129,11 @@ export async function loadPlanningData() {
     }
   }
 
-  // If not signed in, just return the local data
   if (!user) {
     planningCache = localData;
     return planningCache;
   }
 
-  // Fetch the latest cloud data
   let cloudData = {};
   try {
     const snap = await db
@@ -165,6 +153,7 @@ export async function loadPlanningData() {
   const newer = cloudTs >= localTs ? cloudData : localData;
   planningCache = deepMerge(older, newer);
   planningCache.lastUpdated = Math.max(localTs, cloudTs);
+
   try {
     await db
       .collection('users').doc(user.uid)
@@ -183,9 +172,7 @@ export async function savePlanningData(data) {
   planningCache.lastUpdated = Date.now();
   const user = getCurrentUser?.();
   localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
-  if (!user) {
-    return;
-  }
+  if (!user) return;
   try {
     await db
       .collection('users').doc(user.uid)
@@ -193,6 +180,61 @@ export async function savePlanningData(data) {
       .set(planningCache, { merge: true });
   } catch (err) {
     console.error('Failed to save planning data:', err);
+  }
+}
+
+
+async function saveAssetSnapshot(userId, snapshotData) {
+  const requiredFields = ["date", "age", "balance"]; // Add more if needed
+
+  // 1. Ensure all fields are populated
+  for (let field of requiredFields) {
+    if (!snapshotData[field] || snapshotData[field] === "Invalid Date") {
+      console.log(`Skipping snapshot: Missing field ${field}`);
+      return; // Don't save
+    }
+  }
+
+  // 2. Normalize date to YYYY-MM-DD for comparison
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+
+  // 3. Check if today's snapshot already exists
+  const existing = await AssetSnapshot.findOne({
+    userId,
+    date: todayStr
+  });
+
+  if (existing) {
+    console.log("Skipping snapshot: Already saved today");
+    return;
+  }
+
+  // 4. Save snapshot
+  await AssetSnapshot.create({
+    userId,
+    date: todayStr,
+    age: snapshotData.age,
+    balance: snapshotData.balance
+  });
+
+  console.log("Snapshot saved:", todayStr);
+}
+
+
+async function loadAssetHistoryFromDB() {
+  const user = getCurrentUser?.();
+  if (!user) return [];
+  try {
+    const snap = await db.collection('users').doc(user.uid)
+      .collection('assetHistory')
+      .orderBy('timestamp', 'desc')
+      .limit(50)
+      .get();
+    return snap.docs.map(doc => doc.data());
+  } catch (err) {
+    console.error('Failed to load asset history:', err);
+    return [];
   }
 }
 
@@ -211,36 +253,52 @@ export async function initPlanningPanel() {
   const container = document.getElementById('planningContainer');
   container.innerHTML = `
     <form id="planningForm" class="planning-form">
-      <label>Current Age <input type="number" name="curAge" placeholder="e.g. 30" value="${currentData.finance.curAge ?? ''}" /></label>
-      <label>Retirement Age <input type="number" name="retAge" placeholder="e.g. 65" value="${currentData.finance.retAge ?? ''}" /></label>
-      <label>Net Income <input type="number" name="income" placeholder="e.g. 50000" value="${currentData.finance.income ?? ''}" /></label>
-      <label>Annual Savings <input type="number" name="annualSavings" placeholder="e.g. 5000" value="${currentData.finance.annualSavings ?? ''}" /></label>
-      <label>Annual Raise % <input type="number" name="annualRaise" placeholder="e.g. 3" value="${currentData.finance.annualRaise ?? ''}" /></label>
-      <label>Inflation Rate % <input type="number" name="inflation" placeholder="e.g. 3" value="${currentData.finance.inflation ?? 0}" /></label>
-      <label>Return Rate % <input type="number" name="returnRate" placeholder="e.g. 5" value="${currentData.finance.returnRate ?? ''}" /></label>
-      <label>High-3 Salary <input type="number" name="high3" placeholder="e.g. 80000" value="${currentData.finance.high3 ?? ''}" /></label>
-      <label>Service Years <input type="number" name="serviceYears" placeholder="e.g. 35" value="${currentData.finance.serviceYears ?? ''}" /></label>
-      <label>Withdrawal Rate % <input type="number" name="withdrawalRate" placeholder="e.g. 4" value="${currentData.finance.withdrawalRate ?? 4}" /></label>
-      <label>Post Years <input type="number" name="postYears" placeholder="e.g. 30" value="${currentData.finance.postYears ?? 30}" /></label>
-      <label>Social Security <input type="number" name="socialSecurity" placeholder="e.g. 20000" value="${currentData.finance.socialSecurity ?? ''}" /></label>
+      <label>Current Age <input type="number" name="curAge" value="${currentData.finance.curAge ?? ''}" /></label>
+      <label>Retirement Age <input type="number" name="retAge" value="${currentData.finance.retAge ?? ''}" /></label>
+      <label>Net Income <input type="number" name="income" value="${currentData.finance.income ?? ''}" /></label>
+      <label>Annual Savings <input type="number" name="annualSavings" value="${currentData.finance.annualSavings ?? ''}" /></label>
+      <label>Annual Raise % <input type="number" name="annualRaise" value="${currentData.finance.annualRaise ?? ''}" /></label>
+      <label>Inflation Rate % <input type="number" name="inflation" value="${currentData.finance.inflation ?? 0}" /></label>
+      <label>Return Rate % <input type="number" name="returnRate" value="${currentData.finance.returnRate ?? ''}" /></label>
+      <label>High-3 Salary <input type="number" name="high3" value="${currentData.finance.high3 ?? ''}" /></label>
+      <label>Service Years <input type="number" name="serviceYears" value="${currentData.finance.serviceYears ?? ''}" /></label>
+      <label>Withdrawal Rate % <input type="number" name="withdrawalRate" value="${currentData.finance.withdrawalRate ?? 4}" /></label>
+      <label>Post Years <input type="number" name="postYears" value="${currentData.finance.postYears ?? 30}" /></label>
+      <label>Social Security <input type="number" name="socialSecurity" value="${currentData.finance.socialSecurity ?? ''}" /></label>
       <div id="ssEstimate" style="margin-bottom:0.5em;font-style:italic"></div>
-      <label>Real Estate <input type="number" name="realEstate" placeholder="e.g. 300000" value="${currentData.assets.realEstate ?? ''}" /></label>
-      <label>Car <input type="number" name="carValue" placeholder="e.g. 20000" value="${currentData.assets.carValue ?? ''}" /></label>
-      <label>Savings <input type="number" name="assetSavings" placeholder="e.g. 10000" value="${currentData.assets.assetSavings ?? ''}" /></label>
-      <label>Checking <input type="number" name="checking" placeholder="e.g. 2000" value="${currentData.assets.checking ?? ''}" /></label>
-      <label>Investment Accounts <input type="number" name="investment" placeholder="e.g. 50000" value="${currentData.assets.investment ?? ''}" /></label>
-      <label>Roth IRA <input type="number" name="roth" placeholder="e.g. 10000" value="${currentData.assets.roth ?? ''}" /></label>
-      <label>Crypto <input type="number" name="crypto" placeholder="e.g. 1000" value="${currentData.assets.crypto ?? ''}" /></label>
-      <label>Rolling Credit <input type="number" name="rollingCredit" placeholder="e.g. 5000" value="${currentData.budget.rollingCredit ?? ''}" /></label>
+      <label>Real Estate <input type="number" name="realEstate" value="${currentData.assets.realEstate ?? ''}" /></label>
+      <label>Car <input type="number" name="carValue" value="${currentData.assets.carValue ?? ''}" /></label>
+      <label>Savings <input type="number" name="assetSavings" value="${currentData.assets.assetSavings ?? ''}" /></label>
+      <label>Checking <input type="number" name="checking" value="${currentData.assets.checking ?? ''}" /></label>
+      <label>Investment Accounts <input type="number" name="investment" value="${currentData.assets.investment ?? ''}" /></label>
+      <label>Roth IRA <input type="number" name="roth" value="${currentData.assets.roth ?? ''}" /></label>
+      <label>Crypto <input type="number" name="crypto" value="${currentData.assets.crypto ?? ''}" /></label>
+      <label>Rolling Credit <input type="number" name="rollingCredit" value="${currentData.budget.rollingCredit ?? ''}" /></label>
     </form>
     <div id="assetsTotal" style="margin-top:1em;"></div>
     <div id="financeResult" style="margin-top:1em;"></div>
+    <div id="assetHistory" style="margin-top:1em;"></div>
   `;
 
   const form = container.querySelector('#planningForm');
   const assetsTotalDiv = container.querySelector('#assetsTotal');
   const financeResultDiv = container.querySelector('#financeResult');
   const ssEstimateDiv = container.querySelector('#ssEstimate');
+  const assetHistoryDiv = container.querySelector('#assetHistory');
+
+  async function renderAssetHistory() {
+    const dbHistory = await loadAssetHistoryFromDB();
+    const combined = [...(currentData.history || []), ...dbHistory]
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .reduce((acc, cur) => {
+        const exists = acc.find(x => x.timestamp === cur.timestamp);
+        if (!exists) acc.push(cur);
+        return acc;
+      }, []);
+    assetHistoryDiv.innerHTML = '<h3>Asset History</h3><table><thead><tr><th>Date</th><th>Age</th><th>Balance</th></tr></thead><tbody>' +
+      combined.map(r => `<tr><td>${new Date(r.timestamp).toLocaleDateString()}</td><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
+      '</tbody></table>';
+  }
 
   function renderAll() {
     const values = {
@@ -282,24 +340,26 @@ export async function initPlanningPanel() {
       values.investment + values.roth + values.crypto - values.rollingCredit;
     assetsTotalDiv.textContent = `Total Assets: $${assetTotal.toLocaleString()}`;
 
-      const finData = calculateFinanceProjection({
-        currentAge: values.curAge,
-        retirementAge: values.retAge,
-        savings: assetTotal,
-        income: values.income,
-        annualSavings: values.annualSavings,
-        annualRaise: values.annualRaise,
-        inflationRate: values.inflation,
-        returnRate: values.returnRate,
-        high3: values.high3,
-        serviceYears: values.serviceYears,
-        socialSecurity: values.socialSecurity,
-        postYears: values.postYears,
-        withdrawalRate: values.withdrawalRate
-      });
+    const finData = calculateFinanceProjection({
+      currentAge: values.curAge,
+      retirementAge: values.retAge,
+      savings: assetTotal,
+      income: values.income,
+      annualSavings: values.annualSavings,
+      annualRaise: values.annualRaise,
+      inflationRate: values.inflation,
+      returnRate: values.returnRate,
+      high3: values.high3,
+      serviceYears: values.serviceYears,
+      socialSecurity: values.socialSecurity,
+      postYears: values.postYears,
+      withdrawalRate: values.withdrawalRate
+    });
+
     financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Income (Today)</th><th>Withdrawals</th><th>FERS</th><th>Social Security</th></tr></thead><tbody>' +
       finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.realIncome ? '$' + r.realIncome.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.fers ? '$' + r.fers.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
       '</tbody></table>';
+
     currentData.finance = {
       curAge: values.curAge,
       retAge: values.retAge,
@@ -344,13 +404,16 @@ export async function initPlanningPanel() {
       }
     }
     if (addSnapshot) {
-      hist.push({ timestamp: nowIso, age: values.curAge, balance: assetTotal });
+      const snapObj = { timestamp: nowIso, age: values.curAge, balance: assetTotal };
+      hist.push(snapObj);
+      saveAssetSnapshotToDB(snapObj);
     } else if (last) {
       last.timestamp = nowIso;
       last.age = values.curAge;
     }
 
     savePlanningData(currentData);
+    renderAssetHistory();
   }
 
   form.addEventListener('input', renderAll);
