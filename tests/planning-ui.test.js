@@ -218,4 +218,35 @@ describe('planning UI persistence', () => {
     const saved = JSON.parse(localStorage.getItem('planningData'));
     expect(saved.history.length).toBe(0);
   });
+
+  it('removes snapshots without a timestamp', async () => {
+    vi.resetModules();
+    currentUser = null;
+    const dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    localStorage.clear();
+
+    localStorage.setItem('planningData', JSON.stringify({
+      history: [
+        { timestamp: '2023-01-01T10:00:00Z', age: 30, balance: 100 },
+        { age: 31, balance: 200 }
+      ]
+    }));
+
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    names.forEach(n => {
+      Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
+        get() { return this.elements.namedItem(n); },
+        configurable: true
+      });
+    });
+
+    const mod = await import('../js/planning.js');
+    await mod.initPlanningPanel();
+
+    const saved = JSON.parse(localStorage.getItem('planningData'));
+    expect(saved.history.length).toBe(1);
+    expect(saved.history[0].timestamp).toBeDefined();
+  });
 });
