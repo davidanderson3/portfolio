@@ -614,10 +614,16 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
 
     clockBtn.addEventListener('click', e => {
       e.stopPropagation();
+      if (menu.style.display === 'block') {
+        menu.style.display = 'none';
+        return;
+      }
+      menu.style.display = 'block';
       const rect = clockBtn.getBoundingClientRect();
       menu.style.top = `${rect.bottom + window.scrollY}px`;
-      menu.style.left = `${rect.left + window.scrollX}px`;
-      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+      let left = rect.left - menu.offsetWidth + window.scrollX;
+      if (left < 0) left = 0;
+      menu.style.left = `${left}px`;
     });
 
     document.addEventListener('click', e => {
