@@ -39,7 +39,7 @@ let resultMarkers = [];
 let sortByDistance = true;
 let userCoords = null;
 let showVisited = true;
-const pageSize = 100;
+const pageSize = Infinity;
 let currentPage = 0;
 
 // Simple circle markers for map points. Visited places are green.
