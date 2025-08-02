@@ -105,7 +105,6 @@ export function calculateBudgetAllocation({ income = 0, taxRate = 0, mortgage = 
 const PLANNING_KEY = 'planningData';
 let planningCache = null;
 let planningInitialized = false;
-const DAILY_HISTORY_HOUR = 20;
 
 function isObject(val) {
   return val && typeof val === 'object' && !Array.isArray(val);
@@ -199,9 +198,10 @@ async function saveAssetSnapshotToDB(snapshot) {
   const user = getCurrentUser?.();
   if (!user) return;
   try {
+    const dayId = snapshot.timestamp.slice(0, 10);
     await db
       .collection('users').doc(user.uid)
-      .collection('assetHistory').doc()
+      .collection('assetHistory').doc(dayId)
       .set(snapshot);
   } catch (err) {
     console.error('Failed to save asset snapshot:', err);
@@ -234,7 +234,14 @@ export async function initPlanningPanel() {
   currentData.finance = currentData.finance || {};
   currentData.assets = currentData.assets || {};
   currentData.budget = currentData.budget || {};
-  currentData.history = currentData.history || [];
+  currentData.history = (currentData.history || [])
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+    .reduce((acc, cur) => {
+      const day = new Date(cur.timestamp).toDateString();
+      acc[day] = cur;
+      return acc;
+    }, {});
+  currentData.history = Object.values(currentData.history);
 
   const container = document.getElementById('planningContainer');
   container.innerHTML = `
@@ -277,8 +284,10 @@ export async function initPlanningPanel() {
     const combined = [...(currentData.history || []), ...dbHistory]
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       .reduce((acc, cur) => {
-        const exists = acc.find(x => x.timestamp === cur.timestamp);
-        if (!exists) acc.push(cur);
+        const day = new Date(cur.timestamp).toDateString();
+        if (!acc.some(x => new Date(x.timestamp).toDateString() === day)) {
+          acc.push(cur);
+        }
         return acc;
       }, []);
     assetHistoryDiv.innerHTML = '<h3>Asset History</h3><table><thead><tr><th>Date</th><th>Age</th><th>Balance</th></tr></thead><tbody>' +
@@ -377,25 +386,16 @@ export async function initPlanningPanel() {
     const last = hist[hist.length - 1];
     const nowDate = new Date();
     const nowIso = nowDate.toISOString();
-    const schedulePassed = nowDate.getHours() >= DAILY_HISTORY_HOUR;
-    let addSnapshot = false;
-    if (!last) {
-      addSnapshot = true;
-    } else {
-      const lastDate = new Date(last.timestamp);
-      const sameDay = lastDate.toDateString() === nowDate.toDateString();
-      const needDaily = schedulePassed && (!sameDay || lastDate.getHours() < DAILY_HISTORY_HOUR);
-      if (last.balance !== assetTotal || needDaily) {
-        addSnapshot = true;
-      }
-    }
-    if (addSnapshot) {
+    const required = ['curAge', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'rollingCredit'];
+    const allFilled = required.every(name => form[name].value.trim() !== '');
+    if (allFilled) {
       const snapObj = { timestamp: nowIso, age: values.curAge, balance: assetTotal };
-      hist.push(snapObj);
+      if (!last || new Date(last.timestamp).toDateString() !== nowDate.toDateString()) {
+        hist.push(snapObj);
+      } else {
+        Object.assign(last, snapObj);
+      }
       saveAssetSnapshotToDB(snapObj);
-    } else if (last) {
-      last.timestamp = nowIso;
-      last.age = values.curAge;
     }
 
     savePlanningData(currentData);
