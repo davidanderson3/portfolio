@@ -228,12 +228,23 @@ export async function initTravelPanel() {
       );
     }
     const total = items.length;
-    const start = currentPage * pageSize;
-    const pageItems = items.slice(start, start + pageSize);
-    updatePagination(total);
+    let start;
+    let pageItems;
+    if (pageSize === Infinity) {
+      start = 0;
+      pageItems = items;
+      if (paginationDiv) paginationDiv.style.display = 'none';
+    } else {
+      start = currentPage * pageSize;
+      pageItems = items.slice(start, start + pageSize);
+      if (paginationDiv) paginationDiv.style.display = '';
+      updatePagination(total);
+    }
     if (placeCountEl) {
-      const end = Math.min(start + pageItems.length, total);
-      placeCountEl.textContent = `Showing ${start + 1}-${end} of ${total}`;
+      const end =
+        pageSize === Infinity ? total : Math.min(start + pageItems.length, total);
+      placeCountEl.textContent =
+        total === 0 ? 'Showing 0 of 0' : `Showing ${start + 1}-${end} of ${total}`;
     }
 
     pageItems.forEach((p, index) => {
