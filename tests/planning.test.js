@@ -9,7 +9,7 @@ describe('planning calculations', () => {
       retirementAge: 32,
       savings: 1000,
       annualSavings: 100,
-      returnRate: 0
+      investmentReturnRate: 0
     });
     expect(res).toEqual([
       { age: 30, balance: 1000, income: 0, realIncome: 0 },
@@ -25,7 +25,7 @@ describe('planning calculations', () => {
       savings: 1000,
       annualSavings: 100,
       income: 50000,
-      returnRate: 0
+      investmentReturnRate: 0
     });
     expect(res).toEqual([
       { age: 30, balance: 1000, income: 50000, realIncome: 50000 },
@@ -42,7 +42,7 @@ describe('planning calculations', () => {
       annualSavings: 100,
       income: 50000,
       annualRaise: 10,
-      returnRate: 0
+      investmentReturnRate: 0
     });
     expect(res).toEqual([
       { age: 30, balance: 1000, income: 50000, realIncome: 50000 },
@@ -57,7 +57,7 @@ describe('planning calculations', () => {
       retirementAge: 31,
       savings: 1000,
       annualSavings: 100,
-      returnRate: 0,
+      investmentReturnRate: 0,
       pension: 10,
       socialSecurity: 50,
       postYears: 1,
@@ -83,7 +83,7 @@ describe('planning calculations', () => {
       currentAge: 30,
       retirementAge: 31,
       savings: 1000,
-      returnRate: 0,
+      investmentReturnRate: 0,
       postYears: 2,
       withdrawalRate: 4
     });
@@ -98,7 +98,7 @@ describe('planning calculations', () => {
       currentAge: 65,
       retirementAge: 65,
       savings: 0,
-      returnRate: 0,
+      investmentReturnRate: 0,
       socialSecurity: 100,
       postYears: 2,
       withdrawalRate: 0,

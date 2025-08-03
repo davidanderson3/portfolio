@@ -36,7 +36,7 @@ describe('planning UI persistence', () => {
     global.window = dom.window;
     global.document = dom.window.document;
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'investmentReturnRate', 'savingsReturnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -106,7 +106,7 @@ describe('planning UI persistence', () => {
     global.document = dom.window.document;
     localStorage.clear();
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'investmentReturnRate', 'savingsReturnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -124,20 +124,18 @@ describe('planning UI persistence', () => {
     form.assetSavings.value = '2';
     form.checking.value = '3';
     form.investment.value = '4';
-    form.roth.value = '5';
-    form.crypto.value = '6';
     form.rollingCredit.value = '0';
     form.dispatchEvent(new window.Event('input', { bubbles: true }));
 
     let saved = JSON.parse(localStorage.getItem('planningData'));
     expect(saved.history.length).toBe(1);
-    expect(saved.history[0].balance).toBe(1021);
+    expect(saved.history[0].balance).toBe(1010);
 
     form.realEstate.value = '2000';
     form.dispatchEvent(new window.Event('input', { bubbles: true }));
     saved = JSON.parse(localStorage.getItem('planningData'));
     expect(saved.history.length).toBe(1);
-    expect(saved.history[0].balance).toBe(2021);
+    expect(saved.history[0].balance).toBe(2010);
   });
 
   it('records a new snapshot on a new day', async () => {
@@ -151,7 +149,7 @@ describe('planning UI persistence', () => {
     global.document = dom.window.document;
     localStorage.clear();
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'investmentReturnRate', 'savingsReturnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -169,8 +167,6 @@ describe('planning UI persistence', () => {
     form.assetSavings.value = '2';
     form.checking.value = '3';
     form.investment.value = '4';
-    form.roth.value = '5';
-    form.crypto.value = '6';
     form.rollingCredit.value = '0';
     form.dispatchEvent(new window.Event('input', { bubbles: true }));
 
@@ -192,7 +188,7 @@ describe('planning UI persistence', () => {
     global.document = dom.window.document;
     localStorage.clear();
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'investmentReturnRate', 'savingsReturnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -210,8 +206,6 @@ describe('planning UI persistence', () => {
     form.assetSavings.value = '2';
     form.checking.value = '3';
     form.investment.value = '4';
-    form.roth.value = '5';
-    form.crypto.value = '6';
     form.rollingCredit.value = '0';
     form.dispatchEvent(new window.Event('input', { bubbles: true }));
 
@@ -234,7 +228,7 @@ describe('planning UI persistence', () => {
       ]
     }));
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'investmentReturnRate', 'savingsReturnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
