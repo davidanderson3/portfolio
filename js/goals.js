@@ -43,12 +43,12 @@ function tempToColor(temp) {
 
 export async function addCalendarGoal(date = '') {
     const text = prompt('New goal:');
-    if (!text) return;
-    const range = await pickDateRange(
-        date || new Date().toISOString().slice(0, 10),
-        ''
-    );
-    if (!range.start) return;
+    if (!text?.trim()) return;
+    const defaultDate = date || new Date().toISOString().slice(0, 10);
+    const range = await pickDateRange(defaultDate, '');
+    if (range.start === null) return;
+    const start = range.start || defaultDate;
+    const end = range.end?.trim() || '';
     const all = await loadDecisions();
     const newGoal = {
         id: generateId(),
@@ -61,8 +61,8 @@ export async function addCalendarGoal(date = '') {
         parentGoalId: null,
         hiddenUntil: null,
         deadline: '',
-        scheduled: range.start.trim(),
-        scheduledEnd: range.end.trim() || ''
+        scheduled: start.trim(),
+        scheduledEnd: end
     };
     await saveDecisions([...all, newGoal]);
 

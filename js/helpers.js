@@ -399,7 +399,7 @@ export function pickDateRange(start = '', end = '') {
   // Fallback for browsers lacking <dialog> support
   if (!window.HTMLDialogElement || !document.createElement('dialog').showModal) {
     const startVal = prompt('Start date (YYYY-MM-DD):', start) || '';
-    if (!startVal) return Promise.resolve({ start: '', end: '' });
+    if (!startVal) return Promise.resolve({ start: null, end: null });
     const endVal = prompt('End date (optional):', end) || '';
     return Promise.resolve({ start: startVal.trim(), end: endVal.trim() });
   }
@@ -436,8 +436,8 @@ export function pickDateRange(start = '', end = '') {
     dialog.addEventListener('close', () => {
       const cancelled = dialog.returnValue === 'cancel';
       const result = {
-        start: cancelled ? '' : startInput.value,
-        end: cancelled ? '' : endInput.value
+        start: cancelled ? null : startInput.value,
+        end: cancelled ? null : endInput.value
       };
       dialog.remove();
       resolve(result);
