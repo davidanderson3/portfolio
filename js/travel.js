@@ -31,6 +31,7 @@ let markers = [];
 let travelData = [];
 let currentSearch = '';
 let rowMarkerMap = new Map();
+let markerRowMap = new Map();
 let selectedRow = null;
 let allTags = [];
 let selectedTags = [];
@@ -228,6 +229,7 @@ export async function initTravelPanel() {
     markers.forEach(m => m.remove());
     markers = [];
     rowMarkerMap.clear();
+    markerRowMap.clear();
     let items;
     if (Array.isArray(customItems)) {
       items = customItems;
@@ -276,10 +278,7 @@ export async function initTravelPanel() {
       const m = L.marker([p.lat, p.lon], { icon }).addTo(map).bindPopup(p.name);
       markers.push(m);
       m.on('click', () => {
-        if (searchInput) searchInput.value = p.name;
-        currentSearch = p.name;
-        renderList(currentSearch);
-        const row = tableBody.querySelector('tr');
+        const row = markerRowMap.get(m);
         if (row) {
           if (selectedRow) selectedRow.classList.remove('selected-row');
           selectedRow = row;
@@ -495,6 +494,7 @@ export async function initTravelPanel() {
       );
       tableBody.append(tr);
       rowMarkerMap.set(tr, m);
+      markerRowMap.set(m, tr);
 
       tr.addEventListener('click', e => {
         // If the user clicked a link inside the row, allow the link to
