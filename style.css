@@ -1214,10 +1214,19 @@ h2 {
 }
 
 /* Green dot indicators for task completions */
-.completion-dots {
-  display: flex;
-  gap: 6px;
-  padding-top: 8px;
+.completion-table {
+  border-collapse: collapse;
+  margin-top: 8px;
+}
+.completion-table th,
+.completion-table td {
+  padding: 4px;
+  text-align: center;
+}
+.completion-table th:first-child,
+.completion-table td:first-child {
+  text-align: right;
+  padding-right: 8px;
 }
 
 .completion-dot {

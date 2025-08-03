@@ -1,5 +1,8 @@
 import { loadDecisions, loadLists } from './helpers.js';
 
+// Map of task id -> recurrence category (daily/weekly/monthly)
+let taskCategoryMap = {};
+
 function getLastNDates(n) {
   const dates = [];
   const today = new Date();
@@ -29,20 +32,58 @@ export function renderGoalsReport(items) {
 async function renderDailyReport(items, user, db) {
   const container = document.getElementById('dailyReport');
   if (!container) return;
-  container.innerHTML = '<h3>Daily Completions</h3><div class="completion-dots"></div>';
+  container.innerHTML = '<h3>Daily Completions</h3><table class="completion-table"></table>';
+
+  // Build map of task ids to recurrence category
+  taskCategoryMap = {};
+  for (const item of items) {
+    if (item.type === 'task' && item.recurs)
+      taskCategoryMap[item.id] = item.recurs;
+  }
+  const categories = ['daily', 'weekly', 'monthly'].filter(c =>
+    Object.values(taskCategoryMap).includes(c)
+  );
+
   let completionMap = {};
   if (user && db) {
     const snap = await db.collection('taskCompletions').doc(user.uid).get();
     completionMap = snap.exists ? snap.data() : {};
   }
+
   const labels = getLastNDates(7);
-  const row = container.querySelector('.completion-dots');
+  const table = container.querySelector('table');
+
+  // Header row with date labels (MM-DD)
+  const header = document.createElement('tr');
+  header.appendChild(document.createElement('th'));
   for (const date of labels) {
-    const dot = document.createElement('span');
-    dot.className = 'completion-dot';
-    dot.dataset.date = date;
-    if ((completionMap[date] || []).length) dot.classList.add('completed');
-    row.appendChild(dot);
+    const th = document.createElement('th');
+    th.textContent = date.slice(5);
+    header.appendChild(th);
+  }
+  table.appendChild(header);
+
+  // Rows for each category
+  for (const cat of categories) {
+    const tr = document.createElement('tr');
+    const labelCell = document.createElement('td');
+    labelCell.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+    tr.appendChild(labelCell);
+
+    for (const date of labels) {
+      const td = document.createElement('td');
+      const dot = document.createElement('span');
+      dot.className = 'completion-dot';
+      dot.dataset.date = date;
+      dot.dataset.cat = cat;
+      if (
+        (completionMap[date] || []).some(id => taskCategoryMap[id] === cat)
+      )
+        dot.classList.add('completed');
+      td.appendChild(dot);
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
   }
 }
 
@@ -51,7 +92,11 @@ export function updateCompletionDots(map) {
   if (!container) return;
   container.querySelectorAll('.completion-dot').forEach(dot => {
     const date = dot.dataset.date;
-    if (map[date] && map[date].length) dot.classList.add('completed');
+    const cat = dot.dataset.cat;
+    if (
+      map[date] && map[date].some(id => taskCategoryMap[id] === cat)
+    )
+      dot.classList.add('completed');
     else dot.classList.remove('completed');
   });
 }
