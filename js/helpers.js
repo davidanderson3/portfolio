@@ -3,6 +3,33 @@ import { SAMPLE_DECISIONS, SAMPLE_LISTS } from './sampleData.js';
 
 // Demo data for visitors stored in sampleData.js
 
+function shiftSampleCalendarItems(items) {
+  const today = new Date();
+  const scheduled = items.filter(it => it.scheduled);
+  if (!scheduled.length) return items;
+  const dates = scheduled
+    .map(it => new Date(it.scheduled))
+    .filter(d => !isNaN(d));
+  const earliest = dates.sort((a, b) => a - b)[0];
+  if (!earliest || earliest >= today) return items;
+  const shiftDays = Math.ceil((today - earliest) / 86400000) + 7;
+  return items.map(it => {
+    if (!it.scheduled) return it;
+    const start = new Date(it.scheduled);
+    if (isNaN(start)) return it;
+    start.setDate(start.getDate() + shiftDays);
+    const updated = { ...it, scheduled: start.toISOString().split('T')[0] };
+    if (it.scheduledEnd) {
+      const end = new Date(it.scheduledEnd);
+      if (!isNaN(end)) {
+        end.setDate(end.getDate() + shiftDays);
+        updated.scheduledEnd = end.toISOString().split('T')[0];
+      }
+    }
+    return updated;
+  });
+}
+
 // Cache decisions in-memory and persist a copy in localStorage
 let decisionsCache = null;
 const DECISIONS_LOCAL_KEY = 'pendingDecisions';
@@ -80,7 +107,7 @@ export async function loadDecisions(forceRefresh = false) {
   // ---- 4) If still no data, consult Firestore or sample data ----
   if (!currentUser) {
     console.warn('🚫 No current user — returning sample data');
-    return SAMPLE_DECISIONS;
+    return shiftSampleCalendarItems(SAMPLE_DECISIONS);
   }
 
   return refreshFromCloud();

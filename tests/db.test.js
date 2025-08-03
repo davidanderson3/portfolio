@@ -151,7 +151,10 @@ describe('database helpers', () => {
     const { loadDecisions } = await import('../js/helpers.js');
     const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
     const result = await loadDecisions(true);
-    expect(result).toEqual(SAMPLE_DECISIONS);
+    expect(result.length).toBe(SAMPLE_DECISIONS.length);
+    result.filter(i => i.scheduled).forEach(i => {
+      expect(new Date(i.scheduled).getTime()).toBeGreaterThan(Date.now());
+    });
     expect(dbMock.collection).not.toHaveBeenCalled();
   });
 

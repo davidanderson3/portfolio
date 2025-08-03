@@ -116,7 +116,10 @@ describe('loadDecisions caching behavior', () => {
     getMock.mockClear();
 
     const anon = await loadDecisions();
-    expect(anon).toEqual(SAMPLE_DECISIONS);
+    expect(anon.length).toBe(SAMPLE_DECISIONS.length);
+    anon.filter(i => i.scheduled).forEach(i => {
+      expect(new Date(i.scheduled).getTime()).toBeGreaterThan(Date.now());
+    });
     expect(collectionMock).not.toHaveBeenCalled();
 
     currentUser = { uid: 'user1' };
