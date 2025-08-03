@@ -201,6 +201,10 @@ export async function loadGoalOrder(forceRefresh = false) {
 export async function flushPendingDecisions() {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
   const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
   if (!pending) return;
   let items;
