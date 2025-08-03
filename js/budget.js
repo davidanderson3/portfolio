@@ -27,6 +27,7 @@ export function calculateMonthlyBudget({ salary, netPay, categories }) {
 
 import { loadPlanningData } from './planning.js';
 import { getCurrentUser, db } from './auth.js';
+import { makeIconBtn } from './helpers.js';
 
 const BUDGET_KEY = 'budgetConfig';
 let budgetCache = null;
@@ -233,20 +234,24 @@ export async function initBudgetPanel() {
       <input type="text" class="sub-name" placeholder="Name" value="${name}">
       <input type="number" class="sub-cost" value="${cost}">
     `;
-    const rem = document.createElement('button');
-    rem.type = 'button';
-    rem.textContent = '❌';
-    rem.onclick = () => {
+    const rem = makeIconBtn('❌', 'Remove', () => {
       panel.querySelectorAll(`.subscription-row[data-id="${id}"]`).forEach(r => r.remove());
       render();
-    };
+    });
+    const up = makeIconBtn('⬆️', 'Move up', () => {
+      panel.querySelectorAll(`.subscription-row[data-id="${id}"]`).forEach(r => {
+        const prev = r.previousElementSibling;
+        if (prev) r.parentElement.insertBefore(r, prev);
+      });
+      render();
+    });
     const nameEl = row.querySelector('.sub-name');
     nameEl.addEventListener('input', () => {
       panel.querySelectorAll(`.subscription-row[data-id="${id}"] .sub-name`).forEach(el => {
         if (el !== nameEl) el.value = nameEl.value;
       });
     });
-    row.append(rem);
+    row.append(up, rem);
     container.append(row);
   }
 
@@ -265,14 +270,18 @@ export async function initBudgetPanel() {
       <input type="text" class="recur-name" placeholder="Name" value="${name}" ${fixed ? 'readonly' : ''}>
       <input type="number" class="recur-cost" value="${cost}">
     `;
-    const rem = document.createElement('button');
-    rem.type = 'button';
-    rem.textContent = '❌';
-    rem.onclick = () => {
+    const rem = makeIconBtn('❌', 'Remove', () => {
       if (key) removedBuiltIns.add(key);
       panel.querySelectorAll(`.recurring-row[data-id="${id}"]`).forEach(r => r.remove());
       render();
-    };
+    });
+    const up = makeIconBtn('⬆️', 'Move up', () => {
+      panel.querySelectorAll(`.recurring-row[data-id="${id}"]`).forEach(r => {
+        const prev = r.previousElementSibling;
+        if (prev) r.parentElement.insertBefore(r, prev);
+      });
+      render();
+    });
     const nameEl = row.querySelector('.recur-name');
     if (!fixed) {
       nameEl.addEventListener('input', () => {
@@ -281,7 +290,7 @@ export async function initBudgetPanel() {
         });
       });
     }
-    row.append(rem);
+    row.append(up, rem);
     container.append(row);
   }
 

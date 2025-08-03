@@ -204,4 +204,28 @@ describe('budget panel', () => {
     expect(saved.goalRecurring).toEqual({ 'Test Recurring': '50' });
     expect(setMock).toHaveBeenCalled();
   });
+
+  it('reorders categories with the up button', async () => {
+    getMock.mockResolvedValue({ exists: false });
+
+    const dom = new JSDOM('<div id="budgetContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.Event = dom.window.Event;
+
+    const { initBudgetPanel } = await import('../js/budget.js');
+    await initBudgetPanel();
+
+    document.getElementById('addCategoryBtn').click();
+    document.getElementById('addCategoryBtn').click();
+
+    const rows = document.querySelectorAll('#recurContainerA .recurring-row');
+    rows[0].querySelector('.recur-name').value = 'First';
+    rows[1].querySelector('.recur-name').value = 'Second';
+
+    rows[1].querySelector('button[title="Move up"]').click();
+
+    const order = Array.from(document.querySelectorAll('#recurContainerA .recurring-row .recur-name')).map(el => el.value);
+    expect(order[0]).toBe('Second');
+  });
 });
