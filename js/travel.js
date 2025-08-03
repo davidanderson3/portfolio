@@ -638,6 +638,34 @@ export async function initTravelPanel() {
     renderInitial();
   }
 
+  const dmsToDecimal = (deg, min, sec, dir) => {
+    const dec = Number(deg) + Number(min) / 60 + Number(sec) / 3600;
+    return /[SW]/i.test(dir) ? -dec : dec;
+  };
+  const ddmToDecimal = (deg, min, dir) => {
+    const dec = Number(deg) + Number(min) / 60;
+    return /[SW]/i.test(dir) ? -dec : dec;
+  };
+  const parseCoordinates = input => {
+    const ddMatch = input.match(/^\s*(-?\d{1,3}(?:\.\d+)?)\s*[,\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/);
+    if (ddMatch) {
+      return { lat: parseFloat(ddMatch[1]), lon: parseFloat(ddMatch[2]) };
+    }
+    const dmsMatch = input.match(/^[\s]*?(\d{1,3})[°\s]\s*(\d{1,2})['\s]\s*(\d{1,2}(?:\.\d+)?)["\s]?\s*([NS])[,\s]+(\d{1,3})[°\s]\s*(\d{1,2})['\s]\s*(\d{1,2}(?:\.\d+)?)["\s]?\s*([EW])\s*$/i);
+    if (dmsMatch) {
+      const lat = dmsToDecimal(dmsMatch[1], dmsMatch[2], dmsMatch[3], dmsMatch[4]);
+      const lon = dmsToDecimal(dmsMatch[5], dmsMatch[6], dmsMatch[7], dmsMatch[8]);
+      return { lat, lon };
+    }
+    const ddmMatch = input.match(/^\s*(\d{1,3})[°\s]\s*(\d{1,2}(?:\.\d+)?)[']?\s*([NS])[,\s]+(\d{1,3})[°\s]\s*(\d{1,2}(?:\.\d+)?)[']?\s*([EW])\s*$/i);
+    if (ddmMatch) {
+      const lat = ddmToDecimal(ddmMatch[1], ddmMatch[2], ddmMatch[3]);
+      const lon = ddmToDecimal(ddmMatch[4], ddmMatch[5], ddmMatch[6]);
+      return { lat, lon };
+    }
+    return null;
+  };
+
   if (placeInput) {
     placeInput.addEventListener('keydown', async e => {
       if (e.key !== 'Enter') return;
@@ -645,6 +673,36 @@ export async function initTravelPanel() {
       const term = placeInput.value.trim();
       if (!term) return;
       clearSearchResults();
+      const coords = parseCoordinates(term);
+      if (coords) {
+        const { lat, lon } = coords;
+        const m = L.marker([lat, lon], { icon: defaultIcon }).addTo(map);
+        resultMarkers.push(m);
+        const popupDiv = document.createElement('div');
+        const title = document.createElement('div');
+        title.textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+        const btn = document.createElement('button');
+        btn.textContent = 'Add to list';
+        popupDiv.append(title, btn);
+        m.bindPopup(popupDiv);
+        btn.addEventListener('click', async () => {
+          const name = prompt('Place name:', '');
+          if (!name) return;
+          await storePlace({ name, description: '', lat, lon, tags: [], Rating: '', Date: '', visited: false });
+          clearSearchResults();
+          placeInput.value = '';
+        });
+        const li = document.createElement('li');
+        li.textContent = title.textContent;
+        li.addEventListener('click', () => {
+          map.setView([lat, lon], 8);
+          m.openPopup();
+          clearSearchResults();
+        });
+        if (resultsList) resultsList.append(li);
+        map.setView([lat, lon], 8);
+        return;
+      }
       try {
         const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(term)}`);
         const data = await resp.json();
