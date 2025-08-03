@@ -132,7 +132,7 @@ export async function loadBudgetData() {
     await db
       .collection('users').doc(user.uid)
       .collection('settings').doc(BUDGET_KEY)
-      .set(budgetCache, { merge: true });
+      .set(budgetCache);
   } catch (err) {
     console.error('Failed to save budget data:', err);
   }
@@ -156,7 +156,7 @@ export async function saveBudgetData(data) {
     await db
       .collection('users').doc(user.uid)
       .collection('settings').doc(BUDGET_KEY)
-      .set(budgetCache, { merge: true });
+      .set(budgetCache);
   } catch (err) {
     console.error('Failed to save budget data:', err);
   }
