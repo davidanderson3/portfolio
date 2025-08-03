@@ -255,8 +255,6 @@ export async function initPlanningPanel() {
       <label>Annual Savings <input type="number" name="annualSavings" value="${currentData.finance.annualSavings ?? ''}" /></label>
       <label>Annual Raise % <input type="number" name="annualRaise" value="${currentData.finance.annualRaise ?? ''}" /></label>
       <label>Inflation Rate % <input type="number" name="inflation" value="${currentData.finance.inflation ?? 0}" /></label>
-      <label>Investment Return Rate % <input type="number" name="investmentReturnRate" value="${currentData.finance.investmentReturnRate ?? ''}" /></label>
-      <label>Savings Account Return Rate % <input type="number" name="savingsReturnRate" value="${currentData.finance.savingsReturnRate ?? ''}" /></label>
       <label>Estimated Pension <input type="number" name="pension" value="${currentData.finance.pension ?? ''}" /></label>
       <label>Withdrawal Rate % <input type="number" name="withdrawalRate" value="${currentData.finance.withdrawalRate ?? 4}" /></label>
       <label>Post Years <input type="number" name="postYears" value="${currentData.finance.postYears ?? 30}" /></label>
@@ -266,8 +264,10 @@ export async function initPlanningPanel() {
       <label>Real Estate <input type="number" name="realEstate" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" value="${currentData.assets.carValue ?? ''}" /></label>
       <label>Savings <input type="number" name="assetSavings" value="${currentData.assets.assetSavings ?? ''}" /></label>
+      <label>Savings Account Return Rate % <input type="number" name="savingsReturnRate" value="${currentData.finance.savingsReturnRate ?? ''}" /></label>
       <label>Checking <input type="number" name="checking" value="${currentData.assets.checking ?? ''}" /></label>
       <label>Investment Accounts <input type="number" name="investment" value="${currentData.assets.investment ?? ''}" /></label>
+      <label>Investment Return Rate % <input type="number" name="investmentReturnRate" value="${currentData.finance.investmentReturnRate ?? ''}" /></label>
       <h3>Liabilities</h3>
       <label>Rolling Credit <input type="number" name="rollingCredit" value="${currentData.budget.rollingCredit ?? ''}" /></label>
     </form>
