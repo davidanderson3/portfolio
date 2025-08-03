@@ -42,6 +42,28 @@ let showVisited = true;
 const pageSize = Infinity;
 let currentPage = 0;
 
+function parseKml(text) {
+  const xml = new DOMParser().parseFromString(text, 'application/xml');
+  const placemarks = Array.from(xml.getElementsByTagName('Placemark'));
+  return placemarks
+    .map(pm => {
+      const name = pm.getElementsByTagName('name')[0]?.textContent.trim() || 'Unknown';
+      const description = pm.getElementsByTagName('description')[0]?.textContent || '';
+      const styleUrl = pm.getElementsByTagName('styleUrl')[0]?.textContent || '';
+      const coordText = pm.getElementsByTagName('coordinates')[0]?.textContent.trim() || '';
+      const [lon, lat] = coordText.split(',').map(Number);
+      const data = { name, description, styleUrl, lat, lon };
+      const dataNodes = pm.getElementsByTagName('Data');
+      Array.from(dataNodes).forEach(d => {
+        const key = d.getAttribute('name');
+        const value = d.getElementsByTagName('value')[0]?.textContent || '';
+        if (key) data[key] = value;
+      });
+      return data;
+    })
+    .filter(p => !Number.isNaN(p.lat) && !Number.isNaN(p.lon));
+}
+
 // Simple circle markers for map points. Visited places are green.
 const createSvgUrl = color =>
   `data:image/svg+xml,${encodeURIComponent(
@@ -127,7 +149,15 @@ export async function initTravelPanel() {
   const user = getCurrentUser?.();
   const cached = localStorage.getItem(storageKey());
   travelData = cached ? JSON.parse(cached) : [];
-  if (!user) travelData = [];
+  if (travelData.length === 0) {
+    try {
+      const resp = await fetch('assets/travel/doc.xml');
+      const text = await resp.text();
+      travelData = parseKml(text);
+    } catch (err) {
+      console.error('Failed to load default travel data', err);
+    }
+  }
   travelData.forEach(p => {
     ensureDefaultTag(p);
     applyVisitedFlag(p);
