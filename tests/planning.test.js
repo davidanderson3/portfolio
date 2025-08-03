@@ -115,7 +115,7 @@ describe('planning calculations', () => {
       currentAge: 65,
       retirementAge: 65,
       savings: 0,
-      returnRate: 0,
+      investmentReturnRate: 0,
       pension: 100,
       postYears: 2,
       withdrawalRate: 0,

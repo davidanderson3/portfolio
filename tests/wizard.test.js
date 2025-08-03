@@ -34,7 +34,7 @@ describe('saveGoalWizard', () => {
     const { wizardState, initWizard, saveGoalWizard } = mod;
     initWizard({
       wizardContainer: { style: {} },
-      addGoalBtn: { style: {} },
+      addProjectBtn: { style: {} },
       cancelBtn: {},
       backBtn: { style: {} },
       nextBtn: {},
@@ -57,12 +57,12 @@ describe('saveGoalWizard', () => {
 describe('initWizard', () => {
   it('focuses first input when wizard opens', async () => {
     const dom = new JSDOM(`
-      <div id="goalWizardModal" style="display:none;"></div>
+      <div id="projectWizardModal" style="display:none;"></div>
       <div id="wizardStep"></div>
       <button id="wizardNextBtn"></button>
       <button id="wizardBackBtn"></button>
       <button id="wizardCancelBtn"></button>
-      <button id="addGoalBtn"></button>
+      <button id="addProjectBtn"></button>
     `);
     global.window = dom.window;
     global.document = dom.window.document;
@@ -70,15 +70,15 @@ describe('initWizard', () => {
     const mod = await import('../js/wizard.js');
     const { initWizard } = mod;
     initWizard({
-      wizardContainer: document.getElementById('goalWizardModal'),
-      addGoalBtn: document.getElementById('addGoalBtn'),
+      wizardContainer: document.getElementById('projectWizardModal'),
+      addProjectBtn: document.getElementById('addProjectBtn'),
       cancelBtn: document.getElementById('wizardCancelBtn'),
       backBtn: document.getElementById('wizardBackBtn'),
       nextBtn: document.getElementById('wizardNextBtn'),
       wizardStep: document.getElementById('wizardStep')
     });
 
-    document.getElementById('addGoalBtn').click();
+    document.getElementById('addProjectBtn').click();
     expect(document.activeElement.id).toBe('goalTextInput');
   });
 });

@@ -277,7 +277,7 @@ function initHiddenSection() {
         hiddenSection.id = 'hiddenList';
         hiddenSection.innerHTML = `
       <h2 style="margin-top:32px" id="hiddenHeader">
-        <span id="toggleHidden" style="cursor:pointer">▶</span> <span id="hiddenLabel">Hidden Goals</span>
+        <span id="toggleHidden" style="cursor:pointer">▶</span> <span id="hiddenLabel">Hidden Projects</span>
       </h2>
       <div id="hiddenContent" style="display:none"></div>
       <hr style="margin: 40px 0;" />
@@ -808,10 +808,10 @@ function updateGoalCounts(items) {
     }).length;
     const completed = rootGoals.filter(g => g.completed).length;
 
-    const goalsHeader = document.getElementById('goalsHeader');
-    if (goalsHeader) goalsHeader.textContent = `Goals (${active})`;
+    const projectsHeader = document.getElementById('projectsHeader');
+    if (projectsHeader) projectsHeader.textContent = `Projects (${active})`;
     const hiddenLabel = document.getElementById('hiddenLabel');
-    if (hiddenLabel) hiddenLabel.textContent = `Hidden Goals (${hidden})`;
+    if (hiddenLabel) hiddenLabel.textContent = `Hidden Projects (${hidden})`;
     const completedLabel = document.getElementById('completedLabel');
     if (completedLabel) completedLabel.textContent = ` Completed (${completed})`;
 }

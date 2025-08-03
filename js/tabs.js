@@ -1,7 +1,7 @@
 import { currentUser } from './auth.js';
 
 export const PANELS = [
-  'goalsPanel',
+  'projectsPanel',
   'calendarPanel',
   'dailyPanel',
   'metricsPanel',
@@ -12,7 +12,7 @@ export const PANELS = [
 ];
 
 export const PANEL_NAMES = {
-  goalsPanel: 'Goals',
+  projectsPanel: 'Projects',
   calendarPanel: 'Calendar',
   dailyPanel: 'Recurring',
   metricsPanel: 'Metrics',
