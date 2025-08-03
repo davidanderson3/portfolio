@@ -39,8 +39,9 @@ describe('list postponing', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
 
-    const option = [...document.querySelectorAll('.postpone-option')]
-      .find(btn => btn.textContent === '2 days');
+    const buttons = [...document.querySelectorAll('.postpone-option')];
+    expect(buttons.some(btn => btn.textContent === '20 hours')).toBe(true);
+    const option = buttons.find(btn => btn.textContent === '2 days');
     option.click();
     vi.advanceTimersByTime(300);
 
