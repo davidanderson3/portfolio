@@ -89,8 +89,9 @@ describe('goal postponing', () => {
     wrapper.appendChild(row);
     document.getElementById('goalList').appendChild(wrapper);
 
-    const option = [...document.querySelectorAll('.postpone-option')]
-      .find(btn => btn.textContent === '2 days');
+    const buttons = [...document.querySelectorAll('.postpone-option')];
+    expect(buttons.some(btn => btn.textContent === '20 hours')).toBe(true);
+    const option = buttons.find(btn => btn.textContent === '2 days');
     option.click();
     await Promise.resolve();
 
