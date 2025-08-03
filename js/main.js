@@ -212,7 +212,18 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       menu.style.display = 'block';
       const rect = btn.getBoundingClientRect();
-      menu.style.top = `${rect.top - menu.offsetHeight + window.scrollY}px`;
+      const menuHeight = menu.offsetHeight;
+      let top = rect.top - menuHeight + window.scrollY;
+      const viewportTop = window.scrollY;
+      if (top < viewportTop) {
+        top = rect.bottom + window.scrollY;
+      }
+      const viewportBottom = window.scrollY + window.innerHeight;
+      if (top + menuHeight > viewportBottom) {
+        top = viewportBottom - menuHeight;
+        if (top < viewportTop) top = viewportTop;
+      }
+      menu.style.top = `${top}px`;
       let left = rect.left + window.scrollX;
       if (left + menu.offsetWidth > window.innerWidth) {
         left = window.innerWidth - menu.offsetWidth - 10;
