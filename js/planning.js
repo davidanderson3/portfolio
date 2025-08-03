@@ -6,7 +6,7 @@ export function calculateFinanceProjection({
   savings,
   annualSavings = 0,
   income = 0,
-  returnRate,
+  investmentReturnRate,
   annualRaise = 0,
   pension = 0,
   socialSecurity = 0,
@@ -18,7 +18,7 @@ export function calculateFinanceProjection({
   retirementAge = Number(retirementAge);
   savings = Number(savings);
   annualSavings = Number(annualSavings !== undefined ? annualSavings : income);
-  returnRate = Number(returnRate) / 100;
+  investmentReturnRate = Number(investmentReturnRate) / 100;
   annualRaise = Number(annualRaise) / 100;
   pension = Number(pension);
   socialSecurity = Number(socialSecurity);
@@ -35,7 +35,7 @@ export function calculateFinanceProjection({
   for (let i = 0; i <= years; i++) {
     if (i > 0) {
       balance += contribution;
-      balance *= 1 + returnRate;
+      balance *= 1 + investmentReturnRate;
       contribution *= 1 + annualRaise;
       yearIncome *= 1 + annualRaise;
     }
@@ -53,7 +53,7 @@ export function calculateFinanceProjection({
   let pensionAmount = pension;
   for (let i = 1; i <= postYears; i++) {
     const age = retirementAge + i;
-    postBalance *= 1 + returnRate;
+    postBalance *= 1 + investmentReturnRate;
     if (i === 1) {
       withdrawalAmount = postBalance * withdrawalRate;
     } else {
@@ -251,11 +251,12 @@ export async function initPlanningPanel() {
       <h3>Finances</h3>
       <label>Current Age <input type="number" name="curAge" value="${currentData.finance.curAge ?? ''}" /></label>
       <label>Retirement Age <input type="number" name="retAge" value="${currentData.finance.retAge ?? ''}" /></label>
-      <label>Net Income <input type="number" name="income" value="${currentData.finance.income ?? ''}" /></label>
+      <label>Current Net Income <input type="number" name="income" value="${currentData.finance.income ?? ''}" /></label>
       <label>Annual Savings <input type="number" name="annualSavings" value="${currentData.finance.annualSavings ?? ''}" /></label>
       <label>Annual Raise % <input type="number" name="annualRaise" value="${currentData.finance.annualRaise ?? ''}" /></label>
       <label>Inflation Rate % <input type="number" name="inflation" value="${currentData.finance.inflation ?? 0}" /></label>
-      <label>Return Rate % <input type="number" name="returnRate" value="${currentData.finance.returnRate ?? ''}" /></label>
+      <label>Investment Return Rate % <input type="number" name="investmentReturnRate" value="${currentData.finance.investmentReturnRate ?? ''}" /></label>
+      <label>Savings Account Return Rate % <input type="number" name="savingsReturnRate" value="${currentData.finance.savingsReturnRate ?? ''}" /></label>
       <label>Estimated Pension <input type="number" name="pension" value="${currentData.finance.pension ?? ''}" /></label>
       <label>Withdrawal Rate % <input type="number" name="withdrawalRate" value="${currentData.finance.withdrawalRate ?? 4}" /></label>
       <label>Post Years <input type="number" name="postYears" value="${currentData.finance.postYears ?? 30}" /></label>
@@ -267,8 +268,6 @@ export async function initPlanningPanel() {
       <label>Savings <input type="number" name="assetSavings" value="${currentData.assets.assetSavings ?? ''}" /></label>
       <label>Checking <input type="number" name="checking" value="${currentData.assets.checking ?? ''}" /></label>
       <label>Investment Accounts <input type="number" name="investment" value="${currentData.assets.investment ?? ''}" /></label>
-      <label>Roth IRA <input type="number" name="roth" value="${currentData.assets.roth ?? ''}" /></label>
-      <label>Crypto <input type="number" name="crypto" value="${currentData.assets.crypto ?? ''}" /></label>
       <h3>Liabilities</h3>
       <label>Rolling Credit <input type="number" name="rollingCredit" value="${currentData.budget.rollingCredit ?? ''}" /></label>
     </form>
@@ -308,7 +307,8 @@ export async function initPlanningPanel() {
       annualSavings: Number(form.annualSavings.value || 0),
       annualRaise: form.annualRaise.value,
       inflation: form.inflation.value,
-      returnRate: form.returnRate.value,
+      investmentReturnRate: Number(form.investmentReturnRate.value || 0),
+      savingsReturnRate: Number(form.savingsReturnRate.value || 0),
       pension: Number(form.pension.value || 0),
       withdrawalRate: Number(form.withdrawalRate.value || 4),
       postYears: Number(form.postYears.value || 30),
@@ -318,8 +318,6 @@ export async function initPlanningPanel() {
       assetSavings: Number(form.assetSavings.value || 0),
       checking: Number(form.checking.value || 0),
       investment: Number(form.investment.value || 0),
-      roth: Number(form.roth.value || 0),
-      crypto: Number(form.crypto.value || 0),
       rollingCredit: Number(form.rollingCredit.value || 0),
       mortgage: 0
     };
@@ -336,8 +334,14 @@ export async function initPlanningPanel() {
 
     const assetTotal =
       values.realEstate + values.carValue + values.assetSavings + values.checking +
-      values.investment + values.roth + values.crypto - values.rollingCredit;
+      values.investment - values.rollingCredit;
     assetsTotalDiv.textContent = `Total Assets: $${assetTotal.toLocaleString()}`;
+
+    const investmentAssets = values.realEstate + values.carValue + values.investment;
+    const savingsAssets = values.assetSavings + values.checking;
+    const combinedReturnRate = assetTotal > 0
+      ? ((investmentAssets * values.investmentReturnRate) + (savingsAssets * values.savingsReturnRate)) / assetTotal
+      : 0;
 
     const finData = calculateFinanceProjection({
       currentAge: values.curAge,
@@ -347,7 +351,7 @@ export async function initPlanningPanel() {
       annualSavings: values.annualSavings,
       annualRaise: values.annualRaise,
       inflationRate: values.inflation,
-      returnRate: values.returnRate,
+      investmentReturnRate: combinedReturnRate,
       pension: values.pension,
       socialSecurity: values.socialSecurity,
       postYears: values.postYears,
@@ -365,7 +369,8 @@ export async function initPlanningPanel() {
       annualSavings: values.annualSavings,
       annualRaise: values.annualRaise,
       inflation: values.inflation,
-      returnRate: values.returnRate,
+      investmentReturnRate: values.investmentReturnRate,
+      savingsReturnRate: values.savingsReturnRate,
       pension: values.pension,
       withdrawalRate: values.withdrawalRate,
       postYears: values.postYears,
@@ -376,9 +381,7 @@ export async function initPlanningPanel() {
       carValue: values.carValue,
       assetSavings: values.assetSavings,
       checking: values.checking,
-      investment: values.investment,
-      roth: values.roth,
-      crypto: values.crypto
+      investment: values.investment
     };
     currentData.budget = {
       rollingCredit: values.rollingCredit
@@ -388,7 +391,7 @@ export async function initPlanningPanel() {
     const last = hist[hist.length - 1];
     const nowDate = new Date();
     const nowIso = nowDate.toISOString();
-    const required = ['curAge', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'rollingCredit'];
+    const required = ['curAge', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'rollingCredit'];
     const allFilled = required.every(name => form[name].value.trim() !== '');
     if (allFilled) {
       const snapObj = { timestamp: nowIso, age: values.curAge, balance: assetTotal };
