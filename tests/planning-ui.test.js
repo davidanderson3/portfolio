@@ -36,7 +36,7 @@ describe('planning UI persistence', () => {
     global.window = dom.window;
     global.document = dom.window.document;
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -106,7 +106,7 @@ describe('planning UI persistence', () => {
     global.document = dom.window.document;
     localStorage.clear();
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -151,7 +151,7 @@ describe('planning UI persistence', () => {
     global.document = dom.window.document;
     localStorage.clear();
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -192,7 +192,7 @@ describe('planning UI persistence', () => {
     global.document = dom.window.document;
     localStorage.clear();
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
@@ -234,7 +234,7 @@ describe('planning UI persistence', () => {
       ]
     }));
 
-    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'high3', 'serviceYears', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'returnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'roth', 'crypto', 'mortgage', 'rollingCredit', 'other'];
     names.forEach(n => {
       Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
         get() { return this.elements.namedItem(n); },
