@@ -59,7 +59,7 @@ function isObject(val) {
 }
 
 function deepMerge(base = {}, override = {}) {
-  const out = { ...base };
+  const out = {};
   for (const key of Object.keys(override)) {
     const bVal = base[key];
     const oVal = override[key];
@@ -121,8 +121,9 @@ export async function loadBudgetData() {
 
   const localTs = localData.lastUpdated || 0;
   const cloudTs = cloudData.lastUpdated || 0;
-  const older = cloudTs >= localTs ? localData : cloudData;
-  const newer = cloudTs >= localTs ? cloudData : localData;
+  const useCloud = cloudTs > localTs || (cloudTs === localTs && !Object.keys(localData).length);
+  const older = useCloud ? localData : cloudData;
+  const newer = useCloud ? cloudData : localData;
   budgetCache = migrateSubscriptions(deepMerge(older, newer));
   budgetCache.recurring = budgetCache.recurring || {};
   budgetCache.goalRecurring = budgetCache.goalRecurring || {};

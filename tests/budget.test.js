@@ -140,7 +140,16 @@ describe('budget persistence', () => {
     localStorage.setItem('budgetConfig', JSON.stringify({ escrow: 100, lastUpdated: 100 }));
     const { loadBudgetData } = await import('../js/budget.js');
     const res = await loadBudgetData();
-    expect(res.escrow).toBe(100);
+    expect(res.escrow).toBeUndefined();
+    expect(res.lastUpdated).toBe(200);
+  });
+
+  it('does not resurrect deleted entries from older data', async () => {
+    getMock.mockResolvedValue({ exists: true, data: () => ({ escrow: 50, lastUpdated: 100 }) });
+    localStorage.setItem('budgetConfig', JSON.stringify({ lastUpdated: 200 }));
+    const { loadBudgetData } = await import('../js/budget.js');
+    const res = await loadBudgetData();
+    expect(res.escrow).toBeUndefined();
     expect(res.lastUpdated).toBe(200);
   });
 
