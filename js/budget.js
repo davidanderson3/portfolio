@@ -377,11 +377,14 @@ export async function initBudgetPanel() {
       saveBudgetData(dataToSave);
     }
   }
-  formA.addEventListener('input', () => render(true));
-  formB.addEventListener('input', () => render(true));
-  formB.addEventListener('change', () => render(true));
-  render(false);
-}
+    // Update summaries as the user types but avoid saving on every keystroke.
+    formA.addEventListener('input', () => render(false));
+    formB.addEventListener('input', () => render(false));
+    // Persist data only after the user commits a change.
+    formA.addEventListener('change', () => render(true));
+    formB.addEventListener('change', () => render(true));
+    render(false);
+  }
 
 if (typeof window !== 'undefined') {
   window.initBudgetPanel = initBudgetPanel;

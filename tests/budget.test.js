@@ -163,8 +163,11 @@ describe('budget panel', () => {
     const costInput = document.querySelector('#recurContainerB .recurring-row:last-child .recur-cost');
     nameInput.value = 'Test Recurring';
     costInput.value = '50';
-    nameInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-    costInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      nameInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      costInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      // Changes are persisted on change events rather than every keystroke.
+      nameInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      costInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 
     await new Promise(res => setTimeout(res, 0));
 
