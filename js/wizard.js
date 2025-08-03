@@ -13,21 +13,21 @@ export const wizardState = {
 };
 
 let wizardContainer = null;
-let addGoalBtn = null;
+let addProjectBtn = null;
 
 export function initWizard(uiRefs) {
   // Early exit if key UI elements are missing
-  if (!uiRefs?.wizardContainer || !uiRefs?.addGoalBtn) {
+  if (!uiRefs?.wizardContainer || !uiRefs?.addProjectBtn) {
     console.warn('⚠️ initWizard skipped — missing required UI elements.');
     return;
   }
 
   ({
     wizardContainer,
-    addGoalBtn
+    addProjectBtn
   } = uiRefs);
 
-  uiRefs.addGoalBtn.onclick = () => {
+  uiRefs.addProjectBtn.onclick = () => {
     Object.assign(wizardState, {
       step: 0,
       goalText: '',
@@ -37,13 +37,13 @@ export function initWizard(uiRefs) {
       editingGoalId: null
     });
     wizardContainer.style.display = 'flex';
-    addGoalBtn.style.display = 'none';
+    addProjectBtn.style.display = 'none';
     renderWizardStep(uiRefs.wizardStep, uiRefs.backBtn);
   };
 
   uiRefs.cancelBtn.onclick = () => {
     wizardContainer.style.display = 'none';
-    addGoalBtn.style.display = 'none';
+    addProjectBtn.style.display = 'none';
   };
 
   uiRefs.backBtn.onclick = () => {
@@ -64,7 +64,7 @@ export function initWizard(uiRefs) {
         }
         wizardState.goalText = input.value.trim();
         if (!wizardState.goalText) {
-          alert("Goal cannot be empty.");
+          alert("Project cannot be empty.");
           return;
         }
       } else if (wizardState.step === 1) {
@@ -116,12 +116,12 @@ function renderWizardStep(container, backBtn) {
 
   if (wizardState.step === 0) {
     container.innerHTML = `
-      <label for="goalTextInput"><strong>Goal:</strong></label>
+      <label for="goalTextInput"><strong>Project:</strong></label>
       <input id="goalTextInput" value="${wizardState.goalText}" style="margin-left:8px; width: 80%;" />
     `;
   } else if (wizardState.step === 1) {
     container.innerHTML = `
-      <label>Subgoals (optional):</label>
+      <label>Subprojects (optional):</label>
       <textarea id="taskList" rows="4" placeholder="One per line">${wizardState.subgoals.join('\n')}</textarea>
     `;
   } else {
@@ -204,8 +204,8 @@ async function saveGoalWizard() {
   await saveGoalOrder(newGoalOrder);
 
   wizardState.editingGoalId = null;
-  wizardContainer.style.display = 'none';
-  addGoalBtn.style.display = 'none';
+    wizardContainer.style.display = 'none';
+    addProjectBtn.style.display = 'none';
   if (isEdit) {
     refreshGoalInDOM(newGoal, [...updatedItems, ...newItems]);
   } else {

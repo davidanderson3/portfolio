@@ -24,8 +24,8 @@ window.addEventListener('DOMContentLoaded', () => {
     signupBtn: document.getElementById('signupBtn'),
     splashLoginBtn: document.getElementById('splashLoginBtn'),
     previewBtn: document.getElementById('previewBtn'),
-    calendarAddGoalBtn: document.getElementById('calendarAddGoalBtn'),
-    addGoalBtn: document.getElementById('addGoalBtn'),
+    calendarAddProjectBtn: document.getElementById('calendarAddProjectBtn'),
+    addProjectBtn: document.getElementById('addProjectBtn'),
     bottomAddBtn: document.getElementById('bottomAddBtn'),
     bottomLogoutBtn: document.getElementById('bottomLogoutBtn'),
     bottomAddModal: document.getElementById('bottomAddModal'),
@@ -34,7 +34,7 @@ window.addEventListener('DOMContentLoaded', () => {
     bottomAddText: document.getElementById('bottomAddText'),
     bottomAddCancel: document.getElementById('bottomAddCancel'),
     bottomAddSubmit: document.getElementById('bottomAddSubmit'),
-    wizardContainer: document.getElementById('goalWizardModal'),
+    wizardContainer: document.getElementById('projectWizardModal'),
     wizardStep: document.getElementById('wizardStep'),
     nextBtn: document.getElementById('wizardNextBtn'),
     backBtn: document.getElementById('wizardBackBtn'),
@@ -55,8 +55,8 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (uiRefs.calendarAddGoalBtn) {
-    uiRefs.calendarAddGoalBtn.addEventListener('click', () => addCalendarGoal());
+  if (uiRefs.calendarAddProjectBtn) {
+    uiRefs.calendarAddProjectBtn.addEventListener('click', () => addCalendarGoal());
   }
 
   if (uiRefs.bottomAddBtn) {
@@ -120,8 +120,8 @@ window.addEventListener('DOMContentLoaded', () => {
   function handleBottomAdd() {
     const active = document.querySelector('.tab-button.active')?.dataset.target;
     if (!active) return;
-    if (active === 'goalsPanel') {
-      uiRefs.addGoalBtn?.click();
+    if (active === 'projectsPanel') {
+      uiRefs.addProjectBtn?.click();
       return;
     }
     if (active === 'calendarPanel') {
@@ -259,10 +259,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
   initAuth(uiRefs, async (user) => {
-    ['goalList', 'completedList', 'dailyTasksList', 'weeklyTasksList', 'monthlyTasksList'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = '';
-    });
+
+  ['goalList', 'completedList', 'dailyTasksList', 'weeklyTasksList', 'monthlyTasksList'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '';
+  });
 
     window.openGoalIds?.clear?.();
 

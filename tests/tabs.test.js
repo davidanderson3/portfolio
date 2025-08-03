@@ -10,7 +10,7 @@ beforeEach(() => {
 describe('initTabs persistence', () => {
   it('activates the last selected panel from localStorage', async () => {
     const dom = new JSDOM(`
-      <button class="tab-button" data-target="goalsPanel"></button>
+      <button class="tab-button" data-target="projectsPanel"></button>
       <button class="tab-button" data-target="calendarPanel"></button>
       <button class="tab-button" data-target="dailyPanel"></button>
       <button class="tab-button" data-target="metricsPanel"></button>
@@ -18,7 +18,7 @@ describe('initTabs persistence', () => {
       <button class="tab-button" data-target="travelPanel"></button>
       <button class="tab-button" data-target="planningPanel"></button>
       <button class="tab-button" data-target="budgetPanel"></button>
-      <div id="goalsPanel"></div>
+      <div id="projectsPanel"></div>
       <div id="calendarPanel"></div>
       <div id="dailyPanel"></div>
       <div id="metricsPanel"></div>

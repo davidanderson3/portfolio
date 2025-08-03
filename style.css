@@ -1055,14 +1055,14 @@ h2 {
   gap: 8px;
 }
 
-#goalsHeaderRow {
+#projectsHeaderRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 /* Remove default button margin so header buttons align with text */
-#goalsHeaderRow button,
+#projectsHeaderRow button,
 #calendarHeaderRow button {
   margin-top: 0;
 }

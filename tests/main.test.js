@@ -166,7 +166,7 @@ describe('shift+A hotkey', () => {
       <button id="loginBtn"></button>
       <button id="bottomAddBtn"></button>
       <input id="dummy" />
-      <button class="tab-button active" data-target="goalsPanel"></button>
+      <button class="tab-button active" data-target="projectsPanel"></button>
     `);
     global.window = dom.window;
     global.document = dom.window.document;

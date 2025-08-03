@@ -43,7 +43,7 @@
     ">Sign In</button>
     <h1>Welcome to Dashboard</h1>
     <p style="max-width: 600px; text-align: center;">
-      Track your goals, daily tasks, and metrics—all in one place.
+      Track your projects, daily tasks, and metrics—all in one place.
       Sign up or sign in to get started.
     </p>
     <button id="signupBtn" style="
@@ -84,7 +84,7 @@
         </div>
       </div>
       <div class="tabs scroll-tabs" id="tabsContainer" style="visibility:hidden;">
-        <button class="tab-button active" data-target="goalsPanel">Goals</button>
+        <button class="tab-button active" data-target="projectsPanel">Projects</button>
         <button class="tab-button" data-target="calendarPanel">Calendar</button>
         <button class="tab-button" data-target="dailyPanel">Recurring</button>
         <button class="tab-button" data-target="metricsPanel">Metrics</button>
@@ -96,10 +96,10 @@
     </nav>
 
     <!-- TABS CONTENT PANELS -->
-      <div id="goalsPanel" class="main-layout">
+      <div id="projectsPanel" class="main-layout">
       <div class="full-column">
-        <div id="goalsHeaderRow" class="panel-header">
-          <h2 id="goalsHeader">Goals</h2>
+        <div id="projectsHeaderRow" class="panel-header">
+          <h2 id="projectsHeader">Projects</h2>
           <div class="header-actions">
             <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
           </div>
@@ -107,10 +107,10 @@
 
         <div id="goalList" class="decision-container"></div>
         <div class="wizard-panel">
-          <button id="addGoalBtn" style="display:none;">+ Add Goal</button>
+          <button id="addProjectBtn" style="display:none;">+ Add Project</button>
         </div>
 
-        <div id="goalWizardModal" class="modal" style="display:none;">
+          <div id="projectWizardModal" class="modal" style="display:none;">
           <div class="modal-content">
             <div id="wizardStep"></div>
             <div class="button-row">
@@ -138,7 +138,7 @@
         <div id="calendarHeaderRow" class="panel-header">
           <h2>Calendar</h2>
           <div class="header-actions">
-            <button id="calendarAddGoalBtn">+ Add Goal</button>
+              <button id="calendarAddProjectBtn">+ Add Project</button>
             <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
           </div>
         </div>
