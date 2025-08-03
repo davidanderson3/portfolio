@@ -127,7 +127,18 @@ export async function initTravelPanel() {
   const user = getCurrentUser?.();
   const cached = localStorage.getItem(storageKey());
   travelData = cached ? JSON.parse(cached) : [];
-  if (!user) travelData = [];
+  if (travelData.length === 0 && user) {
+    try {
+      const snap = await db
+        .collection('users')
+        .doc(user.uid)
+        .collection('travel')
+        .get();
+      travelData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (err) {
+      console.error('Failed to load travel data', err);
+    }
+  }
   travelData.forEach(p => {
     ensureDefaultTag(p);
     applyVisitedFlag(p);
