@@ -114,7 +114,8 @@ export async function initTravelPanel() {
       [90, 180]
     ],
     maxBoundsViscosity: 1.0,
-    worldCopyJump: false
+    worldCopyJump: false,
+    doubleClickZoom: false
   }).setView([20, 0], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
@@ -123,6 +124,26 @@ export async function initTravelPanel() {
 
   // Ensure map fills its container once it is visible
   setTimeout(() => map.invalidateSize(), 0);
+
+  map.on('dblclick', async e => {
+    const name = prompt('Place name:');
+    if (!name) return;
+    const description = prompt('Description:');
+    const tags = prompt('Tags (comma separated):');
+    const rating = prompt('Rating:');
+    const date = await pickDate('');
+    const visited = confirm('Visited?');
+    await storePlace({
+      name,
+      description: description || '',
+      lat: e.latlng.lat,
+      lon: e.latlng.lng,
+      tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      Rating: rating || '',
+      Date: date || '',
+      visited
+    });
+  });
 
   const user = getCurrentUser?.();
   const cached = localStorage.getItem(storageKey());
