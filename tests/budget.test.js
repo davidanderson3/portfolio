@@ -186,7 +186,7 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
-    document.getElementById('addRecurBtn').click();
+    document.getElementById('addCategoryBtn').click();
 
     const nameInput = document.querySelector('#recurContainerB .recurring-row:last-child .recur-name');
     const costInput = document.querySelector('#recurContainerB .recurring-row:last-child .recur-cost');
