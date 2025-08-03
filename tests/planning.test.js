@@ -110,6 +110,23 @@ describe('planning calculations', () => {
     ]);
   });
 
+  it('indexes pension by inflation', () => {
+    const res = calculateFinanceProjection({
+      currentAge: 65,
+      retirementAge: 65,
+      savings: 0,
+      returnRate: 0,
+      pension: 100,
+      postYears: 2,
+      withdrawalRate: 0,
+      inflationRate: 2
+    });
+    expect(res.slice(-2)).toEqual([
+      { age: 66, balance: 0, income: 100, realIncome: 98, withdrawal: 0, pension: 100, socialSecurity: 0 },
+      { age: 67, balance: 0, income: 102, realIncome: 98, withdrawal: 0, pension: 102, socialSecurity: 0 }
+    ]);
+  });
+
   it('calculates budget allocation', () => {
     const res = calculateBudgetAllocation({ income: 1000, taxRate: 10, mortgage: 300 });
     expect(res).toEqual({ taxes: 100, mortgage: 300, leftover: 600 });
