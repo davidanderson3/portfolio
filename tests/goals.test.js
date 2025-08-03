@@ -20,7 +20,7 @@ vi.mock('../js/helpers.js', () => ({
   loadGoalOrder: vi.fn(async () => []),
   generateId: vi.fn(() => 'g1'),
   pickDate: vi.fn(async () => ''),
-  pickDateRange: vi.fn(async () => ({ start: '', end: '' })),
+  pickDateRange: vi.fn(async () => ({ start: null, end: null })),
   makeIconBtn: (symbol, title, fn) => {
     const b = document.createElement('button');
     b.title = title;
@@ -136,6 +136,23 @@ describe('addCalendarGoal', () => {
     expect(content.children.length).toBeGreaterThan(0);
     // goal should also appear in the main goal list
     expect(document.getElementById('goalList').children.length).toBe(1);
+  });
+
+  it('uses provided date when none selected', async () => {
+    helpers.saveDecisions.mockClear();
+    helpers.loadDecisions
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    global.prompt = vi.fn()
+      .mockReturnValueOnce('My calendar goal')
+      .mockReturnValueOnce('');
+    helpers.pickDateRange.mockResolvedValue({ start: '', end: '' });
+    const mod = await import('../js/goals.js');
+    const { addCalendarGoal } = mod;
+    await addCalendarGoal('2024-01-02');
+    expect(helpers.saveDecisions).toHaveBeenCalled();
+    const saved = helpers.saveDecisions.mock.calls[0][0].pop();
+    expect(saved.scheduled).toBe('2024-01-02');
   });
 
   it('saves goal order when user signed in', async () => {

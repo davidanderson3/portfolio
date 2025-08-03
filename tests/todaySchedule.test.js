@@ -30,7 +30,7 @@ vi.mock('../js/helpers.js', () => ({
   saveGoalOrder: vi.fn(),
   generateId: vi.fn(),
   pickDate: vi.fn(async () => ''),
-  pickDateRange: vi.fn(async () => ({ start: '', end: '' })),
+  pickDateRange: vi.fn(async () => ({ start: null, end: null })),
   makeIconBtn: () => document.createElement('button'),
   formatDaysUntil: () => '',
   linkify: (t) => t
