@@ -58,8 +58,7 @@ describe('planning calculations', () => {
       savings: 1000,
       annualSavings: 100,
       returnRate: 0,
-      high3: 100,
-      serviceYears: 10,
+      pension: 10,
       socialSecurity: 50,
       postYears: 1,
       withdrawalRate: 4
@@ -73,7 +72,7 @@ describe('planning calculations', () => {
         income: 104,
         realIncome: 104,
         withdrawal: 44,
-        fers: 10,
+        pension: 10,
         socialSecurity: 50
       }
     ]);
@@ -89,8 +88,8 @@ describe('planning calculations', () => {
       withdrawalRate: 4
     });
     expect(res.slice(-2)).toEqual([
-      { age: 32, balance: 960, income: 40, realIncome: 40, withdrawal: 40, fers: 0, socialSecurity: 0 },
-      { age: 33, balance: 919, income: 41, realIncome: 41, withdrawal: 41, fers: 0, socialSecurity: 0 }
+      { age: 32, balance: 960, income: 40, realIncome: 40, withdrawal: 40, pension: 0, socialSecurity: 0 },
+      { age: 33, balance: 919, income: 41, realIncome: 41, withdrawal: 41, pension: 0, socialSecurity: 0 }
     ]);
   });
 
@@ -106,8 +105,8 @@ describe('planning calculations', () => {
       inflationRate: 2
     });
     expect(res.slice(-2)).toEqual([
-      { age: 66, balance: 0, income: 100, realIncome: 98, withdrawal: 0, fers: 0, socialSecurity: 100 },
-      { age: 67, balance: 0, income: 102, realIncome: 98, withdrawal: 0, fers: 0, socialSecurity: 102 }
+      { age: 66, balance: 0, income: 100, realIncome: 98, withdrawal: 0, pension: 0, socialSecurity: 100 },
+      { age: 67, balance: 0, income: 102, realIncome: 98, withdrawal: 0, pension: 0, socialSecurity: 102 }
     ]);
   });
 
