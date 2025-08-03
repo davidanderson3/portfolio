@@ -392,3 +392,13 @@ export const SAMPLE_METRIC_DATA = {
     gratitude: [{ timestamp: 1750406400000, value: 1 }]
   }
 };
+
+export const SAMPLE_HOUR_NOTES = {
+  '2024-01-01': { 9: 'Team sync', 13: 'Lunch with Alex' },
+  '2024-01-02': { 10: 'Project planning' },
+  '2024-01-03': { 11: 'Write documentation' },
+  '2024-01-04': { 15: 'Code review' },
+  '2024-01-05': { 9: 'Demo prep' },
+  '2024-01-06': { 10: 'Hiking' },
+  '2024-01-07': { 12: 'Family time' }
+};
