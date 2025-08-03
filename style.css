@@ -1822,6 +1822,11 @@ h2 {
   flex: 1 1 160px;
 }
 
+.planning-form h3 {
+  flex-basis: 100%;
+  margin: 8px 0 0;
+}
+
 #planningPanel .full-column {
   overflow-x: auto;
 }
