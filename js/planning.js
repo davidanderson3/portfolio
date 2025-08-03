@@ -250,6 +250,7 @@ export async function initPlanningPanel() {
   const container = document.getElementById('planningContainer');
   container.innerHTML = `
     <form id="planningForm" class="planning-form">
+      <h3>Finances</h3>
       <label>Current Age <input type="number" name="curAge" value="${currentData.finance.curAge ?? ''}" /></label>
       <label>Retirement Age <input type="number" name="retAge" value="${currentData.finance.retAge ?? ''}" /></label>
       <label>Net Income <input type="number" name="income" value="${currentData.finance.income ?? ''}" /></label>
@@ -263,6 +264,7 @@ export async function initPlanningPanel() {
       <label>Post Years <input type="number" name="postYears" value="${currentData.finance.postYears ?? 30}" /></label>
       <label>Social Security <input type="number" name="socialSecurity" value="${currentData.finance.socialSecurity ?? ''}" /></label>
       <div id="ssEstimate" style="margin-bottom:0.5em;font-style:italic"></div>
+      <h3>Assets</h3>
       <label>Real Estate <input type="number" name="realEstate" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" value="${currentData.assets.carValue ?? ''}" /></label>
       <label>Savings <input type="number" name="assetSavings" value="${currentData.assets.assetSavings ?? ''}" /></label>
@@ -270,6 +272,7 @@ export async function initPlanningPanel() {
       <label>Investment Accounts <input type="number" name="investment" value="${currentData.assets.investment ?? ''}" /></label>
       <label>Roth IRA <input type="number" name="roth" value="${currentData.assets.roth ?? ''}" /></label>
       <label>Crypto <input type="number" name="crypto" value="${currentData.assets.crypto ?? ''}" /></label>
+      <h3>Liabilities</h3>
       <label>Rolling Credit <input type="number" name="rollingCredit" value="${currentData.budget.rollingCredit ?? ''}" /></label>
     </form>
     <div id="assetsTotal" style="margin-top:1em;"></div>
