@@ -1,0 +1,13 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "Sample City"},
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-98,39]
+      }
+    }
+  ]
+}
