@@ -1998,6 +1998,12 @@ h2 {
   width: 120px;
 }
 
+#addCategoryBtn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+}
+
 @media (max-width: 600px) {
   #budgetLayout {
     flex-direction: column;

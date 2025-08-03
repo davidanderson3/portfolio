@@ -193,11 +193,8 @@ export async function initBudgetPanel() {
         <form id="budgetFormA" class="budget-form">
           <div class="section-title">Recurring Expenses</div>
           <div id="recurContainerA" class="recurring-list"></div>
-          <button type="button" id="addRecurBtn">+ Add Category</button>
-
           <div class="section-title">Subscriptions</div>
           <div id="subsContainerA" class="subscriptions-list"></div>
-          <button type="button" id="addSubBtn">+ Add Subscription</button>
         </form>
         <div id="budgetSummaryA" class="budget-summary"></div>
       </div>
@@ -213,14 +210,14 @@ export async function initBudgetPanel() {
         <div id="budgetSummaryB" class="budget-summary"></div>
       </div>
     </div>
+    <button type="button" id="addCategoryBtn">+ Add Category</button>
   `;
 
   const formA = panel.querySelector('#budgetFormA');
   const summaryA = panel.querySelector('#budgetSummaryA');
   const subsContainerA = formA.querySelector('#subsContainerA');
-  const addSubBtn = formA.querySelector('#addSubBtn');
   const recurContainerA = formA.querySelector('#recurContainerA');
-  const addRecurBtn = formA.querySelector('#addRecurBtn');
+  const addCategoryBtn = panel.querySelector('#addCategoryBtn');
   const removedBuiltIns = new Set(saved.removedBuiltIns || []);
 
   const formB = panel.querySelector('#budgetFormB');
@@ -303,7 +300,6 @@ export async function initBudgetPanel() {
     subNames.add('Spotify');
   }
   subNames.forEach(n => addSubscriptionRowPair(n, saved.subscriptions?.[n] ?? '', saved.goalSubscriptions?.[n] ?? ''));
-  addSubBtn.addEventListener('click', () => { addSubscriptionRowPair(); render(); });
 
   const recurNames = new Set([
     ...Object.keys(saved.recurring || {}),
@@ -315,7 +311,7 @@ export async function initBudgetPanel() {
     }
   });
   recurNames.forEach(n => addRecurRowPair(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? ''));
-  addRecurBtn.addEventListener('click', () => { addRecurRowPair(); render(); });
+  addCategoryBtn.addEventListener('click', () => { addRecurRowPair(); render(); });
 
   function collectScenario(recurContainer, subsContainer, removedSet, options = {}) {
     const prefix = options.prefix || '';
