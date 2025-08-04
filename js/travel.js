@@ -39,7 +39,6 @@ let markerRowMap = new Map();
 let selectedRow = null;
 let allTags = [];
 let selectedTags = [];
-let searchMarker = null;
 let resultMarkers = [];
 let sortByDistance = true;
 let userCoords = null;
@@ -538,10 +537,6 @@ export async function initTravelPanel() {
     if (resultsList) resultsList.innerHTML = '';
     resultMarkers.forEach(m => m.remove());
     resultMarkers = [];
-    if (searchMarker) {
-      searchMarker.remove();
-      searchMarker = null;
-    }
   };
   async function storePlace(place) {
     ensureDefaultTag(place);
@@ -696,9 +691,7 @@ export async function initTravelPanel() {
         li.textContent = title.textContent;
         li.addEventListener('click', () => {
           map.setView([lat, lon], 8);
-          clearSearchResults();
-          searchMarker = L.marker([lat, lon], { icon: defaultIcon }).addTo(map);
-          searchMarker.bindPopup(title.textContent).openPopup();
+          m.openPopup();
         });
         if (resultsList) resultsList.append(li);
         map.setView([lat, lon], 8);
@@ -735,11 +728,7 @@ export async function initTravelPanel() {
             li.textContent = display_name;
             li.addEventListener('click', () => {
               map.setView([latitude, longitude], 8);
-              clearSearchResults();
-              searchMarker = L.marker([latitude, longitude], { icon: defaultIcon }).addTo(map);
-              searchMarker
-                .bindPopup(display_name)
-                .openPopup();
+              m.openPopup();
             });
             if (resultsList) resultsList.append(li);
           });
