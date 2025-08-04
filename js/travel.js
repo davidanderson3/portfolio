@@ -708,10 +708,12 @@ export async function initTravelPanel() {
         const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(term)}`);
         const data = await resp.json();
         if (data && data.length) {
+          const latLngs = [];
           data.forEach((res, idx) => {
             const { lat, lon, display_name } = res;
             const latitude = parseFloat(lat);
             const longitude = parseFloat(lon);
+            latLngs.push([latitude, longitude]);
             const m = L.marker([latitude, longitude], { icon: defaultIcon }).addTo(map);
             resultMarkers.push(m);
             const popupDiv = document.createElement('div');
@@ -741,8 +743,11 @@ export async function initTravelPanel() {
             });
             if (resultsList) resultsList.append(li);
           });
-          const first = data[0];
-          map.setView([parseFloat(first.lat), parseFloat(first.lon)], 4);
+          if (latLngs.length === 1) {
+            map.setView(latLngs[0], 8);
+          } else {
+            map.fitBounds(latLngs);
+          }
         } else {
           alert('Place not found');
         }
