@@ -3,6 +3,8 @@ import { loadDecisions, loadLists } from './helpers.js';
 // Map of task id -> recurrence category (daily/weekly/monthly)
 let taskCategoryMap = {};
 
+const COMPLETION_KEY = 'taskCompletions';
+
 function getLastNDates(n) {
   const dates = [];
   const today = new Date();
@@ -48,6 +50,8 @@ async function renderDailyReport(items, user, db) {
   if (user && db) {
     const snap = await db.collection('taskCompletions').doc(user.uid).get();
     completionMap = snap.exists ? snap.data() : {};
+  } else {
+    completionMap = JSON.parse(localStorage.getItem(COMPLETION_KEY) || '{}');
   }
 
   const labels = getLastNDates(7);
