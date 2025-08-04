@@ -116,12 +116,34 @@ export async function loadDecisions(forceRefresh = false) {
     const snap = await db.collection('decisions').doc(currentUser.uid).get();
     const data = snap.data();
     const rawItems = data && Array.isArray(data.items) ? data.items : [];
-    decisionsCache = rawItems.map(it => {
+
+    // Convert Firestore timestamps
+    const serverItems = rawItems.map(it => {
       if (it && it.hiddenUntil && typeof it.hiddenUntil.toDate === 'function') {
         return { ...it, hiddenUntil: it.hiddenUntil.toDate().toISOString() };
       }
       return it;
     });
+
+    // If unsynced local edits exist, merge them over server results
+    let merged = serverItems;
+    const pendingRaw = localStorage.getItem(DECISIONS_LOCAL_KEY);
+    if (pendingRaw) {
+      try {
+        const pendingItems = JSON.parse(pendingRaw);
+        const map = new Map(serverItems.map(it => [it.id, it]));
+        for (const item of pendingItems) {
+          if (item && item.id) {
+            map.set(item.id, item);
+          }
+        }
+        merged = Array.from(map.values());
+      } catch {
+        // ignore parse failure and fall back to server items
+      }
+    }
+
+    decisionsCache = merged;
     localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(decisionsCache));
     return decisionsCache;
   }
