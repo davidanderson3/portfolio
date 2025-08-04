@@ -696,8 +696,9 @@ export async function initTravelPanel() {
         li.textContent = title.textContent;
         li.addEventListener('click', () => {
           map.setView([lat, lon], 8);
-          m.openPopup();
           clearSearchResults();
+          searchMarker = L.marker([lat, lon], { icon: defaultIcon }).addTo(map);
+          searchMarker.bindPopup(title.textContent).openPopup();
         });
         if (resultsList) resultsList.append(li);
         map.setView([lat, lon], 8);
@@ -732,8 +733,11 @@ export async function initTravelPanel() {
             li.textContent = display_name;
             li.addEventListener('click', () => {
               map.setView([latitude, longitude], 8);
-              m.openPopup();
               clearSearchResults();
+              searchMarker = L.marker([latitude, longitude], { icon: defaultIcon }).addTo(map);
+              searchMarker
+                .bindPopup(display_name)
+                .openPopup();
             });
             if (resultsList) resultsList.append(li);
           });
