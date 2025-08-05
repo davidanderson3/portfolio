@@ -52,25 +52,7 @@ export async function quickAddTask(recurs, text) {
   await saveDecisions(updated);
   const active = document.querySelector('.tab-button.active')?.dataset.target;
   if (active === 'dailyPanel') {
-    const containerId =
-      recurs === 'weekly'
-        ? 'weeklyTasksList'
-        : recurs === 'monthly'
-          ? 'monthlyTasksList'
-          : 'dailyTasksList';
-    const list = document.getElementById(containerId);
-    if (list) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'daily-task-wrapper';
-      wrapper.dataset.taskId = newTask.id;
-      const row = document.createElement('div');
-      row.className = 'daily-task';
-      const label = document.createElement('div');
-      label.textContent = text;
-      row.append(document.createElement('div'), label, document.createElement('div'));
-      wrapper.appendChild(row);
-      list.appendChild(wrapper);
-    }
+    await renderDailyTasks(currentUser, db);
   }
 }
 
