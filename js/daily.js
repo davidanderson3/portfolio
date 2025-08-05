@@ -265,18 +265,20 @@ export async function renderDailyTasks(currentUser, db) {
 
     const label = document.createElement('div');
     const titleSpan = document.createElement('div');
+    titleSpan.style.overflowWrap = 'anywhere';
     titleSpan.innerHTML = linkify(task.text.replace(/^\[Daily\]\s*/, ''));
     label.appendChild(titleSpan);
     if (task.notes) {
       const noteSpan = document.createElement('div');
       noteSpan.className = 'note-text';
+      noteSpan.style.overflowWrap = 'anywhere';
       noteSpan.innerHTML = linkify(task.notes);
       label.appendChild(noteSpan);
     }
     Object.assign(label.style, {
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis'
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
+      minWidth: 0
     });
 
     const btns = document.createElement('div');
