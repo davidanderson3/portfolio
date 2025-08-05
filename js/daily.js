@@ -71,7 +71,7 @@ export async function renderDailyTasks(currentUser, db) {
     container.className = 'decision-container';
     panel.appendChild(container);
   }
-  // — ensure firstThing/morning/afternoon/evening/beforeBed containers exist
+  // — ensure firstThing/morning/afternoon/evening/endOfDay containers exist
   let firstThingContainer = container.querySelector('#firstThingTasksList');
   if (!firstThingContainer) {
     firstThingContainer = document.createElement('div');
@@ -112,15 +112,15 @@ export async function renderDailyTasks(currentUser, db) {
     container.appendChild(hdr);
     container.appendChild(eveningContainer);
   }
-  let beforeBedContainer = container.querySelector('#beforeBedTasksList');
-  if (!beforeBedContainer) {
-    beforeBedContainer = document.createElement('div');
-    beforeBedContainer.id = 'beforeBedTasksList';
-    beforeBedContainer.className = 'decision-container';
+  let endOfDayContainer = container.querySelector('#endOfDayTasksList');
+  if (!endOfDayContainer) {
+    endOfDayContainer = document.createElement('div');
+    endOfDayContainer.id = 'endOfDayTasksList';
+    endOfDayContainer.className = 'decision-container';
     const hdr = document.createElement('h3');
-    hdr.textContent = 'Before Bed';
+    hdr.textContent = 'End of Day';
     container.appendChild(hdr);
-    container.appendChild(beforeBedContainer);
+    container.appendChild(endOfDayContainer);
   }
   // — ensure our weekly container exists
   const wrapper = container.parentElement || panel;
@@ -165,7 +165,7 @@ export async function renderDailyTasks(currentUser, db) {
   morningContainer.innerHTML = '';
   afternoonContainer.innerHTML = '';
   eveningContainer.innerHTML = '';
-  beforeBedContainer.innerHTML = '';
+  endOfDayContainer.innerHTML = '';
   weeklyContainer.innerHTML = '';
   monthlyContainer.innerHTML = '';
   const all = await loadDecisions();
@@ -179,17 +179,22 @@ export async function renderDailyTasks(currentUser, db) {
         t.text = t.text.replace(/^\[Daily\]\s*/, '');
         migrated = true;
       }
-      const match = t.text.match(/^\[(Morning|Afternoon|Evening|First Thing|Before Bed)\]\s*/i);
+      const match = t.text.match(/^\[(Morning|Afternoon|Evening|First Thing|End of Day|Before Bed)\]\s*/i);
       if (match) {
         const map = {
           'morning': 'morning',
           'afternoon': 'afternoon',
           'evening': 'evening',
           'first thing': 'firstThing',
-          'before bed': 'beforeBed'
+          'end of day': 'endOfDay',
+          'before bed': 'endOfDay'
         };
         t.timeOfDay = map[match[1].toLowerCase()];
         t.text = t.text.replace(match[0], '').trim();
+        migrated = true;
+      }
+      if (t.timeOfDay === 'beforeBed') {
+        t.timeOfDay = 'endOfDay';
         migrated = true;
       }
       if (t.recurs === 'daily' && !t.timeOfDay) {
@@ -250,7 +255,7 @@ export async function renderDailyTasks(currentUser, db) {
     morning: { missed: [], done: [] },
     afternoon: { missed: [], done: [] },
     evening: { missed: [], done: [] },
-    beforeBed: { missed: [], done: [] }
+    endOfDay: { missed: [], done: [] }
   };
   for (const t of activeList) {
     const section = t.timeOfDay || 'morning';
@@ -263,7 +268,7 @@ export async function renderDailyTasks(currentUser, db) {
     morning: morningContainer,
     afternoon: afternoonContainer,
     evening: eveningContainer,
-    beforeBed: beforeBedContainer
+    endOfDay: endOfDayContainer
   };
   for (const [section, data] of Object.entries(buckets)) {
     const target = targetMap[section] || morningContainer;
@@ -413,12 +418,12 @@ export async function renderDailyTasks(currentUser, db) {
         notesInput.style.width = '100%';
         notesInput.style.marginTop = '4px';
         const select = document.createElement('select');
-        ['firstThing', 'morning', 'afternoon', 'evening', 'beforeBed'].forEach(val => {
+        ['firstThing', 'morning', 'afternoon', 'evening', 'endOfDay'].forEach(val => {
           const opt = document.createElement('option');
           opt.value = val;
           opt.textContent =
             val === 'firstThing' ? 'First Thing'
-            : val === 'beforeBed' ? 'Before Bed'
+            : val === 'endOfDay' ? 'End of Day'
             : val.charAt(0).toUpperCase() + val.slice(1);
           select.appendChild(opt);
         });
