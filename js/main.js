@@ -274,8 +274,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (!user) {
       clearPlanningCache();
-      splash.style.display = 'flex';
-      goalsView.style.display = '';
+      if (splash) splash.style.display = 'flex';
+      if (goalsView) goalsView.style.display = '';
       initTabs(null, db);
       const hidden = await loadHiddenTabs();
       applyHiddenTabs(hidden);
@@ -287,13 +287,15 @@ window.addEventListener('DOMContentLoaded', () => {
       const tabsEl = document.getElementById('tabsContainer');
       if (tabsEl) tabsEl.style.visibility = 'visible';
       renderGoalsAndSubitems();
-      renderDailyTasks(null, db);
+      if (document.querySelector('.tab-button.active')?.dataset.target === 'dailyPanel') {
+        renderDailyTasks(null, db);
+      }
       initTabReports(null, db);
       return;
     }
 
-    splash.style.display = 'none';
-    goalsView.style.display = '';
+    if (splash) splash.style.display = 'none';
+    if (goalsView) goalsView.style.display = '';
 
     clearPlanningCache();
 
@@ -308,7 +310,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const tabsEl = document.getElementById('tabsContainer');
     if (tabsEl) tabsEl.style.visibility = 'visible';
     renderGoalsAndSubitems(user, db);
-    renderDailyTasks(user, db);
+    if (document.querySelector('.tab-button.active')?.dataset.target === 'dailyPanel') {
+      renderDailyTasks(user, db);
+    }
     initTabReports(user, db);
     if (window.initTravelPanel) {
       try {

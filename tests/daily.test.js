@@ -51,3 +51,29 @@ describe('daily task ordering', () => {
     expect(ids).toEqual(['b', 'c', 'a']);
   });
 });
+
+describe('quickAddTask', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('saves task without reloading list', async () => {
+    const dom = new JSDOM(`
+      <button class="tab-button active" data-target="dailyPanel"></button>
+      <div id="dailyTasksList"></div>
+    `, { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([]);
+    helpers.saveDecisions.mockResolvedValue();
+    helpers.generateId.mockReturnValue('x1');
+
+    const daily = await import('../js/daily.js');
+    const spy = vi.spyOn(daily, 'renderDailyTasks');
+    await daily.quickAddTask('daily', 'Test');
+    expect(helpers.saveDecisions).toHaveBeenCalled();
+    expect(spy).not.toHaveBeenCalled();
+  });
+});
