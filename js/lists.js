@@ -61,12 +61,40 @@ function addColumnInput() {
   container.append(row);
 }
 
-// 3️⃣ Simple debounce helper to batch saves
+// 3️⃣ Debounce helper that returns a promise which resolves
+// once the wrapped function has actually run. This allows
+// callers to `await` persistence and be sure the save completed
+// before continuing (important when the page might unload).
 function debounce(fn, delay) {
   let timer;
+  let pendingPromise = null;
+  let resolvePending;
+  let rejectPending;
+
   return (...args) => {
     clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
+
+    if (!pendingPromise) {
+      pendingPromise = new Promise((resolve, reject) => {
+        resolvePending = resolve;
+        rejectPending = reject;
+      });
+    }
+
+    timer = setTimeout(async () => {
+      try {
+        const result = await fn(...args);
+        resolvePending(result);
+      } catch (err) {
+        rejectPending(err);
+      } finally {
+        pendingPromise = null;
+        resolvePending = null;
+        rejectPending = null;
+      }
+    }, delay);
+
+    return pendingPromise;
   };
 }
 
