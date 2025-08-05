@@ -34,13 +34,14 @@ function tempToColor(temp) {
   return `hsl(${hue}, 90%, 85%)`;
 }
 
-export async function quickAddTask(recurs, text) {
+export async function quickAddTask(recurs, text, timeOfDay = 'morning') {
   const newTask = {
     id: generateId(),
     type: 'task',
     text: `${text}`,
     notes: '',
     recurs,
+    timeOfDay,
     parentGoalId: null,
     completed: false,
     dateCompleted: '',
@@ -69,6 +70,37 @@ export async function renderDailyTasks(currentUser, db) {
     container.id = 'dailyTasksList';
     container.className = 'decision-container';
     panel.appendChild(container);
+  }
+  // — ensure morning/afternoon/evening containers exist
+  let morningContainer = container.querySelector('#morningTasksList');
+  if (!morningContainer) {
+    morningContainer = document.createElement('div');
+    morningContainer.id = 'morningTasksList';
+    morningContainer.className = 'decision-container';
+    const hdr = document.createElement('h3');
+    hdr.textContent = 'Morning';
+    container.appendChild(hdr);
+    container.appendChild(morningContainer);
+  }
+  let afternoonContainer = container.querySelector('#afternoonTasksList');
+  if (!afternoonContainer) {
+    afternoonContainer = document.createElement('div');
+    afternoonContainer.id = 'afternoonTasksList';
+    afternoonContainer.className = 'decision-container';
+    const hdr = document.createElement('h3');
+    hdr.textContent = 'Afternoon';
+    container.appendChild(hdr);
+    container.appendChild(afternoonContainer);
+  }
+  let eveningContainer = container.querySelector('#eveningTasksList');
+  if (!eveningContainer) {
+    eveningContainer = document.createElement('div');
+    eveningContainer.id = 'eveningTasksList';
+    eveningContainer.className = 'decision-container';
+    const hdr = document.createElement('h3');
+    hdr.textContent = 'Evening';
+    container.appendChild(hdr);
+    container.appendChild(eveningContainer);
   }
   // — ensure our weekly container exists
   const wrapper = container.parentElement || panel;
@@ -109,17 +141,32 @@ export async function renderDailyTasks(currentUser, db) {
   }
 
   // — Clear and load all tasks
-  container.innerHTML = '';
+  morningContainer.innerHTML = '';
+  afternoonContainer.innerHTML = '';
+  eveningContainer.innerHTML = '';
   weeklyContainer.innerHTML = '';
   monthlyContainer.innerHTML = '';
   const all = await loadDecisions();
 
-  // — Migrate legacy “[Daily]” flags
+  // — Migrate legacy prefixes and set defaults
   let migrated = false;
   for (const t of all) {
-    if (t.type === 'task' && t.text.startsWith('[Daily]') && !t.recurs) {
-      t.recurs = 'daily';
-      migrated = true;
+    if (t.type === 'task') {
+      if (t.text.startsWith('[Daily]')) {
+        t.recurs = t.recurs || 'daily';
+        t.text = t.text.replace(/^\[Daily\]\s*/, '');
+        migrated = true;
+      }
+      const match = t.text.match(/^\[(Morning|Afternoon|Evening)\]\s*/i);
+      if (match) {
+        t.timeOfDay = match[1].toLowerCase();
+        t.text = t.text.replace(match[0], '').trim();
+        migrated = true;
+      }
+      if (t.recurs === 'daily' && !t.timeOfDay) {
+        t.timeOfDay = 'morning';
+        migrated = true;
+      }
     }
   }
   if (migrated) {
@@ -168,12 +215,28 @@ export async function renderDailyTasks(currentUser, db) {
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
   const activeList = dailyAll.filter(t => !doneDaily.has(t.id));
-  const missed = activeList.filter(t => !yesterdayDone.has(t.id));
-  const completedYesterday = activeList.filter(t => yesterdayDone.has(t.id));
 
-  // — Render only active tasks
-  for (const t of [...missed, ...completedYesterday])
-    container.appendChild(makeTaskElement(t, 'daily'));
+  const buckets = {
+    morning: { missed: [], done: [] },
+    afternoon: { missed: [], done: [] },
+    evening: { missed: [], done: [] }
+  };
+  for (const t of activeList) {
+    const section = t.timeOfDay || 'morning';
+    const bucket = buckets[section] || buckets.morning;
+    if (yesterdayDone.has(t.id)) bucket.done.push(t);
+    else bucket.missed.push(t);
+  }
+  for (const [section, data] of Object.entries(buckets)) {
+    const target = section === 'morning'
+      ? morningContainer
+      : section === 'afternoon'
+        ? afternoonContainer
+        : eveningContainer;
+    for (const t of [...data.missed, ...data.done]) {
+      target.appendChild(makeTaskElement(t, 'daily', target));
+    }
+  }
   const weeklyAll = all.filter(t =>
     t.type === 'task' &&
     t.recurs === 'weekly' &&
@@ -224,13 +287,14 @@ export async function renderDailyTasks(currentUser, db) {
     }
   }
 
-  function makeTaskElement(task, period = 'daily') {
+  function makeTaskElement(task, period = 'daily', listElOverride) {
     const config = {
       daily: { set: doneDaily, key: todayKey, container: container },
       weekly: { set: doneWeekly, key: weekKey, container: weeklyContainer },
       monthly: { set: doneMonthly, key: monthKey, container: monthlyContainer }
     };
-    const { set, key, container: listEl } = config[period];
+    const { set, key, container: defaultList } = config[period];
+    const listEl = listElOverride || defaultList;
     const isDone = set.has(task.id);
     const wrapper = document.createElement('div');
     wrapper.className = 'daily-task-wrapper';
@@ -269,7 +333,7 @@ export async function renderDailyTasks(currentUser, db) {
     const label = document.createElement('div');
     const titleSpan = document.createElement('div');
     titleSpan.style.overflowWrap = 'anywhere';
-    titleSpan.innerHTML = linkify(task.text.replace(/^\[Daily\]\s*/, ''));
+    titleSpan.innerHTML = linkify(task.text);
     label.appendChild(titleSpan);
     if (task.notes) {
       const noteSpan = document.createElement('div');
@@ -302,7 +366,7 @@ export async function renderDailyTasks(currentUser, db) {
 
     // Edit
     btns.append(makeIconBtn('✏️', 'Edit', async () => {
-      const original = task.text.replace(/^\[Daily\]\s*/, '');
+      const original = task.text;
       const edited = prompt('Edit task:', original);
       if (edited === null) return;
       const noteInput = prompt('Task notes:', task.notes || '');
@@ -310,7 +374,7 @@ export async function renderDailyTasks(currentUser, db) {
         const allDecs = await loadDecisions();
         const idx = allDecs.findIndex(t => t.id === task.id);
         if (idx === -1) return;
-        allDecs[idx].text = `[Daily] ${edited.trim()}`;
+        allDecs[idx].text = edited.trim();
         if (noteInput !== null) allDecs[idx].notes = noteInput.trim();
         await saveDecisions(allDecs);
         task.text = allDecs[idx].text;

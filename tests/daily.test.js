@@ -78,3 +78,25 @@ describe('quickAddTask', () => {
     expect(document.querySelector('#dailyTasksList input[type="checkbox"]')).toBeTruthy();
   });
 });
+
+describe('time of day sections', () => {
+  it('renders tasks into respective containers', async () => {
+    vi.resetModules();
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'm', type: 'task', text: 'M', recurs: 'daily', timeOfDay: 'morning' },
+      { id: 'a', type: 'task', text: 'A', recurs: 'daily', timeOfDay: 'afternoon' },
+      { id: 'e', type: 'task', text: 'E', recurs: 'daily', timeOfDay: 'evening' }
+    ]);
+
+    const { renderDailyTasks } = await import('../js/daily.js');
+    await renderDailyTasks(null, {});
+    expect(document.querySelector('#morningTasksList [data-task-id="m"]')).toBeTruthy();
+    expect(document.querySelector('#afternoonTasksList [data-task-id="a"]')).toBeTruthy();
+    expect(document.querySelector('#eveningTasksList [data-task-id="e"]')).toBeTruthy();
+  });
+});
