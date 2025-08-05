@@ -14,7 +14,7 @@ export const PANELS = [
 export const PANEL_NAMES = {
   projectsPanel: 'Projects',
   calendarPanel: 'Calendar',
-  dailyPanel: 'Recurring',
+  dailyPanel: 'Routine',
   metricsPanel: 'Metrics',
   listsPanel: 'Lists',
   travelPanel: 'Places',

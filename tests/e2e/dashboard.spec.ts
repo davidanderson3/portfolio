@@ -56,7 +56,7 @@ test('can add a daily task via UI', async ({ page }) => {
     if (tabs) tabs.style.visibility = 'visible';
   });
 
-  // open Recurring tab
+  // open Routine tab
   await page.waitForSelector('button[data-target="dailyPanel"]', { state: 'visible' });
   await page.click('button[data-target="dailyPanel"]');
 
