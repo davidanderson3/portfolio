@@ -365,34 +365,51 @@ export async function renderDailyTasks(currentUser, db) {
     }));
 
     // Edit
-    btns.append(makeIconBtn('✏️', 'Edit', async () => {
-      const original = task.text;
-      const edited = prompt('Edit task:', original);
-      if (edited === null) return;
-      const noteInput = prompt('Task notes:', task.notes || '');
-      try {
-        const allDecs = await loadDecisions();
-        const idx = allDecs.findIndex(t => t.id === task.id);
-        if (idx === -1) return;
-        allDecs[idx].text = edited.trim();
-        if (noteInput !== null) allDecs[idx].notes = noteInput.trim();
-        await saveDecisions(allDecs);
-        task.text = allDecs[idx].text;
-        task.notes = allDecs[idx].notes;
+    let editing = false;
+    const editBtn = makeIconBtn('✏️', 'Edit', async () => {
+      if (!editing) {
+        editing = true;
+        editBtn.textContent = '💾';
+        const textInput = document.createElement('input');
+        textInput.value = task.text;
+        textInput.style.width = '100%';
+        const notesInput = document.createElement('textarea');
+        notesInput.value = task.notes || '';
+        notesInput.rows = 2;
+        notesInput.style.width = '100%';
+        notesInput.style.marginTop = '4px';
+        const select = document.createElement('select');
+        ['morning', 'afternoon', 'evening'].forEach(val => {
+          const opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = val.charAt(0).toUpperCase() + val.slice(1);
+          select.appendChild(opt);
+        });
+        select.value = task.timeOfDay || 'morning';
+        select.style.marginTop = '4px';
         label.innerHTML = '';
-        const tSpan = document.createElement('div');
-        tSpan.innerHTML = linkify(edited.trim());
-        label.appendChild(tSpan);
-        if (task.notes) {
-          const nSpan = document.createElement('div');
-          nSpan.className = 'note-text';
-          nSpan.innerHTML = linkify(task.notes);
-          label.appendChild(nSpan);
+        label.append(textInput, notesInput, select);
+      } else {
+        editing = false;
+        editBtn.textContent = '✏️';
+        const newText = label.querySelector('input')?.value.trim();
+        const newNotes = label.querySelector('textarea')?.value.trim();
+        const newTime = label.querySelector('select')?.value || 'morning';
+        try {
+          const allDecs = await loadDecisions();
+          const idx = allDecs.findIndex(t => t.id === task.id);
+          if (idx === -1) return;
+          allDecs[idx].text = newText;
+          allDecs[idx].notes = newNotes;
+          allDecs[idx].timeOfDay = newTime;
+          await saveDecisions(allDecs);
+          await renderDailyTasks(currentUser, db);
+        } catch {
+          alert('⚠️ Could not save edit.');
         }
-      } catch {
-        alert('⚠️ Could not save edit.');
       }
-    }));
+    });
+    btns.append(editBtn);
 
     // Skip interval (clock + dropdown menu)
     const clockBtn = makeIconBtn('🕒', 'Skip interval', () => toggleMenu());
