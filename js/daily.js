@@ -145,6 +145,10 @@ export async function renderDailyTasks(currentUser, db) {
   const dailyDone = new Set(completionMap[todayKey] || []);
   const weeklyDone = new Set(completionMap[weekKey] || []);
   const monthlyDone = new Set(completionMap[monthKey] || []);
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const yesterdayKey = yesterday.toLocaleDateString('en-CA');
+  const yesterdayDone = new Set(completionMap[yesterdayKey] || []);
 
   // ——— No weekly or monthly add forms
 
@@ -161,9 +165,11 @@ export async function renderDailyTasks(currentUser, db) {
     (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
   );
   const activeList = dailyAll.filter(t => !doneDaily.has(t.id));
+  const missed = activeList.filter(t => !yesterdayDone.has(t.id));
+  const completedYesterday = activeList.filter(t => yesterdayDone.has(t.id));
 
   // — Render only active tasks
-  for (const t of activeList)
+  for (const t of [...missed, ...completedYesterday])
     container.appendChild(makeTaskElement(t, 'daily'));
   const weeklyAll = all.filter(t =>
     t.type === 'task' &&
