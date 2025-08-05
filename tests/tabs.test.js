@@ -60,3 +60,59 @@ describe('initTabs persistence', () => {
     expect(document.getElementById('dailyPanel').style.display).toBe('flex');
   });
 });
+
+describe('routine tab behavior', () => {
+  it('clears stale tasks before rendering new ones', async () => {
+    const dom = new JSDOM(`
+      <button class="tab-button active" data-target="projectsPanel"></button>
+      <button class="tab-button" data-target="calendarPanel"></button>
+      <button class="tab-button" data-target="dailyPanel"></button>
+      <button class="tab-button" data-target="metricsPanel"></button>
+      <button class="tab-button" data-target="listsPanel"></button>
+      <button class="tab-button" data-target="travelPanel"></button>
+      <button class="tab-button" data-target="planningPanel"></button>
+      <button class="tab-button" data-target="budgetPanel"></button>
+      <button class="tab-button" data-target="contactsPanel"></button>
+      <div id="projectsPanel"></div>
+      <div id="calendarPanel"></div>
+      <div id="dailyPanel" style="display:none;">
+        <div id="dailyTasksList"><div class="old">old</div></div>
+      </div>
+      <div id="metricsPanel"></div>
+      <div id="listsPanel"></div>
+      <div id="travelPanel"></div>
+      <div id="planningPanel"></div>
+      <div id="budgetPanel"></div>
+      <div id="contactsPanel"></div>
+    `, { url: 'http://localhost/' });
+
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.history = dom.window.history;
+    global.localStorage = {
+      getItem: () => null,
+      setItem: () => {}
+    };
+
+    let resolve;
+    const renderStub = vi.fn(() => new Promise(r => { resolve = r; }));
+    global.window.renderDailyTasks = renderStub;
+    global.window.initMetricsUI = vi.fn();
+    global.window.initListsPanel = vi.fn();
+    global.window.initTravelPanel = vi.fn();
+    global.window.initPlanningPanel = vi.fn();
+    global.window.initBudgetPanel = vi.fn();
+
+    const mod = await import('../js/tabs.js');
+    mod.initTabs(null, {});
+
+    const btn = document.querySelector('.tab-button[data-target="dailyPanel"]');
+    btn.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+
+    const list = document.getElementById('dailyTasksList');
+    expect(list.innerHTML).toBe('');
+
+    // resolve to avoid unhandled promise rejection
+    if (resolve) resolve();
+  });
+});

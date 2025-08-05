@@ -44,6 +44,13 @@ export function initTabs(user, db) {
 
       // 2) show/hide panels
       const target = btn.dataset.target;
+
+      // Clear routine list before displaying to avoid flashing stale tasks
+      if (target === 'dailyPanel') {
+        const list = document.getElementById('dailyTasksList');
+        if (list) list.innerHTML = '';
+      }
+
       panels.forEach(id => {
         const el = document.getElementById(id);
         el.style.display = (id === target) ? 'flex' : 'none';
