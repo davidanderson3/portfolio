@@ -93,16 +93,20 @@ describe('time of day sections', () => {
 
     const helpers = await import('../js/helpers.js');
     helpers.loadDecisions.mockResolvedValue([
+      { id: 'f', type: 'task', text: 'F', recurs: 'daily', timeOfDay: 'firstThing' },
       { id: 'm', type: 'task', text: 'M', recurs: 'daily', timeOfDay: 'morning' },
       { id: 'a', type: 'task', text: 'A', recurs: 'daily', timeOfDay: 'afternoon' },
-      { id: 'e', type: 'task', text: 'E', recurs: 'daily', timeOfDay: 'evening' }
+      { id: 'e', type: 'task', text: 'E', recurs: 'daily', timeOfDay: 'evening' },
+      { id: 'b', type: 'task', text: 'B', recurs: 'daily', timeOfDay: 'beforeBed' }
     ]);
 
     const { renderDailyTasks } = await import('../js/daily.js');
     await renderDailyTasks(null, {});
+    expect(document.querySelector('#firstThingTasksList [data-task-id="f"]')).toBeTruthy();
     expect(document.querySelector('#morningTasksList [data-task-id="m"]')).toBeTruthy();
     expect(document.querySelector('#afternoonTasksList [data-task-id="a"]')).toBeTruthy();
     expect(document.querySelector('#eveningTasksList [data-task-id="e"]')).toBeTruthy();
+    expect(document.querySelector('#beforeBedTasksList [data-task-id="b"]')).toBeTruthy();
   });
 });
 

@@ -71,7 +71,17 @@ export async function renderDailyTasks(currentUser, db) {
     container.className = 'decision-container';
     panel.appendChild(container);
   }
-  // — ensure morning/afternoon/evening containers exist
+  // — ensure firstThing/morning/afternoon/evening/beforeBed containers exist
+  let firstThingContainer = container.querySelector('#firstThingTasksList');
+  if (!firstThingContainer) {
+    firstThingContainer = document.createElement('div');
+    firstThingContainer.id = 'firstThingTasksList';
+    firstThingContainer.className = 'decision-container';
+    const hdr = document.createElement('h3');
+    hdr.textContent = 'First Thing';
+    container.appendChild(hdr);
+    container.appendChild(firstThingContainer);
+  }
   let morningContainer = container.querySelector('#morningTasksList');
   if (!morningContainer) {
     morningContainer = document.createElement('div');
@@ -101,6 +111,16 @@ export async function renderDailyTasks(currentUser, db) {
     hdr.textContent = 'Evening';
     container.appendChild(hdr);
     container.appendChild(eveningContainer);
+  }
+  let beforeBedContainer = container.querySelector('#beforeBedTasksList');
+  if (!beforeBedContainer) {
+    beforeBedContainer = document.createElement('div');
+    beforeBedContainer.id = 'beforeBedTasksList';
+    beforeBedContainer.className = 'decision-container';
+    const hdr = document.createElement('h3');
+    hdr.textContent = 'Before Bed';
+    container.appendChild(hdr);
+    container.appendChild(beforeBedContainer);
   }
   // — ensure our weekly container exists
   const wrapper = container.parentElement || panel;
@@ -141,9 +161,11 @@ export async function renderDailyTasks(currentUser, db) {
   }
 
   // — Clear and load all tasks
+  firstThingContainer.innerHTML = '';
   morningContainer.innerHTML = '';
   afternoonContainer.innerHTML = '';
   eveningContainer.innerHTML = '';
+  beforeBedContainer.innerHTML = '';
   weeklyContainer.innerHTML = '';
   monthlyContainer.innerHTML = '';
   const all = await loadDecisions();
@@ -157,9 +179,16 @@ export async function renderDailyTasks(currentUser, db) {
         t.text = t.text.replace(/^\[Daily\]\s*/, '');
         migrated = true;
       }
-      const match = t.text.match(/^\[(Morning|Afternoon|Evening)\]\s*/i);
+      const match = t.text.match(/^\[(Morning|Afternoon|Evening|First Thing|Before Bed)\]\s*/i);
       if (match) {
-        t.timeOfDay = match[1].toLowerCase();
+        const map = {
+          'morning': 'morning',
+          'afternoon': 'afternoon',
+          'evening': 'evening',
+          'first thing': 'firstThing',
+          'before bed': 'beforeBed'
+        };
+        t.timeOfDay = map[match[1].toLowerCase()];
         t.text = t.text.replace(match[0], '').trim();
         migrated = true;
       }
@@ -217,9 +246,11 @@ export async function renderDailyTasks(currentUser, db) {
   const activeList = dailyAll.filter(t => !doneDaily.has(t.id));
 
   const buckets = {
+    firstThing: { missed: [], done: [] },
     morning: { missed: [], done: [] },
     afternoon: { missed: [], done: [] },
-    evening: { missed: [], done: [] }
+    evening: { missed: [], done: [] },
+    beforeBed: { missed: [], done: [] }
   };
   for (const t of activeList) {
     const section = t.timeOfDay || 'morning';
@@ -227,12 +258,15 @@ export async function renderDailyTasks(currentUser, db) {
     if (yesterdayDone.has(t.id)) bucket.done.push(t);
     else bucket.missed.push(t);
   }
+  const targetMap = {
+    firstThing: firstThingContainer,
+    morning: morningContainer,
+    afternoon: afternoonContainer,
+    evening: eveningContainer,
+    beforeBed: beforeBedContainer
+  };
   for (const [section, data] of Object.entries(buckets)) {
-    const target = section === 'morning'
-      ? morningContainer
-      : section === 'afternoon'
-        ? afternoonContainer
-        : eveningContainer;
+    const target = targetMap[section] || morningContainer;
     for (const t of [...data.missed, ...data.done]) {
       target.appendChild(makeTaskElement(t, 'daily', target));
     }
@@ -379,10 +413,13 @@ export async function renderDailyTasks(currentUser, db) {
         notesInput.style.width = '100%';
         notesInput.style.marginTop = '4px';
         const select = document.createElement('select');
-        ['morning', 'afternoon', 'evening'].forEach(val => {
+        ['firstThing', 'morning', 'afternoon', 'evening', 'beforeBed'].forEach(val => {
           const opt = document.createElement('option');
           opt.value = val;
-          opt.textContent = val.charAt(0).toUpperCase() + val.slice(1);
+          opt.textContent =
+            val === 'firstThing' ? 'First Thing'
+            : val === 'beforeBed' ? 'Before Bed'
+            : val.charAt(0).toUpperCase() + val.slice(1);
           select.appendChild(opt);
         });
         select.value = task.timeOfDay || 'morning';
