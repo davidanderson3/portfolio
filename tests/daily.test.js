@@ -5,7 +5,12 @@ vi.mock('../js/helpers.js', () => ({
   loadDecisions: vi.fn(),
   saveDecisions: vi.fn(),
   generateId: vi.fn(),
-  makeIconBtn: () => document.createElement('button'),
+  makeIconBtn: (sym, title, fn) => {
+    const b = document.createElement('button');
+    b.textContent = sym;
+    b.onclick = fn;
+    return b;
+  },
   linkify: t => t,
   pickDate: vi.fn()
 }));
@@ -98,5 +103,38 @@ describe('time of day sections', () => {
     expect(document.querySelector('#morningTasksList [data-task-id="m"]')).toBeTruthy();
     expect(document.querySelector('#afternoonTasksList [data-task-id="a"]')).toBeTruthy();
     expect(document.querySelector('#eveningTasksList [data-task-id="e"]')).toBeTruthy();
+  });
+});
+
+describe('editing daily tasks', () => {
+  it('allows inline editing with time of day', async () => {
+    vi.resetModules();
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions
+      .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }])
+      .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }])
+      .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'New', recurs: 'daily', timeOfDay: 'evening', notes: 'N' }]);
+    helpers.saveDecisions.mockResolvedValue();
+
+    const { renderDailyTasks } = await import('../js/daily.js');
+    await renderDailyTasks(null, {});
+
+    const editBtn = Array.from(document.querySelectorAll('.daily-task button')).find(b => b.textContent === '✏️');
+    editBtn.click();
+    const label = document.querySelector('.daily-task > div:nth-child(2)');
+    label.querySelector('input').value = 'New';
+    label.querySelector('textarea').value = 'N';
+    label.querySelector('select').value = 'evening';
+    editBtn.click();
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(helpers.saveDecisions).toHaveBeenCalledWith([
+      { id: 't1', type: 'task', text: 'New', recurs: 'daily', timeOfDay: 'evening', notes: 'N' }
+    ]);
+    expect(document.querySelector('#eveningTasksList [data-task-id="t1"]')).toBeTruthy();
   });
 });
