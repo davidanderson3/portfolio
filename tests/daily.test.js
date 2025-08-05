@@ -97,7 +97,7 @@ describe('time of day sections', () => {
       { id: 'm', type: 'task', text: 'M', recurs: 'daily', timeOfDay: 'morning' },
       { id: 'a', type: 'task', text: 'A', recurs: 'daily', timeOfDay: 'afternoon' },
       { id: 'e', type: 'task', text: 'E', recurs: 'daily', timeOfDay: 'evening' },
-      { id: 'b', type: 'task', text: 'B', recurs: 'daily', timeOfDay: 'beforeBed' }
+      { id: 'b', type: 'task', text: 'B', recurs: 'daily', timeOfDay: 'endOfDay' }
     ]);
 
     const { renderDailyTasks } = await import('../js/daily.js');
@@ -106,7 +106,7 @@ describe('time of day sections', () => {
     expect(document.querySelector('#morningTasksList [data-task-id="m"]')).toBeTruthy();
     expect(document.querySelector('#afternoonTasksList [data-task-id="a"]')).toBeTruthy();
     expect(document.querySelector('#eveningTasksList [data-task-id="e"]')).toBeTruthy();
-    expect(document.querySelector('#beforeBedTasksList [data-task-id="b"]')).toBeTruthy();
+    expect(document.querySelector('#endOfDayTasksList [data-task-id="b"]')).toBeTruthy();
   });
 });
 
