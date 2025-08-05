@@ -1659,6 +1659,14 @@ h2 {
     box-sizing: border-box;
     display: block;
   }
+
+  .settings-list {
+    flex-direction: column;
+  }
+
+  .settings-list > * {
+    width: 100%;
+  }
 }
 
 /* Decision tree styles */
