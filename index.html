@@ -84,9 +84,9 @@
         </div>
       </div>
       <div class="tabs scroll-tabs" id="tabsContainer" style="visibility:hidden;">
-        <button class="tab-button active" data-target="projectsPanel">Projects</button>
+        <button class="tab-button active" data-target="dailyPanel">Routine</button>
+        <button class="tab-button" data-target="projectsPanel">Projects</button>
         <button class="tab-button" data-target="calendarPanel">Calendar</button>
-        <button class="tab-button" data-target="dailyPanel">Routine</button>
         <button class="tab-button" data-target="metricsPanel">Metrics</button>
         <button class="tab-button" data-target="listsPanel">Lists</button>
         <button class="tab-button" data-target="travelPanel">Places</button>
@@ -96,7 +96,25 @@
     </nav>
 
     <!-- TABS CONTENT PANELS -->
-      <div id="projectsPanel" class="main-layout">
+      <div id="dailyPanel" class="main-layout">
+      <div class="full-column">
+        <div class="panel-header">
+          <h2>Routine Tasks</h2>
+          <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+        </div>
+        <h3>Daily</h3>
+        <div id="dailyTasksList" class="decision-container"></div>
+        <h3>Weekly</h3>
+        <div id="weeklyTasksList" class="decision-container"></div>
+        <h3 style="margin-top:2em;">Monthly</h3>
+        <div id="monthlyTasksList" class="decision-container"></div>
+        <div id="dailyReport" class="report-panel"></div>
+      </div>
+    </div>
+
+
+    <!-- PROJECTS PANEL -->
+      <div id="projectsPanel" class="main-layout" style="display:none;">
       <div class="full-column">
         <div id="projectsHeaderRow" class="panel-header">
           <h2 id="projectsHeader">Projects</h2>
@@ -149,23 +167,6 @@
       </div>
 
 
-    </div>
-
-    <!-- DAILY PANEL -->
-      <div id="dailyPanel" class="main-layout" style="display:none;">
-      <div class="full-column">
-        <div class="panel-header">
-          <h2>Routine Tasks</h2>
-          <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
-        </div>
-        <h3>Daily</h3>
-        <div id="dailyTasksList" class="decision-container"></div>
-        <h3>Weekly</h3>
-        <div id="weeklyTasksList" class="decision-container"></div>
-        <h3 style="margin-top:2em;">Monthly</h3>
-        <div id="monthlyTasksList" class="decision-container"></div>
-        <div id="dailyReport" class="report-panel"></div>
-      </div>
     </div>
 
 
