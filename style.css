@@ -2053,3 +2053,11 @@ h2 {
     align-self: flex-start;
   }
 }
+
+/* Contacts Panel */
+#contactsPanel .contacts-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 1rem;
+}

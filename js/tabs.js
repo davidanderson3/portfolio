@@ -8,7 +8,8 @@ export const PANELS = [
   'listsPanel',
   'travelPanel',
   'planningPanel',
-  'budgetPanel'
+  'budgetPanel',
+  'contactsPanel'
 ];
 
 export const PANEL_NAMES = {
@@ -19,7 +20,8 @@ export const PANEL_NAMES = {
   listsPanel: 'Lists',
   travelPanel: 'Places',
   planningPanel: 'Planning',
-  budgetPanel: 'Budget'
+  budgetPanel: 'Budget',
+  contactsPanel: 'Contacts'
 };
 
 let tabsInitialized = false;
