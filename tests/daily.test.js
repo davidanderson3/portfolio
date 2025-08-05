@@ -57,23 +57,24 @@ describe('quickAddTask', () => {
     vi.resetModules();
   });
 
-  it('saves task without reloading list', async () => {
+  it('saves task and reloads list', async () => {
     const dom = new JSDOM(`
       <button class="tab-button active" data-target="dailyPanel"></button>
-      <div id="dailyTasksList"></div>
+      <div id="dailyPanel"></div>
     `, { url: 'https://example.com' });
     global.window = dom.window;
     global.document = dom.window.document;
 
     const helpers = await import('../js/helpers.js');
-    helpers.loadDecisions.mockResolvedValue([]);
+    helpers.loadDecisions
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: 'x1', type: 'task', text: 'Test', recurs: 'daily' }]);
     helpers.saveDecisions.mockResolvedValue();
     helpers.generateId.mockReturnValue('x1');
 
     const daily = await import('../js/daily.js');
-    const spy = vi.spyOn(daily, 'renderDailyTasks');
     await daily.quickAddTask('daily', 'Test');
     expect(helpers.saveDecisions).toHaveBeenCalled();
-    expect(spy).not.toHaveBeenCalled();
+    expect(document.querySelector('#dailyTasksList input[type="checkbox"]')).toBeTruthy();
   });
 });
