@@ -204,3 +204,35 @@ describe('shift+A hotkey', () => {
     expect(dom.window.document.activeElement).toBe(inp);
   });
 });
+
+describe('initial load', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('does not load daily tasks when not on daily tab', async () => {
+    const dom = new JSDOM('<!DOCTYPE html><body></body>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+
+    const ids = ['signupBtn', 'loginBtn', 'splash', 'goalsView', 'tabsContainer'];
+    ids.forEach(id => {
+      const el = dom.window.document.createElement(id.includes('Btn') ? 'button' : 'div');
+      el.id = id;
+      dom.window.document.body.appendChild(el);
+    });
+    const tab = dom.window.document.createElement('button');
+    tab.className = 'tab-button active';
+    tab.dataset.target = 'projectsPanel';
+    dom.window.document.body.appendChild(tab);
+
+    const daily = await import('../js/daily.js');
+    const auth = await import('../js/auth.js');
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    const cb = auth.initAuth.mock.calls[0][1];
+    await cb(null);
+    expect(daily.renderDailyTasks).not.toHaveBeenCalled();
+  });
+});
