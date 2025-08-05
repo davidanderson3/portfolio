@@ -116,8 +116,7 @@ describe('editing daily tasks', () => {
     const helpers = await import('../js/helpers.js');
     helpers.loadDecisions
       .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }])
-      .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }])
-      .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'New', recurs: 'daily', timeOfDay: 'evening', notes: 'N' }]);
+      .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }]);
     helpers.saveDecisions.mockResolvedValue();
 
     const { renderDailyTasks } = await import('../js/daily.js');
