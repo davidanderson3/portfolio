@@ -259,3 +259,14 @@ describe('parent goal styling', () => {
   });
 });
 
+describe('project progress', () => {
+  it('shows percent of tasks completed', () => {
+    const goal = { id: 'g1', type: 'goal', text: 'G', notes: '', completed: false, parentGoalId: null };
+    const t1 = { id: 't1', type: 'task', parentGoalId: 'g1', completed: true };
+    const t2 = { id: 't2', type: 'task', parentGoalId: 'g1', completed: false };
+    const row = createGoalRow(goal, { itemsRef: [goal, t1, t2] });
+    const prog = row.querySelector('.progress-text');
+    expect(prog.textContent).toBe('50%');
+  });
+});
+

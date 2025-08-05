@@ -150,6 +150,19 @@ export function createGoalRow(goal, options = {}) {
         noteDiv.innerHTML = linkify(goal.notes);
         middle.appendChild(noteDiv);
     }
+    if (options.itemsRef) {
+        const tasks = options.itemsRef.filter(
+            i => i.parentGoalId === goal.id && i.type === 'task'
+        );
+        if (tasks.length) {
+            const done = tasks.filter(t => t.completed).length;
+            const pct = Math.round((done / tasks.length) * 100);
+            const prog = document.createElement('div');
+            prog.className = 'progress-text';
+            prog.textContent = `${pct}%`;
+            middle.appendChild(prog);
+        }
+    }
     const buttonWrap = document.createElement('div');
     buttonWrap.className = 'button-row';
     if (goal.type === 'goal') {
@@ -594,7 +607,7 @@ function renderCalendarSection(all, calendarContent, weather) {
             [key, sunKey].forEach(k => {
                 (byDate[k] || []).forEach(goal => {
                     const wrapper = makeGoalWrapper(goal);
-                    const row = createGoalRow(goal, { hideScheduled: true });
+                    const row = createGoalRow(goal, { hideScheduled: true, itemsRef: all });
                     wrapper.appendChild(row);
 
                     const childrenContainer = document.createElement('div');
@@ -641,7 +654,7 @@ function renderCalendarSection(all, calendarContent, weather) {
             [satKey, key].forEach(k => {
                 (byDate[k] || []).forEach(goal => {
                     const wrapper = makeGoalWrapper(goal);
-                    const row = createGoalRow(goal, { hideScheduled: true });
+                    const row = createGoalRow(goal, { hideScheduled: true, itemsRef: all });
                     wrapper.appendChild(row);
 
                     const childrenContainer = document.createElement('div');
@@ -671,7 +684,7 @@ function renderCalendarSection(all, calendarContent, weather) {
 
             (byDate[key] || []).forEach(goal => {
                 const wrapper = makeGoalWrapper(goal);
-                const row = createGoalRow(goal, { hideScheduled: true });
+                const row = createGoalRow(goal, { hideScheduled: true, itemsRef: all });
                 wrapper.appendChild(row);
 
                 const childrenContainer = document.createElement('div');
@@ -701,7 +714,7 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
         if (rendered.has(goal.id)) return;
 
         const wrapper = makeGoalWrapper(goal);
-        const row = createGoalRow(goal, { hideScheduled: true });
+                const row = createGoalRow(goal, { hideScheduled: true, itemsRef: all });
         wrapper.appendChild(row);
 
         const childrenContainer = document.createElement('div');
@@ -818,7 +831,7 @@ function updateGoalCounts(items) {
 
 export function appendGoalToDOM(goal, allItems) {
     const wrapper = makeGoalWrapper(goal);
-    const row = createGoalRow(goal, { hideScheduled: true });
+    const row = createGoalRow(goal, { hideScheduled: true, itemsRef: allItems });
     wrapper.appendChild(row);
 
     const childrenContainer = document.createElement('div');
