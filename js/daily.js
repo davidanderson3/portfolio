@@ -440,7 +440,34 @@ export async function renderDailyTasks(currentUser, db) {
           allDecs[idx].notes = newNotes;
           allDecs[idx].timeOfDay = newTime;
           await saveDecisions(allDecs);
-          await renderDailyTasks(currentUser, db);
+
+          // update local task and label without re-rendering everything
+          task.text = newText;
+          task.notes = newNotes;
+          const prevTime = task.timeOfDay;
+          task.timeOfDay = newTime;
+
+          label.innerHTML = '';
+          const titleSpan = document.createElement('div');
+          titleSpan.style.overflowWrap = 'anywhere';
+          titleSpan.innerHTML = linkify(newText);
+          label.appendChild(titleSpan);
+          if (newNotes) {
+            const noteSpan = document.createElement('div');
+            noteSpan.className = 'note-text';
+            noteSpan.style.overflowWrap = 'anywhere';
+            noteSpan.innerHTML = linkify(newNotes);
+            label.appendChild(noteSpan);
+          }
+
+          if (newTime !== prevTime) {
+            const target = newTime === 'morning'
+              ? morningContainer
+              : newTime === 'afternoon'
+                ? afternoonContainer
+                : eveningContainer;
+            target.appendChild(wrapper);
+          }
         } catch {
           alert('⚠️ Could not save edit.');
         }
