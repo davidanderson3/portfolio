@@ -118,7 +118,7 @@ describe('budget persistence', () => {
     expect(saved.goalSubscriptions).toEqual({});
     expect(saved.goalRecurring).toEqual({});
     expect(typeof saved.lastUpdated).toBe('number');
-    expect(setMock).toHaveBeenCalledWith(saved);
+    expect(setMock).toHaveBeenCalledWith(saved, { merge: true });
   });
 
   it('uses localStorage when anonymous', async () => {
@@ -153,8 +153,8 @@ describe('budget persistence', () => {
     expect(res.lastUpdated).toBe(200);
   });
 
-  it('removes deleted fields from Firestore', async () => {
-    let remote = {};
+  it('preserves existing fields in Firestore', async () => {
+    let remote = { custom: 'keep' };
     setMock.mockImplementation((data, opts) => {
       remote = opts && opts.merge ? { ...remote, ...data } : data;
       return Promise.resolve();
@@ -164,13 +164,16 @@ describe('budget persistence', () => {
     const { saveBudgetData, loadBudgetData } = await import('../js/budget.js');
 
     await saveBudgetData({ escrow: 50 });
+    expect(remote.custom).toBe('keep');
     expect(remote.escrow).toBe(50);
 
-    await saveBudgetData({});
-    expect(remote.escrow).toBeUndefined();
+    await saveBudgetData({ escrow: 75 });
+    expect(remote.custom).toBe('keep');
+    expect(remote.escrow).toBe(75);
 
     const result = await loadBudgetData();
-    expect(result.escrow).toBeUndefined();
+    expect(result.escrow).toBe(75);
+    expect(remote.custom).toBe('keep');
   });
 });
 
