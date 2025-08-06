@@ -110,34 +110,64 @@ describe('time of day sections', () => {
   });
 });
 
-describe('editing daily tasks', () => {
-  it('allows inline editing with time of day', async () => {
-    vi.resetModules();
-    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
-    global.window = dom.window;
-    global.document = dom.window.document;
+  describe('editing daily tasks', () => {
+    it('allows inline editing with time of day', async () => {
+      vi.resetModules();
+      const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+      global.window = dom.window;
+      global.document = dom.window.document;
 
-    const helpers = await import('../js/helpers.js');
-    helpers.loadDecisions
-      .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }])
-      .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }]);
-    helpers.saveDecisions.mockResolvedValue();
+      const helpers = await import('../js/helpers.js');
+      helpers.loadDecisions
+        .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }])
+        .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }]);
+      helpers.saveDecisions.mockResolvedValue();
 
-    const { renderDailyTasks } = await import('../js/daily.js');
-    await renderDailyTasks(null, {});
+      const { renderDailyTasks } = await import('../js/daily.js');
+      await renderDailyTasks(null, {});
 
-    const editBtn = Array.from(document.querySelectorAll('.daily-task button')).find(b => b.textContent === '✏️');
-    editBtn.click();
-    const label = document.querySelector('.daily-task > div:nth-child(2)');
-    label.querySelector('input').value = 'New';
-    label.querySelector('textarea').value = 'N';
-    label.querySelector('select').value = 'evening';
-    editBtn.click();
-    await new Promise(r => setTimeout(r, 0));
+      const editBtn = Array.from(document.querySelectorAll('.daily-task button')).find(b => b.textContent === '✏️');
+      editBtn.click();
+      const label = document.querySelector('.daily-task > div:nth-child(2)');
+      label.querySelector('input').value = 'New';
+      label.querySelector('textarea').value = 'N';
+      label.querySelector('select').value = 'evening';
+      editBtn.click();
+      await new Promise(r => setTimeout(r, 0));
 
-    expect(helpers.saveDecisions).toHaveBeenCalledWith([
-      { id: 't1', type: 'task', text: 'New', recurs: 'daily', timeOfDay: 'evening', notes: 'N' }
-    ]);
-    expect(document.querySelector('#eveningTasksList [data-task-id="t1"]')).toBeTruthy();
+      expect(helpers.saveDecisions).toHaveBeenCalledWith([
+        { id: 't1', type: 'task', text: 'New', recurs: 'daily', timeOfDay: 'evening', notes: 'N' }
+      ]);
+      expect(document.querySelector('#eveningTasksList [data-task-id="t1"]')).toBeTruthy();
+    });
+
+    it('moves task to selected section on save', async () => {
+      vi.resetModules();
+      const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+      global.window = dom.window;
+      global.document = dom.window.document;
+
+      const helpers = await import('../js/helpers.js');
+      helpers.loadDecisions
+        .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }])
+        .mockResolvedValueOnce([{ id: 't1', type: 'task', text: 'Old', recurs: 'daily', timeOfDay: 'morning', notes: '' }]);
+      helpers.saveDecisions.mockResolvedValue();
+
+      const { renderDailyTasks } = await import('../js/daily.js');
+      await renderDailyTasks(null, {});
+
+      const editBtn = Array.from(document.querySelectorAll('.daily-task button')).find(b => b.textContent === '✏️');
+      editBtn.click();
+      const label = document.querySelector('.daily-task > div:nth-child(2)');
+      label.querySelector('input').value = 'New';
+      label.querySelector('textarea').value = 'N';
+      label.querySelector('select').value = 'endOfDay';
+      editBtn.click();
+      await new Promise(r => setTimeout(r, 0));
+
+      expect(helpers.saveDecisions).toHaveBeenCalledWith([
+        { id: 't1', type: 'task', text: 'New', recurs: 'daily', timeOfDay: 'endOfDay', notes: 'N' }
+      ]);
+      expect(document.querySelector('#endOfDayTasksList [data-task-id="t1"]')).toBeTruthy();
+    });
   });
-});

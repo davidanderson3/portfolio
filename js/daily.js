@@ -466,11 +466,7 @@ export async function renderDailyTasks(currentUser, db) {
           }
 
           if (newTime !== prevTime) {
-            const target = newTime === 'morning'
-              ? morningContainer
-              : newTime === 'afternoon'
-                ? afternoonContainer
-                : eveningContainer;
+            const target = targetMap[newTime] || morningContainer;
             target.appendChild(wrapper);
           }
         } catch {
