@@ -57,6 +57,53 @@ describe('daily task ordering', () => {
   });
 });
 
+describe('missed task shading', () => {
+  let renderDailyTasks;
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    const now = new Date('2024-01-10T12:00:00Z');
+    vi.setSystemTime(now);
+
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+
+    const yesterday = new Date(now.getTime() - 86400000);
+    const twoDaysAgo = new Date(now.getTime() - 2 * 86400000);
+    const threeDaysAgo = new Date(now.getTime() - 3 * 86400000);
+    localStorage.setItem('taskCompletions', JSON.stringify({
+      [yesterday.toLocaleDateString('en-CA')]: ['t1'],
+      [twoDaysAgo.toLocaleDateString('en-CA')]: ['t2'],
+      [threeDaysAgo.toLocaleDateString('en-CA')]: ['t3']
+    }));
+
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 't1', type: 'task', text: 'A', recurs: 'daily' },
+      { id: 't2', type: 'task', text: 'B', recurs: 'daily' },
+      { id: 't3', type: 'task', text: 'C', recurs: 'daily' }
+    ]);
+
+    ({ renderDailyTasks } = await import('../js/daily.js'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('darkens tasks based on days missed', async () => {
+    await renderDailyTasks(null, {});
+    const t1 = document.querySelector('[data-task-id="t1"] .daily-task').style.background;
+    const t2 = document.querySelector('[data-task-id="t2"] .daily-task').style.background;
+    const t3 = document.querySelector('[data-task-id="t3"] .daily-task').style.background;
+    expect(t1).toBe('rgb(255, 250, 240)');
+    expect(t2).toBe('rgba(255, 165, 0, 0.2)');
+    expect(t3).toBe('rgba(255, 165, 0, 0.3)');
+  });
+});
+
 describe('quickAddTask', () => {
   beforeEach(() => {
     vi.resetModules();

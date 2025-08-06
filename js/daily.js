@@ -326,6 +326,19 @@ export async function renderDailyTasks(currentUser, db) {
     }
   }
 
+  function getDaysMissed(taskId) {
+    let last = null;
+    for (const [date, ids] of Object.entries(completionMap)) {
+      if (ids.includes(taskId)) {
+        const d = new Date(date);
+        if (!last || d > last) last = d;
+      }
+    }
+    if (!last) return 0;
+    const diff = Math.floor((now - last) / 86400000);
+    return Math.max(diff - 1, 0);
+  }
+
   function makeTaskElement(task, period = 'daily', listElOverride) {
     const config = {
       daily: { set: doneDaily, key: todayKey, container: container },
@@ -349,6 +362,17 @@ export async function renderDailyTasks(currentUser, db) {
 
     const row = document.createElement('div');
     row.className = 'daily-task';
+    let bgColor = '#fffaf0';
+    let borderColor = '#ffbb55';
+    if (period === 'daily' && !isDone) {
+      const missed = getDaysMissed(task.id);
+      if (missed > 0) {
+        const intensity = Math.min(missed, 7);
+        const alpha = 0.2 + (intensity - 1) * 0.1;
+        bgColor = `rgba(255,165,0,${alpha})`;
+        borderColor = `rgba(255,165,0,${Math.min(alpha + 0.2, 1)})`;
+      }
+    }
     Object.assign(row.style, {
       display: 'grid',
       gridTemplateColumns: '24px 1fr auto',
@@ -356,8 +380,8 @@ export async function renderDailyTasks(currentUser, db) {
       columnGap: '10px',
       padding: '6px 12px',
       borderRadius: '8px',
-      background: '#fffaf0',
-      borderLeft: '4px solid #ffbb55',
+      background: bgColor,
+      borderLeft: `4px solid ${borderColor}`,
       marginBottom: '0',
       opacity: isDone ? '0.6' : '1'
     });
