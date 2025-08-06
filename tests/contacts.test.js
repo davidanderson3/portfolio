@@ -18,7 +18,12 @@ describe('contacts panel', () => {
     initContactsPanel();
     const list = document.getElementById('contactsList');
     expect(list.children.length).toBe(1);
-    expect(list.textContent).toContain('Alice');
+    const label = list.querySelector('label');
+    const checkbox = list.querySelector('input[type="checkbox"]');
+    expect(label).not.toBeNull();
+    expect(checkbox).not.toBeNull();
+    expect(checkbox.value).toBe('Alice');
+    expect(label.textContent).toContain('Alice');
   });
 
   it('adds a contact and saves to localStorage', () => {
@@ -26,7 +31,12 @@ describe('contacts panel', () => {
     addContact('Bob');
     const list = document.getElementById('contactsList');
     expect(list.children.length).toBe(1);
-    expect(list.textContent).toContain('Bob');
+    const label = list.querySelector('label');
+    const checkbox = list.querySelector('input[type="checkbox"]');
+    expect(label).not.toBeNull();
+    expect(checkbox).not.toBeNull();
+    expect(checkbox.value).toBe('Bob');
+    expect(label.textContent).toContain('Bob');
     const stored = JSON.parse(localStorage.getItem('contacts'));
     expect(stored).toEqual(['Bob']);
   });
