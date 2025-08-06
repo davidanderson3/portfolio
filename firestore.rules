@@ -19,7 +19,17 @@ service cloud.firestore {
 
     // 4) Projects ordering at /decisions/{uid}
     match /decisions/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.data.items is list
+                   && request.resource.data.items.size() > 0
+                   && request.resource.data.items.all(item =>
+                        item.keys().hasAll(['id', 'text']) &&
+                        item.id is string && item.id.size() > 0 &&
+                        item.text is string && item.text.size() > 0 &&
+                        !item.id.matches('^demo-.*')
+                     );
     }
 
     // 5) Lists storage at /lists/{uid}
