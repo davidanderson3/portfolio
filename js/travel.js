@@ -446,7 +446,12 @@ export async function initTravelPanel() {
             localStorage.setItem(storageKey(), JSON.stringify(travelData));
             try {
               if (p.id)
-                await db.collection('users').doc(user.uid).collection('travel').doc(p.id).set(p);
+                await db
+                  .collection('users')
+                  .doc(user.uid)
+                  .collection('travel')
+                  .doc(p.id)
+                  .set(p, { merge: true });
             } catch (err) {
               console.error('Failed to update place', err);
             }
