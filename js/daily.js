@@ -309,7 +309,7 @@ export async function renderDailyTasks(currentUser, db) {
         setRef.delete(task.id);
       }
       if (currentUser) {
-        await db.collection('taskCompletions').doc(currentUser.uid).set(completionMap);
+        await db.collection('taskCompletions').doc(currentUser.uid).set(completionMap, { merge: true });
       } else {
         localStorage.setItem(COMPLETION_KEY, JSON.stringify(completionMap));
       }
