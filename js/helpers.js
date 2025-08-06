@@ -443,24 +443,6 @@ export function formatDaysUntil(dateStr) {
 /* lists support */
 const LISTS_KEY = 'myLists';
 
-function stripListFields(lists) {
-  return lists.map(({ hiddenUntil, items = [], ...rest }) => ({
-    ...rest,
-    items: items.map(({ hiddenUntil: ih, ...iRest }) => iRest)
-  }));
-}
-
-const SAMPLE_LISTS_SIGNATURE = JSON.stringify(stripListFields(SAMPLE_LISTS));
-
-function isSampleLists(lists) {
-  if (!Array.isArray(lists) || lists.length !== SAMPLE_LISTS.length) return false;
-  try {
-    return JSON.stringify(stripListFields(lists)) === SAMPLE_LISTS_SIGNATURE;
-  } catch {
-    return false;
-  }
-}
-
 export async function loadLists() {
   const user = getCurrentUser?.();
   if (!user) {
@@ -474,17 +456,6 @@ export async function loadLists() {
   const doc = await db.collection('lists').doc(user.uid).get();
   if (doc.exists && Array.isArray(doc.data().lists)) {
     return doc.data().lists;                                   // Firestore copy exists
-  }
-
-  // first-time sign-in: migrate legacy localStorage
-  const legacy = JSON.parse(localStorage.getItem(LISTS_KEY) || '[]');
-  if (legacy.length) {
-    if (!isSampleLists(legacy) && (typeof confirm !== 'function' || confirm('Import lists stored on this device?'))) {
-      await db.collection('lists').doc(user.uid).set({ lists: legacy });
-      localStorage.removeItem(LISTS_KEY);
-      return legacy;
-    }
-    localStorage.removeItem(LISTS_KEY);
   }
   return [];
 }
