@@ -20,7 +20,13 @@ export function renderContacts() {
   list.innerHTML = '';
   contacts.forEach(name => {
     const li = document.createElement('li');
-    li.textContent = name;
+    const label = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = name;
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(` ${name}`));
+    li.appendChild(label);
     list.appendChild(li);
   });
 }
