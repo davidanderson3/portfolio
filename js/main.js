@@ -155,6 +155,17 @@ window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('addPlaceBtn')?.click();
       return;
     }
+    if (active === 'contactsPanel') {
+      showAddModal({
+        title: 'Add Contact',
+        options: [],
+        showTextInput: true,
+        onSubmit({ text }) {
+          if (text) window.addContact?.(text);
+        }
+      });
+      return;
+    }
   }
 
   function setupHideTabButton(btn) {

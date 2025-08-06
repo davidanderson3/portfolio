@@ -81,6 +81,9 @@ export function initTabs(user, db) {
       else if (target === 'budgetPanel') {
         await window.initBudgetPanel();
       }
+      else if (target === 'contactsPanel') {
+        await window.initContactsPanel();
+      }
     });
   });
 
@@ -120,6 +123,9 @@ export function initTabs(user, db) {
     }
     else if (initial === 'budgetPanel') {
       window.initBudgetPanel();
+    }
+    else if (initial === 'contactsPanel') {
+      window.initContactsPanel();
     }
   };
 
