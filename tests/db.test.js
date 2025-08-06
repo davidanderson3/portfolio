@@ -69,7 +69,10 @@ describe('database helpers', () => {
     const items = [{ id: 'a', text: 'b' }];
     const { saveDecisions, flushPendingDecisions } = await import('../js/helpers.js');
     await saveDecisions(items);
-    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual(items);
+    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual({
+      uid: 'user1',
+      items
+    });
     expect(setMock).not.toHaveBeenCalled();
     await flushPendingDecisions();
     expect(setMock).toHaveBeenCalledWith({ items }, { merge: true });
@@ -134,7 +137,10 @@ describe('database helpers', () => {
     const { saveDecisions } = await import('../js/helpers.js');
     await saveDecisions([{ id: 'x', text: 'y' }]);
     expect(alertSpy).toHaveBeenCalled();
-    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual([{ id: 'x', text: 'y' }]);
+    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual({
+      uid: null,
+      items: [{ id: 'x', text: 'y' }]
+    });
   });
 
   it('saves lists for anonymous users to localStorage', async () => {
@@ -156,6 +162,32 @@ describe('database helpers', () => {
       expect(new Date(i.scheduled).getTime()).toBeGreaterThan(Date.now());
     });
     expect(dbMock.collection).not.toHaveBeenCalled();
+  });
+
+  it('does not sync sample decisions from local cache on login', async () => {
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => ({ uid: 'user1' }),
+      db: {
+        collection: vi.fn(() => ({
+          doc: vi.fn(() => ({
+            get: getMock,
+            set: setMock,
+            update: updateMock
+          }))
+        }))
+      }
+    }));
+    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
+    localStorage.setItem(
+      'pendingDecisions',
+      JSON.stringify({ uid: null, items: SAMPLE_DECISIONS })
+    );
+    getMock.mockResolvedValue({ data: () => ({ items: [{ id: '1', text: 'server' }] }) });
+    const { loadDecisions } = await import('../js/helpers.js');
+    const result = await loadDecisions(true);
+    expect(setMock).not.toHaveBeenCalled();
+    expect(result).toEqual([{ id: '1', text: 'server' }]);
+    expect(localStorage.getItem('pendingDecisions')).toBeNull();
   });
 
   it('debounces rapid saveDecisions calls', async () => {

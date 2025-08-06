@@ -30,6 +30,21 @@ function shiftSampleCalendarItems(items) {
   });
 }
 
+function stripScheduleFields(list) {
+  return list.map(({ scheduled, scheduledEnd, ...rest }) => rest);
+}
+
+const SAMPLE_SIGNATURE = JSON.stringify(stripScheduleFields(SAMPLE_DECISIONS));
+
+function isSampleDataset(items) {
+  if (!Array.isArray(items) || items.length !== SAMPLE_DECISIONS.length) return false;
+  try {
+    return JSON.stringify(stripScheduleFields(items)) === SAMPLE_SIGNATURE;
+  } catch {
+    return false;
+  }
+}
+
 // Cache decisions in-memory and persist a copy in localStorage
 let decisionsCache = null;
 const DECISIONS_LOCAL_KEY = 'pendingDecisions';
@@ -60,21 +75,31 @@ export async function loadDecisions(forceRefresh = false) {
   const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
   if (pending) {
     try {
-      const items = JSON.parse(pending);
-      if (currentUser) {
+      const parsed = JSON.parse(pending);
+      const { items, uid } = Array.isArray(parsed) ? { items: parsed, uid: null } : parsed;
+
+      if (!currentUser) {
+        decisionsCache = items;
+        localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
+        if (!forceRefresh) return decisionsCache;
+      } else if (uid !== currentUser.uid || isSampleDataset(items)) {
+        localStorage.removeItem(DECISIONS_LOCAL_KEY);
+      } else {
         await db
           .collection('decisions')
           .doc(currentUser.uid)
           .set({ items }, { merge: true });
         localStorage.removeItem(DECISIONS_LOCAL_KEY);
+        decisionsCache = items;
+        localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
+        if (!forceRefresh) return decisionsCache;
       }
-      decisionsCache = items;
-      localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
-      if (!forceRefresh) return decisionsCache;
     } catch (err) {
       console.warn('Failed to sync pending decisions:', err);
       try {
-        decisionsCache = JSON.parse(pending);
+        const parsed = JSON.parse(pending);
+        const items = Array.isArray(parsed) ? parsed : parsed.items;
+        decisionsCache = items;
         if (!forceRefresh) return decisionsCache;
       } catch {
         // ignore parse failures and fall through
@@ -130,14 +155,19 @@ export async function loadDecisions(forceRefresh = false) {
     const pendingRaw = localStorage.getItem(DECISIONS_LOCAL_KEY);
     if (pendingRaw) {
       try {
-        const pendingItems = JSON.parse(pendingRaw);
-        const map = new Map(serverItems.map(it => [it.id, it]));
-        for (const item of pendingItems) {
-          if (item && item.id) {
-            map.set(item.id, item);
+        const parsed = JSON.parse(pendingRaw);
+        const { items: pendingItems, uid } = Array.isArray(parsed)
+          ? { items: parsed, uid: null }
+          : parsed;
+        if (uid === currentUser.uid && !isSampleDataset(pendingItems)) {
+          const map = new Map(serverItems.map(it => [it.id, it]));
+          for (const item of pendingItems) {
+            if (item && item.id) {
+              map.set(item.id, item);
+            }
           }
+          merged = Array.from(map.values());
         }
-        merged = Array.from(map.values());
       } catch {
         // ignore parse failure and fall back to server items
       }
@@ -159,12 +189,18 @@ export async function saveDecisions(items) {
   }
   if (!currentUser) {
     alert('⚠️ Please sign in to save your changes.');
-    localStorage.setItem(DECISIONS_LOCAL_KEY, JSON.stringify(items));
+    localStorage.setItem(
+      DECISIONS_LOCAL_KEY,
+      JSON.stringify({ uid: null, items })
+    );
     localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
     decisionsCache = items;
     return;
   }
-  localStorage.setItem(DECISIONS_LOCAL_KEY, JSON.stringify(items));
+  localStorage.setItem(
+    DECISIONS_LOCAL_KEY,
+    JSON.stringify({ uid: currentUser.uid, items })
+  );
   localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
   decisionsCache = items;
 
@@ -229,10 +265,15 @@ export async function flushPendingDecisions() {
   }
   const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
   if (!pending) return;
-  let items;
+  let parsed;
   try {
-    items = JSON.parse(pending);
+    parsed = JSON.parse(pending);
   } catch {
+    return;
+  }
+  const { items, uid } = Array.isArray(parsed) ? { items: parsed, uid: null } : parsed;
+  if (uid !== currentUser.uid || isSampleDataset(items)) {
+    localStorage.removeItem(DECISIONS_LOCAL_KEY);
     return;
   }
   try {
