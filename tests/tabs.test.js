@@ -19,6 +19,7 @@ describe('initTabs persistence', () => {
       <button class="tab-button" data-target="planningPanel"></button>
       <button class="tab-button" data-target="budgetPanel"></button>
       <button class="tab-button" data-target="contactsPanel"></button>
+      <button class="tab-button" data-target="backupsPanel"></button>
       <div id="projectsPanel"></div>
       <div id="calendarPanel"></div>
       <div id="dailyPanel"></div>
@@ -28,6 +29,7 @@ describe('initTabs persistence', () => {
       <div id="planningPanel"></div>
       <div id="budgetPanel"></div>
       <div id="contactsPanel"></div>
+      <div id="backupsPanel"></div>
     `, { url: 'http://localhost/' });
     global.window = dom.window;
     global.document = dom.window.document;
@@ -50,6 +52,7 @@ describe('initTabs persistence', () => {
     global.window.initListsPanel = vi.fn();
     global.window.initTravelPanel = vi.fn();
     global.window.initPlanningPanel = vi.fn();
+    global.window.initBackupsPanel = vi.fn();
 
     const mod = await import('../js/tabs.js');
     mod.initTabs(null, {});
@@ -73,6 +76,7 @@ describe('routine tab behavior', () => {
       <button class="tab-button" data-target="planningPanel"></button>
       <button class="tab-button" data-target="budgetPanel"></button>
       <button class="tab-button" data-target="contactsPanel"></button>
+      <button class="tab-button" data-target="backupsPanel"></button>
       <div id="projectsPanel"></div>
       <div id="calendarPanel"></div>
       <div id="dailyPanel" style="display:none;">
@@ -84,6 +88,7 @@ describe('routine tab behavior', () => {
       <div id="planningPanel"></div>
       <div id="budgetPanel"></div>
       <div id="contactsPanel"></div>
+      <div id="backupsPanel"></div>
     `, { url: 'http://localhost/' });
 
     global.window = dom.window;
@@ -102,6 +107,7 @@ describe('routine tab behavior', () => {
     global.window.initTravelPanel = vi.fn();
     global.window.initPlanningPanel = vi.fn();
     global.window.initBudgetPanel = vi.fn();
+    global.window.initBackupsPanel = vi.fn();
 
     const mod = await import('../js/tabs.js');
     mod.initTabs(null, {});
