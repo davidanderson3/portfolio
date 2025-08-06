@@ -93,6 +93,7 @@
         <button class="tab-button" data-target="planningPanel">Planning</button>
         <button class="tab-button" data-target="budgetPanel">Budget</button>
         <button class="tab-button" data-target="contactsPanel">Contacts</button>
+        <button class="tab-button" data-target="backupsPanel">Backups</button>
       </div>
     </nav>
 
@@ -285,6 +286,17 @@
         </div>
       </div>
 
+      <!-- BACKUPS PANEL -->
+      <div id="backupsPanel" class="main-layout" style="display:none">
+        <div class="full-column">
+          <div class="panel-header">
+            <h2>Backups</h2>
+            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </div>
+          <ul id="backupList"></ul>
+        </div>
+      </div>
+
 
   </section>
 
@@ -320,6 +332,7 @@
   <script type="module" src="js/planning.js"></script>
   <script type="module" src="js/budget.js"></script>
   <script type="module" src="js/contacts.js"></script>
+  <script type="module" src="js/backups.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>

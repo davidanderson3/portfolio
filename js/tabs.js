@@ -9,7 +9,8 @@ export const PANELS = [
   'travelPanel',
   'planningPanel',
   'budgetPanel',
-  'contactsPanel'
+  'contactsPanel',
+  'backupsPanel'
 ];
 
 export const PANEL_NAMES = {
@@ -21,7 +22,8 @@ export const PANEL_NAMES = {
   travelPanel: 'Places',
   planningPanel: 'Planning',
   budgetPanel: 'Budget',
-  contactsPanel: 'Contacts'
+  contactsPanel: 'Contacts',
+  backupsPanel: 'Backups'
 };
 
 let tabsInitialized = false;
@@ -84,6 +86,9 @@ export function initTabs(user, db) {
       else if (target === 'contactsPanel') {
         await window.initContactsPanel();
       }
+      else if (target === 'backupsPanel') {
+        await window.initBackupsPanel();
+      }
     });
   });
 
@@ -126,6 +131,9 @@ export function initTabs(user, db) {
     }
     else if (initial === 'contactsPanel') {
       window.initContactsPanel();
+    }
+    else if (initial === 'backupsPanel') {
+      window.initBackupsPanel();
     }
   };
 
