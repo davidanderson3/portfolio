@@ -76,12 +76,16 @@ export async function loadDecisions(forceRefresh = false) {
   if (pending) {
     try {
       const parsed = JSON.parse(pending);
-      const { items, uid } = Array.isArray(parsed) ? { items: parsed, uid: null } : parsed;
+      const { items, uid, demo } = Array.isArray(parsed)
+        ? { items: parsed, uid: null, demo: false }
+        : parsed;
 
       if (!currentUser) {
         decisionsCache = items;
         localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
         if (!forceRefresh) return decisionsCache;
+      } else if (demo) {
+        // keep demo data in localStorage but do not sync automatically
       } else if (uid !== currentUser.uid || isSampleDataset(items)) {
         localStorage.removeItem(DECISIONS_LOCAL_KEY);
       } else {
@@ -188,10 +192,11 @@ export async function saveDecisions(items) {
     return;
   }
   if (!currentUser) {
+    if (isSampleDataset(items)) return;
     alert('⚠️ Please sign in to save your changes.');
     localStorage.setItem(
       DECISIONS_LOCAL_KEY,
-      JSON.stringify({ uid: null, items })
+      JSON.stringify({ uid: null, demo: true, items })
     );
     localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
     decisionsCache = items;
@@ -256,7 +261,7 @@ export async function loadGoalOrder(forceRefresh = false) {
   }
 }
 
-export async function flushPendingDecisions() {
+export async function flushPendingDecisions(includeDemo = false) {
   const currentUser = getCurrentUser();
   if (!currentUser) return;
   if (saveTimer) {
@@ -271,8 +276,13 @@ export async function flushPendingDecisions() {
   } catch {
     return;
   }
-  const { items, uid } = Array.isArray(parsed) ? { items: parsed, uid: null } : parsed;
-  if (uid !== currentUser.uid || isSampleDataset(items)) {
+  const { items, uid, demo } = Array.isArray(parsed)
+    ? { items: parsed, uid: null, demo: false }
+    : parsed;
+  if (demo && !includeDemo) {
+    return;
+  }
+  if (!includeDemo && (uid !== currentUser.uid || isSampleDataset(items))) {
     localStorage.removeItem(DECISIONS_LOCAL_KEY);
     return;
   }

@@ -139,8 +139,62 @@ describe('database helpers', () => {
     expect(alertSpy).toHaveBeenCalled();
     expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual({
       uid: null,
+      demo: true,
       items: [{ id: 'x', text: 'y' }]
     });
+  });
+
+  it('skips saving sample decisions for anonymous users', async () => {
+    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
+    const { saveDecisions } = await import('../js/helpers.js');
+    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
+    await saveDecisions(SAMPLE_DECISIONS);
+    expect(localStorage.getItem('pendingDecisions')).toBeNull();
+  });
+
+  it('does not sync demo decisions from local cache on login', async () => {
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => ({ uid: 'user1' }),
+      db: {
+        collection: vi.fn(() => ({
+          doc: vi.fn(() => ({
+            get: getMock,
+            set: setMock,
+            update: updateMock
+          }))
+        }))
+      }
+    }));
+    const demoItems = [{ id: 'd1', text: 'demo' }];
+    localStorage.setItem(
+      'pendingDecisions',
+      JSON.stringify({ uid: null, demo: true, items: demoItems })
+    );
+    getMock.mockResolvedValue({ data: () => ({ items: [{ id: '1', text: 'server' }] }) });
+    const { loadDecisions } = await import('../js/helpers.js');
+    const result = await loadDecisions(true);
+    expect(setMock).not.toHaveBeenCalled();
+    expect(result).toEqual([{ id: '1', text: 'server' }]);
+    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual({
+      uid: null,
+      demo: true,
+      items: demoItems
+    });
+  });
+
+  it('flushes demo decisions only when opted in', async () => {
+    const demoItems = [{ id: 'd2', text: 'demo' }];
+    localStorage.setItem(
+      'pendingDecisions',
+      JSON.stringify({ uid: null, demo: true, items: demoItems })
+    );
+    const { flushPendingDecisions } = await import('../js/helpers.js');
+    await flushPendingDecisions();
+    expect(setMock).not.toHaveBeenCalled();
+    expect(JSON.parse(localStorage.getItem('pendingDecisions')).items).toEqual(demoItems);
+    await flushPendingDecisions(true);
+    expect(setMock).toHaveBeenCalledWith({ items: demoItems }, { merge: true });
+    expect(localStorage.getItem('pendingDecisions')).toBeNull();
   });
 
   it('saves lists for anonymous users to localStorage', async () => {
