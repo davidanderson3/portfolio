@@ -271,4 +271,47 @@ describe('database helpers', () => {
     expect(setMock).toHaveBeenCalledTimes(1);
     expect(setMock).toHaveBeenCalledWith({ items: itemsB }, { merge: true });
   });
+
+  it('merges or discards pending decisions when differing from server', async () => {
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => ({ uid: 'user1' }),
+      db: {
+        collection: vi.fn(() => ({
+          doc: vi.fn(() => ({
+            get: getMock,
+            set: setMock,
+            update: updateMock
+          }))
+        }))
+      }
+    }));
+
+    const { loadDecisions } = await import('../js/helpers.js');
+
+    const server = [{ id: '1', text: 'server' }];
+    getMock.mockResolvedValue({ data: () => ({ items: server }) });
+    localStorage.setItem('pendingDecisions', JSON.stringify({ uid: 'user1', items: [{ id: '1', text: 'local' }, { id: '2', text: 'two' }] }));
+    const setSpy = vi.spyOn(localStorage, 'setItem');
+
+    global.window = { confirm: vi.fn(() => true) };
+    const merged = await loadDecisions();
+    expect(window.confirm).toHaveBeenCalled();
+    expect(setMock).toHaveBeenCalledWith({ items: [{ id: '1', text: 'local' }, { id: '2', text: 'two' }] }, { merge: true });
+    const backupCall = setSpy.mock.calls.find(c => /^backup-/.test(c[0]));
+    expect(JSON.parse(backupCall[1])).toEqual(server);
+    expect(merged).toEqual([{ id: '1', text: 'local' }, { id: '2', text: 'two' }]);
+
+    // now test discard path
+    setMock.mockClear();
+    getMock.mockResolvedValue({ data: () => ({ items: server }) });
+    localStorage.setItem('pendingDecisions', JSON.stringify({ uid: 'user1', items: [{ id: '1', text: 'local' }] }));
+    setSpy.mockClear();
+    global.window = { confirm: vi.fn(() => false) };
+    const discarded = await loadDecisions();
+    expect(window.confirm).toHaveBeenCalled();
+    expect(setMock).not.toHaveBeenCalled();
+    expect(discarded).toEqual(server);
+    const backupNone = setSpy.mock.calls.find(c => /^backup-/.test(c[0]));
+    expect(backupNone).toBeUndefined();
+  });
 });

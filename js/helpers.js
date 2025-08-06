@@ -86,17 +86,46 @@ export async function loadDecisions(forceRefresh = false) {
         if (!forceRefresh) return decisionsCache;
       } else if (demo) {
         // keep demo data in localStorage but do not sync automatically
-      } else if (uid !== currentUser.uid || isSampleDataset(items)) {
+      } else if (uid !== currentUser.uid || isSampleDataset(items) || items.length === 0) {
         localStorage.removeItem(DECISIONS_LOCAL_KEY);
       } else {
-        await db
-          .collection('decisions')
-          .doc(currentUser.uid)
-          .set({ items }, { merge: true });
-        localStorage.removeItem(DECISIONS_LOCAL_KEY);
-        decisionsCache = items;
-        localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
-        if (!forceRefresh) return decisionsCache;
+        const docRef = db.collection('decisions').doc(currentUser.uid);
+        const snap = await docRef.get();
+        const serverItems = (snap.data() && Array.isArray(snap.data().items)) ? snap.data().items : [];
+
+        if (JSON.stringify(items) !== JSON.stringify(serverItems)) {
+          const merge = typeof window !== 'undefined' && typeof window.confirm === 'function'
+            ? window.confirm('Local decisions differ from server.\nPress OK to merge, Cancel to discard local changes.')
+            : true;
+          if (!merge) {
+            localStorage.removeItem(DECISIONS_LOCAL_KEY);
+            decisionsCache = serverItems;
+            localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(serverItems));
+            if (!forceRefresh) return decisionsCache;
+          } else {
+            const merged = [...serverItems];
+            items.forEach(it => {
+              const idx = merged.findIndex(s => s.id === it.id);
+              if (idx >= 0) merged[idx] = it; else merged.push(it);
+            });
+            const backupKey = `backup-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+            try {
+              localStorage.setItem(backupKey, JSON.stringify(serverItems));
+            } catch {
+              // ignore backup failures
+            }
+            await docRef.set({ items: merged }, { merge: true });
+            localStorage.removeItem(DECISIONS_LOCAL_KEY);
+            decisionsCache = merged;
+            localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(merged));
+            if (!forceRefresh) return decisionsCache;
+          }
+        } else {
+          localStorage.removeItem(DECISIONS_LOCAL_KEY);
+          decisionsCache = items;
+          localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
+          if (!forceRefresh) return decisionsCache;
+        }
       }
     } catch (err) {
       console.warn('Failed to sync pending decisions:', err);
