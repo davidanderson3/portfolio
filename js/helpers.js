@@ -313,16 +313,31 @@ export async function restoreBackup(selectFn) {
     alert('Invalid backup data');
     return null;
   }
+  if (!Array.isArray(items) || items.length === 0 || isSampleDataset(items)) {
+    alert('⚠️ Refusing to restore empty or demo backup.');
+    return null;
+  }
+  const dateStr = chosen.replace('backup-', '');
+  const sizeKb = (JSON.stringify(items).length / 1024).toFixed(1);
+  const msg = `Restore backup from ${dateStr} containing ${items.length} item${
+    items.length === 1 ? '' : 's'
+  } (~${sizeKb} KB)?`;
+  const confirmFn = typeof globalThis.confirm === 'function' ? globalThis.confirm : () => true;
+  if (!confirmFn(msg)) return null;
   const currentUser = getCurrentUser();
   if (!currentUser) {
     alert('⚠️ Please sign in to restore backup.');
     return null;
   }
   try {
+    const docRef = db.collection('decisions').doc(currentUser.uid);
+    const snap = await docRef.get();
+    const prevItems = (snap.data && typeof snap.data === 'function' ? snap.data() : snap.data)?.items || [];
     await db
-      .collection('decisions')
+      .collection('restoreBackups')
       .doc(currentUser.uid)
-      .set({ items }, { merge: true });
+      .set({ items: prevItems });
+    await docRef.set({ items }, { merge: true });
     localStorage.removeItem(DECISIONS_LOCAL_KEY);
     localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
     decisionsCache = items;
