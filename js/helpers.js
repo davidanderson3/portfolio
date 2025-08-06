@@ -290,6 +290,50 @@ export async function flushPendingDecisions() {
   }
 }
 
+export async function restoreBackup(selectFn) {
+  const backups = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('backup-')) backups.push(key);
+  }
+  if (backups.length === 0) {
+    alert('No backups found');
+    return null;
+  }
+  const choose = selectFn || ((keys) => {
+    const msg = `Choose backup:\n${keys.join('\n')}`;
+    return window.prompt(msg);
+  });
+  const chosen = choose(backups);
+  if (!chosen || !backups.includes(chosen)) return null;
+  let items;
+  try {
+    items = JSON.parse(localStorage.getItem(chosen));
+  } catch {
+    alert('Invalid backup data');
+    return null;
+  }
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    alert('⚠️ Please sign in to restore backup.');
+    return null;
+  }
+  try {
+    await db
+      .collection('decisions')
+      .doc(currentUser.uid)
+      .set({ items }, { merge: true });
+    localStorage.removeItem(DECISIONS_LOCAL_KEY);
+    localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
+    decisionsCache = items;
+    return chosen;
+  } catch (err) {
+    console.error('Failed to restore backup:', err);
+    alert('⚠️ Failed to restore backup.');
+    return null;
+  }
+}
+
 export async function saveGoalOrder(order) {
   const currentUser = getCurrentUser();
   if (!currentUser || !Array.isArray(order) || order.length === 0) {
