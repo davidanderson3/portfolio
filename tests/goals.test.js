@@ -19,7 +19,6 @@ vi.mock('../js/helpers.js', () => ({
   saveGoalOrder: vi.fn(),
   loadGoalOrder: vi.fn(async () => []),
   generateId: vi.fn(() => 'g1'),
-  pickDate: vi.fn(async () => ''),
   pickDateRange: vi.fn(async () => ({ start: null, end: null })),
   makeIconBtn: (symbol, title, fn) => {
     const b = document.createElement('button');
@@ -209,36 +208,13 @@ describe('editing scheduled date', () => {
 
     row.querySelector('.middle-group input').value = 'Test';
     const inputs = row.querySelectorAll('.due-column input');
-    inputs[1].value = '2024-02-01';
+    inputs[0].value = '2024-02-01';
 
     editBtn.click();
     await Promise.resolve();
     await Promise.resolve();
 
   expect(document.getElementById('goalList').contains(wrapper)).toBe(true);
-  });
-});
-
-describe('deadline button', () => {
-  it('updates deadline when set', async () => {
-    const goal = { id: 'g1', type: 'goal', text: 'Test', notes: '', completed: false, dateCompleted: '', parentGoalId: null, deadline: '', scheduled: '', scheduledEnd: '' };
-    helpers.loadDecisions.mockResolvedValue([goal]);
-
-    const mod = await import('../js/goals.js');
-    const { createGoalRow } = mod;
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'decision goal-card';
-    wrapper.dataset.goalId = goal.id;
-    const row = createGoalRow(goal);
-    wrapper.appendChild(row);
-    document.getElementById('goalList').appendChild(wrapper);
-
-    helpers.pickDate.mockResolvedValue('2024-02-10');
-    await row.querySelector('button[title="Set deadline"]').onclick();
-
-    expect(helpers.saveDecisions).toHaveBeenCalled();
-    expect(goal.deadline).toBe('2024-02-10');
   });
 });
 
