@@ -192,6 +192,31 @@ async function recordMetric(metricId, value, extra = null, dayKey = activeMetric
   }
 }
 
+async function deleteMetricEntry(metricId, dayKey, index) {
+  const user = getCurrentUser();
+  if (!user) {
+    const all = JSON.parse(localStorage.getItem(STATS_KEY) || '{}');
+    if (all[dayKey] && Array.isArray(all[dayKey][metricId])) {
+      all[dayKey][metricId].splice(index, 1);
+      if (!all[dayKey][metricId].length) {
+        delete all[dayKey][metricId];
+        if (!Object.keys(all[dayKey]).length) delete all[dayKey];
+      }
+      localStorage.setItem(STATS_KEY, JSON.stringify(all));
+    }
+    return;
+  }
+  const ref = db
+    .collection('users').doc(user.uid)
+    .collection('dailyStats').doc(dayKey);
+  const snap = await ref.get();
+  const data = snap.exists && snap.data().metrics ? snap.data().metrics : {};
+  const arr = Array.isArray(data[metricId]) ? data[metricId].slice() : [];
+  if (index < 0 || index >= arr.length) return;
+  arr.splice(index, 1);
+  await ref.set({ metrics: { [metricId]: arr } }, { merge: true });
+}
+
 async function loadAllStats() {
   const user = auth.currentUser;
   if (!user) {
@@ -342,6 +367,51 @@ async function showMetricGraph(cfg) {
   modal.style.display = 'flex';
 }
 
+async function showMetricValues(cfg) {
+  const allStats = await loadAllStats();
+  const entries = [];
+  Object.keys(allStats).forEach(day => {
+    const arr = allStats[day][cfg.id] || [];
+    arr.forEach((entry, idx) => {
+      entries.push({ day, entry, index: idx });
+    });
+  });
+  entries.sort((a, b) => b.entry.timestamp - a.entry.timestamp);
+  const list = document.getElementById('metricValuesList');
+  list.innerHTML = '';
+  entries.forEach(({ day, entry, index }) => {
+    let display = entry.value;
+    if (cfg.unit === 'time_mmss') {
+      const m = Math.floor(display);
+      const s = String(Math.round((display - m) * 60)).padStart(2, '0');
+      display = `${m}:${s}`;
+    }
+    const row = document.createElement('div');
+    Object.assign(row.style, { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0' });
+    const txt = document.createElement('span');
+    txt.textContent = `${day} – ${display}`;
+    if (cfg.unit === 'list' && typeof entry.value === 'string') txt.style.whiteSpace = 'pre-wrap';
+    row.appendChild(txt);
+    const del = document.createElement('span');
+    del.textContent = '❌';
+    del.style.cursor = 'pointer';
+    del.addEventListener('click', async () => {
+      await deleteMetricEntry(cfg.id, day, index);
+      await showMetricValues(cfg);
+      await renderStatsSummary();
+    });
+    row.appendChild(del);
+    list.appendChild(row);
+  });
+  if (!entries.length) {
+    const none = document.createElement('div');
+    none.textContent = 'No entries';
+    list.appendChild(none);
+  }
+  const modal = document.getElementById('metricValuesModal');
+  modal.style.display = 'flex';
+}
+
 async function renderStatsSummary(dayKey = activeMetricsDate) {
   const config = await loadMetricsConfig();
   config.forEach(cfg => {
@@ -451,6 +521,8 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     span.textContent = `${display} ${cfg.unitLabel}`;
     if (cfg.unit === 'list' && editValue) span.title = editValue;
     span.style.marginRight = '8px';
+    span.style.cursor = 'pointer';
+    span.addEventListener('click', () => showMetricValues(cfg));
     td2.appendChild(span);
     const valueEdit = document.createElement('span');
     valueEdit.textContent = '✏️';
@@ -772,6 +844,13 @@ const metricModal = document.getElementById('metricChartModal');
 if (metricModal) {
   metricModal.addEventListener('click', e => {
     if (e.target === metricModal) metricModal.style.display = 'none';
+  });
+}
+
+const metricValuesModal = document.getElementById('metricValuesModal');
+if (metricValuesModal) {
+  metricValuesModal.addEventListener('click', e => {
+    if (e.target === metricValuesModal) metricValuesModal.style.display = 'none';
   });
 }
 
