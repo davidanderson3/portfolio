@@ -273,13 +273,19 @@ window.addEventListener('DOMContentLoaded', () => {
     setView('daily');
   }
 
+  function clearTaskLists() {
+    ['goalList', 'completedList', 'dailyTasksList', 'weeklyTasksList', 'monthlyTasksList'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '';
+    });
+  }
+
+  // Clear any stale content immediately to avoid flashing old tasks on mobile
+  clearTaskLists();
 
   initAuth(uiRefs, async (user) => {
 
-  ['goalList', 'completedList', 'dailyTasksList', 'weeklyTasksList', 'monthlyTasksList'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = '';
-  });
+    clearTaskLists();
 
     window.openGoalIds?.clear?.();
 
