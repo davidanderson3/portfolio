@@ -79,6 +79,13 @@ export async function addCalendarGoal(date = '') {
     await renderGoalsAndSubitems();
 }
 
+function collectDescendants(goalId, items) {
+    const kids = items.filter(
+        i => i.parentGoalId === goalId && (i.type === 'goal' || i.type === 'task')
+    );
+    return kids.flatMap(k => [k, ...(k.type === 'goal' ? collectDescendants(k.id, items) : [])]);
+}
+
 export function createGoalRow(goal, options = {}) {
     const row = document.createElement('div');
     row.className = 'decision-row';
@@ -149,22 +156,20 @@ export function createGoalRow(goal, options = {}) {
         noteDiv.innerHTML = linkify(goal.notes);
         middle.appendChild(noteDiv);
     }
+    const buttonWrap = document.createElement('div');
+    buttonWrap.className = 'button-row';
     if (options.itemsRef) {
-        const children = options.itemsRef.filter(
-            i => i.parentGoalId === goal.id && (i.type === 'task' || i.type === 'goal')
-        );
-        if (children.length) {
-            const done = children.filter(c => c.completed).length;
-            const pct = Math.round((done / children.length) * 100);
-            row.style.background = `linear-gradient(90deg, rgba(60, 179, 113, 0.2) ${pct}%, #fbfdfc ${pct}%)`;
+        const descendants = collectDescendants(goal.id, options.itemsRef);
+        if (descendants.length) {
+            const done = descendants.filter(c => c.completed).length;
+            const pct = Math.round((done / descendants.length) * 100);
+            row.style.background = `linear-gradient(90deg, rgba(144, 238, 144, 0.2) ${pct}%, #fbfdfc ${pct}%)`;
             const prog = document.createElement('div');
             prog.className = 'progress-text';
             prog.textContent = `${pct}%`;
-            middle.appendChild(prog);
+            buttonWrap.appendChild(prog);
         }
     }
-    const buttonWrap = document.createElement('div');
-    buttonWrap.className = 'button-row';
     if (goal.type === 'goal') {
         attachEditButtons(goal, buttonWrap, row, options.itemsRef);
     }

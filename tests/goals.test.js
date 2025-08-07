@@ -245,5 +245,13 @@ describe('project progress', () => {
     expect(prog.textContent).toBe('50%');
     expect(row.style.background).toMatch(/50%/);
   });
+  it('includes nested subgoals and tasks in progress', () => {
+    const goal = { id: 'g1', type: 'goal', text: 'G', notes: '', completed: false, parentGoalId: null };
+    const g2 = { id: 'g2', type: 'goal', parentGoalId: 'g1', completed: false };
+    const t1 = { id: 't1', type: 'task', parentGoalId: 'g2', completed: true };
+    const row = createGoalRow(goal, { itemsRef: [goal, g2, t1] });
+    const prog = row.querySelector('.progress-text');
+    expect(prog.textContent).toBe('50%');
+  });
 });
 
