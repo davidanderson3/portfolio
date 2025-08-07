@@ -150,12 +150,13 @@ export function createGoalRow(goal, options = {}) {
         middle.appendChild(noteDiv);
     }
     if (options.itemsRef) {
-        const tasks = options.itemsRef.filter(
-            i => i.parentGoalId === goal.id && i.type === 'task'
+        const children = options.itemsRef.filter(
+            i => i.parentGoalId === goal.id && (i.type === 'task' || i.type === 'goal')
         );
-        if (tasks.length) {
-            const done = tasks.filter(t => t.completed).length;
-            const pct = Math.round((done / tasks.length) * 100);
+        if (children.length) {
+            const done = children.filter(c => c.completed).length;
+            const pct = Math.round((done / children.length) * 100);
+            row.style.background = `linear-gradient(90deg, rgba(60, 179, 113, 0.2) ${pct}%, #fbfdfc ${pct}%)`;
             const prog = document.createElement('div');
             prog.className = 'progress-text';
             prog.textContent = `${pct}%`;
