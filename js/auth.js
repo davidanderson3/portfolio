@@ -2,7 +2,7 @@
 import "https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js";
 import "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js";
 import "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js";
-import { clearDecisionsCache, clearGoalOrderCache } from './helpers.js';
+import { clearDecisionsCache, clearGoalOrderCache } from './cache.js';
 
 export let currentUser = null;
 

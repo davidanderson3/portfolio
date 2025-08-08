@@ -9,7 +9,13 @@ function initAuthForPage() {
   initAuth(uiRefs, () => {});
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+function initPage() {
   initSettingsPage();
   initAuthForPage();
-});
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initPage);
+} else {
+  initPage();
+}

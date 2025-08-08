@@ -1,5 +1,15 @@
 import { getCurrentUser, auth, db } from './auth.js';
 import { SAMPLE_DECISIONS, SAMPLE_LISTS } from './sampleData.js';
+import {
+  getDecisionsCache,
+  setDecisionsCache,
+  clearDecisionsCache,
+  getGoalOrderCache,
+  setGoalOrderCache,
+  clearGoalOrderCache
+} from './cache.js';
+
+export { clearDecisionsCache, clearGoalOrderCache } from './cache.js';
 
 // Demo data for visitors stored in sampleData.js
 
@@ -79,8 +89,6 @@ function isSampleDataset(items) {
 }
 
 // Cache decisions and goal order in memory only
-let decisionsCache = null;
-let goalOrderCache = null;
 let saveTimer = null;
 let pendingDecisions = null;
 
@@ -113,14 +121,6 @@ function scheduleSave(user, items) {
   }, 200);
 }
 
-export function clearDecisionsCache() {
-  decisionsCache = null;
-}
-
-export function clearGoalOrderCache() {
-  goalOrderCache = null;
-}
-
 export function generateId() {
   return '_' + Math.random().toString(36).substr(2, 9);
 }
@@ -128,14 +128,16 @@ export function generateId() {
 export async function loadDecisions(forceRefresh = false) {
   const currentUser = getCurrentUser();
 
-  if (decisionsCache && !forceRefresh) {
-    return decisionsCache;
+  const cached = getDecisionsCache();
+  if (cached && !forceRefresh) {
+    return cached;
   }
 
   if (!currentUser) {
     console.warn('🚫 No current user — returning sample data');
-    decisionsCache = shiftSampleCalendarItems(SAMPLE_DECISIONS);
-    return decisionsCache;
+    const shifted = shiftSampleCalendarItems(SAMPLE_DECISIONS);
+    setDecisionsCache(shifted);
+    return shifted;
   }
 
   const snap = await db.collection('decisions').doc(currentUser.uid).get();
@@ -154,8 +156,8 @@ export async function loadDecisions(forceRefresh = false) {
     items = [];
   }
 
-  decisionsCache = items;
-  return decisionsCache;
+  setDecisionsCache(items);
+  return getDecisionsCache();
 }
 
 export async function saveDecisions(items) {
@@ -170,7 +172,7 @@ export async function saveDecisions(items) {
     if (!items.length) return;
   }
 
-  decisionsCache = items;
+  setDecisionsCache(items);
   let user = getCurrentUser();
   if (!user) {
     if (isSampleDataset(items)) return;
@@ -199,29 +201,33 @@ export async function loadGoalOrder(forceRefresh = false) {
     return [];
   }
 
-  if (goalOrderCache && !forceRefresh) {
-    return goalOrderCache;
+  const cached = getGoalOrderCache();
+  if (cached && !forceRefresh) {
+    return cached;
   }
 
   const snap = await db.collection('decisions').doc(currentUser.uid).get();
-  goalOrderCache = Array.isArray(snap.data()?.goalOrder)
+  const order = Array.isArray(snap.data()?.goalOrder)
     ? snap.data().goalOrder
     : [];
-  return goalOrderCache;
+  setGoalOrderCache(order);
+  return order;
 }
 
 export async function flushPendingDecisions() {
   const currentUser = getCurrentUser();
   if (!currentUser || !saveTimer) return;
-  if (containsDemoItems(decisionsCache)) {
-    decisionsCache = stripDemoItems(decisionsCache);
-    if (!decisionsCache.length) {
+  let items = getDecisionsCache();
+  if (containsDemoItems(items)) {
+    items = stripDemoItems(items);
+    if (!items.length) {
       clearTimeout(saveTimer);
       saveTimer = null;
       return;
     }
+    setDecisionsCache(items);
   }
-  if (isSampleDataset(decisionsCache)) {
+  if (isSampleDataset(items)) {
     clearTimeout(saveTimer);
     saveTimer = null;
     return;
@@ -232,7 +238,7 @@ export async function flushPendingDecisions() {
     await db
       .collection('decisions')
       .doc(currentUser.uid)
-      .set({ items: decisionsCache }, { merge: true });
+      .set({ items }, { merge: true });
   } catch (err) {
     console.error('Failed to save decisions:', err);
     alert('⚠️ Failed to save changes.');
@@ -287,7 +293,7 @@ export async function restoreBackup(selectFn) {
       .doc(currentUser.uid)
       .set({ items: prevItems });
     await docRef.set({ items }, { merge: true });
-    decisionsCache = items;
+    setDecisionsCache(items);
     return chosen;
   } catch (err) {
     console.error('Failed to restore backup:', err);
@@ -308,7 +314,7 @@ export async function saveGoalOrder(order) {
       .collection('decisions')
       .doc(currentUser.uid)
       .set({ goalOrder: order }, { merge: true });
-    goalOrderCache = order;
+    setGoalOrderCache(order);
   } catch (err) {
     console.error('Failed to save goal order:', err);
     alert('⚠️ Failed to save changes.');
