@@ -2,6 +2,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Compute a hash signature of decisions without schedule fields
+    function itemsSignature(items) {
+      return util.sha256(
+        items.map(item =>
+          item.diff({'scheduled': item.scheduled, 'scheduledEnd': item.scheduledEnd})
+        ).toString()
+      );
+    }
+
+    // Precomputed signature of the demo/sample decisions dataset
+    const SAMPLE_DECISIONS_SIGNATURE =
+      "1839cc711b0bf76d2bd63a4078be69ff639132a8a5ec3ece03876d7567203834";
+
     // 1) User settings under /users/{uid}/settings/{docId}
     match /users/{userId}/settings/{settingDocId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -29,7 +42,9 @@ service cloud.firestore {
                         item.id is string && item.id.size() > 0 &&
                         item.text is string && item.text.size() > 0 &&
                         !item.id.matches('^demo-.*')
-                     );
+                     )
+                   && itemsSignature(request.resource.data.items) !=
+                      SAMPLE_DECISIONS_SIGNATURE;
     }
 
     // 5) Lists storage at /lists/{uid}
