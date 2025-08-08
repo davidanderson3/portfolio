@@ -4,7 +4,7 @@ service cloud.firestore {
 
     // Compute a hash signature of decisions without schedule fields
     function itemsSignature(items) {
-      return util.sha256(
+      return hashing.sha256(
         items.map(item,
           item.diff({'scheduled': item.scheduled, 'scheduledEnd': item.scheduledEnd})
         ).toString()
