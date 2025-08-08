@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom';
 vi.mock('https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js', () => ({}), { virtual: true });
 vi.mock('https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js', () => ({}), { virtual: true });
 vi.mock('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js', () => ({}), { virtual: true });
-vi.mock('../js/helpers.js', () => ({
+vi.mock('../js/cache.js', () => ({
   clearDecisionsCache: vi.fn(),
   clearGoalOrderCache: vi.fn()
 }));
