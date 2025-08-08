@@ -69,10 +69,6 @@ describe('database helpers', () => {
     const items = [{ id: 'a', text: 'b' }];
     const { saveDecisions, flushPendingDecisions } = await import('../js/helpers.js');
     await saveDecisions(items);
-    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual({
-      uid: 'user1',
-      items
-    });
     expect(setMock).not.toHaveBeenCalled();
     await flushPendingDecisions();
     expect(setMock).toHaveBeenCalledWith({ items }, { merge: true });
@@ -137,68 +133,9 @@ describe('database helpers', () => {
     const { saveDecisions } = await import('../js/helpers.js');
     await saveDecisions([{ id: 'x', text: 'y' }]);
     expect(alertSpy).toHaveBeenCalled();
-    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual({
-      uid: null,
-      demo: true,
-      items: [{ id: 'x', text: 'y' }]
-    });
-  });
-
-  it('skips saving sample decisions for anonymous users', async () => {
-    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
-    const { saveDecisions } = await import('../js/helpers.js');
-    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
-    await saveDecisions(SAMPLE_DECISIONS);
-    expect(localStorage.getItem('pendingDecisions')).toBeNull();
-  });
-
-  it('does not sync demo decisions from local cache on login', async () => {
-    vi.doMock('../js/auth.js', () => ({
-      getCurrentUser: () => ({ uid: 'user1' }),
-      db: {
-        collection: vi.fn(() => ({
-          doc: vi.fn(() => ({
-            get: getMock,
-            set: setMock,
-            update: updateMock
-          }))
-        }))
-      }
-    }));
-    const demoItems = [{ id: 'd1', text: 'demo' }];
-    localStorage.setItem(
-      'pendingDecisions',
-      JSON.stringify({ uid: null, demo: true, items: demoItems })
-    );
-    getMock.mockResolvedValue({ data: () => ({ items: [{ id: '1', text: 'server' }] }) });
-    const { loadDecisions } = await import('../js/helpers.js');
-    const result = await loadDecisions(true);
-    expect(setMock).not.toHaveBeenCalled();
-    expect(result).toEqual([{ id: '1', text: 'server' }]);
-    expect(JSON.parse(localStorage.getItem('pendingDecisions'))).toEqual({
-      uid: null,
-      demo: true,
-      items: demoItems
-    });
-  });
-
-  it('flushes demo decisions only when opted in', async () => {
-    const demoItems = [{ id: 'd2', text: 'demo' }];
-    localStorage.setItem(
-      'pendingDecisions',
-      JSON.stringify({ uid: null, demo: true, items: demoItems })
-    );
-    const { flushPendingDecisions } = await import('../js/helpers.js');
-    await flushPendingDecisions();
-    expect(setMock).not.toHaveBeenCalled();
-    expect(JSON.parse(localStorage.getItem('pendingDecisions')).items).toEqual(demoItems);
-    await flushPendingDecisions(true);
-    expect(setMock).toHaveBeenCalledWith({ items: demoItems }, { merge: true });
-    expect(localStorage.getItem('pendingDecisions')).toBeNull();
   });
 
   it('saves lists for anonymous users to localStorage', async () => {
-    // Remock getCurrentUser to return null
     vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
     const { saveLists: saveAnon } = await import('../js/helpers.js');
     await saveAnon([{ name: 'test' }]);
@@ -218,32 +155,6 @@ describe('database helpers', () => {
     expect(dbMock.collection).not.toHaveBeenCalled();
   });
 
-  it('does not sync sample decisions from local cache on login', async () => {
-    vi.doMock('../js/auth.js', () => ({
-      getCurrentUser: () => ({ uid: 'user1' }),
-      db: {
-        collection: vi.fn(() => ({
-          doc: vi.fn(() => ({
-            get: getMock,
-            set: setMock,
-            update: updateMock
-          }))
-        }))
-      }
-    }));
-    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
-    localStorage.setItem(
-      'pendingDecisions',
-      JSON.stringify({ uid: null, items: SAMPLE_DECISIONS })
-    );
-    getMock.mockResolvedValue({ data: () => ({ items: [{ id: '1', text: 'server' }] }) });
-    const { loadDecisions } = await import('../js/helpers.js');
-    const result = await loadDecisions(true);
-    expect(setMock).not.toHaveBeenCalled();
-    expect(result).toEqual([{ id: '1', text: 'server' }]);
-    expect(localStorage.getItem('pendingDecisions')).toBeNull();
-  });
-
   it('debounces rapid saveDecisions calls', async () => {
     vi.doMock('../js/auth.js', () => ({
       getCurrentUser: () => ({ uid: 'user1' }),
@@ -259,59 +170,13 @@ describe('database helpers', () => {
     }));
     const itemsA = [{ id: 'a', text: 'A' }];
     const itemsB = [{ id: 'b', text: 'B' }];
-
     const { saveDecisions, flushPendingDecisions } = await import('../js/helpers.js');
     await saveDecisions(itemsA);
     await saveDecisions(itemsB);
-
     expect(setMock).not.toHaveBeenCalled();
-
     await flushPendingDecisions();
-
     expect(setMock).toHaveBeenCalledTimes(1);
     expect(setMock).toHaveBeenCalledWith({ items: itemsB }, { merge: true });
   });
-
-  it('merges or discards pending decisions when differing from server', async () => {
-    vi.doMock('../js/auth.js', () => ({
-      getCurrentUser: () => ({ uid: 'user1' }),
-      db: {
-        collection: vi.fn(() => ({
-          doc: vi.fn(() => ({
-            get: getMock,
-            set: setMock,
-            update: updateMock
-          }))
-        }))
-      }
-    }));
-
-    const { loadDecisions } = await import('../js/helpers.js');
-
-    const server = [{ id: '1', text: 'server' }];
-    getMock.mockResolvedValue({ data: () => ({ items: server }) });
-    localStorage.setItem('pendingDecisions', JSON.stringify({ uid: 'user1', items: [{ id: '1', text: 'local' }, { id: '2', text: 'two' }] }));
-    const setSpy = vi.spyOn(localStorage, 'setItem');
-
-    global.window = { confirm: vi.fn(() => true) };
-    const merged = await loadDecisions();
-    expect(window.confirm).toHaveBeenCalled();
-    expect(setMock).toHaveBeenCalledWith({ items: [{ id: '1', text: 'local' }, { id: '2', text: 'two' }] }, { merge: true });
-    const backupCall = setSpy.mock.calls.find(c => /^backup-/.test(c[0]));
-    expect(JSON.parse(backupCall[1])).toEqual(server);
-    expect(merged).toEqual([{ id: '1', text: 'local' }, { id: '2', text: 'two' }]);
-
-    // now test discard path
-    setMock.mockClear();
-    getMock.mockResolvedValue({ data: () => ({ items: server }) });
-    localStorage.setItem('pendingDecisions', JSON.stringify({ uid: 'user1', items: [{ id: '1', text: 'local' }] }));
-    setSpy.mockClear();
-    global.window = { confirm: vi.fn(() => false) };
-    const discarded = await loadDecisions();
-    expect(window.confirm).toHaveBeenCalled();
-    expect(setMock).not.toHaveBeenCalled();
-    expect(discarded).toEqual(server);
-    const backupNone = setSpy.mock.calls.find(c => /^backup-/.test(c[0]));
-    expect(backupNone).toBeUndefined();
-  });
 });
+

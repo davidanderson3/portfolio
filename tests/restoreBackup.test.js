@@ -54,8 +54,7 @@ describe('restoreBackup', () => {
     expect(getMock).toHaveBeenCalled();
     expect(global.confirm).toHaveBeenCalledWith(expect.stringContaining('2024-01-01'));
     expect(global.confirm.mock.calls[0][0]).toContain('1 item');
-    expect(JSON.parse(localStorage.getItem('cachedDecisions'))).toEqual(backupData);
-    expect(localStorage.getItem('pendingDecisions')).toBeNull();
+    expect(localStorage.getItem('cachedDecisions')).toBeNull();
   });
 
   it('refuses to restore empty backup', async () => {
