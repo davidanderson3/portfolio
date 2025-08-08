@@ -18,7 +18,13 @@ function normalize(data) {
 export async function loadHiddenTabs() {
   const user = getCurrentUser?.();
   if (!user) {
-    const stored = JSON.parse(localStorage.getItem(KEY) || '{}');
+    let stored = {};
+    try {
+      stored = JSON.parse(localStorage.getItem(KEY) || '{}');
+    } catch (err) {
+      console.error('Failed to parse hidden tabs from localStorage:', err);
+      stored = {};
+    }
     return normalize(stored);
   }
   const snap = await db
