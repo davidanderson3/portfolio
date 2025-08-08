@@ -376,6 +376,13 @@ window.addEventListener('DOMContentLoaded', () => {
       flushPendingDecisions().catch(() => {});
     }
   });
+  window.addEventListener('beforeunload', async () => {
+    try {
+      await flushPendingDecisions();
+    } catch {
+      // ignore errors during unload
+    }
+  });
 });
 
 window.renderDailyTasks = renderDailyTasks;
