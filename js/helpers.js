@@ -175,6 +175,14 @@ export async function loadDecisions(forceRefresh = false) {
     return it;
   });
 
+  // Remove any duplicate decisions by id
+  const seenIds = new Set();
+  items = items.filter(it => {
+    if (!it?.id || seenIds.has(it.id)) return false;
+    seenIds.add(it.id);
+    return true;
+  });
+
   if (isSampleDataset(items)) {
     console.warn('⚠️ Ignoring sample decisions fetched from Firestore');
     items = [];

@@ -192,7 +192,14 @@ export function attachTaskButtons(item, row, listContainer, allDecisions) {
 export async function renderChildren(goal, all, container) {
     container.innerHTML = '';
     const now = Date.now();
-    const children = all.filter(item => item.parentGoalId === goal.id);
+    const childCandidates = all.filter(item => item.parentGoalId === goal.id);
+    // De-duplicate child items by id to avoid showing duplicates
+    const seenIds = new Set();
+    const children = childCandidates.filter(c => {
+        if (!c?.id || seenIds.has(c.id)) return false;
+        seenIds.add(c.id);
+        return true;
+    });
 
     // ── Active sub-goals ──
     const activeGoals = children.filter(c => {
