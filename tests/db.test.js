@@ -180,5 +180,28 @@ describe('database helpers', () => {
     expect(setMock).toHaveBeenCalledTimes(1);
     expect(setMock).toHaveBeenCalledWith({ items: itemsB }, { merge: true });
   });
+
+  it('does not save sample dataset after login', async () => {
+    const authCallbacks = [];
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => null,
+      db: {
+        collection: vi.fn(() => ({
+          doc: vi.fn(() => ({
+            get: getMock,
+            set: setMock,
+            update: updateMock
+          }))
+        }))
+      },
+      auth: { onAuthStateChanged: vi.fn(cb => { authCallbacks.push(cb); return () => {}; }) }
+    }));
+    const { saveDecisions, flushPendingDecisions } = await import('../js/helpers.js');
+    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
+    await saveDecisions(SAMPLE_DECISIONS);
+    authCallbacks.forEach(cb => cb({ uid: 'user1' }));
+    await flushPendingDecisions();
+    expect(setMock).not.toHaveBeenCalled();
+  });
 });
 
