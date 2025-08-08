@@ -1,4 +1,4 @@
-import { loadDecisions, saveDecisions, generateId, flushPendingDecisions } from './helpers.js';
+import { loadDecisions, saveDecisions, generateId, flushPendingDecisions, clearDecisionsCache } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
 import { renderGoalsAndSubitems, addCalendarGoal } from './goals.js';
 import { initAuth, db, currentUser } from './auth.js';
@@ -283,11 +283,12 @@ window.addEventListener('DOMContentLoaded', () => {
   // Clear any stale content immediately to avoid flashing old tasks on mobile
   clearTaskLists();
 
-  initAuth(uiRefs, async (user) => {
+    initAuth(uiRefs, async (user) => {
 
-    clearTaskLists();
+      clearTaskLists();
+      clearDecisionsCache();
 
-    window.openGoalIds?.clear?.();
+      window.openGoalIds?.clear?.();
 
     if (!user) {
       clearPlanningCache();

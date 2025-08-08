@@ -56,6 +56,7 @@ auth.onAuthStateChanged(user => {
   if (user && pendingDecisions) {
     const items = pendingDecisions;
     pendingDecisions = null;
+    if (isSampleDataset(items)) return;
     scheduleSave(user, items);
   }
 });
@@ -126,6 +127,7 @@ export async function saveDecisions(items) {
   decisionsCache = items;
   let user = getCurrentUser();
   if (!user) {
+    if (isSampleDataset(items)) return;
     pendingDecisions = items;
     user = await new Promise(resolve => {
       const unsub = auth.onAuthStateChanged(u => {
@@ -133,15 +135,15 @@ export async function saveDecisions(items) {
         resolve(u);
       });
     });
-  }
-
-  if (!user) {
-    if (isSampleDataset(items)) return;
-    alert('⚠️ Please sign in to save your changes.');
-    return;
+    if (!user) {
+      pendingDecisions = null;
+      alert('⚠️ Please sign in to save your changes.');
+      return;
+    }
   }
 
   pendingDecisions = null;
+  if (isSampleDataset(items)) return;
   scheduleSave(user, items);
 }
 
@@ -165,6 +167,11 @@ export async function loadGoalOrder(forceRefresh = false) {
 export async function flushPendingDecisions() {
   const currentUser = getCurrentUser();
   if (!currentUser || !saveTimer) return;
+  if (isSampleDataset(decisionsCache)) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+    return;
+  }
   clearTimeout(saveTimer);
   saveTimer = null;
   try {

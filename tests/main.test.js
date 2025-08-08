@@ -5,7 +5,8 @@ vi.mock('../js/helpers.js', () => ({
   loadDecisions: vi.fn(),
   saveDecisions: vi.fn(),
   generateId: vi.fn(),
-  flushPendingDecisions: vi.fn().mockResolvedValue()
+  flushPendingDecisions: vi.fn().mockResolvedValue(),
+  clearDecisionsCache: vi.fn()
 }));
 
 vi.mock('../js/daily.js', () => ({ renderDailyTasks: vi.fn() }));
