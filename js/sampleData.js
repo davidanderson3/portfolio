@@ -1,3 +1,13 @@
+function deepFreeze(obj) {
+  if (obj && typeof obj === 'object') {
+    Object.freeze(obj);
+    Object.getOwnPropertyNames(obj).forEach(prop => {
+      deepFreeze(obj[prop]);
+    });
+  }
+  return obj;
+}
+
 export const SAMPLE_DECISIONS = [
   {
     id: 'demo-goal',
@@ -292,6 +302,9 @@ export const SAMPLE_LISTS = [
     ]
   }
 ];
+
+deepFreeze(SAMPLE_DECISIONS);
+deepFreeze(SAMPLE_LISTS);
 
 export const SAMPLE_METRICS = [
   { id: 'mood', label: 'Mood Rating', unit: 'rating', direction: 'higher' },
