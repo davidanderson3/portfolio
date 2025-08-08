@@ -1,4 +1,4 @@
-import { getCurrentUser, db } from './auth.js';
+import { getCurrentUser, auth, db } from './auth.js';
 import { SAMPLE_DECISIONS, SAMPLE_LISTS } from './sampleData.js';
 
 // Demo data for visitors stored in sampleData.js
@@ -49,6 +49,31 @@ function isSampleDataset(items) {
 let decisionsCache = null;
 let goalOrderCache = null;
 let saveTimer = null;
+let pendingDecisions = null;
+
+// If a save was attempted before login completed, retry once a user appears
+auth.onAuthStateChanged(user => {
+  if (user && pendingDecisions) {
+    const items = pendingDecisions;
+    pendingDecisions = null;
+    scheduleSave(user, items);
+  }
+});
+
+function scheduleSave(user, items) {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await db
+        .collection('decisions')
+        .doc(user.uid)
+        .set({ items }, { merge: true });
+    } catch (err) {
+      console.error('Failed to save decisions:', err);
+      alert('⚠️ Failed to save changes.');
+    }
+  }, 200);
+}
 
 export function clearDecisionsCache() {
   decisionsCache = null;
@@ -91,33 +116,33 @@ export async function loadDecisions(forceRefresh = false) {
 }
 
 export async function saveDecisions(items) {
-  const currentUser = getCurrentUser();
   if (!Array.isArray(items)) return;
   // ensure at least one valid decision exists
   if (!items.some(i => i.id && i.text)) {
     console.warn('⚠️ Refusing to save empty or invalid decisions');
     return;
   }
-  if (!currentUser) {
+
+  decisionsCache = items;
+  let user = getCurrentUser();
+  if (!user) {
+    pendingDecisions = items;
+    user = await new Promise(resolve => {
+      const unsub = auth.onAuthStateChanged(u => {
+        unsub();
+        resolve(u);
+      });
+    });
+  }
+
+  if (!user) {
     if (isSampleDataset(items)) return;
     alert('⚠️ Please sign in to save your changes.');
-    decisionsCache = items;
     return;
   }
-  decisionsCache = items;
 
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    try {
-      await db
-        .collection('decisions')
-        .doc(currentUser.uid)
-        .set({ items }, { merge: true });
-    } catch (err) {
-      console.error('Failed to save decisions:', err);
-      alert('⚠️ Failed to save changes.');
-    }
-  }, 200);
+  pendingDecisions = null;
+  scheduleSave(user, items);
 }
 
 export async function loadGoalOrder(forceRefresh = false) {

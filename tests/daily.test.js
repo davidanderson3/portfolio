@@ -15,7 +15,7 @@ vi.mock('../js/helpers.js', () => ({
   pickDate: vi.fn()
 }));
 
-vi.mock('../js/auth.js', () => ({ db: {}, currentUser: null }));
+vi.mock('../js/auth.js', () => ({ db: {}, currentUser: null, auth: { onAuthStateChanged: vi.fn() } }));
 vi.mock('../js/tabReports.js', () => ({ updateCompletionDots: vi.fn() }));
 vi.mock('../js/googleCalendar.js', () => ({ createCalendarEvent: vi.fn() }));
 

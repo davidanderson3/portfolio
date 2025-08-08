@@ -39,7 +39,7 @@ vi.mock('../js/goals.js', async () => {
   const actual = await vi.importActual('../js/goals.js');
   return { ...actual, renderGoalsAndSubitems: vi.fn() };
 });
-vi.mock('../js/auth.js', () => ({ db: {} }));
+vi.mock('../js/auth.js', () => ({ db: {}, auth: { onAuthStateChanged: vi.fn() } }));
 
 let renderTodaySchedule;
 let helpers;

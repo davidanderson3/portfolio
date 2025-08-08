@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 
-vi.mock('../js/auth.js', () => ({ currentUser: null }));
+vi.mock('../js/auth.js', () => ({ currentUser: null, auth: { onAuthStateChanged: vi.fn() } }));
 
 beforeEach(() => {
   vi.resetModules();

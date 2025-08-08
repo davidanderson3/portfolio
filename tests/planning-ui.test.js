@@ -9,6 +9,7 @@ var collectionMock;
 
 vi.mock('../js/auth.js', () => ({
   getCurrentUser: () => currentUser,
+  auth: { onAuthStateChanged: vi.fn() },
   db: { collection: (...args) => collectionMock(...args) }
 }));
 

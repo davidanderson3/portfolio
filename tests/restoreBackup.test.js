@@ -20,6 +20,7 @@ global.localStorage = storage;
 
 vi.mock('../js/auth.js', () => ({
   getCurrentUser: () => ({ uid: 'user1' }),
+  auth: { onAuthStateChanged: vi.fn() },
   db: {
     collection: name => ({
       doc: () => {
