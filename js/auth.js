@@ -2,6 +2,11 @@
 import "https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js";
 import "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js";
 import "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import { clearDecisionsCache, clearGoalOrderCache } from './cache.js';
 
 export let currentUser = null;
@@ -21,10 +26,14 @@ export const auth = firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(err => {
   console.error('Failed to set auth persistence:', err);
 });
-export const db = firebase.firestore();
-db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-  console.warn('Persistence support disabled', err);
+
+initializeFirestore(firebase.app(), {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
 });
+
+export const db = firebase.firestore();
 
 export function getCurrentUser() {
   return auth.currentUser;

@@ -4,6 +4,11 @@ import { JSDOM } from 'jsdom';
 vi.mock('https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js', () => ({}), { virtual: true });
 vi.mock('https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js', () => ({}), { virtual: true });
 vi.mock('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js', () => ({}), { virtual: true });
+vi.mock('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js', () => ({
+  initializeFirestore: vi.fn(),
+  persistentLocalCache: vi.fn(() => ({})),
+  persistentMultipleTabManager: vi.fn(() => ({}))
+}), { virtual: true });
 vi.mock('../js/cache.js', () => ({
   clearDecisionsCache: vi.fn(),
   clearGoalOrderCache: vi.fn()
@@ -27,11 +32,12 @@ describe('auth persistence and UI updates', () => {
     function authFn() { return authMock; }
     authFn.Auth = { Persistence: { LOCAL: 'LOCAL' } };
 
-    global.firebase = {
-      initializeApp: vi.fn(),
-      auth: authFn,
-      firestore: vi.fn(() => ({ enablePersistence: vi.fn().mockResolvedValue() }))
-    };
+      global.firebase = {
+        initializeApp: vi.fn(),
+        app: vi.fn(() => ({})),
+        auth: authFn,
+        firestore: vi.fn(() => ({}))
+      };
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.resetModules();
