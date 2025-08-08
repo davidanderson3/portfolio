@@ -273,16 +273,31 @@ async function loadAndSyncGoals() {
     if (user) {
         goalOrder = await loadGoalOrder();
 
-        const missing = goals.map(g => g.id).filter(id => !goalOrder.includes(id));
-        if (missing.length) {
-            goalOrder = [...goalOrder, ...missing];
+        // Remove any duplicate IDs from persisted goal order
+        const deduped = Array.from(new Set(goalOrder));
+
+        const missing = goals.map(g => g.id).filter(id => !deduped.includes(id));
+
+        // If we removed duplicates or found new goals, persist the cleaned order
+        if (missing.length || deduped.length !== goalOrder.length) {
+            goalOrder = [...deduped, ...missing];
             await saveGoalOrder(goalOrder);
+        } else {
+            goalOrder = deduped;
         }
     } else {
         goalOrder = goals.map(g => g.id);
     }
 
-    const sortedGoals = goalOrder.map(id => goalMap[id]).filter(Boolean);
+    const seenIds = new Set();
+    const sortedGoals = goalOrder
+        .filter(id => {
+            if (seenIds.has(id)) return false;
+            seenIds.add(id);
+            return true;
+        })
+        .map(id => goalMap[id])
+        .filter(Boolean);
     return { allDecisions, sortedGoals };
 }
 
@@ -715,6 +730,7 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
 
     sortedGoals.forEach(goal => {
         if (rendered.has(goal.id)) return;
+        rendered.add(goal.id);
 
         const wrapper = makeGoalWrapper(goal);
                 const row = createGoalRow(goal, { hideScheduled: true, itemsRef: all });
