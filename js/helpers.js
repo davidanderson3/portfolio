@@ -88,6 +88,17 @@ function isSampleDataset(items) {
   }
 }
 
+async function awaitAuthUser() {
+  const existing = getCurrentUser();
+  if (existing) return existing;
+  return new Promise(resolve => {
+    const unsubscribe = auth.onAuthStateChanged(u => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+      resolve(u);
+    });
+  });
+}
+
 // Cache decisions and goal order in memory only
 let saveTimer = null;
 let pendingDecisions = null;
@@ -110,12 +121,27 @@ function scheduleSave(user, items) {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     try {
+      let authUser = getCurrentUser();
+      if (!authUser) authUser = await awaitAuthUser();
+      if (!authUser) {
+        console.warn('🛑 Cannot save decisions: no authenticated user');
+        return;
+      }
+      let toSave = items;
+      if (containsDemoItems(toSave)) {
+        toSave = stripDemoItems(toSave);
+      }
+      if (!toSave.length || isSampleDataset(toSave)) return;
       await db
         .collection('decisions')
-        .doc(user.uid)
-        .set({ items }, { merge: true });
+        .doc(authUser.uid)
+        .set({ items: toSave }, { merge: true });
     } catch (err) {
-      console.error('Failed to save decisions:', err);
+      if (err?.code === 'permission-denied') {
+        console.error('Save rejected by security rules:', err);
+      } else {
+        console.error('Failed to save decisions:', err);
+      }
       alert('⚠️ Failed to save changes.');
     }
   }, 200);
@@ -177,14 +203,10 @@ export async function saveDecisions(items) {
   if (!user) {
     if (isSampleDataset(items)) return;
     pendingDecisions = items;
-    user = await new Promise(resolve => {
-      const unsub = auth.onAuthStateChanged(u => {
-        unsub();
-        resolve(u);
-      });
-    });
+    user = await awaitAuthUser();
     if (!user) {
       pendingDecisions = null;
+      console.warn('🛑 Cannot save decisions: no authenticated user');
       alert('⚠️ Please sign in to save your changes.');
       return;
     }
@@ -215,8 +237,13 @@ export async function loadGoalOrder(forceRefresh = false) {
 }
 
 export async function flushPendingDecisions() {
-  const currentUser = getCurrentUser();
-  if (!currentUser || !saveTimer) return;
+  if (!saveTimer) return;
+  let user = getCurrentUser();
+  if (!user) user = await awaitAuthUser();
+  if (!user) {
+    console.warn('🛑 Cannot flush decisions: no authenticated user');
+    return;
+  }
   let items = getDecisionsCache();
   if (containsDemoItems(items)) {
     items = stripDemoItems(items);
@@ -237,10 +264,14 @@ export async function flushPendingDecisions() {
   try {
     await db
       .collection('decisions')
-      .doc(currentUser.uid)
+      .doc(user.uid)
       .set({ items }, { merge: true });
   } catch (err) {
-    console.error('Failed to save decisions:', err);
+    if (err?.code === 'permission-denied') {
+      console.error('Save rejected by security rules:', err);
+    } else {
+      console.error('Failed to save decisions:', err);
+    }
     alert('⚠️ Failed to save changes.');
   }
 }
@@ -272,6 +303,13 @@ export async function restoreBackup(selectFn) {
     alert('⚠️ Refusing to restore empty or demo backup.');
     return null;
   }
+  if (containsDemoItems(items)) {
+    items = stripDemoItems(items);
+    if (!items.length) {
+      alert('⚠️ Refusing to restore empty or demo backup.');
+      return null;
+    }
+  }
   const dateStr = chosen.replace('backup-', '');
   const sizeKb = (JSON.stringify(items).length / 1024).toFixed(1);
   const msg = `Restore backup from ${dateStr} containing ${items.length} item${
@@ -279,10 +317,13 @@ export async function restoreBackup(selectFn) {
   } (~${sizeKb} KB)?`;
   const confirmFn = typeof globalThis.confirm === 'function' ? globalThis.confirm : () => true;
   if (!confirmFn(msg)) return null;
-  const currentUser = getCurrentUser();
+  let currentUser = getCurrentUser();
   if (!currentUser) {
-    alert('⚠️ Please sign in to restore backup.');
-    return null;
+    currentUser = await awaitAuthUser();
+    if (!currentUser) {
+      alert('⚠️ Please sign in to restore backup.');
+      return null;
+    }
   }
   try {
     const docRef = db.collection('decisions').doc(currentUser.uid);
@@ -296,7 +337,11 @@ export async function restoreBackup(selectFn) {
     setDecisionsCache(items);
     return chosen;
   } catch (err) {
-    console.error('Failed to restore backup:', err);
+    if (err?.code === 'permission-denied') {
+      console.error('Restore rejected by security rules:', err);
+    } else {
+      console.error('Failed to restore backup:', err);
+    }
     alert('⚠️ Failed to restore backup.');
     return null;
   }
@@ -316,7 +361,11 @@ export async function saveGoalOrder(order) {
       .set({ goalOrder: order }, { merge: true });
     setGoalOrderCache(order);
   } catch (err) {
-    console.error('Failed to save goal order:', err);
+    if (err?.code === 'permission-denied') {
+      console.error('Save goal order rejected by security rules:', err);
+    } else {
+      console.error('Failed to save goal order:', err);
+    }
     alert('⚠️ Failed to save changes.');
   }
 }
