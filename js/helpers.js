@@ -1,4 +1,4 @@
-import { getCurrentUser, auth, db } from './auth.js';
+import { getCurrentUser, auth, db, awaitAuthUser } from './auth.js';
 import { SAMPLE_DECISIONS, SAMPLE_LISTS } from './sampleData.js';
 import {
   getDecisionsCache,
@@ -126,6 +126,7 @@ export function generateId() {
 }
 
 export async function loadDecisions(forceRefresh = false) {
+  await awaitAuthUser();
   const currentUser = getCurrentUser();
 
   const cached = getDecisionsCache();

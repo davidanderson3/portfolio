@@ -30,6 +30,21 @@ export function getCurrentUser() {
   return auth.currentUser;
 }
 
+let authReadyPromise = null;
+
+export function awaitAuthUser() {
+  if (!authReadyPromise) {
+    authReadyPromise = new Promise(resolve => {
+      const unsubscribe = auth.onAuthStateChanged(user => {
+        currentUser = user;
+        unsubscribe();
+        resolve(user);
+      });
+    });
+  }
+  return authReadyPromise;
+}
+
 export function initAuth({ loginBtn, logoutBtn, userEmail, bottomLoginBtn, bottomLogoutBtn }, onLogin) {
   const safeSet = (el, key, value) => {
     if (el) el[key] = value;
