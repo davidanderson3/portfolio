@@ -113,3 +113,30 @@ describe('unhideListItem button', () => {
     vi.useRealTimers();
   });
 });
+
+describe('unhide list button', () => {
+  it('clears list hiddenUntil when clicked', async () => {
+    const hideTime = '2030-01-01T00:00:00.000Z';
+    document.getElementById('listsPanel').innerHTML = '';
+    vi.resetModules();
+    const [h, g] = await Promise.all([
+      import('../js/helpers.js'),
+      import('../js/goals.js'),
+      import('../js/lists.js')
+    ]);
+    helpers = h;
+    goals = g;
+    helpers.loadLists.mockResolvedValue([{ name: 'Hidden', columns: [], items: [], hiddenUntil: hideTime }]);
+    helpers.loadDecisions.mockResolvedValue([]);
+    vi.useFakeTimers();
+    await window.initListsPanel();
+
+    const btn = document.querySelector('#hiddenListsContent button');
+    expect(btn).toBeTruthy();
+    btn.click();
+    vi.advanceTimersByTime(300);
+    const saved = helpers.saveLists.mock.calls.at(-1)[0][0];
+    expect(saved.hiddenUntil).toBe(null);
+    vi.useRealTimers();
+  });
+});
