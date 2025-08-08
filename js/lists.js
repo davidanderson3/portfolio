@@ -258,8 +258,12 @@ async function initListsPanel() {
           listsArray[idx].hiddenUntil = null;
           await persist();
           renderTabs();
-          renderHiddenLists();
-          if (isHidden(listsArray[selectedListIndex])) {
+          // Ensure a list is visible and selected after unhiding.
+          // Display the list we just unhid so its table becomes active.
+          const target = idx;
+          if (!isHidden(listsArray[target])) {
+            selectList(target);
+          } else {
             const firstActive = listsArray.findIndex(l => !isHidden(l));
             if (firstActive !== -1) selectList(firstActive);
             else {
