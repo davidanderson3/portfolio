@@ -4,7 +4,8 @@ import { JSDOM } from 'jsdom';
 vi.mock('../js/helpers.js', () => ({
   loadDecisions: vi.fn(),
   saveDecisions: vi.fn(),
-  generateId: vi.fn()
+  generateId: vi.fn(),
+  flushPendingDecisions: vi.fn().mockResolvedValue()
 }));
 
 vi.mock('../js/daily.js', () => ({ renderDailyTasks: vi.fn() }));
@@ -234,5 +235,23 @@ describe('initial load', () => {
     const cb = auth.initAuth.mock.calls[0][1];
     await cb(null);
     expect(daily.renderDailyTasks).not.toHaveBeenCalled();
+  });
+});
+
+describe('beforeunload handler', () => {
+  it('flushes pending decisions on unload', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+
+    const helpers = await import('../js/helpers.js');
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    dom.window.dispatchEvent(new dom.window.Event('beforeunload'));
+    expect(helpers.flushPendingDecisions).toHaveBeenCalled();
   });
 });
