@@ -88,16 +88,6 @@ function isSampleDataset(items) {
   }
 }
 
-async function awaitAuthUser() {
-  const existing = getCurrentUser();
-  if (existing) return existing;
-  return new Promise(resolve => {
-    const unsubscribe = auth.onAuthStateChanged(u => {
-      if (typeof unsubscribe === 'function') unsubscribe();
-      resolve(u);
-    });
-  });
-}
 
 // Cache decisions and goal order in memory only
 let saveTimer = null;
