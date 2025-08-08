@@ -163,7 +163,8 @@ function createAuthMock() {
   function collectionFn() { return { doc: docFn }; }
   return {
     getCurrentUser: () => ({ uid: 'u1' }),
-    db: { collection: collectionFn }
+    db: { collection: collectionFn },
+    auth: { onAuthStateChanged: vi.fn() }
   };
 }
 vi.mock('../js/auth.js', createAuthMock);
@@ -196,7 +197,7 @@ describe('planning persistence', () => {
   });
 
   it('uses localStorage when anonymous', async () => {
-    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
+    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {}, auth: { onAuthStateChanged: vi.fn() } }));
     const { savePlanningData, loadPlanningData } = await import('../js/planning.js');
     await savePlanningData({ finance: { curAge: '25' } });
     const stored = JSON.parse(localStorage.getItem('planningData'));

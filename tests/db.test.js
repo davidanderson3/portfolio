@@ -25,6 +25,7 @@ global.localStorage = storage;
 vi.mock('../js/auth.js', () => {
   return {
     getCurrentUser: () => ({ uid: 'user1' }),
+    auth: { onAuthStateChanged: vi.fn() },
     db: {
       collection: vi.fn(() => ({
         doc: vi.fn(() => ({
@@ -127,7 +128,7 @@ describe('database helpers', () => {
   });
 
   it('alerts when not signed in', async () => {
-    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
+    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {}, auth: { onAuthStateChanged: (cb) => { setTimeout(() => cb(null), 0); return () => {}; } } }));
     const alertSpy = vi.fn();
     global.alert = alertSpy;
     const { saveDecisions } = await import('../js/helpers.js');
@@ -136,7 +137,7 @@ describe('database helpers', () => {
   });
 
   it('saves lists for anonymous users to localStorage', async () => {
-    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {} }));
+    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {}, auth: { onAuthStateChanged: vi.fn() } }));
     const { saveLists: saveAnon } = await import('../js/helpers.js');
     await saveAnon([{ name: 'test' }]);
     expect(JSON.parse(localStorage.getItem('myLists'))).toEqual([{ name: 'test' }]);
@@ -144,7 +145,7 @@ describe('database helpers', () => {
 
   it('returns sample decisions for anonymous users', async () => {
     const dbMock = { collection: vi.fn() };
-    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: dbMock }));
+    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: dbMock, auth: { onAuthStateChanged: vi.fn() } }));
     const { loadDecisions } = await import('../js/helpers.js');
     const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
     const result = await loadDecisions(true);
@@ -166,7 +167,8 @@ describe('database helpers', () => {
             update: updateMock
           }))
         }))
-      }
+      },
+      auth: { onAuthStateChanged: vi.fn() }
     }));
     const itemsA = [{ id: 'a', text: 'A' }];
     const itemsB = [{ id: 'b', text: 'B' }];

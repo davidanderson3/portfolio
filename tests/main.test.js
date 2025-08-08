@@ -13,7 +13,7 @@ vi.mock('../js/goals.js', () => ({
   renderGoalsAndSubitems: vi.fn(),
   addCalendarGoal: vi.fn()
 }));
-vi.mock('../js/auth.js', () => ({ initAuth: vi.fn(), db: {}, currentUser: null }));
+vi.mock('../js/auth.js', () => ({ initAuth: vi.fn(), db: {}, currentUser: null, auth: { onAuthStateChanged: vi.fn() } }));
 vi.mock('../js/wizard.js', () => ({ initWizard: vi.fn() }));
 vi.mock('../js/report.js', () => ({ renderDailyTaskReport: vi.fn() }));
 vi.mock('../js/stats.js', () => ({ initMetricsUI: vi.fn() }));

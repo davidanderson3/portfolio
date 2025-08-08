@@ -5,6 +5,7 @@ let currentUser = null;
 
 vi.mock('../js/auth.js', () => ({
   getCurrentUser: () => currentUser,
+  auth: { onAuthStateChanged: vi.fn() },
   db: {
     collection: () => ({
       doc: () => ({

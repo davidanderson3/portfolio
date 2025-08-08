@@ -30,7 +30,7 @@ describe('auth persistence and UI updates', () => {
     global.firebase = {
       initializeApp: vi.fn(),
       auth: authFn,
-      firestore: vi.fn()
+      firestore: vi.fn(() => ({ enablePersistence: vi.fn().mockResolvedValue() }))
     };
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
