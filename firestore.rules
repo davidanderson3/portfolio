@@ -5,15 +5,16 @@ service cloud.firestore {
     // Compute a hash signature of decisions without schedule fields
     function itemsSignature(items) {
       return util.sha256(
-        items.map(item =>
+        items.map(item,
           item.diff({'scheduled': item.scheduled, 'scheduledEnd': item.scheduledEnd})
         ).toString()
       );
     }
 
     // Precomputed signature of the demo/sample decisions dataset
-    const SAMPLE_DECISIONS_SIGNATURE =
-      "1839cc711b0bf76d2bd63a4078be69ff639132a8a5ec3ece03876d7567203834";
+    function SAMPLE_DECISIONS_SIGNATURE() {
+      return "1839cc711b0bf76d2bd63a4078be69ff639132a8a5ec3ece03876d7567203834";
+    }
 
     // 1) User settings under /users/{uid}/settings/{docId}
     match /users/{userId}/settings/{settingDocId} {
@@ -37,14 +38,14 @@ service cloud.firestore {
                    && request.auth.uid == userId
                    && request.resource.data.items is list
                    && request.resource.data.items.size() > 0
-                   && request.resource.data.items.all(item =>
+                   && request.resource.data.items.all(item,
                         item.keys().hasAll(['id', 'text']) &&
                         item.id is string && item.id.size() > 0 &&
                         item.text is string && item.text.size() > 0 &&
                         !item.id.matches('^demo-.*')
                      )
                    && itemsSignature(request.resource.data.items) !=
-                      SAMPLE_DECISIONS_SIGNATURE;
+                      SAMPLE_DECISIONS_SIGNATURE();
     }
 
     // 5) Lists storage at /lists/{uid}
