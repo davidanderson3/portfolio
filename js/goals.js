@@ -21,6 +21,7 @@ import {
 } from './tasks.js';
 import { createCalendarEvent } from './googleCalendar.js';
 import { loadHourNotes, saveHourNotes } from './hourNotes.js';
+import { currentUser } from './auth.js';
 
 
 const openGoalIds = new Set();
@@ -266,7 +267,7 @@ async function loadAndSyncGoals() {
     const goals = allDecisions.filter(d => d.type === 'goal' && !d.parentGoalId);
     const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));
 
-    const user = firebase.auth().currentUser;
+    const user = currentUser;
     let goalOrder = [];
 
     if (user) {
