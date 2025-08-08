@@ -18,6 +18,9 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 export const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(err => {
+  console.error('Failed to set auth persistence:', err);
+});
 export const db = firebase.firestore();
 
 export function getCurrentUser() {
