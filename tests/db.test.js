@@ -55,6 +55,17 @@ describe('database helpers', () => {
     expect(getMock).toHaveBeenCalled();
   });
 
+  it('ignores sample decisions returned from Firestore', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
+    getMock.mockResolvedValue({ data: () => ({ items: SAMPLE_DECISIONS }) });
+    const { loadDecisions } = await import('../js/helpers.js');
+    const result = await loadDecisions(true);
+    expect(result).toEqual([]);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
   it('converts Timestamp hiddenUntil values to strings', async () => {
     const future = new Date(Date.now() + 3600 * 1000);
     const tsObj = { toDate: () => future };
