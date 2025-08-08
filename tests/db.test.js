@@ -203,5 +203,33 @@ describe('database helpers', () => {
     await flushPendingDecisions();
     expect(setMock).not.toHaveBeenCalled();
   });
+
+  it('filters demo items edited before login', async () => {
+    const authCallbacks = [];
+    const userState = { value: null };
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => userState.value,
+      db: {
+        collection: vi.fn(() => ({
+          doc: vi.fn(() => ({
+            get: getMock,
+            set: setMock,
+            update: updateMock
+          }))
+        }))
+      },
+      auth: { onAuthStateChanged: vi.fn(cb => { authCallbacks.push(cb); return () => {}; }) }
+    }));
+    const { saveDecisions, flushPendingDecisions } = await import('../js/helpers.js');
+    const demoItem = { id: 'demo-task-1', text: 'edited demo' };
+    const realItem = { id: 'real-1', text: 'real task' };
+    const savePromise = saveDecisions([demoItem, realItem]);
+    userState.value = { uid: 'user1' };
+    authCallbacks.forEach(cb => cb(userState.value));
+    await savePromise;
+    await flushPendingDecisions();
+    expect(setMock).toHaveBeenCalledTimes(1);
+    expect(setMock).toHaveBeenCalledWith({ items: [realItem] }, { merge: true });
+  });
 });
 

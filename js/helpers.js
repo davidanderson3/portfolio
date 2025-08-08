@@ -36,6 +36,38 @@ function stripScheduleFields(list) {
 
 const SAMPLE_SIGNATURE = JSON.stringify(stripScheduleFields(SAMPLE_DECISIONS));
 
+// IDs used in sample/demo data that should never be persisted
+const DEMO_IDS = new Set([
+  'daily-task-1',
+  'daily-task-2',
+  'daily-task-3',
+  'daily-task-4',
+  'daily-task-5',
+  'daily-task-6',
+  'daily-task-7',
+  'daily-task-8',
+  'daily-task-9',
+  'daily-task-10',
+  'daily-task-11',
+  'sample-decision-1'
+]);
+
+export function containsDemoItems(items) {
+  if (!Array.isArray(items)) return false;
+  return items.some(it => {
+    const id = it && it.id;
+    return typeof id === 'string' && (id.startsWith('demo-') || DEMO_IDS.has(id));
+  });
+}
+
+function stripDemoItems(items) {
+  if (!Array.isArray(items)) return items;
+  return items.filter(it => {
+    const id = it && it.id;
+    return !(typeof id === 'string' && (id.startsWith('demo-') || DEMO_IDS.has(id)));
+  });
+}
+
 function isSampleDataset(items) {
   if (!Array.isArray(items) || items.length !== SAMPLE_DECISIONS.length) return false;
   try {
@@ -54,8 +86,12 @@ let pendingDecisions = null;
 // If a save was attempted before login completed, retry once a user appears
 auth.onAuthStateChanged(user => {
   if (user && pendingDecisions) {
-    const items = pendingDecisions;
+    let items = pendingDecisions;
     pendingDecisions = null;
+    if (containsDemoItems(items)) {
+      items = stripDemoItems(items);
+      if (!items.length) return;
+    }
     if (isSampleDataset(items)) return;
     scheduleSave(user, items);
   }
@@ -123,6 +159,10 @@ export async function saveDecisions(items) {
     console.warn('⚠️ Refusing to save empty or invalid decisions');
     return;
   }
+  if (containsDemoItems(items)) {
+    items = stripDemoItems(items);
+    if (!items.length) return;
+  }
 
   decisionsCache = items;
   let user = getCurrentUser();
@@ -167,6 +207,14 @@ export async function loadGoalOrder(forceRefresh = false) {
 export async function flushPendingDecisions() {
   const currentUser = getCurrentUser();
   if (!currentUser || !saveTimer) return;
+  if (containsDemoItems(decisionsCache)) {
+    decisionsCache = stripDemoItems(decisionsCache);
+    if (!decisionsCache.length) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      return;
+    }
+  }
   if (isSampleDataset(decisionsCache)) {
     clearTimeout(saveTimer);
     saveTimer = null;
