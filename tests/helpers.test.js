@@ -125,7 +125,7 @@ describe('loadDecisions caching behavior', () => {
     currentUser = { uid: 'user1' };
     getMock.mockResolvedValueOnce({ data: () => ({ items: [{ id: '1', text: 't' }] }) });
 
-    const auth = await loadDecisions();
+    const auth = await loadDecisions(true);
     expect(auth).toEqual([{ id: '1', text: 't' }]);
     expect(collectionMock).toHaveBeenCalled();
   });

@@ -45,23 +45,17 @@ function isSampleDataset(items) {
   }
 }
 
-// Cache decisions in-memory and persist a copy in localStorage
+// Cache decisions and goal order in memory only
 let decisionsCache = null;
-const DECISIONS_LOCAL_KEY = 'pendingDecisions';
-const DECISIONS_CACHE_KEY = 'cachedDecisions';
-// Cache goal order similarly to decisions
-const GOAL_ORDER_CACHE_KEY = 'cachedGoalOrder';
 let goalOrderCache = null;
 let saveTimer = null;
 
 export function clearDecisionsCache() {
   decisionsCache = null;
-  localStorage.removeItem(DECISIONS_CACHE_KEY);
 }
 
 export function clearGoalOrderCache() {
   goalOrderCache = null;
-  localStorage.removeItem(GOAL_ORDER_CACHE_KEY);
 }
 
 export function generateId() {
@@ -71,145 +65,29 @@ export function generateId() {
 export async function loadDecisions(forceRefresh = false) {
   const currentUser = getCurrentUser();
 
-  // ---- 1) Sync any pending edits first ----
-  const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
-  if (pending) {
-    try {
-      const parsed = JSON.parse(pending);
-      const { items, uid, demo } = Array.isArray(parsed)
-        ? { items: parsed, uid: null, demo: false }
-        : parsed;
-
-      if (!currentUser) {
-        decisionsCache = items;
-        localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
-        if (!forceRefresh) return decisionsCache;
-      } else if (demo) {
-        // keep demo data in localStorage but do not sync automatically
-      } else if (uid !== currentUser.uid || isSampleDataset(items) || items.length === 0) {
-        localStorage.removeItem(DECISIONS_LOCAL_KEY);
-      } else {
-        const docRef = db.collection('decisions').doc(currentUser.uid);
-        const snap = await docRef.get();
-        const serverItems = (snap.data() && Array.isArray(snap.data().items)) ? snap.data().items : [];
-
-        if (JSON.stringify(items) !== JSON.stringify(serverItems)) {
-          const merge = typeof window !== 'undefined' && typeof window.confirm === 'function'
-            ? window.confirm('Local decisions differ from server.\nPress OK to merge, Cancel to discard local changes.')
-            : true;
-          if (!merge) {
-            localStorage.removeItem(DECISIONS_LOCAL_KEY);
-            decisionsCache = serverItems;
-            localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(serverItems));
-            if (!forceRefresh) return decisionsCache;
-          } else {
-            const merged = [...serverItems];
-            items.forEach(it => {
-              const idx = merged.findIndex(s => s.id === it.id);
-              if (idx >= 0) merged[idx] = it; else merged.push(it);
-            });
-            const backupKey = `backup-${new Date().toISOString().replace(/[:.]/g, '-')}`;
-            try {
-              localStorage.setItem(backupKey, JSON.stringify(serverItems));
-            } catch {
-              // ignore backup failures
-            }
-            await docRef.set({ items: merged }, { merge: true });
-            localStorage.removeItem(DECISIONS_LOCAL_KEY);
-            decisionsCache = merged;
-            localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(merged));
-            if (!forceRefresh) return decisionsCache;
-          }
-        } else {
-          localStorage.removeItem(DECISIONS_LOCAL_KEY);
-          decisionsCache = items;
-          localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
-          if (!forceRefresh) return decisionsCache;
-        }
-      }
-    } catch (err) {
-      console.warn('Failed to sync pending decisions:', err);
-      try {
-        const parsed = JSON.parse(pending);
-        const items = Array.isArray(parsed) ? parsed : parsed.items;
-        decisionsCache = items;
-        if (!forceRefresh) return decisionsCache;
-      } catch {
-        // ignore parse failures and fall through
-      }
-    }
-  }
-
-  // ---- 2) Use in-memory cache when available ----
   if (decisionsCache && !forceRefresh) {
     return decisionsCache;
   }
 
-  // ---- 3) Fall back to localStorage cache ----
-  if (!forceRefresh) {
-    const cached = localStorage.getItem(DECISIONS_CACHE_KEY);
-    if (cached) {
-      try {
-        decisionsCache = JSON.parse(cached);
-      } catch {
-        decisionsCache = null;
-      }
-    }
-    if (decisionsCache) {
-      // start refresh in background but return cached copy
-      refreshFromCloud().catch(() => {});
-      return decisionsCache;
-    }
-  }
-
-  // ---- 4) If still no data, consult Firestore or sample data ----
   if (!currentUser) {
     console.warn('🚫 No current user — returning sample data');
-    return shiftSampleCalendarItems(SAMPLE_DECISIONS);
-  }
-
-  return refreshFromCloud();
-
-  async function refreshFromCloud() {
-    const snap = await db.collection('decisions').doc(currentUser.uid).get();
-    const data = snap.data();
-    const rawItems = data && Array.isArray(data.items) ? data.items : [];
-
-    // Convert Firestore timestamps
-    const serverItems = rawItems.map(it => {
-      if (it && it.hiddenUntil && typeof it.hiddenUntil.toDate === 'function') {
-        return { ...it, hiddenUntil: it.hiddenUntil.toDate().toISOString() };
-      }
-      return it;
-    });
-
-    // If unsynced local edits exist, merge them over server results
-    let merged = serverItems;
-    const pendingRaw = localStorage.getItem(DECISIONS_LOCAL_KEY);
-    if (pendingRaw) {
-      try {
-        const parsed = JSON.parse(pendingRaw);
-        const { items: pendingItems, uid } = Array.isArray(parsed)
-          ? { items: parsed, uid: null }
-          : parsed;
-        if (uid === currentUser.uid && !isSampleDataset(pendingItems)) {
-          const map = new Map(serverItems.map(it => [it.id, it]));
-          for (const item of pendingItems) {
-            if (item && item.id) {
-              map.set(item.id, item);
-            }
-          }
-          merged = Array.from(map.values());
-        }
-      } catch {
-        // ignore parse failure and fall back to server items
-      }
-    }
-
-    decisionsCache = merged;
-    localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(decisionsCache));
+    decisionsCache = shiftSampleCalendarItems(SAMPLE_DECISIONS);
     return decisionsCache;
   }
+
+  const snap = await db.collection('decisions').doc(currentUser.uid).get();
+  const data = snap.data();
+  const rawItems = data && Array.isArray(data.items) ? data.items : [];
+
+  const items = rawItems.map(it => {
+    if (it && it.hiddenUntil && typeof it.hiddenUntil.toDate === 'function') {
+      return { ...it, hiddenUntil: it.hiddenUntil.toDate().toISOString() };
+    }
+    return it;
+  });
+
+  decisionsCache = items;
+  return decisionsCache;
 }
 
 export async function saveDecisions(items) {
@@ -223,19 +101,9 @@ export async function saveDecisions(items) {
   if (!currentUser) {
     if (isSampleDataset(items)) return;
     alert('⚠️ Please sign in to save your changes.');
-    localStorage.setItem(
-      DECISIONS_LOCAL_KEY,
-      JSON.stringify({ uid: null, demo: true, items })
-    );
-    localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
     decisionsCache = items;
     return;
   }
-  localStorage.setItem(
-    DECISIONS_LOCAL_KEY,
-    JSON.stringify({ uid: currentUser.uid, items })
-  );
-  localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
   decisionsCache = items;
 
   if (saveTimer) clearTimeout(saveTimer);
@@ -245,7 +113,6 @@ export async function saveDecisions(items) {
         .collection('decisions')
         .doc(currentUser.uid)
         .set({ items }, { merge: true });
-      localStorage.removeItem(DECISIONS_LOCAL_KEY);
     } catch (err) {
       console.error('Failed to save decisions:', err);
       alert('⚠️ Failed to save changes.');
@@ -263,66 +130,23 @@ export async function loadGoalOrder(forceRefresh = false) {
     return goalOrderCache;
   }
 
-  if (!forceRefresh) {
-    const cached = localStorage.getItem(GOAL_ORDER_CACHE_KEY);
-    if (cached) {
-      try {
-        goalOrderCache = JSON.parse(cached);
-      } catch {
-        goalOrderCache = null;
-      }
-    }
-    if (goalOrderCache) {
-      refreshFromCloud().catch(() => {});
-      return goalOrderCache;
-    }
-  }
-
-  return refreshFromCloud();
-
-  async function refreshFromCloud() {
-    const snap = await db.collection('decisions').doc(currentUser.uid).get();
-    goalOrderCache = Array.isArray(snap.data()?.goalOrder)
-      ? snap.data().goalOrder
-      : [];
-    localStorage.setItem(GOAL_ORDER_CACHE_KEY, JSON.stringify(goalOrderCache));
-    return goalOrderCache;
-  }
+  const snap = await db.collection('decisions').doc(currentUser.uid).get();
+  goalOrderCache = Array.isArray(snap.data()?.goalOrder)
+    ? snap.data().goalOrder
+    : [];
+  return goalOrderCache;
 }
 
-export async function flushPendingDecisions(includeDemo = false) {
+export async function flushPendingDecisions() {
   const currentUser = getCurrentUser();
-  if (!currentUser) return;
-  if (saveTimer) {
-    clearTimeout(saveTimer);
-    saveTimer = null;
-  }
-  const pending = localStorage.getItem(DECISIONS_LOCAL_KEY);
-  if (!pending) return;
-  let parsed;
-  try {
-    parsed = JSON.parse(pending);
-  } catch {
-    return;
-  }
-  const { items, uid, demo } = Array.isArray(parsed)
-    ? { items: parsed, uid: null, demo: false }
-    : parsed;
-  if (demo && !includeDemo) {
-    return;
-  }
-  if (!includeDemo && (uid !== currentUser.uid || isSampleDataset(items))) {
-    localStorage.removeItem(DECISIONS_LOCAL_KEY);
-    return;
-  }
+  if (!currentUser || !saveTimer) return;
+  clearTimeout(saveTimer);
+  saveTimer = null;
   try {
     await db
       .collection('decisions')
       .doc(currentUser.uid)
-      .set({ items }, { merge: true });
-    localStorage.removeItem(DECISIONS_LOCAL_KEY);
-    localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
-    decisionsCache = items;
+      .set({ items: decisionsCache }, { merge: true });
   } catch (err) {
     console.error('Failed to save decisions:', err);
     alert('⚠️ Failed to save changes.');
@@ -377,8 +201,6 @@ export async function restoreBackup(selectFn) {
       .doc(currentUser.uid)
       .set({ items: prevItems });
     await docRef.set({ items }, { merge: true });
-    localStorage.removeItem(DECISIONS_LOCAL_KEY);
-    localStorage.setItem(DECISIONS_CACHE_KEY, JSON.stringify(items));
     decisionsCache = items;
     return chosen;
   } catch (err) {
@@ -401,7 +223,6 @@ export async function saveGoalOrder(order) {
       .doc(currentUser.uid)
       .set({ goalOrder: order }, { merge: true });
     goalOrderCache = order;
-    localStorage.setItem(GOAL_ORDER_CACHE_KEY, JSON.stringify(order));
   } catch (err) {
     console.error('Failed to save goal order:', err);
     alert('⚠️ Failed to save changes.');

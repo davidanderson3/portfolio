@@ -19,6 +19,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 export const auth = firebase.auth();
 export const db = firebase.firestore();
+db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+  console.warn('Persistence support disabled', err);
+});
 
 export function getCurrentUser() {
   return auth.currentUser;
