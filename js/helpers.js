@@ -117,6 +117,12 @@ auth.onAuthStateChanged(user => {
   }
 });
 
+function notifyDecisionsUpdated() {
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new Event('decisionsUpdated'));
+  }
+}
+
 function scheduleSave(user, items) {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
@@ -164,6 +170,7 @@ export async function loadDecisions(forceRefresh = false) {
     console.warn('🚫 No current user — returning sample data');
     const shifted = shiftSampleCalendarItems(SAMPLE_DECISIONS);
     setDecisionsCache(shifted);
+    notifyDecisionsUpdated();
     return shifted;
   }
 
@@ -184,6 +191,7 @@ export async function loadDecisions(forceRefresh = false) {
   }
 
   setDecisionsCache(items);
+  notifyDecisionsUpdated();
   return getDecisionsCache();
 }
 
@@ -200,6 +208,7 @@ export async function saveDecisions(items) {
   }
 
   setDecisionsCache(items);
+  notifyDecisionsUpdated();
   let user = getCurrentUser();
   if (!user) {
     if (isSampleDataset(items)) return;
