@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const setMock = vi.fn();
 const updateMock = vi.fn();
 const getMock = vi.fn();
+const realWarn = console.warn;
 
 // Simple localStorage mock for Node environment
 const storage = (() => {
@@ -44,6 +45,7 @@ beforeEach(() => {
   getMock.mockClear();
   vi.resetModules();
   localStorage.clear();
+  console.warn = realWarn;
 });
 
 describe('database helpers', () => {
@@ -152,6 +154,15 @@ describe('database helpers', () => {
     const { saveLists: saveAnon } = await import('../js/helpers.js');
     await saveAnon([{ name: 'test' }]);
     expect(JSON.parse(localStorage.getItem('myLists'))).toEqual([{ name: 'test' }]);
+  });
+
+  it('does not persist sample lists', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { saveLists } = await import('../js/helpers.js');
+    const { SAMPLE_LISTS } = await import('../js/sampleData.js');
+    await saveLists(SAMPLE_LISTS);
+    expect(setMock).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
   it('returns sample decisions for anonymous users', async () => {

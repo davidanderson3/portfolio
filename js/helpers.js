@@ -35,6 +35,7 @@ function stripScheduleFields(list) {
 }
 
 const SAMPLE_SIGNATURE = JSON.stringify(stripScheduleFields(SAMPLE_DECISIONS));
+const SAMPLE_LISTS_SIGNATURE = JSON.stringify(SAMPLE_LISTS);
 
 // IDs used in sample/demo data that should never be persisted
 const DEMO_IDS = new Set([
@@ -374,6 +375,10 @@ export async function saveLists(lists) {
   const user = getCurrentUser?.();
   if (!user) {
     localStorage.setItem(LISTS_KEY, JSON.stringify(sanitized));
+    return;
+  }
+  if (JSON.stringify(sanitized) === SAMPLE_LISTS_SIGNATURE) {
+    console.warn('⚠️ Refusing to save sample lists');
     return;
   }
   await db.collection('lists')
