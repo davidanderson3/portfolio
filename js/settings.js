@@ -47,10 +47,15 @@ export async function clearHiddenTabs() {
     localStorage.removeItem(KEY);
     return;
   }
-  await db
-    .collection('users').doc(user.uid)
-    .collection('settings').doc(KEY)
-    .delete();
+  try {
+    await db
+      .collection('users').doc(user.uid)
+      .collection('settings').doc(KEY)
+      .delete();
+  } catch (err) {
+    alert(`Failed to clear hidden tabs: ${err?.message || err}`);
+    throw err;
+  }
 }
 
 export function applyHiddenTabs(tabs) {
@@ -129,8 +134,13 @@ export async function initSettingsPage() {
   });
 
   resetBtn?.addEventListener('click', async () => {
-    await clearHiddenTabs();
-    window.location.href = 'index.html';
+    try {
+      await clearHiddenTabs();
+    } catch (err) {
+      // error already surfaced in clearHiddenTabs
+    } finally {
+      window.location.href = 'index.html';
+    }
   });
 
   const updateForUser = async (user) => {
