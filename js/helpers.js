@@ -141,12 +141,17 @@ export async function loadDecisions(forceRefresh = false) {
   const data = snap.data();
   const rawItems = data && Array.isArray(data.items) ? data.items : [];
 
-  const items = rawItems.map(it => {
+  let items = rawItems.map(it => {
     if (it && it.hiddenUntil && typeof it.hiddenUntil.toDate === 'function') {
       return { ...it, hiddenUntil: it.hiddenUntil.toDate().toISOString() };
     }
     return it;
   });
+
+  if (isSampleDataset(items)) {
+    console.warn('⚠️ Ignoring sample decisions fetched from Firestore');
+    items = [];
+  }
 
   decisionsCache = items;
   return decisionsCache;
