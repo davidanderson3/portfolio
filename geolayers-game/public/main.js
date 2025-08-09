@@ -3,14 +3,15 @@ let current = 0;
 let locationId = '';
 let finished = false;
 let guessedThisLayer = false;
+let firstLayer = true;
 const guess = document.getElementById('guess');
 
-fetch('https://restcountries.com/v3.1/all').then(r=>r.json()).then(data=>{
-  data.sort((a,b)=>a.name.common.localeCompare(b.name.common));
+fetch('/countries').then(r=>r.json()).then(data=>{
+  data.sort((a,b)=>a.name.localeCompare(b.name));
   for (const c of data) {
     const opt = document.createElement('option');
-    opt.value = c.cca3;
-    opt.textContent = c.name.common;
+    opt.value = c.code;
+    opt.textContent = c.name;
     guess.appendChild(opt);
   }
 });
@@ -33,7 +34,7 @@ function styleFor(layer) {
 
 function loadLayer() {
   fetch(layers[current]).then(r=>r.json()).then(geo=>{
-    L.geoJSON(geo, {
+    const gj = L.geoJSON(geo, {
       style: styleFor(layers[current]),
       pointToLayer: (feature, latlng) => {
         if (layers[current].includes('label')) {
@@ -42,6 +43,10 @@ function loadLayer() {
         return L.circleMarker(latlng, { radius:5, fillOpacity:1, color: styleFor(layers[current]).color });
       }
     }).addTo(map);
+    if (firstLayer) {
+      map.fitBounds(gj.getBounds());
+      firstLayer = false;
+    }
     guessedThisLayer = false;
   });
 }
