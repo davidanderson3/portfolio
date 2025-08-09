@@ -1,6 +1,6 @@
 import { SAMPLE_HOUR_NOTES } from './sampleData.js';
 
-export const NOTES_KEY = 'hourNotes';
+const NOTES_KEY = 'hourNotes';
 
 function shiftSampleHourNotes(notes) {
   const today = new Date();

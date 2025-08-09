@@ -68,9 +68,14 @@ describe('travel record editing', () => {
     global.window = dom.window;
     global.document = dom.window.document;
     global.localStorage = dom.window.localStorage;
-    global.navigator = {
-      geolocation: { getCurrentPosition: cb => cb({ coords: { latitude: 0, longitude: 0 } }) }
-    };
+    Object.defineProperty(global, 'navigator', {
+      value: {
+        geolocation: {
+          getCurrentPosition: cb => cb({ coords: { latitude: 0, longitude: 0 } })
+        }
+      },
+      configurable: true
+    });
     global.L = {
       icon: vi.fn(() => ({})),
       map: vi.fn(() => ({
