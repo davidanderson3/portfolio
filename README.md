@@ -29,7 +29,7 @@ The Planning tab models long-term finances. Enter current savings, income, annua
 Budget breaks down monthly income into recurring expenses and subscriptions. It estimates federal taxes, calculates net pay, and shows what remains after bills. Categories are customizable so the plan can reflect your real spending.
 
 ### Contacts
-Contacts is a lightweight list of people you want to stay in touch with. Checkboxes let you mark who you've contacted, and options track how often you'd like to reach out, have a conversation, or meet in person.
+Contacts is a lightweight list of people you want to stay in touch with. Each person stores desired frequencies (in days) for reaching out, having a meaningful conversation, or meeting in person. Logging an interaction records the date and optional notes.
 
 ### Backups
 Backups scans local storage for saved snapshots of your data. Each backup can be restored with a single click, making it easy to recover from mistakes or sync between devices.

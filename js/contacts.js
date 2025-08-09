@@ -3,7 +3,10 @@ let contacts = [];
 function loadContacts() {
   try {
     const stored = JSON.parse(localStorage.getItem('contacts')) || [];
-    contacts = stored.map(c => typeof c === 'string' ? { name: c } : c);
+    contacts = stored.map(c => {
+      if (typeof c === 'string') return { name: c, logs: [] };
+      return { ...c, logs: c.logs || [] };
+    });
   } catch {
     contacts = [];
   }
@@ -68,17 +71,24 @@ export function addContact(name, prefs = {}) {
     desiredMeet: getVal('desiredMeet', 'Desired frequency of in person get together (days)'),
     lastContact: null,
     lastConversation: null,
-    lastMeet: null
+    lastMeet: null,
+    logs: []
   };
   contacts.push(contact);
   saveContacts();
   renderContacts();
 }
 
-export function logContactEvent(name, type) {
+export function logContactEvent(name, type, note) {
   const c = contacts.find(c => c.name === name);
   if (!c) return;
   const now = new Date().toISOString();
+  let noteVal = note;
+  if (noteVal === undefined && typeof window !== 'undefined' && typeof window.prompt === 'function') {
+    noteVal = window.prompt('Notes', '') || '';
+  }
+  c.logs = c.logs || [];
+  c.logs.push({ type, date: now, note: noteVal || '' });
   if (type === 'contact') c.lastContact = now;
   if (type === 'conversation') c.lastConversation = now;
   if (type === 'meet') c.lastMeet = now;
