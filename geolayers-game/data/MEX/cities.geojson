@@ -1,0 +1,13 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "Mexico City"},
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-99,19]
+      }
+    }
+  ]
+}
