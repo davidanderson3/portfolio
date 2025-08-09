@@ -63,6 +63,7 @@ test('can add a daily task via UI', async ({ page }) => {
   // open add modal
   await page.click('#bottomAddBtn');
   await page.check('input[type=radio][value=daily]');
+  await page.check('input[type=radio][name=bottomAddSection][value=morning]');
   await page.fill('#bottomAddText', 'Playwright Task');
   await page.click('#bottomAddSubmit');
 

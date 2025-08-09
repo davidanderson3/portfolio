@@ -125,7 +125,7 @@ describe('quickAddTask', () => {
     helpers.generateId.mockReturnValue('x1');
 
     const daily = await import('../js/daily.js');
-    await daily.quickAddTask('daily', 'Test');
+    await daily.quickAddTask('daily', 'Test', 'morning');
     expect(helpers.saveDecisions).toHaveBeenCalled();
     expect(document.querySelector('#dailyTasksList input[type="checkbox"]')).toBeTruthy();
   });

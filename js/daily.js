@@ -34,14 +34,20 @@ function tempToColor(temp) {
   return `hsl(${hue}, 90%, 85%)`;
 }
 
-export async function quickAddTask(recurs, text, timeOfDay = 'morning') {
+export async function quickAddTask(recurs, text, timeOfDay) {
+  if (!['daily', 'weekly', 'monthly'].includes(recurs)) {
+    throw new Error('Invalid recurrence');
+  }
+  if (recurs === 'daily' && !timeOfDay) {
+    throw new Error('Daily tasks require a section');
+  }
   const newTask = {
     id: generateId(),
     type: 'task',
     text: `${text}`,
     notes: '',
     recurs,
-    timeOfDay,
+    ...(recurs === 'daily' ? { timeOfDay } : {}),
     parentGoalId: null,
     completed: false,
     dateCompleted: '',
