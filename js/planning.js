@@ -90,19 +90,6 @@ export function estimateSocialSecurity({ income = 0, currentAge = 0, retirementA
   return Math.round(averageIncome * 0.4);
 }
 
-// Simple budget allocation helper used by planning tests.  It breaks a monthly
-// income into basic categories of taxes, mortgage and leftover funds.
-export function calculateBudgetAllocation({ income = 0, taxRate = 0, mortgage = 0 }) {
-  income = Number(income) || 0;
-  taxRate = Number(taxRate) || 0;
-  mortgage = Number(mortgage) || 0;
-
-  const taxes = Math.round(income * (taxRate / 100));
-  const leftover = income - taxes - mortgage;
-
-  return { taxes, mortgage, leftover };
-}
-
 const PLANNING_KEY = 'planningData';
 let planningCache = null;
 let planningInitialized = false;
