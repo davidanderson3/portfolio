@@ -94,6 +94,7 @@
         <button class="tab-button" data-target="budgetPanel">Budget</button>
         <button class="tab-button" data-target="contactsPanel">Contacts</button>
         <button class="tab-button" data-target="backupsPanel">Backups</button>
+        <button class="tab-button" data-target="geolayersPanel">GeoLayers</button>
       </div>
     </nav>
 
@@ -301,6 +302,17 @@
             <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
           </div>
           <ul id="backupList"></ul>
+        </div>
+      </div>
+
+      <!-- GEOLAYERS PANEL -->
+      <div id="geolayersPanel" class="main-layout" style="display:none;">
+        <div class="full-column">
+          <div class="panel-header">
+            <h2>GeoLayers Game</h2>
+            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </div>
+          <iframe src="geolayers-game/public/index.html" style="width:100%;height:80vh;border:none;"></iframe>
         </div>
       </div>
 
