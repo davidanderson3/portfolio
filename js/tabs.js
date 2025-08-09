@@ -10,7 +10,8 @@ export const PANELS = [
   'planningPanel',
   'budgetPanel',
   'contactsPanel',
-  'backupsPanel'
+  'backupsPanel',
+  'geolayersPanel'
 ];
 
 export const PANEL_NAMES = {
@@ -23,7 +24,8 @@ export const PANEL_NAMES = {
   planningPanel: 'Planning',
   budgetPanel: 'Budget',
   contactsPanel: 'Contacts',
-  backupsPanel: 'Backups'
+  backupsPanel: 'Backups',
+  geolayersPanel: 'GeoLayers'
 };
 
 let tabsInitialized = false;

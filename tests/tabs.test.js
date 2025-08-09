@@ -20,6 +20,7 @@ describe('initTabs persistence', () => {
       <button class="tab-button" data-target="budgetPanel"></button>
       <button class="tab-button" data-target="contactsPanel"></button>
       <button class="tab-button" data-target="backupsPanel"></button>
+      <button class="tab-button" data-target="geolayersPanel"></button>
       <div id="projectsPanel"></div>
       <div id="calendarPanel"></div>
       <div id="dailyPanel"></div>
@@ -30,6 +31,7 @@ describe('initTabs persistence', () => {
       <div id="budgetPanel"></div>
       <div id="contactsPanel"></div>
       <div id="backupsPanel"></div>
+      <div id="geolayersPanel"></div>
     `, { url: 'http://localhost/' });
     global.window = dom.window;
     global.document = dom.window.document;
@@ -77,6 +79,7 @@ describe('routine tab behavior', () => {
       <button class="tab-button" data-target="budgetPanel"></button>
       <button class="tab-button" data-target="contactsPanel"></button>
       <button class="tab-button" data-target="backupsPanel"></button>
+      <button class="tab-button" data-target="geolayersPanel"></button>
       <div id="projectsPanel"></div>
       <div id="calendarPanel"></div>
       <div id="dailyPanel" style="display:none;">
@@ -89,6 +92,7 @@ describe('routine tab behavior', () => {
       <div id="budgetPanel"></div>
       <div id="contactsPanel"></div>
       <div id="backupsPanel"></div>
+      <div id="geolayersPanel"></div>
     `, { url: 'http://localhost/' });
 
     global.window = dom.window;
