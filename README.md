@@ -1,49 +1,44 @@
 # Dashboard
 
- An app for tracking projects and tasks.
+Dashboard is a personal productivity and planning app that groups tools into a set of tabs.
 
-## Recent updates
+## Tabs
 
-- New project wizard creates subprojects instead of subtasks.
-- Projects can now be scheduled directly on your calendar during creation.
-- Projects can span a date range on the calendar view.
-- Tasks can be edited inline without pop-up prompts.
-- Decisions can be edited inline without pop-up prompts.
-- Lists can be sorted by clicking column headers.
-- Tabs can be temporarily hidden via Settings.
-- Planning tab includes an Annual Savings field.
-- Planning tab records total assets history with timestamps whenever the balance changes.
-- Record total assets daily at a given time to keep track of changes over time.
-- Travel map shows green markers for visited places and red for others.
-- Double-click the travel map to add a new place.
-- Firestore rules block saving the demo dataset by checking a hash of the items.
+### Routine
+The Routine tab helps keep track of recurring tasks throughout the day. Tasks are organized by time slots (First Thing, Morning, Afternoon, Evening, End of Day) and can also repeat weekly or monthly. You can check items off, skip them for predefined intervals, or quickly add new tasks without leaving the page. Completed items feed into a daily report to show progress at a glance.
 
-👉 **Live App:** [https://davidanderson3.github.io/dashboard/](https://davidanderson3.github.io/dashboard/)
+### Projects
+Projects capture larger goals and their subtasks. Tasks can be nested under parent goals and rearranged with drag-and-drop. A project wizard walks through creating new projects and subprojects, and projects may be scheduled on the calendar as single dates or ranges. Inline editing and progress indicators make it easy to monitor completion.
 
-## Importing travel data
+### Calendar
+The Calendar tab displays scheduled projects and tasks in either a daily or hourly view. Items can be added directly to the schedule and sent to Google Calendar. A separate schedule panel summarizes what's happening today, making it a central hub for time management.
 
-Two node scripts help load travel places into Firestore:
+### Metrics
+Metrics offers flexible tracking for anything that can be measured. Users define their own metrics (such as mood or counts) and record values for each day. The tab renders charts and value history, lets you browse previous days, and postpones entries when needed. It doubles as a lightweight journaling tool for data-driven habits.
 
-1. `npm run import:travel` – Clears all existing travel documents for the default user and imports `assets/travel/doc.kml`.
-2. `npm run append:travel` – Reads `assets/travel/extra.kml` and appends those places to the same user without removing existing ones.
+### Lists
+Lists builds custom tables with user-defined columns and types. Columns may be text, number, date, checkbox, link, or list, and each list supports sorting and pagination. It's useful for anything from simple checklists to structured reference tables.
 
-Both scripts expect `serviceAccountKey.json` in the project root and support the Firestore emulator if `FIRESTORE_EMULATOR_HOST` is set.
+### Places
+Places logs travel destinations on an interactive map. Entries can be searched by name or coordinates, filtered by tags, and toggled to show only unvisited spots. Markers turn green once visited and red otherwise. A table lists distance from your current location, ratings, visit dates, and actions for each place, and you can double-click the map to add new locations.
 
-## Running E2E tests
+### Planning
+The Planning tab models long-term finances. Enter current savings, income, annual contributions, and assumptions like investment return or inflation to project account balances through retirement and beyond. The tab records total assets with timestamps so you can track wealth over time, and an annual savings field helps plan future contributions.
 
-End-to-end tests are written with [Playwright](https://playwright.dev/). Install
-the browsers once and then run the `e2e` script:
+### Budget
+Budget breaks down monthly income into recurring expenses and subscriptions. It estimates federal taxes, calculates net pay, and shows what remains after bills. Categories are customizable so the plan can reflect your real spending.
+
+### Contacts
+Contacts is a lightweight list of people you want to stay in touch with. Checkboxes let you mark who you've contacted, and options track how often you'd like to reach out, have a conversation, or meet in person.
+
+### Backups
+Backups scans local storage for saved snapshots of your data. Each backup can be restored with a single click, making it easy to recover from mistakes or sync between devices.
+
+## Development
+
+Install dependencies and run the test suite with:
 
 ```bash
 npm install
-npx playwright install
-npm run e2e
+npm test
 ```
-
-This starts the local server, launches a browser, and exercises basic UI flows.
-
-## Android location snippet
-
-The `android/WeatherLocationHelper.kt` file demonstrates how to obtain the user's current
-location with the Fused Location Provider API. It first checks the last known
-location and, if unavailable, requests a single high accuracy update.
