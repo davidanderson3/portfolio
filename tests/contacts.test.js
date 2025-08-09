@@ -47,14 +47,28 @@ describe('contacts panel', () => {
   it('logs interactions for a contact', () => {
     initContactsPanel();
     addContact('Bob', { desiredContact: 1, desiredConversation: 2, desiredMeet: 3 });
-    logContactEvent('Bob', 'contact');
+    logContactEvent('Bob', 'contact', 'quick hello');
     let stored = JSON.parse(localStorage.getItem('contacts'))[0];
     expect(stored.lastContact).not.toBeNull();
-    logContactEvent('Bob', 'conversation');
+    expect(stored.logs.length).toBe(1);
+    expect(stored.logs[0].note).toBe('quick hello');
+    logContactEvent('Bob', 'conversation', 'chatted about project');
     stored = JSON.parse(localStorage.getItem('contacts'))[0];
     expect(stored.lastConversation).not.toBeNull();
-    logContactEvent('Bob', 'meet');
+    expect(stored.logs.length).toBe(2);
+    logContactEvent('Bob', 'meet', 'met at cafe');
     stored = JSON.parse(localStorage.getItem('contacts'))[0];
     expect(stored.lastMeet).not.toBeNull();
+    expect(stored.logs.length).toBe(3);
+  });
+
+  it('stores notes for interactions', () => {
+    initContactsPanel();
+    addContact('Alice', { desiredContact: 1, desiredConversation: 2, desiredMeet: 3 });
+    logContactEvent('Alice', 'contact', 'lunch');
+    const stored = JSON.parse(localStorage.getItem('contacts'))[0];
+    expect(stored.logs[0].note).toBe('lunch');
+    expect(stored.logs[0].type).toBe('contact');
+    expect(stored.logs[0].date).toBeTruthy();
   });
 });
