@@ -26,17 +26,66 @@ export function renderContacts() {
   const list = document.getElementById('contactsList');
   if (!list) return;
   list.innerHTML = '';
-  contacts.forEach(c => {
+  contacts.forEach((c, idx) => {
     const li = document.createElement('li');
-    const nameEl = document.createElement('strong');
-    nameEl.textContent = c.name;
-    li.appendChild(nameEl);
 
-    function addRow(label, prop, type, freqProp) {
+    const nameText = document.createElement('span');
+    nameText.textContent = c.name;
+    nameText.style.display = 'none';
+
+    const nameInp = document.createElement('input');
+    nameInp.type = 'text';
+    nameInp.value = c.name;
+    nameInp.style.marginRight = '.5rem';
+
+    const contactInp = document.createElement('input');
+    contactInp.type = 'number';
+    contactInp.placeholder = 'Contact days';
+    contactInp.value = c.desiredContact ?? '';
+    contactInp.style.width = '7rem';
+    contactInp.style.marginRight = '.5rem';
+
+    const convoInp = document.createElement('input');
+    convoInp.type = 'number';
+    convoInp.placeholder = 'Conversation days';
+    convoInp.value = c.desiredConversation ?? '';
+    convoInp.style.width = '7rem';
+    convoInp.style.marginRight = '.5rem';
+
+    const meetInp = document.createElement('input');
+    meetInp.type = 'number';
+    meetInp.placeholder = 'Meet days';
+    meetInp.value = c.desiredMeet ?? '';
+    meetInp.style.width = '7rem';
+    meetInp.style.marginRight = '.5rem';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.style.marginRight = '.5rem';
+    saveBtn.addEventListener('click', () => {
+      c.name = nameInp.value.trim();
+      c.desiredContact = contactInp.value ? Number(contactInp.value) : null;
+      c.desiredConversation = convoInp.value ? Number(convoInp.value) : null;
+      c.desiredMeet = meetInp.value ? Number(meetInp.value) : null;
+      saveContacts();
+      renderContacts();
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', () => {
+      if (!confirm('Delete contact?')) return;
+      contacts.splice(idx, 1);
+      saveContacts();
+      renderContacts();
+    });
+
+    li.append(nameText, nameInp, contactInp, convoInp, meetInp, saveBtn, delBtn);
+
+    function addRow(label, prop, type) {
       const row = document.createElement('div');
       const span = document.createElement('span');
-      const freq = c[freqProp];
-      span.textContent = `${label}: ${formatDate(c[prop])}${freq ? ` (every ${freq} days)` : ''}`;
+      span.textContent = `${label}: ${formatDate(c[prop])}`;
       const btn = document.createElement('button');
       btn.textContent = 'Log';
       btn.addEventListener('click', () => logContactEvent(c.name, type));
@@ -44,9 +93,9 @@ export function renderContacts() {
       li.appendChild(row);
     }
 
-    addRow('Last contact', 'lastContact', 'contact', 'desiredContact');
-    addRow('Last conversation', 'lastConversation', 'conversation', 'desiredConversation');
-    addRow('Last meet', 'lastMeet', 'meet', 'desiredMeet');
+    addRow('Last contact', 'lastContact', 'contact');
+    addRow('Last conversation', 'lastConversation', 'conversation');
+    addRow('Last meet', 'lastMeet', 'meet');
 
     list.appendChild(li);
   });
@@ -99,6 +148,26 @@ export function logContactEvent(name, type, note) {
 export function initContactsPanel() {
   loadContacts();
   renderContacts();
+
+  const addBtn = document.getElementById('addContactBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      const name = document.getElementById('newContactName').value.trim();
+      const desiredContact = document.getElementById('newContactContact').value;
+      const desiredConversation = document.getElementById('newContactConversation').value;
+      const desiredMeet = document.getElementById('newContactMeet').value;
+      addContact(name, {
+        desiredContact,
+        desiredConversation,
+        desiredMeet
+      });
+      ['newContactName','newContactContact','newContactConversation','newContactMeet']
+        .forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+    });
+  }
 }
 
 window.initContactsPanel = initContactsPanel;
