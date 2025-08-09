@@ -2,7 +2,8 @@ let contacts = [];
 
 function loadContacts() {
   try {
-    contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+    const stored = JSON.parse(localStorage.getItem('contacts')) || [];
+    contacts = stored.map(c => typeof c === 'string' ? { name: c } : c);
   } catch {
     contacts = [];
   }
@@ -14,26 +15,73 @@ function saveContacts() {
   } catch {}
 }
 
+function formatDate(value) {
+  return value ? new Date(value).toLocaleDateString() : 'never';
+}
+
 export function renderContacts() {
   const list = document.getElementById('contactsList');
   if (!list) return;
   list.innerHTML = '';
-  contacts.forEach(name => {
+  contacts.forEach(c => {
     const li = document.createElement('li');
-    const label = document.createElement('label');
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.value = name;
-    label.appendChild(checkbox);
-    label.appendChild(document.createTextNode(` ${name}`));
-    li.appendChild(label);
+    const nameEl = document.createElement('strong');
+    nameEl.textContent = c.name;
+    li.appendChild(nameEl);
+
+    function addRow(label, prop, type, freqProp) {
+      const row = document.createElement('div');
+      const span = document.createElement('span');
+      const freq = c[freqProp];
+      span.textContent = `${label}: ${formatDate(c[prop])}${freq ? ` (every ${freq} days)` : ''}`;
+      const btn = document.createElement('button');
+      btn.textContent = 'Log';
+      btn.addEventListener('click', () => logContactEvent(c.name, type));
+      row.append(span, btn);
+      li.appendChild(row);
+    }
+
+    addRow('Last contact', 'lastContact', 'contact', 'desiredContact');
+    addRow('Last conversation', 'lastConversation', 'conversation', 'desiredConversation');
+    addRow('Last meet', 'lastMeet', 'meet', 'desiredMeet');
+
     list.appendChild(li);
   });
 }
 
-export function addContact(name) {
+export function addContact(name, prefs = {}) {
   if (!name) return;
-  contacts.push(name);
+
+  function getVal(key, msg) {
+    if (prefs[key] !== undefined) return Number(prefs[key]) || null;
+    if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
+      const v = window.prompt(msg, '');
+      return v ? Number(v) : null;
+    }
+    return null;
+  }
+
+  const contact = {
+    name,
+    desiredContact: getVal('desiredContact', 'Desired frequency of contact (days)'),
+    desiredConversation: getVal('desiredConversation', 'Desired frequency of meaningful conversation (days)'),
+    desiredMeet: getVal('desiredMeet', 'Desired frequency of in person get together (days)'),
+    lastContact: null,
+    lastConversation: null,
+    lastMeet: null
+  };
+  contacts.push(contact);
+  saveContacts();
+  renderContacts();
+}
+
+export function logContactEvent(name, type) {
+  const c = contacts.find(c => c.name === name);
+  if (!c) return;
+  const now = new Date().toISOString();
+  if (type === 'contact') c.lastContact = now;
+  if (type === 'conversation') c.lastConversation = now;
+  if (type === 'meet') c.lastMeet = now;
   saveContacts();
   renderContacts();
 }
@@ -45,3 +93,4 @@ export function initContactsPanel() {
 
 window.initContactsPanel = initContactsPanel;
 window.addContact = addContact;
+window.logContactEvent = logContactEvent;
