@@ -15,7 +15,7 @@ vi.mock('../js/googleCalendar.js', () => ({ createCalendarEvent: vi.fn() }));
 
 vi.mock('../js/helpers.js', () => ({
   loadDecisions: vi.fn(),
-  saveDecisions: vi.fn(),
+  saveDecisions: vi.fn(async () => { window.dispatchEvent(new window.Event('decisionsUpdated')); }),
   saveGoalOrder: vi.fn(),
   loadGoalOrder: vi.fn(async () => []),
   generateId: vi.fn(() => 'g1'),
@@ -124,6 +124,11 @@ describe('addCalendarGoal', () => {
       ]);
     const mod = await import('../js/goals.js');
     const { addCalendarGoal } = mod;
+    const renderDone = new Promise(resolve => {
+      window.addEventListener('decisionsUpdated', () => {
+        renderGoalsAndSubitems().then(resolve);
+      }, { once: true });
+    });
 
     global.prompt = vi.fn()
       .mockReturnValueOnce('My calendar goal')
@@ -131,6 +136,7 @@ describe('addCalendarGoal', () => {
 
     helpers.pickDateRange.mockResolvedValue({ start: '2024-01-02', end: '' });
     await addCalendarGoal('2024-01-02');
+    await renderDone;
 
     const content = document.getElementById('calendarContent');
     expect(content.children.length).toBeGreaterThan(0);

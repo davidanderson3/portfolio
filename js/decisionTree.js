@@ -1,5 +1,4 @@
 import { loadDecisions, generateId, saveDecisions, makeIconBtn } from './helpers.js';
-import { renderGoalsAndSubitems } from './goals.js';
 
 async function editDecision(decId) {
   const card = document.querySelector(`.decision-card[data-dec-id="${decId}"]`);
@@ -43,7 +42,6 @@ async function editDecision(decId) {
     items[idx].text = newText;
     items[idx].considerations = newCons;
     await saveDecisions(items);
-    await renderGoalsAndSubitems();
     initDecisionsPanel();
   }
 }
@@ -61,7 +59,6 @@ async function deleteDecision(decId) {
   gather(decId);
   items = items.filter(it => !idsToRemove.has(it.id));
   await saveDecisions(items);
-  await renderGoalsAndSubitems();
   initDecisionsPanel();
 }
 
@@ -157,7 +154,6 @@ export async function addDecision(parentId = null) {
     considerations: cons.trim()
   };
   await saveDecisions([...items, newDecision]);
-  await renderGoalsAndSubitems();
   initDecisionsPanel();
 }
 

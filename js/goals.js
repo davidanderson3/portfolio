@@ -99,8 +99,7 @@ export async function addCalendarGoal(date = '') {
     } catch (err) {
         console.error('Failed to create calendar event', err);
     }
-    // Re-render all goal views so calendar refreshes with latest data
-    await renderGoalsAndSubitems();
+    // UI re-render handled by decisionsUpdated event
 }
 
 function collectDescendants(goalId, items) {
@@ -146,8 +145,6 @@ export function createGoalRow(goal, options = {}) {
             if (options.stayPut) {
                 if (typeof options.onToggle === 'function') {
                     await options.onToggle(checkbox.checked, items);
-                } else {
-                    await renderGoalsAndSubitems();
                 }
             } else {
                 const wrapper = row.closest('.decision.goal-card') || row;
@@ -843,7 +840,6 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
         if (idx !== -1) {
             items[idx].hiddenUntil = null;
             await saveDecisions(items);
-            await renderGoalsAndSubitems();
         }
     });
 
