@@ -88,6 +88,16 @@ function isSampleDataset(items) {
   }
 }
 
+function dedupeById(list) {
+  if (!Array.isArray(list)) return [];
+  const seen = new Set();
+  return list.filter(it => {
+    if (!it?.id || seen.has(it.id)) return false;
+    seen.add(it.id);
+    return true;
+  });
+}
+
 
 // Cache decisions and goal order in memory only
 let saveTimer = null;
@@ -176,12 +186,7 @@ export async function loadDecisions(forceRefresh = false) {
   });
 
   // Remove any duplicate decisions by id
-  const seenIds = new Set();
-  items = items.filter(it => {
-    if (!it?.id || seenIds.has(it.id)) return false;
-    seenIds.add(it.id);
-    return true;
-  });
+  items = dedupeById(items);
 
   if (isSampleDataset(items)) {
     console.warn('⚠️ Ignoring sample decisions fetched from Firestore');
@@ -195,6 +200,8 @@ export async function loadDecisions(forceRefresh = false) {
 
 export async function saveDecisions(items) {
   if (!Array.isArray(items)) return;
+  // Remove duplicate IDs before caching/saving
+  items = dedupeById(items);
   // ensure at least one valid decision exists
   if (!items.some(i => i.id && i.text)) {
     console.warn('⚠️ Refusing to save empty or invalid decisions');
