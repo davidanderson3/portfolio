@@ -3,17 +3,38 @@ import {
     enableGoalDragAndDrop
 } from './dragAndDrop.js';
 
-import {
+import * as helpers from './helpers.js';
+const {
     loadDecisions,
     saveDecisions,
     saveGoalOrder,
-    loadGoalOrder,
     generateId,
     makeIconBtn,
     formatDaysUntil,
     linkify,
     pickDateRange
-} from './helpers.js';
+} = helpers;
+let loadGoalOrder;
+try {
+    loadGoalOrder = helpers.loadGoalOrder;
+} catch {}
+if (typeof loadGoalOrder !== 'function') {
+    loadGoalOrder = async () => [];
+}
+let dedupeById = (list => {
+    if (!Array.isArray(list)) return [];
+    const seen = new Set();
+    return list.filter(it => {
+        if (!it?.id || seen.has(it.id)) return false;
+        seen.add(it.id);
+        return true;
+    });
+});
+try {
+    if (typeof helpers.dedupeById === 'function') {
+        dedupeById = helpers.dedupeById;
+    }
+} catch {}
 
 import {
     attachTaskButtons,
@@ -50,10 +71,11 @@ export async function addCalendarGoal(date = '') {
     const start = range.start || defaultDate;
     const end = range.end?.trim() || '';
     const all = await loadDecisions();
+    const trimmed = text.trim();
     const newGoal = {
         id: generateId(),
         type: 'goal',
-        text: text.trim(),
+        text: trimmed,
         notes: '',
         completed: false,
         resolution: '',
@@ -64,7 +86,8 @@ export async function addCalendarGoal(date = '') {
         scheduled: start.trim(),
         scheduledEnd: end
     };
-    await saveDecisions([...all, newGoal]);
+    const deduped = dedupeById([...all, newGoal]);
+    await saveDecisions(deduped);
 
     const order = await loadGoalOrder();
     if (!order.includes(newGoal.id)) {
@@ -264,12 +287,7 @@ async function fixMutualParentGoals(items) {
 async function loadAndSyncGoals() {
     let allDecisions = await loadDecisions();
     // De-duplicate any decisions by ID so we don't render duplicate projects
-    const seen = new Set();
-    const deduped = allDecisions.filter(d => {
-        if (!d?.id || seen.has(d.id)) return false;
-        seen.add(d.id);
-        return true;
-    });
+    const deduped = dedupeById(allDecisions);
     if (deduped.length !== allDecisions.length) {
         allDecisions = deduped;
         try { await saveDecisions(allDecisions); } catch (err) { console.error(err); }

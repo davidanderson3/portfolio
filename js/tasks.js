@@ -1,8 +1,24 @@
 // ── tasks.js ──
 
-import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify } from './helpers.js';
+import * as helpers from './helpers.js';
 import { enableTaskDragAndDrop } from './dragAndDrop.js';
 import { createGoalRow, renderGoalsAndSubitems } from './goals.js';
+
+const { saveDecisions, generateId, makeIconBtn, linkify } = helpers;
+let dedupeById = (list => {
+    if (!Array.isArray(list)) return [];
+    const seen = new Set();
+    return list.filter(it => {
+        if (!it?.id || seen.has(it.id)) return false;
+        seen.add(it.id);
+        return true;
+    });
+});
+try {
+    if (typeof helpers.dedupeById === 'function') {
+        dedupeById = helpers.dedupeById;
+    }
+} catch {}
 
 // Access the global openGoalIds set defined in goals.js
 const openGoalIds = window.openGoalIds || new Set();
@@ -194,12 +210,7 @@ export async function renderChildren(goal, all, container) {
     const now = Date.now();
     const childCandidates = all.filter(item => item.parentGoalId === goal.id);
     // De-duplicate child items by id to avoid showing duplicates
-    const seenIds = new Set();
-    const children = childCandidates.filter(c => {
-        if (!c?.id || seenIds.has(c.id)) return false;
-        seenIds.add(c.id);
-        return true;
-    });
+    const children = dedupeById(childCandidates);
 
     // ── Active sub-goals ──
     const activeGoals = children.filter(c => {
@@ -298,26 +309,38 @@ export async function renderChildren(goal, all, container) {
         borderRadius: '6px', display: 'inline-flex',
         alignItems: 'center', justifyContent: 'center'
     });
+    let adding = false;
     addBtn.addEventListener('click', async () => {
+        if (adding) return;
         const text = inputText.value.trim();
         if (!text) return alert('Please enter goal text.');
-        const newGoal = {
-            id: generateId(),
-            text,
-            notes: '',
-            completed: false,
-            dateCompleted: '',
-            parentGoalId: goal.id,
-            type: 'goal',
-            hiddenUntil: null,
-            deadline: '',
-            scheduled: '',
-            scheduledEnd: ''
-        };
-        all.push(newGoal);
-        renderChildren(goal, all, container);
-        await saveDecisions(all);
-        inputText.value = '';
+        adding = true;
+        addBtn.disabled = true;
+        try {
+            const newGoal = {
+                id: generateId(),
+                text,
+                notes: '',
+                completed: false,
+                dateCompleted: '',
+                parentGoalId: goal.id,
+                type: 'goal',
+                hiddenUntil: null,
+                deadline: '',
+                scheduled: '',
+                scheduledEnd: ''
+            };
+            all.push(newGoal);
+            // Dedupe in place to keep shared array clean
+            const deduped = dedupeById(all);
+            all.splice(0, all.length, ...deduped);
+            renderChildren(goal, all, container);
+            await saveDecisions(all);
+            inputText.value = '';
+        } finally {
+            addBtn.disabled = false;
+            adding = false;
+        }
     });
 
     addForm.append(inputText, addBtn);
