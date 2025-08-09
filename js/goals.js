@@ -262,7 +262,20 @@ async function fixMutualParentGoals(items) {
 }
 
 async function loadAndSyncGoals() {
-    const allDecisions = await loadDecisions();
+    let allDecisions = await loadDecisions();
+    // De-duplicate any decisions by ID so we don't render duplicate projects
+    const seen = new Set();
+    const deduped = allDecisions.filter(d => {
+        if (!d?.id || seen.has(d.id)) return false;
+        seen.add(d.id);
+        return true;
+    });
+    if (deduped.length !== allDecisions.length) {
+        allDecisions = deduped;
+        try { await saveDecisions(allDecisions); } catch (err) { console.error(err); }
+    } else {
+        allDecisions = deduped;
+    }
     await fixMutualParentGoals(allDecisions);
     const goals = allDecisions.filter(d => d.type === 'goal' && !d.parentGoalId);
     const goalMap = Object.fromEntries(goals.map(g => [g.id, g]));

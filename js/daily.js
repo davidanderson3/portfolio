@@ -168,7 +168,18 @@ export async function renderDailyTasks(currentUser, db) {
   endOfDayContainer.innerHTML = '';
   weeklyContainer.innerHTML = '';
   monthlyContainer.innerHTML = '';
-  const all = await loadDecisions();
+
+  const loaded = await loadDecisions();
+  // De-duplicate tasks by ID to prevent rendering duplicates
+  const seenIds = new Set();
+  const all = loaded.filter(item => {
+    if (!item?.id || seenIds.has(item.id)) return false;
+    seenIds.add(item.id);
+    return true;
+  });
+  if (all.length !== loaded.length) {
+    try { await saveDecisions(all); } catch (err) { console.error(err); }
+  }
 
   // — Migrate legacy prefixes and set defaults
   let migrated = false;
