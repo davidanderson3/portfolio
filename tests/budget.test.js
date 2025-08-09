@@ -37,7 +37,21 @@ function createAuthMock() {
 
 vi.mock('../js/auth.js', createAuthMock);
 
-import { calculateMonthlyBudget, calculateCurrentMonthlyBudget } from '../js/budget.js';
+import { calculateMonthlyBudget, loadBudgetData } from '../js/budget.js';
+
+async function calculateCurrentMonthlyBudgetForTest() {
+  const budget = await loadBudgetData();
+  const salary = Number(planningMock?.finance?.income || 0);
+  const {
+    subscriptions = {},
+    recurring = {},
+    netPay: _ignore,
+    ...rest
+  } = budget;
+  const categories = { ...rest, ...recurring, ...subscriptions };
+  Object.keys(categories).forEach(k => { if (k.startsWith('goal_')) delete categories[k]; });
+  return calculateMonthlyBudget({ salary, categories });
+}
 
 beforeEach(() => {
   setMock.mockClear();
@@ -88,7 +102,7 @@ describe('budget calculations', () => {
       tsp: 300
     };
     localStorage.setItem('budgetConfig', JSON.stringify(stored));
-    const res = await calculateCurrentMonthlyBudget();
+    const res = await calculateCurrentMonthlyBudgetForTest();
     const expectedExpenses = 300 + 15;
     expect(res.expenses).toBe(expectedExpenses);
     expect(res.leftover).toBe(9685);

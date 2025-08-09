@@ -164,23 +164,6 @@ export async function saveBudgetData(data) {
   }
 }
 
-export async function calculateCurrentMonthlyBudget() {
-  const planning = await loadPlanningData();
-  const budget = await loadBudgetData();
-  const salary = Number(planning?.finance?.income || 0);
-  const {
-    subscriptions = {},
-    recurring = {},
-    goalSubscriptions = {},
-    goalRecurring = {},
-    netPay: _ignore,
-    ...rest
-  } = budget;
-  const categories = { ...rest, ...recurring, ...subscriptions };
-  Object.keys(categories).forEach(k => { if (k.startsWith('goal_')) delete categories[k]; });
-  return calculateMonthlyBudget({ salary, categories });
-}
-
 export async function initBudgetPanel() {
   const panel = document.getElementById('budgetContainer');
   if (!panel) return;
