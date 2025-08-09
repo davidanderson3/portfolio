@@ -31,6 +31,7 @@ window.addEventListener('DOMContentLoaded', () => {
     bottomAddModal: document.getElementById('bottomAddModal'),
     bottomAddTitle: document.getElementById('bottomAddTitle'),
     bottomAddOptions: document.getElementById('bottomAddOptions'),
+    bottomAddSection: document.getElementById('bottomAddSection'),
     bottomAddText: document.getElementById('bottomAddText'),
     bottomAddCancel: document.getElementById('bottomAddCancel'),
     bottomAddSubmit: document.getElementById('bottomAddSubmit'),
@@ -91,6 +92,35 @@ window.addEventListener('DOMContentLoaded', () => {
       label.append(radio, document.createTextNode(' ' + opt.label));
       uiRefs.bottomAddOptions.append(label);
     });
+
+    // setup optional section options
+    uiRefs.bottomAddSection.innerHTML = '';
+    if (cfg.sectionOptions && uiRefs.bottomAddSection) {
+      cfg.sectionOptions.forEach(opt => {
+        const label = document.createElement('label');
+        label.style.marginRight = '8px';
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'bottomAddSection';
+        radio.value = opt.value;
+        label.append(radio, document.createTextNode(' ' + opt.label));
+        uiRefs.bottomAddSection.append(label);
+      });
+      uiRefs.bottomAddSection.style.display = 'none';
+      uiRefs.bottomAddOptions.querySelectorAll('input[name="bottomAddOption"]').forEach(r => {
+        r.addEventListener('change', () => {
+          if (r.value === 'daily') {
+            uiRefs.bottomAddSection.style.display = 'block';
+          } else {
+            uiRefs.bottomAddSection.style.display = 'none';
+            uiRefs.bottomAddSection.querySelectorAll('input[name="bottomAddSection"]').forEach(s => s.checked = false);
+          }
+        });
+      });
+    } else if (uiRefs.bottomAddSection) {
+      uiRefs.bottomAddSection.style.display = 'none';
+    }
+
     uiRefs.bottomAddText.style.display = cfg.showTextInput ? 'block' : 'none';
     uiRefs.bottomAddText.value = '';
 
@@ -98,14 +128,26 @@ window.addEventListener('DOMContentLoaded', () => {
       uiRefs.bottomAddModal.style.display = 'none';
       uiRefs.bottomAddSubmit.onclick = null;
       uiRefs.bottomAddCancel.onclick = null;
+      if (uiRefs.bottomAddSection) {
+        uiRefs.bottomAddSection.style.display = 'none';
+        uiRefs.bottomAddSection.innerHTML = '';
+      }
     }
 
     uiRefs.bottomAddCancel.onclick = close;
     uiRefs.bottomAddSubmit.onclick = () => {
       const selected = uiRefs.bottomAddOptions.querySelector('input[name="bottomAddOption"]:checked')?.value;
       const text = uiRefs.bottomAddText.value.trim();
+      let section = null;
+      if (selected === 'daily' && cfg.sectionOptions) {
+        section = uiRefs.bottomAddSection.querySelector('input[name="bottomAddSection"]:checked')?.value;
+        if (!section) {
+          alert('Please select a section');
+          return;
+        }
+      }
       close();
-      if (cfg.onSubmit) cfg.onSubmit({ option: selected, text });
+      if (cfg.onSubmit) cfg.onSubmit({ option: selected, text, section });
     };
 
     uiRefs.bottomAddModal.style.display = 'flex';
@@ -136,9 +178,19 @@ window.addEventListener('DOMContentLoaded', () => {
           { label: 'Weekly', value: 'weekly' },
           { label: 'Monthly', value: 'monthly' }
         ],
+        sectionOptions: [
+          { label: 'First Thing', value: 'firstThing' },
+          { label: 'Morning', value: 'morning' },
+          { label: 'Afternoon', value: 'afternoon' },
+          { label: 'Evening', value: 'evening' },
+          { label: 'End of Day', value: 'endOfDay' }
+        ],
         showTextInput: true,
-        onSubmit({ option, text }) {
-          if (option && text) window.quickAddTask?.(option, text);
+        onSubmit({ option, text, section }) {
+          if (option && text) {
+            if (option === 'daily') window.quickAddTask?.(option, text, section);
+            else window.quickAddTask?.(option, text);
+          }
         }
       });
       return;

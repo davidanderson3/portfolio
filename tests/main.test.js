@@ -55,6 +55,7 @@ describe('bottom add button', () => {
       <div id="bottomAddModal" style="display:none;">
         <div id="bottomAddTitle"></div>
         <div id="bottomAddOptions"></div>
+        <div id="bottomAddSection"></div>
         <input id="bottomAddText" />
         <button id="bottomAddCancel"></button>
         <button id="bottomAddSubmit"></button>
@@ -126,6 +127,7 @@ describe('shift+A hotkey', () => {
       <div id="bottomAddModal" style="display:none;">
         <div id="bottomAddTitle"></div>
         <div id="bottomAddOptions"></div>
+        <div id="bottomAddSection"></div>
         <input id="bottomAddText" />
         <button id="bottomAddCancel"></button>
         <button id="bottomAddSubmit"></button>
