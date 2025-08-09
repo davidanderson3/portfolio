@@ -98,6 +98,23 @@ export function dedupeById(list) {
   });
 }
 
+function dedupeByTextAndType(list) {
+  if (!Array.isArray(list)) return [];
+  const seen = new Set();
+  return list.filter(it => {
+    const key =
+      it?.text && it?.type ? `${it.type}|${it.text.toLowerCase()}` : null;
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function dedupeDecisions(list) {
+  return dedupeByTextAndType(dedupeById(list));
+}
+
 
 // Cache decisions and goal order in memory only
 let saveTimer = null;
@@ -185,8 +202,8 @@ export async function loadDecisions(forceRefresh = false) {
     return it;
   });
 
-  // Remove any duplicate decisions by id
-  items = dedupeById(items);
+  // Remove any duplicate decisions by id or by text/type
+  items = dedupeDecisions(items);
 
   if (isSampleDataset(items)) {
     console.warn('⚠️ Ignoring sample decisions fetched from Firestore');
@@ -209,21 +226,7 @@ export async function removeDuplicateDecisionsFromDb() {
   const snap = await docRef.get();
   const data = snap.data();
   const items = data && Array.isArray(data.items) ? data.items : [];
-  const seenIds = new Set();
-  const seenText = new Set();
-  const deduped = [];
-  for (const it of items) {
-    if (it?.id) {
-      if (seenIds.has(it.id)) continue;
-      seenIds.add(it.id);
-    }
-    const key = it?.text && it?.type ? `${it.type}|${it.text.toLowerCase()}` : null;
-    if (key) {
-      if (seenText.has(key)) continue;
-      seenText.add(key);
-    }
-    deduped.push(it);
-  }
+  const deduped = dedupeDecisions(items);
   if (deduped.length !== items.length) {
     await docRef.set({ items: deduped }, { merge: true });
     setDecisionsCache(deduped);
@@ -234,8 +237,8 @@ export async function removeDuplicateDecisionsFromDb() {
 
 export async function saveDecisions(items) {
   if (!Array.isArray(items)) return;
-  // Remove duplicate IDs before caching/saving
-  items = dedupeById(items);
+  // Remove duplicate IDs or text/type combos before caching/saving
+  items = dedupeDecisions(items);
   // ensure at least one valid decision exists
   if (!items.some(i => i.id && i.text)) {
     console.warn('⚠️ Refusing to save empty or invalid decisions');
