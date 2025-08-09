@@ -27,16 +27,18 @@ describe('contacts panel', () => {
     initContactsPanel();
     const list = document.getElementById('contactsList');
     expect(list.children.length).toBe(1);
-    expect(list.textContent).toContain('Alice');
+    const nameInput = list.querySelector('input[type="text"]');
+    expect(nameInput.value).toBe('Alice');
     const buttons = list.querySelectorAll('button');
-    expect(buttons.length).toBe(3);
+    expect(buttons.length).toBe(5);
   });
 
   it('adds a contact and saves to localStorage', () => {
     initContactsPanel();
     addContact('Bob', { desiredContact: 1, desiredConversation: 2, desiredMeet: 3 });
     const list = document.getElementById('contactsList');
-    expect(list.textContent).toContain('Bob');
+    const nameInput = list.querySelector('input[type="text"]');
+    expect(nameInput.value).toBe('Bob');
     const stored = JSON.parse(localStorage.getItem('contacts'));
     expect(stored[0].name).toBe('Bob');
     expect(stored[0].desiredContact).toBe(1);
