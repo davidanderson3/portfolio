@@ -88,7 +88,7 @@ function isSampleDataset(items) {
   }
 }
 
-function dedupeById(list) {
+export function dedupeById(list) {
   if (!Array.isArray(list)) return [];
   const seen = new Set();
   return list.filter(it => {
