@@ -3,6 +3,17 @@ let current = 0;
 let locationId = '';
 let finished = false;
 let guessedThisLayer = false;
+const guess = document.getElementById('guess');
+
+fetch('https://restcountries.com/v3.1/all').then(r=>r.json()).then(data=>{
+  data.sort((a,b)=>a.name.common.localeCompare(b.name.common));
+  for (const c of data) {
+    const opt = document.createElement('option');
+    opt.value = c.cca3;
+    opt.textContent = c.name.common;
+    guess.appendChild(opt);
+  }
+});
 
 const map = L.map('map', { zoomControl:false, attributionControl:false }).setView([37,-95],3);
 
@@ -10,6 +21,7 @@ function styleFor(layer) {
   const name = layer.split('/').pop();
   const colors = {
     rivers: '#0ff',
+    lakes: '#00f',
     elevation: '#555',
     roads: '#ff0',
     outline: '#0f0',
@@ -51,7 +63,6 @@ document.getElementById('reveal').addEventListener('click', () => {
   }
 });
 
-const guess = document.getElementById('guess');
 guess.addEventListener('change', () => {
   if (finished || guessedThisLayer) return;
   const val = guess.value;

@@ -8,8 +8,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-const layerOrder = ['rivers','elevation','roads','outline','cities','label'];
-const locations = [{ id: 'USA', layers: layerOrder }];
+const layerOrder = ['rivers','lakes','elevation','roads','outline','cities','label'];
+const locations = ['USA','CAN','MEX'];
 const leaderboard = [];
 
 function dailySeed() {
@@ -29,13 +29,13 @@ function pickLocation() {
 app.get('/daily', (req, res) => {
   const loc = pickLocation();
   res.json({
-    locationId: loc.id,
-    layers: loc.layers.map(l => `/layer/${l}`)
+    locationId: loc,
+    layers: layerOrder.map(l => `/layer/${loc}/${l}`)
   });
 });
 
-app.get('/layer/:name', (req, res) => {
-  const file = path.join(__dirname, 'data', `${req.params.name}.geojson`);
+app.get('/layer/:loc/:name', (req, res) => {
+  const file = path.join(__dirname, 'data', req.params.loc, `${req.params.name}.geojson`);
   fs.readFile(file, 'utf8', (err, data) => {
     if (err) return res.status(404).send('Layer not found');
     res.type('application/json').send(data);
