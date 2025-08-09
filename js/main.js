@@ -13,6 +13,7 @@ import { loadHiddenTabs, applyHiddenTabs, saveHiddenTabs } from './settings.js';
 import { clearPlanningCache } from './planning.js';
 
 let hiddenTabsTimer = null;
+let renderQueue = Promise.resolve();
 
 window.addEventListener('DOMContentLoaded', () => {
   const uiRefs = {
@@ -337,7 +338,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Re-render UI components whenever decisions are updated
   window.addEventListener('decisionsUpdated', () => {
-    renderGoalsAndSubitems(currentUser, db);
+    renderQueue = renderQueue.then(() => renderGoalsAndSubitems());
     if (document.querySelector('.tab-button.active')?.dataset.target === 'dailyPanel') {
       renderDailyTasks(currentUser, db);
     }

@@ -1,5 +1,5 @@
 import { parseNaturalDate, generateId, loadDecisions, saveDecisions, saveGoalOrder, loadGoalOrder } from './helpers.js';
-import { renderGoalsAndSubitems, appendGoalToDOM, refreshGoalInDOM } from './goals.js';
+import { appendGoalToDOM, refreshGoalInDOM } from './goals.js';
 import { createCalendarEvent } from './googleCalendar.js';
 
 

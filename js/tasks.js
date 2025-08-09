@@ -2,7 +2,7 @@
 
 import * as helpers from './helpers.js';
 import { enableTaskDragAndDrop } from './dragAndDrop.js';
-import { createGoalRow, renderGoalsAndSubitems } from './goals.js';
+import { createGoalRow } from './goals.js';
 
 const { saveDecisions, generateId, makeIconBtn, linkify } = helpers;
 let dedupeById = (list => {
