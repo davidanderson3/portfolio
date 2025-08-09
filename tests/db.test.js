@@ -257,5 +257,28 @@ describe('database helpers', () => {
     expect(setMock).toHaveBeenCalledTimes(1);
     expect(setMock).toHaveBeenCalledWith({ items: [realItem] }, { merge: true });
   });
+
+  it('removes duplicate decisions in Firestore', async () => {
+    const items = [
+      { id: '1', type: 'task', text: 'Repeat' },
+      { id: '2', type: 'task', text: 'Repeat' },
+      { id: '1', type: 'task', text: 'Repeat' },
+      { id: '3', type: 'goal', text: 'Repeat' }
+    ];
+    getMock.mockResolvedValue({ data: () => ({ items }) });
+    const { removeDuplicateDecisionsFromDb } = await import('../js/helpers.js');
+    const result = await removeDuplicateDecisionsFromDb();
+    expect(result).toEqual([
+      { id: '1', type: 'task', text: 'Repeat' },
+      { id: '3', type: 'goal', text: 'Repeat' }
+    ]);
+    expect(setMock).toHaveBeenCalledWith(
+      { items: [
+        { id: '1', type: 'task', text: 'Repeat' },
+        { id: '3', type: 'goal', text: 'Repeat' }
+      ] },
+      { merge: true }
+    );
+  });
 });
 

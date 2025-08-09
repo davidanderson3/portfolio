@@ -198,6 +198,40 @@ export async function loadDecisions(forceRefresh = false) {
   return getDecisionsCache();
 }
 
+export async function removeDuplicateDecisionsFromDb() {
+  await awaitAuthUser();
+  const currentUser = getCurrentUser();
+  if (!currentUser) {
+    console.warn('🛑 Cannot remove duplicates: no authenticated user');
+    return [];
+  }
+  const docRef = db.collection('decisions').doc(currentUser.uid);
+  const snap = await docRef.get();
+  const data = snap.data();
+  const items = data && Array.isArray(data.items) ? data.items : [];
+  const seenIds = new Set();
+  const seenText = new Set();
+  const deduped = [];
+  for (const it of items) {
+    if (it?.id) {
+      if (seenIds.has(it.id)) continue;
+      seenIds.add(it.id);
+    }
+    const key = it?.text && it?.type ? `${it.type}|${it.text.toLowerCase()}` : null;
+    if (key) {
+      if (seenText.has(key)) continue;
+      seenText.add(key);
+    }
+    deduped.push(it);
+  }
+  if (deduped.length !== items.length) {
+    await docRef.set({ items: deduped }, { merge: true });
+    setDecisionsCache(deduped);
+    notifyDecisionsUpdated();
+  }
+  return deduped;
+}
+
 export async function saveDecisions(items) {
   if (!Array.isArray(items)) return;
   // Remove duplicate IDs before caching/saving
