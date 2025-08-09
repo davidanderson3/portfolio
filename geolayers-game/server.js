@@ -11,6 +11,7 @@ app.use(express.json());
 const layerOrder = ['rivers','lakes','elevation','roads','outline','cities','label'];
 const locations = ['USA','CAN','MEX'];
 const leaderboard = [];
+const countryNames = { USA:'United States', CAN:'Canada', MEX:'Mexico' };
 
 function dailySeed() {
   const today = new Date().toISOString().slice(0,10);
@@ -32,6 +33,11 @@ app.get('/daily', (req, res) => {
     locationId: loc,
     layers: layerOrder.map(l => `/layer/${loc}/${l}`)
   });
+});
+
+app.get('/countries', (req, res) => {
+  const list = Object.entries(countryNames).map(([code, name]) => ({ code, name }));
+  res.json(list);
 });
 
 app.get('/layer/:loc/:name', (req, res) => {
