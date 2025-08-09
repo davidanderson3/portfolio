@@ -2,6 +2,7 @@
 
 import { auth, db, getCurrentUser } from './auth.js';
 import { SAMPLE_METRICS, SAMPLE_METRIC_DATA } from './sampleData.js';
+import { makeIconBtn } from './helpers.js';
 
 const METRICS_KEY = 'metricsConfig';
 const STATS_KEY = 'metricsData';
@@ -507,6 +508,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       }
     }
     const row = document.createElement('tr');
+    row.dataset.metricId = cfg.id;
     const td1 = document.createElement('td');
     td1.textContent = cfg.label;
     td1.dataset.label = 'Metric';
@@ -618,6 +620,20 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     const td6 = document.createElement('td');
     td6.dataset.label = 'Actions';
     Object.assign(td6.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+
+    const upBtn = makeIconBtn('⬆️', 'Move metric up', async () => {
+      const prev = row.previousElementSibling;
+      if (prev) {
+        tbody.insertBefore(row, prev);
+        const ids = Array.from(tbody.children).map(r => r.dataset.metricId);
+        await safeSaveMetricsConfig(oldCfg => {
+          const ordered = ids.map(id => oldCfg.find(m => m.id === id)).filter(Boolean);
+          const remaining = oldCfg.filter(m => !ids.includes(m.id));
+          return [...ordered, ...remaining];
+        });
+      }
+    });
+    td6.appendChild(upBtn);
 
     const clockBtn = document.createElement('span');
     clockBtn.textContent = '🕒';
