@@ -1,5 +1,6 @@
 import { auth, db, getCurrentUser } from './auth.js';
 import { PANELS, PANEL_NAMES } from './tabs.js';
+import { getSiteName, setSiteName } from './siteName.js';
 
 const KEY = 'hiddenTabs';
 
@@ -97,12 +98,17 @@ export function applyHiddenTabs(tabs) {
 
 
 export async function initSettingsPage() {
-  const listDiv = document.getElementById('settingsTabsList');
-  listDiv?.classList.add('settings-list');
-  const saveBtn = document.getElementById('settingsSaveBtn');
-  const resetBtn = document.getElementById('settingsResetBtn');
-  const emailSpan = document.getElementById('settingsEmail');
-  const panels = PANELS;
+    const listDiv = document.getElementById('settingsTabsList');
+    listDiv?.classList.add('settings-list');
+    const saveBtn = document.getElementById('settingsSaveBtn');
+    const resetBtn = document.getElementById('settingsResetBtn');
+    const emailSpan = document.getElementById('settingsEmail');
+    const siteNameInput = document.getElementById('siteNameInput');
+    const panels = PANELS;
+
+    if (siteNameInput) {
+      siteNameInput.value = getSiteName();
+    }
 
   if (listDiv && listDiv.children.length === 0) {
     panels.forEach(id => {
@@ -129,15 +135,18 @@ export async function initSettingsPage() {
   };
 
   saveBtn?.addEventListener('click', async () => {
-    const hidden = {};
-    listDiv.querySelectorAll('.settings-option input[type=checkbox]').forEach(cb => {
-      if (!cb.checked) {
-        hidden[cb.value] = new Date('9999-12-31').toISOString();
+      const hidden = {};
+      listDiv.querySelectorAll('.settings-option input[type=checkbox]').forEach(cb => {
+        if (!cb.checked) {
+          hidden[cb.value] = new Date('9999-12-31').toISOString();
+        }
+      });
+      if (siteNameInput) {
+        setSiteName(siteNameInput.value);
       }
+      await saveHiddenTabs(hidden);
+      window.location.href = 'index.html';
     });
-    await saveHiddenTabs(hidden);
-    window.location.href = 'index.html';
-  });
 
   resetBtn?.addEventListener('click', async () => {
     try {

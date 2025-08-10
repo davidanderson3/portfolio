@@ -11,11 +11,13 @@ import { initTabReports } from './tabReports.js';
 import { initGoogleCalendar } from './googleCalendar.js';
 import { loadHiddenTabs, applyHiddenTabs, saveHiddenTabs } from './settings.js';
 import { clearPlanningCache } from './planning.js';
+import { applySiteName } from './siteName.js';
 
 let hiddenTabsTimer = null;
 let renderQueue = Promise.resolve();
 
 window.addEventListener('DOMContentLoaded', () => {
+  applySiteName();
   const uiRefs = {
     loginBtn: document.getElementById('loginBtn'),
     logoutBtn: document.getElementById('logoutBtn'),

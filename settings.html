@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Settings - Dashboard</title>
+    <title>Settings - Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <nav class="navbar">
     <div class="container navbar-inner">
-      <div class="navbar-left"><a href="index.html">Dashboard</a></div>
+        <div class="navbar-left"><a href="index.html" class="site-name">Dashboard</a></div>
       <div class="navbar-right">
         <span id="settingsEmail" class="user-email"></span>
       </div>
@@ -17,8 +17,10 @@
   </nav>
 
   <section class="main-layout settings-container" style="padding:2em;">
-    <h2>Tab Visibility</h2>
-    <div id="settingsTabsList"></div>
+      <h2>Site Name</h2>
+      <input id="siteNameInput" type="text" style="margin-bottom:1em;" />
+      <h2>Tab Visibility</h2>
+      <div id="settingsTabsList"></div>
     <div class="modal-actions" style="margin-top:1em;">
       <button type="button" id="settingsSaveBtn">Save</button>
       <button type="button" id="settingsResetBtn">Show All Tabs</button>
