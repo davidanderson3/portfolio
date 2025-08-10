@@ -1,5 +1,6 @@
 import { initSettingsPage } from './settings.js';
 import { initAuth } from './auth.js';
+import { applySiteName } from './siteName.js';
 
 function initAuthForPage() {
   const uiRefs = {
@@ -9,10 +10,11 @@ function initAuthForPage() {
   initAuth(uiRefs, () => {});
 }
 
-function initPage() {
-  initSettingsPage();
-  initAuthForPage();
-}
+  function initPage() {
+    applySiteName();
+    initSettingsPage();
+    initAuthForPage();
+  }
 
 if (document.readyState === 'loading') {
   window.addEventListener('DOMContentLoaded', initPage);

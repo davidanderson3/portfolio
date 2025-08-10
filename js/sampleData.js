@@ -1,3 +1,5 @@
+import { getSiteName } from './siteName.js';
+
 function deepFreeze(obj) {
   if (obj && typeof obj === 'object') {
     Object.freeze(obj);
@@ -12,7 +14,7 @@ export const SAMPLE_DECISIONS = [
   {
     id: 'demo-goal',
     type: 'goal',
-    text: 'Welcome to Dashboard',
+    text: `Welcome to ${getSiteName()}`,
     completed: false,
     resolution: '',
     dateCompleted: '',
