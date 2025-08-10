@@ -333,6 +333,39 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const SIGNED_OUT_TABS = [
+    'dailyPanel',
+    'projectsPanel',
+    'calendarPanel',
+    'metricsPanel',
+    'listsPanel',
+    'travelPanel',
+    'planningPanel',
+    'budgetPanel',
+    'geolayersPanel'
+  ];
+
+  function showOnlySignedOutTabs() {
+    const allowed = new Set(SIGNED_OUT_TABS);
+    const buttons = document.querySelectorAll('.tab-button');
+    let active = document.querySelector('.tab-button.active');
+    buttons.forEach(btn => {
+      const target = btn.dataset.target;
+      const panel = document.getElementById(target);
+      if (!allowed.has(target)) {
+        btn.style.display = 'none';
+        if (panel) panel.style.display = 'none';
+        if (btn === active) active = null;
+      } else {
+        btn.style.display = '';
+      }
+    });
+    if (!active) {
+      const first = Array.from(buttons).find(b => b.style.display !== 'none');
+      first?.click();
+    }
+  }
+
   // Clear any stale content immediately to avoid flashing old tasks on mobile
   clearTaskLists();
 
@@ -362,10 +395,12 @@ window.addEventListener('DOMContentLoaded', () => {
         initTabs(null, db);
       const hidden = await loadHiddenTabs();
       applyHiddenTabs(hidden);
+      showOnlySignedOutTabs();
       if (hiddenTabsTimer) clearInterval(hiddenTabsTimer);
       hiddenTabsTimer = setInterval(async () => {
         const h = await loadHiddenTabs();
         applyHiddenTabs(h);
+        showOnlySignedOutTabs();
       }, 60 * 1000);
       const tabsEl = document.getElementById('tabsContainer');
         if (tabsEl) tabsEl.style.visibility = 'visible';
