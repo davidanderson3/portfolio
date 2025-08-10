@@ -1,6 +1,12 @@
 import request from 'supertest';
-import server from '../backend/server';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+let server;
+
+beforeAll(async () => {
+  const mod = await import('../backend/server.js');
+  server = mod.default || mod;
+});
 
 afterAll(() => {
   server.close();

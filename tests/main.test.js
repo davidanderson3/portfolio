@@ -23,6 +23,7 @@ vi.mock('../js/buttonStyles.js', () => ({ initButtonStyles: vi.fn() }));
 vi.mock('../js/tabReports.js', () => ({ initTabReports: vi.fn() }));
 vi.mock('../js/googleCalendar.js', () => ({ initGoogleCalendar: vi.fn() }));
 vi.mock('../js/settings.js', () => ({ loadHiddenTabs: vi.fn(), applyHiddenTabs: vi.fn() }));
+vi.mock('../js/planning.js', () => ({ clearPlanningCache: vi.fn() }));
 
 beforeEach(() => {
   vi.resetModules();
@@ -206,6 +207,63 @@ describe('shift+A hotkey', () => {
     dom.window.document.getElementById('bottomAddBtn').click();
     const inp = dom.window.document.getElementById('metricLabel');
     expect(dom.window.document.activeElement).toBe(inp);
+  });
+});
+
+describe('signed-out tabs', () => {
+  it('hides contacts and backups when not signed in', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+      <div id="splash"></div>
+      <div id="goalsView"></div>
+      <div id="tabsContainer">
+        <button class="tab-button" data-target="dailyPanel"></button>
+        <button class="tab-button" data-target="projectsPanel"></button>
+        <button class="tab-button" data-target="calendarPanel"></button>
+        <button class="tab-button" data-target="metricsPanel"></button>
+        <button class="tab-button" data-target="listsPanel"></button>
+        <button class="tab-button" data-target="travelPanel"></button>
+        <button class="tab-button" data-target="planningPanel"></button>
+        <button class="tab-button" data-target="budgetPanel"></button>
+        <button class="tab-button" data-target="contactsPanel"></button>
+        <button class="tab-button" data-target="backupsPanel"></button>
+        <button class="tab-button" data-target="geolayersPanel"></button>
+      </div>
+      <div id="dailyPanel"></div>
+      <div id="projectsPanel"></div>
+      <div id="calendarPanel"></div>
+      <div id="metricsPanel"></div>
+      <div id="listsPanel"></div>
+      <div id="travelPanel"></div>
+      <div id="planningPanel"></div>
+      <div id="budgetPanel"></div>
+      <div id="contactsPanel"></div>
+      <div id="backupsPanel"></div>
+      <div id="geolayersPanel"></div>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+
+    const settings = await import('../js/settings.js');
+    settings.loadHiddenTabs.mockResolvedValue({});
+    settings.applyHiddenTabs.mockImplementation(() => {});
+
+    const auth = await import('../js/auth.js');
+    auth.initAuth.mockImplementation(async (_ui, cb) => { await cb(null); });
+
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    await Promise.resolve();
+
+    const contactsBtn = dom.window.document.querySelector('.tab-button[data-target="contactsPanel"]');
+    const backupsBtn = dom.window.document.querySelector('.tab-button[data-target="backupsPanel"]');
+    const dailyBtn = dom.window.document.querySelector('.tab-button[data-target="dailyPanel"]');
+
+    expect(contactsBtn.style.display).toBe('none');
+    expect(backupsBtn.style.display).toBe('none');
+    expect(dailyBtn.style.display).not.toBe('none');
   });
 });
 
