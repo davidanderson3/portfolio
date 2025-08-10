@@ -37,6 +37,10 @@ fetch('countries.json').then(r=>r.json()).then(data=>{
 });
 
 const map = L.map('map', { zoomControl:false, attributionControl:false }).setView([37,-95],3);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
 
 function styleFor(layer) {
   const name = layer.split('/').pop().replace('.geojson','');
