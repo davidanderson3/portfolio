@@ -6,7 +6,23 @@ let guessedThisLayer = false;
 let firstLayer = true;
 const guess = document.getElementById('guess');
 
-fetch('/countries').then(r=>r.json()).then(data=>{
+const layerOrder = ['rivers','lakes','elevation','roads','outline','cities','label'];
+
+function dailySeed() {
+  const today = new Date().toISOString().slice(0,10);
+  let seed = 0;
+  for (const c of today) {
+    seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
+  }
+  return seed;
+}
+
+function pickLocation(locations) {
+  const seed = dailySeed();
+  return locations[seed % locations.length];
+}
+
+fetch('countries.json').then(r=>r.json()).then(data=>{
   data.sort((a,b)=>a.name.localeCompare(b.name));
   for (const c of data) {
     const opt = document.createElement('option');
@@ -14,12 +30,16 @@ fetch('/countries').then(r=>r.json()).then(data=>{
     opt.textContent = c.name;
     guess.appendChild(opt);
   }
+  const locations = data.map(c=>c.code);
+  locationId = pickLocation(locations);
+  layers = layerOrder.map(l => `data/${locationId}/${l}.geojson`);
+  loadLayer();
 });
 
 const map = L.map('map', { zoomControl:false, attributionControl:false }).setView([37,-95],3);
 
 function styleFor(layer) {
-  const name = layer.split('/').pop();
+  const name = layer.split('/').pop().replace('.geojson','');
   const colors = {
     rivers: '#0ff',
     lakes: '#00f',
@@ -50,12 +70,6 @@ function loadLayer() {
     guessedThisLayer = false;
   });
 }
-
-fetch('/daily').then(r=>r.json()).then(data=>{
-  locationId = data.locationId;
-  layers = data.layers;
-  loadLayer();
-});
 
 document.getElementById('reveal').addEventListener('click', () => {
   if (finished) return;
