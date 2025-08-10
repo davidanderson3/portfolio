@@ -102,10 +102,10 @@ function dedupeByTextAndType(list) {
   if (!Array.isArray(list)) return [];
   const seen = new Set();
   return list.filter(it => {
-    const key =
-      it?.text && it?.type
-        ? `${it.type}|${it.text.trim().toLowerCase()}`
-        : null;
+    const text = it?.text?.trim().toLowerCase();
+    const type = it?.type;
+    const parent = it?.parentGoalId || '';
+    const key = text && type ? `${type}|${text}|${parent}` : null;
     if (!key) return true;
     if (seen.has(key)) return false;
     seen.add(key);

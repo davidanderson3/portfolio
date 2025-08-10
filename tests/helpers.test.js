@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 
 // Mock auth.js to avoid loading Firebase scripts during tests
@@ -130,5 +130,40 @@ describe('loadDecisions caching behavior', () => {
     const auth = await loadDecisions(true);
     expect(auth).toEqual([{ id: '1', text: 't' }]);
     expect(collectionMock).toHaveBeenCalled();
+  });
+});
+
+describe('saveDecisions deduplication', () => {
+  let saveDecisions;
+  let getDecisionsCache;
+  let clearDecisionsCache;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    ({ saveDecisions } = await import('../js/helpers.js'));
+    ({ getDecisionsCache, clearDecisionsCache } = await import('../js/cache.js'));
+    global.alert = vi.fn();
+  });
+
+  it('retains goals with same text under different parents', async () => {
+    clearDecisionsCache();
+    const items = [
+      { id: 'a1', text: 'Sub', type: 'goal', parentGoalId: 'p1' },
+      { id: 'a2', text: 'Sub', type: 'goal', parentGoalId: 'p2' }
+    ];
+    await saveDecisions(items);
+    const cached = getDecisionsCache();
+    expect(cached.length).toBe(2);
+  });
+
+  it('dedupes goals with same text under same parent', async () => {
+    clearDecisionsCache();
+    const items = [
+      { id: 'b1', text: 'Sub', type: 'goal', parentGoalId: 'p1' },
+      { id: 'b2', text: 'Sub', type: 'goal', parentGoalId: 'p1' }
+    ];
+    await saveDecisions(items);
+    const cached = getDecisionsCache();
+    expect(cached.length).toBe(1);
   });
 });
