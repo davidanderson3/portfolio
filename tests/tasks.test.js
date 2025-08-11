@@ -9,7 +9,19 @@ vi.mock('../js/helpers.js', () => ({
   saveDecisions: vi.fn(async () => {}),
   generateId: vi.fn(),
   makeIconBtn: () => document.createElement('button'),
-  linkify: (t) => t
+  linkify: (t) => t,
+  dedupeDecisions: (list) => {
+    const seenId = new Set();
+    const seenKey = new Set();
+    return list.filter(it => {
+      if (seenId.has(it.id)) return false;
+      seenId.add(it.id);
+      const key = `${it.type}|${it.text}|${it.parentGoalId || ''}`;
+      if (seenKey.has(key)) return false;
+      seenKey.add(key);
+      return true;
+    });
+  }
 }));
 
 let currentItems = [];
@@ -49,6 +61,7 @@ let container;
 
 beforeEach(async () => {
   vi.resetModules();
+  vi.clearAllMocks();
   const dom = new JSDOM('<div id="container"></div>');
   global.window = dom.window;
   global.document = dom.window.document;
@@ -93,5 +106,23 @@ describe('task completion', () => {
     expect(taskList.children.length).toBe(0);
     expect(doneList.children.length).toBe(1);
     expect(doneList.querySelector('input[type="checkbox"]').checked).toBe(true);
+  });
+});
+
+describe('duplicate handling', () => {
+  it('dedupes tasks with same text before rendering and saves', async () => {
+    const goal = { id: 'g1', type: 'goal', parentGoalId: null, completed: false };
+    const task1 = { id: 't1', type: 'task', text: 'do it', notes: '', parentGoalId: 'g1', completed: false, dateCompleted: '' };
+    const task2 = { id: 't2', type: 'task', text: 'do it', notes: '', parentGoalId: 'g1', completed: false, dateCompleted: '' };
+    const all = [goal, task1, task2];
+    currentItems = all;
+
+    await renderChildren(goal, all, container);
+
+    const taskList = container.querySelector('.task-list');
+    expect(taskList.children.length).toBe(1);
+    expect(all.filter(i => i.type === 'task').length).toBe(1);
+    expect(helpers.saveDecisions).toHaveBeenCalledTimes(1);
+    expect(helpers.saveDecisions.mock.calls[0][0].some(i => i.id === 't2')).toBe(false);
   });
 });

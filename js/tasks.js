@@ -208,9 +208,18 @@ export function attachTaskButtons(item, row, listContainer, allDecisions) {
 export async function renderChildren(goal, all, container) {
     container.innerHTML = '';
     const now = Date.now();
+
+    // Remove any duplicate tasks/goals before rendering
+    if (typeof helpers.dedupeDecisions === 'function') {
+        const deduped = helpers.dedupeDecisions(all);
+        if (deduped.length !== all.length) {
+            all.splice(0, all.length, ...deduped);
+            await saveDecisions(all);
+        }
+    }
+
     const childCandidates = all.filter(item => item.parentGoalId === goal.id);
-    // De-duplicate child items by id to avoid showing duplicates
-    const children = dedupeById(childCandidates);
+    const children = childCandidates;
 
     // ── Active sub-goals ──
     const activeGoals = children.filter(c => {
