@@ -197,6 +197,20 @@ export async function loadDecisions(forceRefresh = false) {
   const data = snap.data();
   const rawItems = data && Array.isArray(data.items) ? data.items : [];
 
+  // detect duplicates by text/type/parent before we dedupe so we can log them
+  const seenKeys = new Set();
+  const dupes = [];
+  for (const it of rawItems) {
+    const text = it?.text?.trim().toLowerCase();
+    const type = it?.type;
+    const parent = it?.parentGoalId || '';
+    const key = text && type ? `${type}|${text}|${parent}` : null;
+    if (key) {
+      if (seenKeys.has(key)) dupes.push(it);
+      else seenKeys.add(key);
+    }
+  }
+
   let items = rawItems.map(it => {
     if (it && it.hiddenUntil && typeof it.hiddenUntil.toDate === 'function') {
       return { ...it, hiddenUntil: it.hiddenUntil.toDate().toISOString() };
@@ -206,6 +220,17 @@ export async function loadDecisions(forceRefresh = false) {
 
   // Remove any duplicate decisions by id or by text/type
   items = dedupeDecisions(items);
+
+  if (dupes.length) {
+    console.warn(`🗑️ Removing ${dupes.length} duplicate decisions from Firestore`, dupes);
+    try {
+      await db.collection('decisions').doc(currentUser.uid).set({ items }, { merge: true });
+    } catch (err) {
+      console.error('Failed to purge duplicates', err);
+    }
+  } else {
+    console.log(`Loaded ${items.length} decisions from Firestore`);
+  }
 
   if (isSampleDataset(items)) {
     console.warn('⚠️ Ignoring sample decisions fetched from Firestore');
@@ -228,8 +253,21 @@ export async function removeDuplicateDecisionsFromDb() {
   const snap = await docRef.get();
   const data = snap.data();
   const items = data && Array.isArray(data.items) ? data.items : [];
+  const seenKeys = new Set();
+  const dupes = [];
+  for (const it of items) {
+    const text = it?.text?.trim().toLowerCase();
+    const type = it?.type;
+    const parent = it?.parentGoalId || '';
+    const key = text && type ? `${type}|${text}|${parent}` : null;
+    if (key) {
+      if (seenKeys.has(key)) dupes.push(it);
+      else seenKeys.add(key);
+    }
+  }
   const deduped = dedupeDecisions(items);
   if (deduped.length !== items.length) {
+    console.warn(`🗑️ Removed ${dupes.length} duplicate decisions`, dupes);
     await docRef.set({ items: deduped }, { merge: true });
     setDecisionsCache(deduped);
     notifyDecisionsUpdated();

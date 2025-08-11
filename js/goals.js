@@ -283,9 +283,11 @@ async function fixMutualParentGoals(items) {
 
 async function loadAndSyncGoals() {
     let allDecisions = await loadDecisions();
+    console.log(`Loaded ${allDecisions.length} decisions for rendering`);
     // De-duplicate any decisions by ID so we don't render duplicate projects
     const deduped = dedupeById(allDecisions);
     if (deduped.length !== allDecisions.length) {
+        console.warn(`Removed ${allDecisions.length - deduped.length} decisions with duplicate IDs`);
         allDecisions = deduped;
         try { await saveDecisions(allDecisions); } catch (err) { console.error(err); }
     } else {
