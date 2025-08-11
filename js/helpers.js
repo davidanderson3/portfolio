@@ -122,18 +122,11 @@ function dedupeDecisions(list) {
 let saveTimer = null;
 let pendingDecisions = null;
 
-// If a save was attempted before login completed, retry once a user appears
+// Clear any lingering pending edits when a user logs in so they never sync to
+// the authenticated account. Anonymous edits are stored separately and should
+// not be merged after authentication.
 auth.onAuthStateChanged(user => {
-  if (user && pendingDecisions) {
-    let items = pendingDecisions;
-    pendingDecisions = null;
-    if (containsDemoItems(items)) {
-      items = stripDemoItems(items);
-      if (!items.length) return;
-    }
-    if (isSampleDataset(items)) return;
-    scheduleSave(user, items);
-  }
+  if (user) pendingDecisions = null;
 });
 
 function notifyDecisionsUpdated() {
@@ -176,6 +169,19 @@ export function generateId() {
   return '_' + Math.random().toString(36).substr(2, 9);
 }
 
+export function getSampleSessionId() {
+  if (typeof localStorage === 'undefined') {
+    return generateId();
+  }
+  const key = 'sampleSessionId';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = generateId();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
 export async function loadDecisions(forceRefresh = false) {
   await awaitAuthUser();
   const currentUser = getCurrentUser();
@@ -186,6 +192,19 @@ export async function loadDecisions(forceRefresh = false) {
   }
 
   if (!currentUser) {
+    const sessionId = getSampleSessionId();
+    try {
+      const snap = await db.collection('sample').doc(sessionId).get();
+      const data = snap.data();
+      const items = Array.isArray(data?.items) ? dedupeDecisions(data.items) : null;
+      if (items && items.length) {
+        setDecisionsCache(items);
+        notifyDecisionsUpdated();
+        return items;
+      }
+    } catch (err) {
+      console.warn('Failed to load sample decisions:', err);
+    }
     console.warn('🚫 No current user — returning sample data');
     const shifted = shiftSampleCalendarItems(SAMPLE_DECISIONS);
     setDecisionsCache(shifted);
@@ -289,23 +308,22 @@ export async function saveDecisions(items) {
     if (!items.length) return;
   }
 
+  if (isSampleDataset(items)) return;
+
   setDecisionsCache(items);
   notifyDecisionsUpdated();
-  let user = getCurrentUser();
+  const user = getCurrentUser();
   if (!user) {
-    if (isSampleDataset(items)) return;
-    pendingDecisions = items;
-    user = await awaitAuthUser();
-    if (!user) {
-      pendingDecisions = null;
-      console.warn('🛑 Cannot save decisions: no authenticated user');
-      alert('⚠️ Please sign in to save your changes.');
-      return;
+    const sessionId = getSampleSessionId();
+    try {
+      await db.collection('sample').doc(sessionId).set({ items }, { merge: true });
+    } catch (err) {
+      console.warn('Failed to save sample decisions:', err);
     }
+    console.warn('🛑 Cannot save decisions: no authenticated user');
+    alert('⚠️ Please sign in to save your changes.');
+    return;
   }
-
-  pendingDecisions = null;
-  if (isSampleDataset(items)) return;
   scheduleSave(user, items);
 }
 

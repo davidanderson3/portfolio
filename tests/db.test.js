@@ -45,6 +45,16 @@ beforeEach(() => {
   updateMock.mockClear();
   getMock.mockClear();
   vi.resetModules();
+  vi.doMock('../js/auth.js', () => ({
+    getCurrentUser: () => ({ uid: 'user1' }),
+    awaitAuthUser: () => Promise.resolve(),
+    auth: { onAuthStateChanged: vi.fn() },
+    db: {
+      collection: vi.fn(() => ({
+        doc: vi.fn(() => ({ get: getMock, set: setMock, update: updateMock }))
+      }))
+    }
+  }));
   localStorage.clear();
   console.warn = realWarn;
 });
@@ -177,7 +187,12 @@ describe('database helpers', () => {
   });
 
   it('alerts when not signed in', async () => {
-    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, awaitAuthUser: () => Promise.resolve(), db: {}, auth: { onAuthStateChanged: (cb) => { setTimeout(() => cb(null), 0); return () => {}; } } }));
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => null,
+      awaitAuthUser: () => Promise.resolve(),
+      db: { collection: () => ({ doc: () => ({ set: vi.fn() }) }) },
+      auth: { onAuthStateChanged: cb => { setTimeout(() => cb(null), 0); return () => {}; } }
+    }));
     const alertSpy = vi.fn();
     global.alert = alertSpy;
     const { saveDecisions } = await import('../js/helpers.js');
@@ -202,8 +217,17 @@ describe('database helpers', () => {
   });
 
   it('returns sample decisions for anonymous users', async () => {
-    const dbMock = { collection: vi.fn() };
-    vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, awaitAuthUser: () => Promise.resolve(), db: dbMock, auth: { onAuthStateChanged: vi.fn() } }));
+    const dbMock = {
+      collection: vi.fn(() => ({
+        doc: vi.fn(() => ({ get: vi.fn(() => Promise.resolve({ data: () => undefined })) }))
+      }))
+    };
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => null,
+      awaitAuthUser: () => Promise.resolve(),
+      db: dbMock,
+      auth: { onAuthStateChanged: vi.fn() }
+    }));
     const { loadDecisions } = await import('../js/helpers.js');
     const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
     const result = await loadDecisions(true);
@@ -211,9 +235,8 @@ describe('database helpers', () => {
     result.filter(i => i.scheduled).forEach(i => {
       expect(new Date(i.scheduled).getTime()).toBeGreaterThan(Date.now());
     });
-    expect(dbMock.collection).not.toHaveBeenCalled();
+    expect(dbMock.collection).toHaveBeenCalledWith('sample');
   });
-
   it('debounces rapid saveDecisions calls', async () => {
     vi.doMock('../js/auth.js', () => ({
       getCurrentUser: () => ({ uid: 'user1' }),
@@ -264,33 +287,90 @@ describe('database helpers', () => {
     expect(setMock).not.toHaveBeenCalled();
   });
 
-  it('filters demo items edited before login', async () => {
+  it('ignores anonymous demo edits after login', async () => {
     const authCallbacks = [];
-    const userState = { value: null };
     vi.doMock('../js/auth.js', () => ({
-      getCurrentUser: () => userState.value,
+      getCurrentUser: () => null,
       awaitAuthUser: () => Promise.resolve(),
       db: {
-        collection: vi.fn(() => ({
+        collection: vi.fn(name => ({
           doc: vi.fn(() => ({
-            get: getMock,
-            set: setMock,
-            update: updateMock
+            set: data => {
+              if (name === 'decisions') setMock(data);
+              return Promise.resolve();
+            }
           }))
         }))
       },
       auth: { onAuthStateChanged: vi.fn(cb => { authCallbacks.push(cb); return () => {}; }) }
     }));
-    const { saveDecisions, flushPendingDecisions } = await import('../js/helpers.js');
+    const { saveDecisions } = await import('../js/helpers.js');
     const demoItem = { id: 'demo-task-1', text: 'edited demo' };
     const realItem = { id: 'real-1', text: 'real task' };
-    const savePromise = saveDecisions([demoItem, realItem]);
-    userState.value = { uid: 'user1' };
-    authCallbacks.forEach(cb => cb(userState.value));
-    await savePromise;
-    await flushPendingDecisions();
-    expect(setMock).toHaveBeenCalledTimes(1);
-    expect(setMock).toHaveBeenCalledWith({ items: [realItem] }, { merge: true });
+    await saveDecisions([demoItem, realItem]);
+    authCallbacks.forEach(cb => cb({ uid: 'user1' }));
+    expect(setMock).not.toHaveBeenCalled();
+  });
+
+  it('persists anonymous edits across reloads', async () => {
+    const sampleStore = {};
+    const dbMock = {
+      collection: vi.fn(name => ({
+        doc: vi.fn(id => ({
+          set: data => {
+            if (name === 'sample') sampleStore[id] = data;
+            return Promise.resolve();
+          },
+          get: () => Promise.resolve({ data: () => sampleStore[id] })
+        }))
+      }))
+    };
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => null,
+      awaitAuthUser: () => Promise.resolve(),
+      db: dbMock,
+      auth: { onAuthStateChanged: vi.fn() }
+    }));
+    const { saveDecisions } = await import('../js/helpers.js');
+    await saveDecisions([{ id: '1', text: 'a' }]);
+    const sessionId = localStorage.getItem('sampleSessionId');
+    expect(sampleStore[sessionId]).toEqual({ items: [{ id: '1', text: 'a' }] });
+
+    vi.resetModules();
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => null,
+      awaitAuthUser: () => Promise.resolve(),
+      db: dbMock,
+      auth: { onAuthStateChanged: vi.fn() }
+    }));
+    const { loadDecisions } = await import('../js/helpers.js');
+    const loaded = await loadDecisions(true);
+    expect(loaded).toEqual([{ id: '1', text: 'a' }]);
+  });
+
+  it('does not write anonymous edits to user document after login', async () => {
+    const authCallbacks = [];
+    const dbMock = {
+      collection: vi.fn(name => ({
+        doc: vi.fn(id => ({
+          set: data => {
+            if (name === 'decisions') setMock(data);
+            return Promise.resolve();
+          },
+          get: () => Promise.resolve({ data: () => undefined })
+        }))
+      }))
+    };
+    vi.doMock('../js/auth.js', () => ({
+      getCurrentUser: () => null,
+      awaitAuthUser: () => Promise.resolve(),
+      db: dbMock,
+      auth: { onAuthStateChanged: vi.fn(cb => { authCallbacks.push(cb); return () => {}; }) }
+    }));
+    const { saveDecisions } = await import('../js/helpers.js');
+    await saveDecisions([{ id: 'a', text: 'b' }]);
+    authCallbacks.forEach(cb => cb({ uid: 'user1' }));
+    expect(setMock).not.toHaveBeenCalled();
   });
 
   it('removes duplicate decisions in Firestore', async () => {
