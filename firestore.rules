@@ -68,6 +68,11 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // 9) Sample session data for anonymous users
+    match /sample/{sessionId} {
+      allow read, write: if true;
+    }
+
     // Everything else locked down
     match /{document=**} {
       allow read, write: if false;

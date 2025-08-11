@@ -19,8 +19,11 @@ vi.mock('../js/auth.js', () => ({
 // Initialize mocks after vi.mock so they are available when functions run
 currentUser = null;
 getMock = vi.fn();
-docMock = vi.fn(() => ({ get: getMock }));
-collectionMock = vi.fn(() => ({ doc: docMock }));
+docMock = vi.fn((name) => ({
+  get: name === 'decisions' ? getMock : vi.fn(() => Promise.resolve({ data: () => undefined })),
+  set: vi.fn()
+}));
+collectionMock = vi.fn(name => ({ doc: () => docMock(name) }));
 
 // Simple localStorage mock for Node environment
 var storage = (() => {
@@ -122,14 +125,15 @@ describe('loadDecisions caching behavior', () => {
     anon.filter(i => i.scheduled).forEach(i => {
       expect(new Date(i.scheduled).getTime()).toBeGreaterThan(Date.now());
     });
-    expect(collectionMock).not.toHaveBeenCalled();
+    expect(collectionMock).toHaveBeenCalledWith('sample');
 
     currentUser = { uid: 'user1' };
+    collectionMock.mockClear();
     getMock.mockResolvedValueOnce({ data: () => ({ items: [{ id: '1', text: 't' }] }) });
 
     const auth = await loadDecisions(true);
     expect(auth).toEqual([{ id: '1', text: 't' }]);
-    expect(collectionMock).toHaveBeenCalled();
+    expect(collectionMock).toHaveBeenCalledWith('decisions');
   });
 });
 
