@@ -57,6 +57,44 @@ describe('daily task ordering', () => {
   });
 });
 
+describe('routine task reordering', () => {
+  let renderDailyTasks;
+  let helpers;
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+
+    helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'a', type: 'task', text: 'A', recurs: 'daily' },
+      { id: 'b', type: 'task', text: 'B', recurs: 'daily' }
+    ]);
+    helpers.saveDecisions.mockResolvedValue();
+
+    ({ renderDailyTasks } = await import('../js/daily.js'));
+  });
+
+  it('moves task up and persists order', async () => {
+    await renderDailyTasks(null, {});
+    const upBtn = [...document.querySelector('[data-task-id="b"]').querySelectorAll('button')]
+      .find(b => b.textContent === '⬆️');
+    upBtn.click();
+    await new Promise(r => setTimeout(r, 0));
+    const ids = Array.from(document.querySelectorAll('#morningTasksList .daily-task-wrapper'))
+      .map(el => el.dataset.taskId);
+    expect(ids).toEqual(['b', 'a']);
+    const lastCall = helpers.saveDecisions.mock.calls.at(-1)[0];
+    expect(lastCall).toEqual([
+      expect.objectContaining({ id: 'b', text: 'B', recurs: 'daily' }),
+      expect.objectContaining({ id: 'a', text: 'A', recurs: 'daily' })
+    ]);
+  });
+});
+
 describe('missed task shading', () => {
   let renderDailyTasks;
   beforeEach(async () => {

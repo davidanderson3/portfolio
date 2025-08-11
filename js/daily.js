@@ -435,8 +435,8 @@ export async function renderDailyTasks(currentUser, db) {
     // Move up
     btns.append(makeIconBtn('⬆️', 'Move up', async () => {
       const prev = wrapper.previousElementSibling;
-      if (prev && prev.classList.contains('daily-task-wrapper')) {
-        listEl.insertBefore(wrapper, prev);
+      if (prev) {
+        prev.before(wrapper);
         if (period === 'daily') {
           try { await persistReorder(); }
           catch { alert('⚠️ Could not save new order.'); }
