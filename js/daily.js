@@ -65,7 +65,7 @@ export async function quickAddTask(recurs, text, timeOfDay) {
 
 const COMPLETION_KEY = 'taskCompletions';
 
-export async function renderDailyTasks(currentUser, db) {
+async function renderDailyTasksImpl(currentUser, db) {
   const panel = document.getElementById('dailyPanel');
   if (!panel) return;
 
@@ -596,6 +596,19 @@ export async function renderDailyTasks(currentUser, db) {
     const reordered = ids.map(id => all.find(t => t.id === id)).filter(Boolean);
     await saveDecisions([...others, ...reordered]);
   }
+}
+
+let currentRender = Promise.resolve();
+
+export function renderDailyTasks(currentUser, db) {
+  currentRender = currentRender.finally(async () => {
+    try {
+      await renderDailyTasksImpl(currentUser, db);
+    } finally {
+      currentRender = Promise.resolve();
+    }
+  });
+  return currentRender;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
