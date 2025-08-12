@@ -65,7 +65,7 @@ export async function quickAddTask(recurs, text, timeOfDay) {
 
 const COMPLETION_KEY = 'taskCompletions';
 
-export async function renderDailyTasks(currentUser, db) {
+async function renderDailyTasksImpl(currentUser, db) {
   const panel = document.getElementById('dailyPanel');
   if (!panel) return;
 
@@ -312,6 +312,15 @@ export async function renderDailyTasks(currentUser, db) {
 
   for (const t of monthlyActive)
     monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
+
+  // Remove any duplicate task elements by ID
+  const wrappers = Array.from(panel.querySelectorAll('.daily-task-wrapper'));
+  const renderedIds = new Set();
+  for (const w of wrappers) {
+    const id = w.dataset.taskId;
+    if (renderedIds.has(id)) w.remove();
+    else renderedIds.add(id);
+  }
 
   // ——— Helpers —————————————————————————
 
@@ -596,6 +605,19 @@ export async function renderDailyTasks(currentUser, db) {
     const reordered = ids.map(id => all.find(t => t.id === id)).filter(Boolean);
     await saveDecisions([...others, ...reordered]);
   }
+}
+
+let currentRender = Promise.resolve();
+
+export function renderDailyTasks(currentUser, db) {
+  currentRender = currentRender.finally(async () => {
+    try {
+      await renderDailyTasksImpl(currentUser, db);
+    } finally {
+      currentRender = Promise.resolve();
+    }
+  });
+  return currentRender;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
