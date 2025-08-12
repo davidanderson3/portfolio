@@ -598,13 +598,5 @@ export async function renderDailyTasks(currentUser, db) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const panel = document.getElementById('dailyPanel');
-  if (panel && panel.style.display !== 'none') {
-    // Render tasks for the current user if the Daily tab is visible
-    renderDailyTasks(currentUser, db);
-  }
-});
-
 window.renderDailyTasks = renderDailyTasks;
 window.quickAddTask = quickAddTask;
