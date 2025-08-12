@@ -313,6 +313,15 @@ async function renderDailyTasksImpl(currentUser, db) {
   for (const t of monthlyActive)
     monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
 
+  // Remove any duplicate task elements by ID
+  const wrappers = Array.from(panel.querySelectorAll('.daily-task-wrapper'));
+  const renderedIds = new Set();
+  for (const w of wrappers) {
+    const id = w.dataset.taskId;
+    if (renderedIds.has(id)) w.remove();
+    else renderedIds.add(id);
+  }
+
   // ——— Helpers —————————————————————————
 
   async function onToggleTaskCompletion(task, cb, wrapper, listEl, setRef, key) {
