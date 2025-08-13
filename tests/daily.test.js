@@ -155,20 +155,27 @@ describe('hidden and completed sections', () => {
     global.localStorage = dom.window.localStorage;
 
     const todayKey = now.toLocaleDateString('en-CA');
-    localStorage.setItem('taskCompletions', JSON.stringify({ [todayKey]: ['c'] }));
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    const weekKey = monday.toISOString().split('T')[0];
+    localStorage.setItem('taskCompletions', JSON.stringify({ [todayKey]: ['c'], [weekKey]: ['cw'] }));
 
     const future = new Date(now.getTime() + 3600000).toISOString();
     const helpers = await import('../js/helpers.js');
     helpers.loadDecisions.mockResolvedValue([
-      { id: 'h', type: 'task', text: 'Hidden', recurs: 'daily', timeOfDay: 'morning', skipUntil: future },
-      { id: 'c', type: 'task', text: 'Done', recurs: 'daily', timeOfDay: 'morning' }
+      { id: 'h', type: 'task', text: 'Hidden', recurs: 'daily', timeOfDay: 'morning', hiddenUntil: future },
+      { id: 'hw', type: 'task', text: 'Hidden weekly', recurs: 'weekly', hiddenUntil: future },
+      { id: 'c', type: 'task', text: 'Done', recurs: 'daily', timeOfDay: 'morning' },
+      { id: 'cw', type: 'task', text: 'Done weekly', recurs: 'weekly' }
     ]);
 
     const { renderDailyTasks } = await import('../js/daily.js');
     await renderDailyTasks(null, {});
 
     expect(document.querySelector('#hiddenTasksList [data-task-id="h"]')).toBeTruthy();
+    expect(document.querySelector('#hiddenTasksList [data-task-id="hw"]')).toBeTruthy();
     expect(document.querySelector('#completedTasksList [data-task-id="c"]')).toBeTruthy();
+    expect(document.querySelector('#completedTasksList [data-task-id="cw"]')).toBeTruthy();
     vi.useRealTimers();
   });
 });

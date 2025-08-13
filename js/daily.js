@@ -53,6 +53,7 @@ export async function quickAddTask(recurs, text, timeOfDay) {
     dateCompleted: '',
     resolution: '',
     dependencies: [],
+    hiddenUntil: null,
     skipUntil: null
   };
   const updated = [...await loadDecisions(), newTask];
@@ -290,10 +291,14 @@ async function renderDailyTasksImpl(currentUser, db) {
   // — Prepare and split lists
   const nowMs = Date.now();
   const dailyAll = all.filter(t => t.type === 'task' && t.recurs === 'daily');
-  const dailyHidden = dailyAll.filter(t =>
-    t.skipUntil && nowMs < new Date(t.skipUntil).getTime() && !doneDaily.has(t.id)
-  );
-  const dailyVisible = dailyAll.filter(t => !t.skipUntil || nowMs >= new Date(t.skipUntil).getTime());
+  const dailyHidden = dailyAll.filter(t => {
+    const hideUntil = t.hiddenUntil || t.skipUntil;
+    return hideUntil && nowMs < new Date(hideUntil).getTime() && !doneDaily.has(t.id);
+  });
+  const dailyVisible = dailyAll.filter(t => {
+    const hideUntil = t.hiddenUntil || t.skipUntil;
+    return !hideUntil || nowMs >= new Date(hideUntil).getTime();
+  });
   const activeList = dailyVisible.filter(t => !doneDaily.has(t.id));
   const dailyCompleted = dailyAll.filter(t => doneDaily.has(t.id));
 
@@ -324,10 +329,14 @@ async function renderDailyTasksImpl(currentUser, db) {
     }
   }
   const weeklyAll = all.filter(t => t.type === 'task' && t.recurs === 'weekly');
-  const weeklyHidden = weeklyAll.filter(t =>
-    t.skipUntil && nowMs < new Date(t.skipUntil).getTime() && !doneWeekly.has(t.id)
-  );
-  const weeklyVisible = weeklyAll.filter(t => !t.skipUntil || nowMs >= new Date(t.skipUntil).getTime());
+  const weeklyHidden = weeklyAll.filter(t => {
+    const hideUntil = t.hiddenUntil || t.skipUntil;
+    return hideUntil && nowMs < new Date(hideUntil).getTime() && !doneWeekly.has(t.id);
+  });
+  const weeklyVisible = weeklyAll.filter(t => {
+    const hideUntil = t.hiddenUntil || t.skipUntil;
+    return !hideUntil || nowMs >= new Date(hideUntil).getTime();
+  });
   const weeklyActive = weeklyVisible.filter(t => !doneWeekly.has(t.id));
   const weeklyCompleted = weeklyAll.filter(t => doneWeekly.has(t.id));
 
@@ -335,10 +344,14 @@ async function renderDailyTasksImpl(currentUser, db) {
     weeklyContainer.appendChild(makeTaskElement(t, 'weekly'));
 
   const monthlyAll = all.filter(t => t.type === 'task' && t.recurs === 'monthly');
-  const monthlyHidden = monthlyAll.filter(t =>
-    t.skipUntil && nowMs < new Date(t.skipUntil).getTime() && !doneMonthly.has(t.id)
-  );
-  const monthlyVisible = monthlyAll.filter(t => !t.skipUntil || nowMs >= new Date(t.skipUntil).getTime());
+  const monthlyHidden = monthlyAll.filter(t => {
+    const hideUntil = t.hiddenUntil || t.skipUntil;
+    return hideUntil && nowMs < new Date(hideUntil).getTime() && !doneMonthly.has(t.id);
+  });
+  const monthlyVisible = monthlyAll.filter(t => {
+    const hideUntil = t.hiddenUntil || t.skipUntil;
+    return !hideUntil || nowMs >= new Date(hideUntil).getTime();
+  });
   const monthlyActive = monthlyVisible.filter(t => !doneMonthly.has(t.id));
   const monthlyCompleted = monthlyAll.filter(t => doneMonthly.has(t.id));
 
@@ -607,10 +620,12 @@ async function renderDailyTasksImpl(currentUser, db) {
       optBtn.addEventListener('click', async e => {
         e.stopPropagation();
         const allDecs = await loadDecisions();
-        const idx = allDecs.findIndex(d => d.id === task.id);
-        if (idx === -1) return;
-        allDecs[idx].skipUntil = new Date(Date.now() + opt.value * 3600000).toISOString();
-        await saveDecisions(allDecs);
+          const idx = allDecs.findIndex(d => d.id === task.id);
+          if (idx === -1) return;
+          const hideUntil = new Date(Date.now() + opt.value * 3600000).toISOString();
+          allDecs[idx].hiddenUntil = hideUntil;
+          allDecs[idx].skipUntil = hideUntil;
+          await saveDecisions(allDecs);
         menu.style.display = 'none'; wrapper.remove();
       });
       menu.appendChild(optBtn);
