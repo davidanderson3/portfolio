@@ -160,7 +160,7 @@ describe('saveDecisions deduplication', () => {
     expect(cached.length).toBe(2);
   });
 
-  it('dedupes goals with same text under same parent', async () => {
+  it('allows goals with same text under same parent', async () => {
     clearDecisionsCache();
     const items = [
       { id: 'b1', text: 'Sub', type: 'goal', parentGoalId: 'p1' },
@@ -168,6 +168,6 @@ describe('saveDecisions deduplication', () => {
     ];
     await saveDecisions(items);
     const cached = getDecisionsCache();
-    expect(cached.length).toBe(1);
+    expect(cached.length).toBe(2);
   });
 });

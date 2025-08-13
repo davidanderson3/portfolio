@@ -12,13 +12,9 @@ vi.mock('../js/helpers.js', () => ({
   linkify: (t) => t,
   dedupeDecisions: (list) => {
     const seenId = new Set();
-    const seenKey = new Set();
     return list.filter(it => {
       if (seenId.has(it.id)) return false;
       seenId.add(it.id);
-      const key = `${it.type}|${it.text}|${it.parentGoalId || ''}`;
-      if (seenKey.has(key)) return false;
-      seenKey.add(key);
       return true;
     });
   }
@@ -110,7 +106,7 @@ describe('task completion', () => {
 });
 
 describe('duplicate handling', () => {
-  it('dedupes tasks with same text before rendering and saves', async () => {
+  it('retains tasks with same text without extra save', async () => {
     const goal = { id: 'g1', type: 'goal', parentGoalId: null, completed: false };
     const task1 = { id: 't1', type: 'task', text: 'do it', notes: '', parentGoalId: 'g1', completed: false, dateCompleted: '' };
     const task2 = { id: 't2', type: 'task', text: 'do it', notes: '', parentGoalId: 'g1', completed: false, dateCompleted: '' };
@@ -120,9 +116,8 @@ describe('duplicate handling', () => {
     await renderChildren(goal, all, container);
 
     const taskList = container.querySelector('.task-list');
-    expect(taskList.children.length).toBe(1);
-    expect(all.filter(i => i.type === 'task').length).toBe(1);
-    expect(helpers.saveDecisions).toHaveBeenCalledTimes(1);
-    expect(helpers.saveDecisions.mock.calls[0][0].some(i => i.id === 't2')).toBe(false);
+    expect(taskList.children.length).toBe(2);
+    expect(all.filter(i => i.type === 'task').length).toBe(2);
+    expect(helpers.saveDecisions).not.toHaveBeenCalled();
   });
 });

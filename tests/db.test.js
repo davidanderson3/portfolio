@@ -90,7 +90,7 @@ describe('database helpers', () => {
     expect(hideUntil).toBeGreaterThan(Date.now());
   });
 
-  it('drops decisions sharing text and type when loading', async () => {
+  it('retains decisions sharing text and type when loading', async () => {
     const items = [
       { id: '1', type: 'task', text: 'Repeat' },
       { id: '2', type: 'task', text: 'repeat' },
@@ -99,10 +99,7 @@ describe('database helpers', () => {
     getMock.mockResolvedValue({ data: () => ({ items }) });
     const { loadDecisions } = await import('../js/helpers.js');
     const result = await loadDecisions(true);
-    expect(result).toEqual([
-      { id: '1', type: 'task', text: 'Repeat' },
-      { id: '3', type: 'goal', text: 'Repeat' }
-    ]);
+    expect(result).toEqual(items);
   });
 
   it('saves decisions to Firestore', async () => {
@@ -114,7 +111,7 @@ describe('database helpers', () => {
     expect(setMock).toHaveBeenCalledWith({ items }, { merge: true });
   });
 
-  it('dedupes decisions with same text and type before saving', async () => {
+  it('saves decisions with same text and type', async () => {
     const items = [
       { id: '1', type: 'task', text: 'Repeat' },
       { id: '2', type: 'task', text: 'repeat' },
@@ -125,10 +122,7 @@ describe('database helpers', () => {
     await flushPendingDecisions();
     expect(setMock).toHaveBeenCalledWith(
       {
-        items: [
-          { id: '1', type: 'task', text: 'Repeat' },
-          { id: '3', type: 'goal', text: 'Repeat' }
-        ]
+        items
       },
       { merge: true }
     );
