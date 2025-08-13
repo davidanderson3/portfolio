@@ -87,12 +87,13 @@ export async function addCalendarGoal(date = '') {
         scheduledEnd: end
     };
     const deduped = dedupeById([...all, newGoal]);
-    await saveDecisions(deduped);
 
     const order = await loadGoalOrder();
     if (!order.includes(newGoal.id)) {
         await saveGoalOrder([...order, newGoal.id]);
     }
+
+    await saveDecisions(deduped);
     const recur = prompt('Repeat how often? (daily/weekly/monthly or blank for none):', '') || '';
     try {
         await createCalendarEvent(newGoal.text, newGoal.scheduled, newGoal.scheduledEnd || newGoal.scheduled, recur);
