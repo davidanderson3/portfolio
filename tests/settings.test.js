@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const deleteMock = vi.fn();
+const setMock = vi.fn();
 let currentUser = null;
 
 vi.mock('../js/auth.js', () => ({
@@ -10,7 +11,7 @@ vi.mock('../js/auth.js', () => ({
     collection: () => ({
       doc: () => ({
         collection: () => ({
-          doc: () => ({ delete: deleteMock })
+          doc: () => ({ delete: deleteMock, set: setMock })
         })
       })
     })
@@ -31,6 +32,7 @@ global.localStorage = storage;
 
 beforeEach(() => {
   deleteMock.mockClear();
+  setMock.mockClear();
   currentUser = null;
   vi.resetModules();
   localStorage.clear();
@@ -50,5 +52,14 @@ describe('clearHiddenTabs', () => {
     const { clearHiddenTabs } = await import('../js/settings.js');
     await clearHiddenTabs();
     expect(deleteMock).toHaveBeenCalled();
+  });
+});
+
+describe('saveHiddenTabs', () => {
+  it('overwrites hidden tabs for signed-in users', async () => {
+    currentUser = { uid: 'u1' };
+    const { saveHiddenTabs } = await import('../js/settings.js');
+    await saveHiddenTabs({});
+    expect(setMock.mock.calls[0]).toEqual([{ tabs: {} }]);
   });
 });

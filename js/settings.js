@@ -46,7 +46,7 @@ export async function saveHiddenTabs(tabs) {
   await db
     .collection('users').doc(user.uid)
     .collection('settings').doc(KEY)
-    .set({ tabs: obj }, { merge: true });
+    .set({ tabs: obj });
 }
 
 export async function clearHiddenTabs() {
