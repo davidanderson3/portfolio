@@ -114,7 +114,7 @@ function dedupeByTextAndType(list) {
 }
 
 function dedupeDecisions(list) {
-  return dedupeByTextAndType(dedupeById(list));
+  return dedupeById(list);
 }
 
 
@@ -216,17 +216,14 @@ export async function loadDecisions(forceRefresh = false) {
   const data = snap.data();
   const rawItems = data && Array.isArray(data.items) ? data.items : [];
 
-  // detect duplicates by text/type/parent before we dedupe so we can log them
-  const seenKeys = new Set();
+  // detect duplicate IDs before we dedupe so we can log them
+  const seenIds = new Set();
   const dupes = [];
   for (const it of rawItems) {
-    const text = it?.text?.trim().toLowerCase();
-    const type = it?.type;
-    const parent = it?.parentGoalId || '';
-    const key = text && type ? `${type}|${text}|${parent}` : null;
-    if (key) {
-      if (seenKeys.has(key)) dupes.push(it);
-      else seenKeys.add(key);
+    const id = it?.id;
+    if (id) {
+      if (seenIds.has(id)) dupes.push(it);
+      else seenIds.add(id);
     }
   }
 
@@ -237,8 +234,8 @@ export async function loadDecisions(forceRefresh = false) {
     return it;
   });
 
-  // Remove any duplicate decisions by id or by text/type
-  items = dedupeDecisions(items);
+  // Remove any duplicate decisions by id
+  items = dedupeById(items);
 
   if (dupes.length) {
     console.warn(`🗑️ Removing ${dupes.length} duplicate decisions from Firestore`, dupes);
@@ -284,7 +281,7 @@ export async function removeDuplicateDecisionsFromDb() {
       else seenKeys.add(key);
     }
   }
-  const deduped = dedupeDecisions(items);
+  const deduped = dedupeByTextAndType(dedupeById(items));
   if (deduped.length !== items.length) {
     console.warn(`🗑️ Removed ${dupes.length} duplicate decisions`, dupes);
     await docRef.set({ items: deduped }, { merge: true });
@@ -296,7 +293,7 @@ export async function removeDuplicateDecisionsFromDb() {
 
 export async function saveDecisions(items) {
   if (!Array.isArray(items)) return;
-  // Remove duplicate IDs or text/type combos before caching/saving
+  // Remove duplicate IDs before caching/saving
   items = dedupeDecisions(items);
   // ensure at least one valid decision exists
   if (!items.some(i => i.id && i.text)) {
