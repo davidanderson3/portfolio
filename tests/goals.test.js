@@ -43,6 +43,7 @@ beforeEach(async () => {
   global.document = dom.window.document;
   global.firebase = { auth: () => ({ currentUser: null }) };
   helpers = await import('../js/helpers.js');
+  helpers.loadGoalOrder.mockResolvedValue([]);
   const mod = await import('../js/goals.js');
   renderGoalsAndSubitems = mod.renderGoalsAndSubitems;
   createGoalRow = mod.createGoalRow;
@@ -180,6 +181,27 @@ describe('addCalendarGoal', () => {
     const calls = helpers.saveGoalOrder.mock.calls.map(c => c[0]);
     expect(calls).toContainEqual(['a', 'g1']);
   });
+
+  it('updates goal order before saving decisions for signed-in users', async () => {
+    helpers.loadDecisions
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    global.prompt = vi.fn()
+      .mockReturnValueOnce('Cal goal')
+      .mockReturnValueOnce('');
+    helpers.pickDateRange.mockResolvedValue({ start: '2024-01-02', end: '' });
+
+    global.firebase = { auth: () => ({ currentUser: { uid: 'u1' } }) };
+    helpers.loadGoalOrder.mockResolvedValue(['a']);
+
+    const mod = await import('../js/goals.js');
+    const { addCalendarGoal } = mod;
+    await addCalendarGoal('2024-01-02');
+
+    const saveOrderCall = helpers.saveGoalOrder.mock.invocationCallOrder[0];
+    const saveDecisionsCall = helpers.saveDecisions.mock.invocationCallOrder[0];
+    expect(saveOrderCall).toBeLessThan(saveDecisionsCall);
+  });
 });
 
 describe('editing scheduled date', () => {
@@ -228,6 +250,7 @@ describe('parent goal styling', () => {
   it('uses the same row layout whether collapsed or expanded', async () => {
     const parent = { id: 'p1', type: 'goal', text: 'P', notes: '', completed: false, parentGoalId: null };
     const child = { id: 'c1', type: 'goal', text: 'C', notes: '', completed: false, parentGoalId: 'p1' };
+    helpers.loadDecisions.mockReset();
     helpers.loadDecisions.mockResolvedValue([parent, child]);
 
     await renderGoalsAndSubitems();
