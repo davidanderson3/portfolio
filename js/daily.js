@@ -145,6 +145,33 @@ async function renderDailyTasksImpl(currentUser, db) {
     monthlyContainer.className = 'decision-container';
     wrapper.appendChild(monthlyContainer);
   }
+  const reportEl = panel.querySelector('#dailyReport');
+  let hiddenContainer = panel.querySelector('#hiddenTasksList');
+  if (!hiddenContainer) {
+    const details = document.createElement('details');
+    details.id = 'hiddenTasksSection';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Hidden Tasks';
+    details.appendChild(summary);
+    hiddenContainer = document.createElement('div');
+    hiddenContainer.id = 'hiddenTasksList';
+    hiddenContainer.className = 'decision-container';
+    details.appendChild(hiddenContainer);
+    if (reportEl) wrapper.insertBefore(details, reportEl); else wrapper.appendChild(details);
+  }
+  let completedContainer = panel.querySelector('#completedTasksList');
+  if (!completedContainer) {
+    const details = document.createElement('details');
+    details.id = 'completedTasksSection';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Completed Tasks';
+    details.appendChild(summary);
+    completedContainer = document.createElement('div');
+    completedContainer.id = 'completedTasksList';
+    completedContainer.className = 'decision-container';
+    details.appendChild(completedContainer);
+    if (reportEl) wrapper.insertBefore(details, reportEl); else wrapper.appendChild(details);
+  }
   // — Inject CSS once to remove green focus/active backgrounds on buttons
   if (!document.getElementById('dailyTasks-btn-reset-css')) {
     const style = document.createElement('style');
@@ -174,6 +201,8 @@ async function renderDailyTasksImpl(currentUser, db) {
   endOfDayContainer.innerHTML = '';
   weeklyContainer.innerHTML = '';
   monthlyContainer.innerHTML = '';
+  hiddenContainer.innerHTML = '';
+  completedContainer.innerHTML = '';
 
   const loaded = await loadDecisions();
   // De-duplicate tasks by ID to prevent rendering duplicates
@@ -260,12 +289,13 @@ async function renderDailyTasksImpl(currentUser, db) {
 
   // — Prepare and split lists
   const nowMs = Date.now();
-  const dailyAll = all.filter(t =>
-    t.type === 'task' &&
-    t.recurs === 'daily' &&
-    (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
+  const dailyAll = all.filter(t => t.type === 'task' && t.recurs === 'daily');
+  const dailyHidden = dailyAll.filter(t =>
+    t.skipUntil && nowMs < new Date(t.skipUntil).getTime() && !doneDaily.has(t.id)
   );
-  const activeList = dailyAll.filter(t => !doneDaily.has(t.id));
+  const dailyVisible = dailyAll.filter(t => !t.skipUntil || nowMs >= new Date(t.skipUntil).getTime());
+  const activeList = dailyVisible.filter(t => !doneDaily.has(t.id));
+  const dailyCompleted = dailyAll.filter(t => doneDaily.has(t.id));
 
   const buckets = {
     firstThing: { missed: [], done: [] },
@@ -293,25 +323,58 @@ async function renderDailyTasksImpl(currentUser, db) {
       target.appendChild(makeTaskElement(t, 'daily', target));
     }
   }
-  const weeklyAll = all.filter(t =>
-    t.type === 'task' &&
-    t.recurs === 'weekly' &&
-    (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
+  const weeklyAll = all.filter(t => t.type === 'task' && t.recurs === 'weekly');
+  const weeklyHidden = weeklyAll.filter(t =>
+    t.skipUntil && nowMs < new Date(t.skipUntil).getTime() && !doneWeekly.has(t.id)
   );
-  const weeklyActive = weeklyAll.filter(t => !doneWeekly.has(t.id));
+  const weeklyVisible = weeklyAll.filter(t => !t.skipUntil || nowMs >= new Date(t.skipUntil).getTime());
+  const weeklyActive = weeklyVisible.filter(t => !doneWeekly.has(t.id));
+  const weeklyCompleted = weeklyAll.filter(t => doneWeekly.has(t.id));
 
   for (const t of weeklyActive)
     weeklyContainer.appendChild(makeTaskElement(t, 'weekly'));
 
-  const monthlyAll = all.filter(t =>
-    t.type === 'task' &&
-    t.recurs === 'monthly' &&
-    (!t.skipUntil || nowMs >= new Date(t.skipUntil).getTime())
+  const monthlyAll = all.filter(t => t.type === 'task' && t.recurs === 'monthly');
+  const monthlyHidden = monthlyAll.filter(t =>
+    t.skipUntil && nowMs < new Date(t.skipUntil).getTime() && !doneMonthly.has(t.id)
   );
-  const monthlyActive = monthlyAll.filter(t => !doneMonthly.has(t.id));
+  const monthlyVisible = monthlyAll.filter(t => !t.skipUntil || nowMs >= new Date(t.skipUntil).getTime());
+  const monthlyActive = monthlyVisible.filter(t => !doneMonthly.has(t.id));
+  const monthlyCompleted = monthlyAll.filter(t => doneMonthly.has(t.id));
 
   for (const t of monthlyActive)
     monthlyContainer.appendChild(makeTaskElement(t, 'monthly'));
+
+  // Populate hidden and completed sections
+  const hiddenTasks = [
+    ...dailyHidden.map(t => ({ task: t, period: 'daily' })),
+    ...weeklyHidden.map(t => ({ task: t, period: 'weekly' })),
+    ...monthlyHidden.map(t => ({ task: t, period: 'monthly' }))
+  ];
+  hiddenTasks.forEach(({ task, period }) => {
+    const target =
+      period === 'daily'
+        ? targetMap[task.timeOfDay || 'morning']
+        : period === 'weekly'
+          ? weeklyContainer
+          : monthlyContainer;
+    hiddenContainer.appendChild(makeTaskElement(task, period, target));
+  });
+
+  const completedTasks = [
+    ...dailyCompleted.map(t => ({ task: t, period: 'daily' })),
+    ...weeklyCompleted.map(t => ({ task: t, period: 'weekly' })),
+    ...monthlyCompleted.map(t => ({ task: t, period: 'monthly' }))
+  ];
+  completedTasks.forEach(({ task, period }) => {
+    const target =
+      period === 'daily'
+        ? targetMap[task.timeOfDay || 'morning']
+        : period === 'weekly'
+          ? weeklyContainer
+          : monthlyContainer;
+    completedContainer.appendChild(makeTaskElement(task, period, target));
+  });
 
   // Remove any duplicate task elements by ID
   const wrappers = Array.from(panel.querySelectorAll('.daily-task-wrapper'));

@@ -142,6 +142,37 @@ describe('missed task shading', () => {
   });
 });
 
+describe('hidden and completed sections', () => {
+  it('renders hidden and completed tasks in separate sections', async () => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    const now = new Date('2024-01-10T12:00:00Z');
+    vi.setSystemTime(now);
+
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+
+    const todayKey = now.toLocaleDateString('en-CA');
+    localStorage.setItem('taskCompletions', JSON.stringify({ [todayKey]: ['c'] }));
+
+    const future = new Date(now.getTime() + 3600000).toISOString();
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'h', type: 'task', text: 'Hidden', recurs: 'daily', timeOfDay: 'morning', skipUntil: future },
+      { id: 'c', type: 'task', text: 'Done', recurs: 'daily', timeOfDay: 'morning' }
+    ]);
+
+    const { renderDailyTasks } = await import('../js/daily.js');
+    await renderDailyTasks(null, {});
+
+    expect(document.querySelector('#hiddenTasksList [data-task-id="h"]')).toBeTruthy();
+    expect(document.querySelector('#completedTasksList [data-task-id="c"]')).toBeTruthy();
+    vi.useRealTimers();
+  });
+});
+
 describe('quickAddTask', () => {
   beforeEach(() => {
     vi.resetModules();
