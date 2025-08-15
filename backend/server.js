@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
+const { XMLParser } = require('fast-xml-parser');
 const app = express();
 const PORT = 3002;
 
@@ -87,6 +88,44 @@ app.post('/score', (req, res) => {
 
 app.get('/leaderboard', (req, res) => {
   res.json(leaderboard.slice(0, 10));
+});
+
+app.get('/api/movies', async (req, res) => {
+  try {
+    const rssUrl = 'https://www.fandango.com/rss/moviesnearme_20190.rss';
+    const rssText = await fetch(rssUrl).then(r => r.text());
+    const parser = new XMLParser();
+    const rss = parser.parse(rssText);
+    const items = rss?.rss?.channel?.item || [];
+    const results = [];
+
+    for (const item of items) {
+      const title = item.title;
+      try {
+        const searchUrl = `https://www.rottentomatoes.com/api/private/v2.0/search?q=${encodeURIComponent(title)}`;
+        const searchData = await fetch(searchUrl).then(r => r.json());
+        const movie = searchData?.movies?.find(m => m.name?.toLowerCase() === title.toLowerCase());
+        if (!movie) continue;
+        const score = Number(movie.meterScore || movie.rottenTomatoesScore);
+        const reviews = Number(movie.reviewCount || movie.rottenTomatoesScoreReviews);
+        if (score >= 88 && reviews >= 20) {
+          results.push({
+            title: movie.name,
+            score,
+            reviews,
+            url: `https://www.rottentomatoes.com${movie.url || movie.urlPath || ''}`
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch movie from Rotten Tomatoes', err);
+      }
+    }
+
+    res.json(results);
+  } catch (err) {
+    console.error('Failed to fetch movies', err);
+    res.status(500).json({ error: 'Failed to fetch movies' });
+  }
 });
 
 app.get('/api/transactions', async (req, res) => {
