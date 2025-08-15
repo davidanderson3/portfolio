@@ -7,6 +7,7 @@ export const PANELS = [
   'metricsPanel',
   'listsPanel',
   'travelPanel',
+  'moviesPanel',
   'planningPanel',
   'budgetPanel',
   'contactsPanel',
@@ -21,6 +22,7 @@ export const PANEL_NAMES = {
   metricsPanel: 'Metrics',
   listsPanel: 'Lists',
   travelPanel: 'Places',
+  moviesPanel: 'Movies',
   planningPanel: 'Planning',
   budgetPanel: 'Budget',
   contactsPanel: 'Contacts',
@@ -57,7 +59,7 @@ export function initTabs(user, db) {
 
       panels.forEach(id => {
         const el = document.getElementById(id);
-        el.style.display = (id === target) ? 'flex' : 'none';
+        if (el) el.style.display = (id === target) ? 'flex' : 'none';
       });
 
       // Remember selected panel
@@ -78,6 +80,9 @@ export function initTabs(user, db) {
       }
       else if (target === 'travelPanel') {
         await window.initTravelPanel();
+      }
+      else if (target === 'moviesPanel') {
+        await window.initMoviesPanel();
       }
       else if (target === 'planningPanel') {
         await window.initPlanningPanel();
@@ -108,7 +113,7 @@ export function initTabs(user, db) {
   document.querySelector(`.tab-button[data-target="${initial}"]`)?.classList.add('active');
   panels.forEach(id => {
     const el = document.getElementById(id);
-    el.style.display = (id === initial) ? 'flex' : 'none';
+    if (el) el.style.display = (id === initial) ? 'flex' : 'none';
   });
 
   try { localStorage.setItem(LAST_PANEL_KEY, initial); } catch {}
@@ -124,6 +129,9 @@ export function initTabs(user, db) {
     }
     else if (initial === 'travelPanel') {
       window.initTravelPanel();
+    }
+    else if (initial === 'moviesPanel') {
+      window.initMoviesPanel();
     }
     else if (initial === 'planningPanel') {
       window.initPlanningPanel();
