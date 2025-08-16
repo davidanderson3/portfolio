@@ -6,7 +6,8 @@ vi.mock('../js/helpers.js', () => ({
   saveLists: vi.fn(),
   loadDecisions: vi.fn(),
   saveDecisions: vi.fn(),
-  generateId: vi.fn()
+  generateId: vi.fn(),
+  pickDate: vi.fn()
 }));
 
 vi.mock('../js/goals.js', () => ({
@@ -31,6 +32,7 @@ beforeEach(async () => {
   helpers.loadLists.mockResolvedValue([{ name: 'Test', columns: [], items: [], hiddenUntil: null }]);
   helpers.loadDecisions.mockResolvedValue([]);
   helpers.generateId.mockReturnValue('g1');
+  helpers.pickDate.mockResolvedValue('');
   await import('../js/lists.js');
 });
 
@@ -53,14 +55,16 @@ describe('list postponing', () => {
     vi.useRealTimers();
   });
 
-  it('sets hiddenUntil based on chosen date', () => {
+  it('sets hiddenUntil based on chosen date', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
 
-    global.prompt = vi.fn().mockReturnValue('2023-01-10');
+    helpers.pickDate.mockResolvedValue('2023-01-10');
     const pickBtn = [...document.querySelectorAll('.postpone-option')].find(btn => btn.textContent === 'Pick date…');
     pickBtn.click();
+    await Promise.resolve();
     vi.advanceTimersByTime(300);
+    await Promise.resolve();
 
     expect(helpers.saveLists).toHaveBeenCalled();
     const saved = helpers.saveLists.mock.calls.at(-1)[0][0];

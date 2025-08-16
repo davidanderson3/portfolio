@@ -3,7 +3,8 @@ import {
   saveLists,
   loadDecisions,
   saveDecisions,
-  generateId
+  generateId,
+  pickDate
 } from './helpers.js';
 import { appendGoalToDOM } from './goals.js';
 import { auth } from './auth.js';
@@ -646,7 +647,7 @@ async function initListsPanel() {
           e.stopPropagation();
           let hideUntil;
           if (opt.value === 'date') {
-            const input = prompt('Postpone until which date? (YYYY-MM-DD)', '');
+            const input = await pickDate('');
             if (!input) return;
             const dt = new Date(input);
             if (isNaN(dt)) return;
@@ -1109,7 +1110,7 @@ function openRowEditor(rowIdx) {
         e.stopPropagation();
         let hideUntil;
         if (opt.value === 'date') {
-          const input = prompt('Postpone until which date? (YYYY-MM-DD)', '');
+          const input = await pickDate('');
           if (!input) return;
           const dt = new Date(input);
           if (isNaN(dt)) return;

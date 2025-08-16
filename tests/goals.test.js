@@ -20,6 +20,7 @@ vi.mock('../js/helpers.js', () => ({
   loadGoalOrder: vi.fn(async () => []),
   generateId: vi.fn(() => 'g1'),
   pickDateRange: vi.fn(async () => ({ start: null, end: null })),
+  pickDate: vi.fn(),
   makeIconBtn: (symbol, title, fn) => {
     const b = document.createElement('button');
     b.title = title;
@@ -44,6 +45,7 @@ beforeEach(async () => {
   global.firebase = { auth: () => ({ currentUser: null }) };
   helpers = await import('../js/helpers.js');
   helpers.loadGoalOrder.mockResolvedValue([]);
+  helpers.pickDate.mockResolvedValue('');
   const mod = await import('../js/goals.js');
   renderGoalsAndSubitems = mod.renderGoalsAndSubitems;
   createGoalRow = mod.createGoalRow;
@@ -120,6 +122,7 @@ describe('goal postponing', () => {
     };
 
     helpers.loadDecisions.mockResolvedValue([goal]);
+    helpers.pickDate.mockResolvedValue('2023-01-10');
 
     const wrapper = document.createElement('div');
     wrapper.className = 'decision goal-card';
@@ -128,9 +131,9 @@ describe('goal postponing', () => {
     wrapper.appendChild(row);
     document.getElementById('goalList').appendChild(wrapper);
 
-    global.prompt = vi.fn().mockReturnValue('2023-01-10');
     const pickBtn = [...document.querySelectorAll('.postpone-option')].find(b => b.textContent === 'Pick date…');
     pickBtn.click();
+    await Promise.resolve();
     await Promise.resolve();
 
     expect(helpers.saveDecisions).toHaveBeenCalled();

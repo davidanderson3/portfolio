@@ -4,7 +4,7 @@ import * as helpers from './helpers.js';
 import { enableTaskDragAndDrop } from './dragAndDrop.js';
 import { createGoalRow } from './goals.js';
 
-const { saveDecisions, generateId, makeIconBtn, linkify } = helpers;
+const { saveDecisions, generateId, makeIconBtn, linkify, pickDate } = helpers;
 let dedupeById = (list => {
     if (!Array.isArray(list)) return [];
     const seen = new Set();
@@ -168,7 +168,7 @@ export function attachTaskButtons(item, row, listContainer, allDecisions) {
 
             let hideUntil;
             if (opt.value === 'date') {
-                const input = prompt('Postpone until which date? (YYYY-MM-DD)', '');
+                const input = await pickDate('');
                 if (!input) return;
                 const dt = new Date(input);
                 if (isNaN(dt)) return;
