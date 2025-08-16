@@ -47,17 +47,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const goalsView = document.getElementById('goalsView');
 
-  if (uiRefs.signupBtn) {
-    uiRefs.signupBtn.addEventListener('click', () => uiRefs.loginBtn.click());
-  }
-
-  if (uiRefs.calendarAddProjectBtn) {
-    uiRefs.calendarAddProjectBtn.addEventListener('click', () => addCalendarGoal());
-  }
-
-  if (uiRefs.bottomAddBtn) {
-    uiRefs.bottomAddBtn.addEventListener('click', handleBottomAdd);
-  }
+  uiRefs.signupBtn?.addEventListener('click', () => uiRefs.loginBtn?.click());
+  uiRefs.calendarAddProjectBtn?.addEventListener('click', () => addCalendarGoal());
+  uiRefs.bottomAddBtn?.addEventListener('click', handleBottomAdd);
   document.querySelectorAll('.tab-hide-btn').forEach(btn => {
     setupHideTabButton(btn);
   });
