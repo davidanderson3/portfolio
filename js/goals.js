@@ -12,7 +12,8 @@ const {
     makeIconBtn,
     formatDaysUntil,
     linkify,
-    pickDateRange
+    pickDateRange,
+    pickDate
 } = helpers;
 let loadGoalOrder;
 try {
@@ -1079,7 +1080,7 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                 if (idx === -1) return;
                 let hideUntil;
                 if (opt.value === 'date') {
-                    const input = prompt('Postpone until which date? (YYYY-MM-DD)', '');
+                    const input = await pickDate('');
                     if (!input) return;
                     const dt = new Date(input);
                     if (isNaN(dt)) return;

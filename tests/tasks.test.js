@@ -17,7 +17,8 @@ vi.mock('../js/helpers.js', () => ({
       seenId.add(it.id);
       return true;
     });
-  }
+  },
+  pickDate: vi.fn()
 }));
 
 let currentItems = [];

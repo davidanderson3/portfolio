@@ -1,4 +1,4 @@
-import { loadDecisions, flushPendingDecisions, clearDecisionsCache } from './helpers.js';
+import { loadDecisions, flushPendingDecisions, clearDecisionsCache, pickDate } from './helpers.js';
 import { renderDailyTasks } from './daily.js';
 import { renderGoalsAndSubitems, addCalendarGoal } from './goals.js';
 import { initAuth, db, currentUser } from './auth.js';
@@ -272,7 +272,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const hidden = await loadHiddenTabs();
         let hideUntil;
         if (opt.value === 'date') {
-          const input = prompt('Postpone until which date? (YYYY-MM-DD)', '');
+          const input = await pickDate('');
           if (!input) return;
           const dt = new Date(input);
           if (isNaN(dt)) return;
