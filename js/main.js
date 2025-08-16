@@ -27,8 +27,6 @@ window.addEventListener('DOMContentLoaded', () => {
     settingsBtn: document.getElementById('settingsBtn'),
     settingsModal: document.getElementById('settingsModal'),
     signupBtn: document.getElementById('signupBtn'),
-    splashLoginBtn: document.getElementById('splashLoginBtn'),
-    previewBtn: document.getElementById('previewBtn'),
     calendarAddProjectBtn: document.getElementById('calendarAddProjectBtn'),
     addProjectBtn: document.getElementById('addProjectBtn'),
     bottomAddBtn: document.getElementById('bottomAddBtn'),
@@ -47,18 +45,10 @@ window.addEventListener('DOMContentLoaded', () => {
     cancelBtn: document.getElementById('wizardCancelBtn')
   };
 
-  const splash = document.getElementById('splash');
   const goalsView = document.getElementById('goalsView');
 
-  uiRefs.signupBtn.addEventListener('click', () => uiRefs.loginBtn.click());
-  if (uiRefs.splashLoginBtn) {
-    uiRefs.splashLoginBtn.addEventListener('click', () => uiRefs.loginBtn.click());
-  }
-  if (uiRefs.previewBtn) {
-    uiRefs.previewBtn.addEventListener('click', () => {
-      splash.style.display = 'none';
-      goalsView.scrollIntoView({ behavior: 'smooth' });
-    });
+  if (uiRefs.signupBtn) {
+    uiRefs.signupBtn.addEventListener('click', () => uiRefs.loginBtn.click());
   }
 
   if (uiRefs.calendarAddProjectBtn) {
@@ -405,7 +395,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
       if (!user) {
         clearPlanningCache();
-        if (splash) splash.style.display = 'flex';
         if (goalsView) goalsView.style.display = '';
         initTabs(null, db);
       const hidden = await loadHiddenTabs();
@@ -427,7 +416,6 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      if (splash) splash.style.display = 'none';
       if (goalsView) goalsView.style.display = '';
 
       clearPlanningCache();

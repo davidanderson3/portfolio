@@ -215,7 +215,6 @@ describe('signed-out tabs', () => {
     const dom = new JSDOM(`
       <button id="signupBtn"></button>
       <button id="loginBtn"></button>
-      <div id="splash"></div>
       <div id="goalsView"></div>
       <div id="tabsContainer">
         <button class="tab-button" data-target="dailyPanel"></button>
@@ -278,7 +277,7 @@ describe('initial load', () => {
     global.document = dom.window.document;
     global.firebase = { auth: () => ({ currentUser: null }) };
 
-    const ids = ['signupBtn', 'loginBtn', 'splash', 'goalsView', 'tabsContainer'];
+    const ids = ['signupBtn', 'loginBtn', 'goalsView', 'tabsContainer'];
     ids.forEach(id => {
       const el = dom.window.document.createElement(id.includes('Btn') ? 'button' : 'div');
       el.id = id;
