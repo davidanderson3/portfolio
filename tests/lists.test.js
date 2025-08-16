@@ -41,13 +41,30 @@ describe('list postponing', () => {
 
     const buttons = [...document.querySelectorAll('.postpone-option')];
     expect(buttons.some(btn => btn.textContent === '20 hours')).toBe(true);
+    expect(buttons.some(btn => btn.textContent === 'Pick date…')).toBe(true);
     const option = buttons.find(btn => btn.textContent === '2 days');
     option.click();
     vi.advanceTimersByTime(300);
 
     expect(helpers.saveLists).toHaveBeenCalled();
-    const saved = helpers.saveLists.mock.calls[0][0][0];
+    const saved = helpers.saveLists.mock.calls.at(-1)[0][0];
     expect(saved.hiddenUntil).toBe(new Date('2023-01-03T00:00:00.000Z').toISOString());
+
+    vi.useRealTimers();
+  });
+
+  it('sets hiddenUntil based on chosen date', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+
+    global.prompt = vi.fn().mockReturnValue('2023-01-10');
+    const pickBtn = [...document.querySelectorAll('.postpone-option')].find(btn => btn.textContent === 'Pick date…');
+    pickBtn.click();
+    vi.advanceTimersByTime(300);
+
+    expect(helpers.saveLists).toHaveBeenCalled();
+    const saved = helpers.saveLists.mock.calls.at(-1)[0][0];
+    expect(saved.hiddenUntil).toBe(new Date('2023-01-10T00:00:00.000Z').toISOString());
 
     vi.useRealTimers();
   });

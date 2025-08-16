@@ -91,6 +91,7 @@ describe('goal postponing', () => {
 
     const buttons = [...document.querySelectorAll('.postpone-option')];
     expect(buttons.some(btn => btn.textContent === '20 hours')).toBe(true);
+    expect(buttons.some(btn => btn.textContent === 'Pick date…')).toBe(true);
     const option = buttons.find(btn => btn.textContent === '2 days');
     option.click();
     await Promise.resolve();
@@ -99,6 +100,42 @@ describe('goal postponing', () => {
     const calls = helpers.saveDecisions.mock.calls;
     const saved = calls[calls.length - 1][0][0];
     expect(saved.hiddenUntil).toBe(new Date('2023-01-03T00:00:00.000Z').toISOString());
+
+    vi.useRealTimers();
+  });
+
+  it('allows postponing until a custom date', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+
+    const goal = {
+      id: 'g1',
+      type: 'goal',
+      text: 'Test',
+      notes: '',
+      completed: false,
+      dateCompleted: '',
+      parentGoalId: null,
+      hiddenUntil: null
+    };
+
+    helpers.loadDecisions.mockResolvedValue([goal]);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'decision goal-card';
+    wrapper.dataset.goalId = goal.id;
+    const row = createGoalRow(goal);
+    wrapper.appendChild(row);
+    document.getElementById('goalList').appendChild(wrapper);
+
+    global.prompt = vi.fn().mockReturnValue('2023-01-10');
+    const pickBtn = [...document.querySelectorAll('.postpone-option')].find(b => b.textContent === 'Pick date…');
+    pickBtn.click();
+    await Promise.resolve();
+
+    expect(helpers.saveDecisions).toHaveBeenCalled();
+    const saved = helpers.saveDecisions.mock.calls.at(-1)[0][0];
+    expect(saved.hiddenUntil).toBe(new Date('2023-01-10T00:00:00.000Z').toISOString());
 
     vi.useRealTimers();
   });

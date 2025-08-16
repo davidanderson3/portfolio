@@ -624,7 +624,8 @@ async function initListsPanel() {
         { label: '2 weeks', value: 336 },
         { label: '1 month', value: 720 },
         { label: '2 months', value: 1440 },
-        { label: '3 months', value: 2160 }
+        { label: '3 months', value: 2160 },
+        { label: 'Pick date…', value: 'date' }
       ];
       options.forEach(opt => {
         const optBtn = document.createElement('button');
@@ -643,7 +644,17 @@ async function initListsPanel() {
         });
         optBtn.addEventListener('click', async e => {
           e.stopPropagation();
-          listsArray[selectedListIndex].items[rowIdx].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+          let hideUntil;
+          if (opt.value === 'date') {
+            const input = prompt('Postpone until which date? (YYYY-MM-DD)', '');
+            if (!input) return;
+            const dt = new Date(input);
+            if (isNaN(dt)) return;
+            hideUntil = dt.toISOString();
+          } else {
+            hideUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+          }
+          listsArray[selectedListIndex].items[rowIdx].hiddenUntil = hideUntil;
           await persist();
           menu.style.display = 'none';
           renderSelectedList();
@@ -1075,7 +1086,8 @@ function openRowEditor(rowIdx) {
       { label: '2 weeks', value: 336 },
       { label: '1 month', value: 720 },
       { label: '2 months', value: 1440 },
-      { label: '3 months', value: 2160 }
+      { label: '3 months', value: 2160 },
+      { label: 'Pick date…', value: 'date' }
     ];
 
     options.forEach(opt => {
@@ -1095,7 +1107,17 @@ function openRowEditor(rowIdx) {
       });
       btn.addEventListener('click', async e => {
         e.stopPropagation();
-        listsArray[selectedListIndex].hiddenUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+        let hideUntil;
+        if (opt.value === 'date') {
+          const input = prompt('Postpone until which date? (YYYY-MM-DD)', '');
+          if (!input) return;
+          const dt = new Date(input);
+          if (isNaN(dt)) return;
+          hideUntil = dt.toISOString();
+        } else {
+          hideUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+        }
+        listsArray[selectedListIndex].hiddenUntil = hideUntil;
         await persist();
         menu.style.display = 'none';
         renderTabs();

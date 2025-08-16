@@ -1048,7 +1048,8 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
             { label: '2 weeks', value: 336 },
             { label: '1 month', value: 720 },
             { label: '2 months', value: 1440 },
-            { label: '3 months', value: 2160 }
+            { label: '3 months', value: 2160 },
+            { label: 'Pick date…', value: 'date' }
         ];
 
         options.forEach(opt => {
@@ -1076,9 +1077,19 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                 const all = await loadDecisions();
                 const idx = all.findIndex(d => d.id === item.id);
                 if (idx === -1) return;
-                all[idx].hiddenUntil = new Date(
-                    Date.now() + opt.value * 3600 * 1000
-                ).toISOString();
+                let hideUntil;
+                if (opt.value === 'date') {
+                    const input = prompt('Postpone until which date? (YYYY-MM-DD)', '');
+                    if (!input) return;
+                    const dt = new Date(input);
+                    if (isNaN(dt)) return;
+                    hideUntil = dt.toISOString();
+                } else {
+                    hideUntil = new Date(
+                        Date.now() + opt.value * 3600 * 1000
+                    ).toISOString();
+                }
+                all[idx].hiddenUntil = hideUntil;
                 await saveDecisions(all);
                 menu.style.display = 'none';
                 const wrapper = buttonWrap.closest('.decision.goal-card');
