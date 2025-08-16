@@ -256,7 +256,8 @@ window.addEventListener('DOMContentLoaded', () => {
       { label: '2 weeks', value: 336 },
       { label: '1 month', value: 720 },
       { label: '2 months', value: 1440 },
-      { label: '3 months', value: 2160 }
+      { label: '3 months', value: 2160 },
+      { label: 'Pick date…', value: 'date' }
     ];
 
     options.forEach(opt => {
@@ -269,7 +270,17 @@ window.addEventListener('DOMContentLoaded', () => {
         const active = document.querySelector('.tab-button.active')?.dataset.target;
         if (!active) return;
         const hidden = await loadHiddenTabs();
-        hidden[active] = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+        let hideUntil;
+        if (opt.value === 'date') {
+          const input = prompt('Postpone until which date? (YYYY-MM-DD)', '');
+          if (!input) return;
+          const dt = new Date(input);
+          if (isNaN(dt)) return;
+          hideUntil = dt.toISOString();
+        } else {
+          hideUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
+        }
+        hidden[active] = hideUntil;
         await saveHiddenTabs(hidden);
         applyHiddenTabs(hidden);
         menu.style.display = 'none';
