@@ -382,6 +382,33 @@ button:hover {
   align-items: center;
 }
 
+/* Routine task list containers */
+#dailyTasksList,
+#weeklyTasksList,
+#monthlyTasksList {
+  padding: 8px;
+  border-radius: 8px;
+}
+
+#dailyTasksList {
+  border: 2px solid #ffa726;
+}
+
+#weeklyTasksList {
+  border: 2px solid #66bb6a;
+  margin-top: 1em;
+}
+
+#monthlyTasksList {
+  border: 2px solid #42a5f5;
+  margin-top: 1em;
+}
+
+#hiddenTasksSection,
+#completedTasksSection {
+  margin-top: 2em;
+}
+
 /* More room when editing a goal */
 .decision-row.editing {
   flex-wrap: wrap;
