@@ -1,6 +1,5 @@
 import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify, pickDate } from './helpers.js';
 import { db, currentUser } from './auth.js';
-import { updateCompletionDots } from './tabReports.js';
 import { createCalendarEvent } from './googleCalendar.js';
 
 // Shared skip intervals (same as goals)
@@ -146,7 +145,6 @@ async function renderDailyTasksImpl(currentUser, db) {
     monthlyContainer.className = 'decision-container';
     wrapper.appendChild(monthlyContainer);
   }
-  const reportEl = panel.querySelector('#dailyReport');
   let hiddenContainer = panel.querySelector('#hiddenTasksList');
   if (!hiddenContainer) {
     const details = document.createElement('details');
@@ -158,7 +156,7 @@ async function renderDailyTasksImpl(currentUser, db) {
     hiddenContainer.id = 'hiddenTasksList';
     hiddenContainer.className = 'decision-container';
     details.appendChild(hiddenContainer);
-    if (reportEl) wrapper.insertBefore(details, reportEl); else wrapper.appendChild(details);
+    wrapper.appendChild(details);
   }
   let completedContainer = panel.querySelector('#completedTasksList');
   if (!completedContainer) {
@@ -171,7 +169,7 @@ async function renderDailyTasksImpl(currentUser, db) {
     completedContainer.id = 'completedTasksList';
     completedContainer.className = 'decision-container';
     details.appendChild(completedContainer);
-    if (reportEl) wrapper.insertBefore(details, reportEl); else wrapper.appendChild(details);
+    wrapper.appendChild(details);
   }
   // — Inject CSS once to remove green focus/active backgrounds on buttons
   if (!document.getElementById('dailyTasks-btn-reset-css')) {
@@ -415,7 +413,6 @@ async function renderDailyTasksImpl(currentUser, db) {
       } else {
         localStorage.setItem(COMPLETION_KEY, JSON.stringify(completionMap));
       }
-      updateCompletionDots(completionMap);
       if (cb.checked) {
         wrapper.remove();
       } else {
