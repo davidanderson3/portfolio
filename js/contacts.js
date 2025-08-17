@@ -18,10 +18,6 @@ function saveContacts() {
   } catch {}
 }
 
-function formatDate(value) {
-  return value ? new Date(value).toLocaleDateString() : 'never';
-}
-
 export function renderContacts() {
   const list = document.getElementById('contactsList');
   if (!list) return;
@@ -82,20 +78,14 @@ export function renderContacts() {
 
     li.append(nameText, nameInp, contactInp, convoInp, meetInp, saveBtn, delBtn);
 
-    function addRow(label, prop, type) {
-      const row = document.createElement('div');
-      const span = document.createElement('span');
-      span.textContent = `${label}: ${formatDate(c[prop])}`;
+    const logRow = document.createElement('div');
+    ['contact', 'conversation', 'meet', 'date'].forEach(type => {
       const btn = document.createElement('button');
-      btn.textContent = 'Log';
+      btn.textContent = type.charAt(0).toUpperCase() + type.slice(1);
       btn.addEventListener('click', () => logContactEvent(c.name, type));
-      row.append(span, btn);
-      li.appendChild(row);
-    }
-
-    addRow('Last contact', 'lastContact', 'contact');
-    addRow('Last conversation', 'lastConversation', 'conversation');
-    addRow('Last meet', 'lastMeet', 'meet');
+      logRow.appendChild(btn);
+    });
+    li.appendChild(logRow);
 
     list.appendChild(li);
   });
@@ -118,9 +108,6 @@ export function addContact(name, prefs = {}) {
     desiredContact: getVal('desiredContact', 'Desired frequency of contact (days)'),
     desiredConversation: getVal('desiredConversation', 'Desired frequency of meaningful conversation (days)'),
     desiredMeet: getVal('desiredMeet', 'Desired frequency of in person get together (days)'),
-    lastContact: null,
-    lastConversation: null,
-    lastMeet: null,
     logs: []
   };
   contacts.push(contact);
@@ -138,9 +125,6 @@ export function logContactEvent(name, type, note) {
   }
   c.logs = c.logs || [];
   c.logs.push({ type, date: now, note: noteVal || '' });
-  if (type === 'contact') c.lastContact = now;
-  if (type === 'conversation') c.lastConversation = now;
-  if (type === 'meet') c.lastMeet = now;
   saveContacts();
   renderContacts();
 }
