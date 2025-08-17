@@ -852,6 +852,13 @@ function openRowEditor(rowIdx) {
           Object.assign(valInp.style, { flex: '3', width: '100%' });
           row.append(valInp);
         }
+        else if (col.type === 'checkbox') {
+          valInp = document.createElement('input');
+          valInp.type = 'checkbox';
+          valInp.checked = !!values[col.name];
+          valInp.style.flex = '3';
+          row.append(valInp);
+        }
         else {
           valInp = document.createElement('input');
           valInp.type = col.type === 'link' ? 'url' : col.type;
@@ -893,7 +900,13 @@ function openRowEditor(rowIdx) {
         });
         if (urlInp) urlInp.addEventListener('blur', () => { values[col.name] = urlInp.value.trim(); });
         if (lblInp) lblInp.addEventListener('blur', () => { values[col.name + '_label'] = lblInp.value.trim(); });
-        if (valInp) valInp.addEventListener('blur', () => { values[col.name] = valInp.value.trim(); });
+        if (valInp) {
+          if (col.type === 'checkbox') {
+            valInp.addEventListener('change', () => { values[col.name] = valInp.checked; });
+          } else {
+            valInp.addEventListener('blur', () => { values[col.name] = valInp.value.trim(); });
+          }
+        }
 
         colsDiv.append(row);
       });
@@ -1026,7 +1039,7 @@ function openRowEditor(rowIdx) {
         const inp = document.createElement('input');
         inp.type = col.type === 'link' ? 'url' : col.type;
         inp.name = col.name;
-        inp.placeholder = col.name;
+        if (col.type !== 'checkbox') inp.placeholder = col.name;
         Object.assign(inp.style, {
           flex: '1 1 auto', minWidth: '6rem', padding: '.25rem', fontSize: '.9rem'
         });
@@ -1044,8 +1057,8 @@ function openRowEditor(rowIdx) {
     addBtn.addEventListener('click', async () => {
       const newItem = { hiddenUntil: null };
       inputsContainer.querySelectorAll('input,textarea').forEach(i => {
-        newItem[i.name] = i.value.trim();
-        i.value = '';
+        newItem[i.name] = i.type === 'checkbox' ? i.checked : i.value.trim();
+        if (i.type === 'checkbox') i.checked = false; else i.value = '';
       });
       listsArray[selectedListIndex].items.push(newItem);
       await persist();
