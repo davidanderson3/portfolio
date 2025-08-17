@@ -635,9 +635,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     });
     td6.appendChild(upBtn);
 
-    const clockBtn = document.createElement('span');
-    clockBtn.textContent = '🕒';
-    clockBtn.style.cursor = 'pointer';
+    const clockBtn = makeIconBtn('🕒', 'Postpone', () => {});
     td6.appendChild(clockBtn);
 
     const menu = document.createElement('div');
@@ -724,26 +722,20 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
         menu.style.display = 'none';
       }
     });
-    const configEdit = document.createElement('span');
-    configEdit.textContent = '✏️';
-    configEdit.style.cursor = 'pointer';
-    configEdit.style.marginLeft = '8px';
-    configEdit.addEventListener('click', () => {
+    const configEdit = makeIconBtn('✏️', 'Edit metric', () => {
       renderConfigForm();
       openMetricsConfigForm(cfg);
     });
+    configEdit.style.marginLeft = '8px';
     td6.appendChild(configEdit);
 
     if (cfg.id !== 'mood') {
-      const del = document.createElement('span');
-      del.textContent = '❌';
-      del.style.cursor = 'pointer';
-      del.style.marginLeft = '8px';
-      del.addEventListener('click', async () => {
+      const del = makeIconBtn('❌', 'Delete metric', async () => {
         await saveMetricsConfig((await loadMetricsConfig()).filter(m => m.id !== cfg.id));
         await renderConfigForm();
         await renderStatsSummary();
       });
+      del.style.marginLeft = '8px';
       td6.appendChild(del);
     }
 

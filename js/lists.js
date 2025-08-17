@@ -274,14 +274,17 @@ async function initListsPanel() {
           } else {
             const firstActive = listsArray.findIndex(l => !isHidden(l));
             if (firstActive !== -1) selectList(firstActive);
-            else {
-              listsContainer.innerHTML = '';
-              itemForm.innerHTML = '';
+              else {
+                listsContainer.innerHTML = '';
+                itemForm.innerHTML = '';
+                itemForm.style.border = '';
+                itemForm.style.padding = '';
+                itemForm.style.borderRadius = '';
+              }
             }
-          }
-        });
-        div.appendChild(unhide);
-        hiddenContent.appendChild(div);
+          });
+          div.appendChild(unhide);
+          hiddenContent.appendChild(div);
       }
     });
     const label = document.getElementById('hiddenListsLabel');
@@ -986,6 +989,11 @@ function openRowEditor(rowIdx) {
     <h4 style="margin:0 0 .5rem;">Add to “${list.name}”</h4>
     <div id="itemInputs" style="display:flex;gap:.5rem;flex-wrap:wrap"></div>
   `;
+    Object.assign(itemForm.style, {
+      border: '1px solid #88c',
+      padding: '.5rem',
+      borderRadius: '4px'
+    });
     const inputsContainer = itemForm.querySelector('#itemInputs');
 
     list.columns.forEach((col, colIdx) => {
@@ -1049,7 +1057,7 @@ function openRowEditor(rowIdx) {
 
     const hideBtn = document.createElement('button');
     hideBtn.type = 'button';
-    hideBtn.textContent = '🕒 Hide';
+    hideBtn.textContent = '🕒 Hide List';
     Object.assign(hideBtn.style, {
       display: 'block',
       marginTop: '0.5rem',
@@ -1131,13 +1139,16 @@ function openRowEditor(rowIdx) {
         renderTabs();
         const firstActive = listsArray.findIndex(l => !isHidden(l));
         if (firstActive !== -1) selectList(firstActive);
-        else {
-          listsContainer.innerHTML = '';
-          itemForm.innerHTML = '';
-        }
+          else {
+            listsContainer.innerHTML = '';
+            itemForm.innerHTML = '';
+            itemForm.style.border = '';
+            itemForm.style.padding = '';
+            itemForm.style.borderRadius = '';
+          }
+        });
+        menu.appendChild(btn);
       });
-      menu.appendChild(btn);
-    });
 
     hideBtn.addEventListener('click', e => {
       e.stopPropagation();
@@ -1173,13 +1184,16 @@ function openRowEditor(rowIdx) {
       if (listsArray.length) {
         selectedListIndex = Math.max(0, selectedListIndex - 1);
         selectList(selectedListIndex);
-      } else {
-        listsContainer.innerHTML = '';
-        itemForm.innerHTML = '';
-      }
-    });
-    itemForm.append(deleteListBtn);
-  }
+        } else {
+          listsContainer.innerHTML = '';
+          itemForm.innerHTML = '';
+          itemForm.style.border = '';
+          itemForm.style.padding = '';
+          itemForm.style.borderRadius = '';
+        }
+      });
+      itemForm.append(deleteListBtn);
+    }
 
 
   // ───10) Hook up the Add-Column button ─────────────────────

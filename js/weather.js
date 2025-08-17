@@ -134,7 +134,7 @@ function renderWeather(panel, data, usingDefault, usingIp, opts = {}) {
       const temp = data.hourly.temperature_2m[i];
       const rain = data.hourly.precipitation_probability ? data.hourly.precipitation_probability[i] : '';
       if (temp >= 58 && temp <= 77) tr.classList.add('comfortable-temp');
-      tr.innerHTML = `<td>${time}</td><td>${temp}</td><td>${rain}</td>`;
+      tr.innerHTML = `<td>${time}</td><td>${temp}</td><td class="rain-percent">${rain}</td>`;
       hBody.appendChild(tr);
     }
     container.appendChild(hourlyTable);
@@ -150,7 +150,7 @@ function renderWeather(panel, data, usingDefault, usingIp, opts = {}) {
     const low = data.daily.temperature_2m_min[i];
     const rain = data.daily.precipitation_probability_max ? data.daily.precipitation_probability_max[i] : '';
     if (high >= 58 && high <= 77) tr.classList.add('comfortable-temp');
-    tr.innerHTML = `<td>${day}</td><td>${high}</td><td>${low}</td><td>${rain}</td>`;
+    tr.innerHTML = `<td>${day}</td><td>${high}</td><td>${low}</td><td class="rain-percent">${rain}</td>`;
     dBody.appendChild(tr);
   });
 

@@ -13,7 +13,7 @@ service cloud.firestore {
 
     // Precomputed signature of the demo/sample decisions dataset
     function SAMPLE_DECISIONS_SIGNATURE() {
-      return "1839cc711b0bf76d2bd63a4078be69ff639132a8a5ec3ece03876d7567203834";
+      return "e54cef8b23877d5d0786a840e398ee8567665b3251aab3eae158331a1be0fa78";
     }
 
     // 1) User settings under /users/{uid}/settings/{docId}
