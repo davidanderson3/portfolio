@@ -204,6 +204,7 @@ export async function initBudgetPanel() {
         <div class="scenario-title">Goal</div>
         <div id="budgetSummaryB" class="budget-summary"></div>
         <form id="budgetFormB" class="budget-form">
+          <div class="section-title">Recurring Expenses</div>
           <div id="recurContainerB" class="recurring-list"></div>
           <div class="section-title">Subscriptions</div>
           <div id="subsContainerB" class="subscriptions-list"></div>
