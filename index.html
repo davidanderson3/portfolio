@@ -256,10 +256,12 @@
           </div>
           <div id="recipesForm" style="margin-bottom:1rem;">
             <input type="text" id="recipesQuery" placeholder="Search (e.g. chicken)" style="margin-right:.5rem;">
-            <input type="text" id="recipesApiKey" placeholder="API Key" style="margin-right:.5rem;">
             <button type="button" id="recipesLoadBtn">Load Recipes</button>
-            <div style="font-size:0.8rem;margin-top:0.5rem;">
-              Uses the <a href="https://api-ninjas.com/api/recipe" target="_blank" rel="noopener noreferrer">API Ninjas Recipe API</a>.
+            <div id="recipesApiKeyContainer" style="margin-top:0.5rem;">
+              <input type="text" id="recipesApiKey" placeholder="API Key" style="margin-right:.5rem;">
+              <div id="recipesApiInstructions" style="font-size:0.8rem;margin-top:0.5rem;">
+                Get a free API key from <a href="https://api-ninjas.com/api/recipe" target="_blank" rel="noopener noreferrer">API Ninjas Recipe API</a>.
+              </div>
             </div>
           </div>
           <div id="recipesList" class="decision-container"></div>
