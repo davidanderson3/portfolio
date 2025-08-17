@@ -31,9 +31,10 @@ let goals;
 
 beforeEach(async () => {
   vi.resetModules();
-  const dom = new JSDOM('<div id="listsPanel"></div><div id="listsFormModal"><div id="listsFormWrapper"></div></div><button class="tab-button active" data-target="listsPanel"></button><div id="goalList"></div>');
+  const dom = new JSDOM('<div id="listsPanel"><div class="full-column"><div class="panel-header"></div></div></div><div id="listsFormModal"><div id="listsFormWrapper"></div></div><button class="tab-button active" data-target="listsPanel"></button><div id="goalList"></div>', { url: 'http://localhost' });
   global.window = dom.window;
   global.document = dom.window.document;
+  global.localStorage = dom.window.localStorage;
   helpers = await import('../js/helpers.js');
   goals = await import('../js/goals.js');
   helpers.loadLists.mockResolvedValue([{ name: 'Test', columns: [], items: [], hiddenUntil: null }]);
@@ -41,6 +42,7 @@ beforeEach(async () => {
   helpers.generateId.mockReturnValue('g1');
   helpers.pickDate.mockResolvedValue('');
   await import('../js/lists.js');
+  await Promise.resolve();
 });
 
 describe.skip('list postponing', () => {
@@ -89,46 +91,38 @@ describe.skip('openListsFormModal', () => {
   });
 });
 
-describe.skip('addListItemGoal', () => {
-  it('creates goal from first column label', () => {
+describe('addListItemGoal', () => {
+  it('creates goal from first column label', async () => {
     const list = { name: 'Test', columns: [{ name: 'Item', type: 'text' }], items: [{ Item: 'Do it' }], hiddenUntil: null };
-    helpers.loadLists.mockResolvedValue([list]);
-    document.getElementById('listsPanel').innerHTML = '';
+    document.getElementById('listsPanel').innerHTML = '<div class="full-column"><div class="panel-header"></div></div>';
     vi.resetModules();
-    return Promise.all([
-      import('../js/helpers.js'),
-      import('../js/goals.js'),
-      import('../js/lists.js')
-    ]).then(async ([h, g]) => {
-      helpers = h;
-      goals = g;
-      helpers.loadDecisions.mockResolvedValue([]);
-      helpers.generateId.mockReturnValue('g1');
-      const btn = document.querySelector('button[title="Add as goal"]');
-      btn.click();
-      await Promise.resolve();
-      await Promise.resolve();
-      expect(helpers.saveDecisions).toHaveBeenCalled();
-      const newGoal = helpers.saveDecisions.mock.calls[0][0].pop();
-      expect(newGoal.text).toBe('Do it');
-      expect(goals.appendGoalToDOM).toHaveBeenCalled();
-    });
+    helpers = await import('../js/helpers.js');
+    goals = await import('../js/goals.js');
+    helpers.loadLists.mockResolvedValue([list]);
+    helpers.loadDecisions.mockResolvedValue([]);
+    helpers.generateId.mockReturnValue('g1');
+    await import('../js/lists.js');
+    await Promise.resolve();
+    const btn = document.querySelector('button[title="Add as goal"]');
+    btn.click();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(helpers.saveDecisions).toHaveBeenCalled();
+    const newGoal = helpers.saveDecisions.mock.calls[0][0].pop();
+    expect(newGoal.text).toBe('Do it');
+    expect(goals.appendGoalToDOM).toHaveBeenCalled();
   });
 });
 
 describe.skip('unhideListItem button', () => {
   it('clears hiddenUntil when clicked', async () => {
     const hideTime = '2030-01-01T00:00:00.000Z';
-    document.getElementById('listsPanel').innerHTML = '';
+    document.getElementById('listsPanel').innerHTML = '<div class="full-column"><div class="panel-header"></div></div>';
     vi.resetModules();
-    const [h, g] = await Promise.all([
-      import('../js/helpers.js'),
-      import('../js/goals.js'),
-      import('../js/lists.js')
-    ]);
-    helpers = h;
-    goals = g;
+    helpers = await import('../js/helpers.js');
+    goals = await import('../js/goals.js');
     helpers.loadLists.mockResolvedValue([{ name: 'Test', columns: [{ name: 'Item', type: 'text' }], items: [{ Item: 'One', hiddenUntil: hideTime }], hiddenUntil: null }]);
+    await import('../js/lists.js');
     vi.useFakeTimers();
     await window.initListsPanel();
 
@@ -145,17 +139,13 @@ describe.skip('unhideListItem button', () => {
 describe.skip('unhide list button', () => {
   it('clears list hiddenUntil when clicked', async () => {
     const hideTime = '2030-01-01T00:00:00.000Z';
-    document.getElementById('listsPanel').innerHTML = '';
+    document.getElementById('listsPanel').innerHTML = '<div class="full-column"><div class="panel-header"></div></div>';
     vi.resetModules();
-    const [h, g] = await Promise.all([
-      import('../js/helpers.js'),
-      import('../js/goals.js'),
-      import('../js/lists.js')
-    ]);
-    helpers = h;
-    goals = g;
+    helpers = await import('../js/helpers.js');
+    goals = await import('../js/goals.js');
     helpers.loadLists.mockResolvedValue([{ name: 'Hidden', columns: [], items: [], hiddenUntil: hideTime }]);
     helpers.loadDecisions.mockResolvedValue([]);
+    await import('../js/lists.js');
     vi.useFakeTimers();
     await window.initListsPanel();
 
