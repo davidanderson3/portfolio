@@ -1927,7 +1927,18 @@ h2 {
 
 .planning-form h3 {
   flex-basis: 100%;
-  margin: 8px 0 0;
+  margin: 0 0 4px;
+}
+
+.planning-form .planning-section {
+  flex-basis: 100%;
+  border: 1px solid #d0decf;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 #planningPanel .full-column {
