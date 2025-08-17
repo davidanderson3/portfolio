@@ -1401,6 +1401,8 @@ h2 {
   flex-wrap: wrap;
   gap: 4px;
   max-height: 360px;
+}
+
 .rain-percent {
   color: blue;
 }
