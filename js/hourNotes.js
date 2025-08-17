@@ -1,4 +1,5 @@
 import { SAMPLE_HOUR_NOTES } from './sampleData.js';
+import { getCurrentUser } from './auth.js';
 
 const NOTES_KEY = 'hourNotes';
 
@@ -26,6 +27,12 @@ export function loadHourNotes() {
     const stored = JSON.parse(localStorage.getItem(NOTES_KEY) || '{}');
     if (stored && Object.keys(stored).length) return stored;
   } catch {}
+
+  const current = getCurrentUser?.();
+  if (current) {
+    return {};
+  }
+
   const sample = shiftSampleHourNotes(SAMPLE_HOUR_NOTES);
   try {
     localStorage.setItem(NOTES_KEY, JSON.stringify(sample));

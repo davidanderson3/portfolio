@@ -33,7 +33,7 @@ vi.mock('../js/helpers.js', async () => {
   };
 });
 
-vi.mock('../js/auth.js', () => ({ db: {}, auth: { onAuthStateChanged: vi.fn() }, currentUser: null }));
+vi.mock('../js/auth.js', () => ({ db: {}, auth: { onAuthStateChanged: vi.fn() }, currentUser: null, getCurrentUser: () => null }));
 
 let renderGoalsAndSubitems;
 let helpers;

@@ -1,4 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+vi.mock('../js/auth.js', () => ({
+  auth: { currentUser: null, onAuthStateChanged: vi.fn() },
+  db: {},
+  getCurrentUser: () => null
+}));
 import { loadHourNotes } from '../js/hourNotes.js';
 
 var storage = (() => {
