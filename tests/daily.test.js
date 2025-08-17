@@ -309,3 +309,32 @@ describe('time of day sections', () => {
       expect(document.querySelector('#endOfDayTasksList [data-task-id="t1"]')).toBeTruthy();
     });
   });
+
+describe('empty routine sections', () => {
+  it('hides sections with no tasks', async () => {
+    vi.resetModules();
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'm', type: 'task', text: 'M', recurs: 'daily', timeOfDay: 'morning' }
+    ]);
+
+    const { renderDailyTasks } = await import('../js/daily.js');
+    await renderDailyTasks(null, {});
+
+    expect(document.getElementById('dailyTasksList').style.display).not.toBe('none');
+    expect(document.getElementById('weeklyTasksList').style.display).toBe('none');
+    expect(document.getElementById('monthlyTasksList').style.display).toBe('none');
+    expect(document.getElementById('hiddenTasksSection').style.display).toBe('none');
+    expect(document.getElementById('completedTasksSection').style.display).toBe('none');
+    expect(document.getElementById('firstThingTasksList').style.display).toBe('none');
+    expect(document.getElementById('afternoonTasksList').style.display).toBe('none');
+    expect(document.getElementById('eveningTasksList').style.display).toBe('none');
+    expect(document.getElementById('endOfDayTasksList').style.display).toBe('none');
+    expect(document.getElementById('morningTasksList').style.display).not.toBe('none');
+  });
+});
