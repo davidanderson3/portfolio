@@ -2140,7 +2140,7 @@ h2 {
 .subscription-row,
 .recurring-row {
   display: grid;
-  grid-template-columns: 2fr 100px 120px 24px 24px;
+  grid-template-columns: 2fr 100px 24px 24px;
   align-items: center;
 }
 
@@ -2174,6 +2174,21 @@ h2 {
 .recurring-row input.recur-cost {
   width: 100%;
   box-sizing: border-box;
+}
+
+.diff-container .subscription-row,
+.diff-container .recurring-row {
+  grid-template-columns: 120px;
+}
+
+.diff-container .subscription-row > *,
+.diff-container .recurring-row > * {
+  border-left: none;
+}
+
+#scenarioDiff .budget-form,
+#scenarioDiff .budget-summary {
+  width: 150px;
 }
 
 .item-diff {

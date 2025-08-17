@@ -176,25 +176,33 @@ export async function initBudgetPanel() {
     <div id="budgetLayout">
       <div class="scenario" id="scenarioA">
         <div class="scenario-title">Current</div>
+        <div id="budgetSummaryA" class="budget-summary"></div>
         <form id="budgetFormA" class="budget-form">
           <div class="section-title">Recurring Expenses</div>
           <div id="recurContainerA" class="recurring-list"></div>
           <div class="section-title">Subscriptions</div>
           <div id="subsContainerA" class="subscriptions-list"></div>
         </form>
-        <div id="budgetSummaryA" class="budget-summary"></div>
       </div>
       <div class="scenario" id="scenarioB">
         <div class="scenario-title">Goal</div>
+        <div id="budgetSummaryB" class="budget-summary"></div>
         <form id="budgetFormB" class="budget-form">
           <div class="section-title">Recurring Expenses</div>
           <div id="recurContainerB" class="recurring-list"></div>
-
           <div class="section-title">Subscriptions</div>
           <div id="subsContainerB" class="subscriptions-list"></div>
         </form>
       </div>
-      <div id="budgetSummaryB" class="budget-summary"></div>
+      <div class="scenario" id="scenarioDiff">
+        <div class="scenario-title">Diff</div>
+        <form id="budgetFormDiff" class="budget-form">
+          <div class="section-title">Recurring Expenses</div>
+          <div id="recurContainerDiff" class="recurring-list diff-container"></div>
+          <div class="section-title">Subscriptions</div>
+          <div id="subsContainerDiff" class="subscriptions-list diff-container"></div>
+        </form>
+      </div>
     </div>
     <button type="button" id="addCategoryBtn">+ Add Category</button>
   `;
@@ -210,6 +218,9 @@ export async function initBudgetPanel() {
   const summaryB = panel.querySelector('#budgetSummaryB');
   const subsContainerB = formB.querySelector('#subsContainerB');
   const recurContainerB = formB.querySelector('#recurContainerB');
+  const formDiff = panel.querySelector('#budgetFormDiff');
+  const subsContainerDiff = formDiff.querySelector('#subsContainerDiff');
+  const recurContainerDiff = formDiff.querySelector('#recurContainerDiff');
 
   function addSubscriptionRow(container, name = '', cost = '', id) {
     const row = document.createElement('div');
@@ -218,7 +229,6 @@ export async function initBudgetPanel() {
     row.innerHTML = `
       <input type="text" class="sub-name" placeholder="Name" value="${name}">
       <input type="number" class="sub-cost" value="${cost}">
-      <span class="item-diff"></span>
     `;
     const rem = makeIconBtn('❌', 'Remove', () => {
       panel.querySelectorAll(`.subscription-row[data-id="${id}"]`).forEach(r => r.remove());
@@ -241,10 +251,21 @@ export async function initBudgetPanel() {
     container.append(row);
   }
 
+  function addDiffRow(container, type, id) {
+    const row = document.createElement('div');
+    row.className = type === 'sub' ? 'subscription-row' : 'recurring-row';
+    if (id) row.dataset.id = id;
+    row.innerHTML = `
+      <span class="item-diff"></span>
+    `;
+    container.append(row);
+  }
+
   function addSubscriptionRowPair(name = '', costA = '', costB = '') {
     const id = Math.random().toString(36).slice(2);
     addSubscriptionRow(subsContainerA, name, costA, id);
     addSubscriptionRow(subsContainerB, name, costB, id);
+    addDiffRow(subsContainerDiff, 'sub', id);
   }
 
   function addRecurRow(container, name = '', cost = '', key = '', id) {
@@ -255,7 +276,6 @@ export async function initBudgetPanel() {
     row.innerHTML = `
       <span class="recur-name">${name}</span>
       <input type="number" class="recur-cost" value="${cost}">
-      <span class="item-diff"></span>
     `;
     const rem = makeIconBtn('❌', 'Remove', () => {
       if (key) removedBuiltIns.add(key);
@@ -277,6 +297,7 @@ export async function initBudgetPanel() {
     const id = key || Math.random().toString(36).slice(2);
     addRecurRow(recurContainerA, name, costA, key, id);
     addRecurRow(recurContainerB, name, costB, key, id);
+    addDiffRow(recurContainerDiff, 'recur', id);
   }
 
   const subNames = new Set([
@@ -342,30 +363,29 @@ export async function initBudgetPanel() {
   }
 
   function updateDiffs() {
-    function applyDiff(aContainer, bContainer, costSelector) {
-      bContainer.querySelectorAll('[data-id]').forEach(rowB => {
-        const id = rowB.dataset.id;
+    function applyDiff(aContainer, bContainer, diffContainer, costSelector) {
+      diffContainer.querySelectorAll('[data-id]').forEach(rowC => {
+        const id = rowC.dataset.id;
         const rowA = aContainer.querySelector(`[data-id="${id}"]`);
+        const rowB = bContainer.querySelector(`[data-id="${id}"]`);
         const costA = parseFloat(rowA?.querySelector(costSelector).value) || 0;
-        const costB = parseFloat(rowB.querySelector(costSelector).value) || 0;
-        const diff = costB - costA;
+        const costB = parseFloat(rowB?.querySelector(costSelector).value) || 0;
+        const diff = costA - costB;
         const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
         const absDiff = Math.abs(diff);
         let percentText;
         if (costA === 0) {
           percentText = absDiff === 0 ? '0%' : 'n/a';
         } else {
-          percentText = sign + ((absDiff / costA) * 100).toFixed(1) + '%';
+          percentText = ((absDiff / costA) * 100).toFixed(1) + '%';
+          if (sign) percentText = sign + percentText;
         }
         const diffText = sign + '$' + absDiff.toFixed(2);
-        rowB.querySelector('.item-diff').textContent = `${percentText} (${diffText})`;
-      });
-      aContainer.querySelectorAll('.item-diff').forEach(el => {
-        el.textContent = '';
+        rowC.querySelector('.item-diff').textContent = `${percentText} (${diffText})`;
       });
     }
-    applyDiff(recurContainerA, recurContainerB, '.recur-cost');
-    applyDiff(subsContainerA, subsContainerB, '.sub-cost');
+    applyDiff(recurContainerA, recurContainerB, recurContainerDiff, '.recur-cost');
+    applyDiff(subsContainerA, subsContainerB, subsContainerDiff, '.sub-cost');
   }
 
   function render(save = true) {
