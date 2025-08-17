@@ -28,7 +28,7 @@ export const PANEL_NAMES = {
   moviesPanel: 'Movies',
   showsPanel: 'Live Music',
   recipesPanel: 'Recipes',
-  planningPanel: 'Finances',
+  planningPanel: 'Financial Variables',
   budgetPanel: 'Budget',
   contactsPanel: 'Contacts',
   backupsPanel: 'Backups',
