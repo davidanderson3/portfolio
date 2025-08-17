@@ -7,7 +7,9 @@ describe('initRecipesPanel', () => {
     const dom = new JSDOM(`
       <div id="recipesList"></div>
       <input id="recipesQuery" />
-      <input id="recipesApiKey" />
+      <div id="recipesApiKeyContainer">
+        <input id="recipesApiKey" />
+      </div>
       <button id="recipesLoadBtn"></button>
     `);
     global.document = dom.window.document;
@@ -39,5 +41,25 @@ describe('initRecipesPanel', () => {
       'https://api.api-ninjas.com/v1/recipe?query=chicken',
       { headers: { 'X-Api-Key': 'testkey' } }
     );
+  });
+
+  it('hides API key input when one is cached', async () => {
+    global.localStorage = {
+      getItem: (key) => (key === 'recipesApiKey' ? 'cached' : ''),
+      setItem: () => {}
+    };
+    const dom = new JSDOM(`
+      <div id="recipesList"></div>
+      <input id="recipesQuery" />
+      <div id="recipesApiKeyContainer">
+        <input id="recipesApiKey" />
+      </div>
+      <button id="recipesLoadBtn"></button>
+    `);
+    global.document = dom.window.document;
+    global.window = dom.window;
+    await initRecipesPanel();
+    const container = document.getElementById('recipesApiKeyContainer');
+    expect(container.style.display).toBe('none');
   });
 });
