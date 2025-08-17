@@ -1366,6 +1366,10 @@ h2 {
   font-weight: normal;
 }
 
+.rain-percent {
+  color: blue;
+}
+
 #travelTagFilters label {
   margin-right: 8px;
   white-space: nowrap;
