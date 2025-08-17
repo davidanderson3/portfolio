@@ -150,13 +150,23 @@ export const SAMPLE_DECISIONS = [
     parentGoalId: 'demo-goal-4',
   },
   {
-    id: 'demo-goal-5',
-    type: 'goal',
-    text: 'Plan a vacation',
+    id: 'demo-meeting',
+    type: 'task',
+    text: 'Meet with a friend',
     completed: false,
     resolution: '',
     dateCompleted: '',
     parentGoalId: null,
+    scheduled: '2025-07-11',
+    scheduledEnd: ''
+  },
+  {
+    id: 'demo-retreat',
+    type: 'goal',
+    text: 'Weekend retreat',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
     deadline: '',
     scheduled: '',
     scheduledEnd: ''
@@ -230,8 +240,8 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     parentGoalId: null,
     deadline: '',
-    scheduled: '',
-    scheduledEnd: ''
+    scheduled: '2025-07-15',
+    scheduledEnd: '2025-07-16'
   },
   {
     id: 'demo-goal-6a',
