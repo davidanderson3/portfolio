@@ -10,6 +10,7 @@ export const PANELS = [
   'travelPanel',
   'moviesPanel',
   'showsPanel',
+  'recipesPanel',
   'planningPanel',
   'budgetPanel',
   'contactsPanel',
@@ -25,7 +26,8 @@ export const PANEL_NAMES = {
   listsPanel: 'Lists',
   travelPanel: 'Places',
   moviesPanel: 'Movies',
-  showsPanel: 'Shows',
+  showsPanel: 'Live Music',
+  recipesPanel: 'Recipes',
   planningPanel: 'Finances',
   budgetPanel: 'Budget',
   contactsPanel: 'Contacts',
@@ -106,12 +108,15 @@ export async function initTabs(user, db) {
       else if (target === 'moviesPanel') {
         await window.initMoviesPanel();
       }
-      else if (target === 'showsPanel') {
-        await window.initShowsPanel();
-      }
-      else if (target === 'planningPanel') {
-        await window.initPlanningPanel();
-      }
+        else if (target === 'showsPanel') {
+          await window.initShowsPanel();
+        }
+        else if (target === 'recipesPanel') {
+          await window.initRecipesPanel();
+        }
+        else if (target === 'planningPanel') {
+          await window.initPlanningPanel();
+        }
       else if (target === 'budgetPanel') {
         await window.initBudgetPanel();
       }
@@ -158,12 +163,15 @@ export async function initTabs(user, db) {
     else if (initial === 'moviesPanel') {
       window.initMoviesPanel();
     }
-    else if (initial === 'showsPanel') {
-      window.initShowsPanel();
-    }
-    else if (initial === 'planningPanel') {
-      window.initPlanningPanel();
-    }
+      else if (initial === 'showsPanel') {
+        window.initShowsPanel();
+      }
+      else if (initial === 'recipesPanel') {
+        window.initRecipesPanel();
+      }
+      else if (initial === 'planningPanel') {
+        window.initPlanningPanel();
+      }
     else if (initial === 'budgetPanel') {
       window.initBudgetPanel();
     }
