@@ -479,7 +479,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
   // header row
-  ['Metric', 'Value', 'Rank', 'Percentile', 'Average', 'Status', 'Actions'].forEach(text => {
+  ['Metric', 'Value', 'Rank', 'Percentile', 'Average', 'Actions'].forEach(text => {
     const th = document.createElement('th');
     th.textContent = text;
     Object.assign(th.style, { borderBottom: '2px solid #444', textAlign: 'left', padding: '8px' });
@@ -649,15 +649,9 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     Object.assign(tdAvg.style, { padding: '8px', borderBottom: '1px solid #ddd' });
     row.appendChild(tdAvg);
 
-    const tdStatus = document.createElement('td');
-    tdStatus.textContent = wasPostponed ? 'postponed' : '';
-    tdStatus.dataset.label = 'Status';
-    Object.assign(tdStatus.style, { padding: '8px', borderBottom: '1px solid #ddd' });
-    row.appendChild(tdStatus);
-
-    const td6 = document.createElement('td');
-    td6.dataset.label = 'Actions';
-    Object.assign(td6.style, { padding: '8px', borderBottom: '1px solid #ddd' });
+    const tdActions = document.createElement('td');
+    tdActions.dataset.label = 'Actions';
+    Object.assign(tdActions.style, { padding: '8px', borderBottom: '1px solid #ddd' });
 
     const upBtn = makeIconBtn('⬆️', 'Move metric up', async () => {
       const prev = row.previousElementSibling;
@@ -671,11 +665,11 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
         });
       }
     });
-    td6.appendChild(upBtn);
+    tdActions.appendChild(upBtn);
 
     const clockBtn = makeIconBtn('🕒', 'Postpone', () => {});
     clockBtn.style.marginLeft = '8px';
-    td6.appendChild(clockBtn);
+    tdActions.appendChild(clockBtn);
 
     const menu = document.createElement('div');
     Object.assign(menu.style, {
@@ -766,7 +760,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       openMetricsConfigForm(cfg);
     });
     configEdit.style.marginLeft = '8px';
-    td6.appendChild(configEdit);
+    tdActions.appendChild(configEdit);
 
     if (cfg.id !== 'mood') {
       const del = makeIconBtn('❌', 'Delete metric', async () => {
@@ -775,10 +769,10 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
         await renderStatsSummary();
       });
       del.style.marginLeft = '8px';
-      td6.appendChild(del);
+      tdActions.appendChild(del);
     }
 
-    row.appendChild(td6);
+    row.appendChild(tdActions);
 
     tbody.appendChild(row);
   }
