@@ -33,21 +33,20 @@ export async function initRecipesPanel() {
         return;
       }
       const ul = document.createElement('ul');
-      recipes.slice(0, 10).forEach(r => {
+      recipes.forEach(r => {
         const li = document.createElement('li');
         const title = document.createElement('strong');
         title.textContent = r.title || 'Untitled';
         li.appendChild(title);
-        if (r.ingredients) {
-          const ing = document.createElement('div');
-          ing.textContent = `Ingredients: ${r.ingredients}`;
-          li.appendChild(ing);
-        }
-        if (r.instructions) {
-          const inst = document.createElement('div');
-          inst.textContent = r.instructions;
-          li.appendChild(inst);
-        }
+
+        const metaList = document.createElement('ul');
+        Object.entries(r).forEach(([key, value]) => {
+          if (key === 'title') return;
+          const metaItem = document.createElement('li');
+          metaItem.textContent = `${key}: ${value}`;
+          metaList.appendChild(metaItem);
+        });
+        li.appendChild(metaList);
         ul.appendChild(li);
       });
       listEl.innerHTML = '';
