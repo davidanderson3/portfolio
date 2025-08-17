@@ -283,12 +283,11 @@ describe('planning finance tables', () => {
     form.rollingCredit.value = '0';
     form.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 
-    const headings = Array.from(document.querySelectorAll('#financeResult h3')).map(h => h.textContent);
-    expect(headings).toEqual(['Working Years', 'Retirement']);
-    const tables = document.querySelectorAll('#financeResult table');
-    expect(tables.length).toBe(2);
-    expect(tables[0].querySelectorAll('tbody tr').length).toBe(2);
-    expect(tables[1].querySelectorAll('tbody tr').length).toBe(1);
+    const workingHeading = document.querySelector('#workingTable h3').textContent;
+    const retirementHeading = document.querySelector('#retirementColumn h3').textContent;
+    expect([workingHeading, retirementHeading]).toEqual(['Working Years', 'Retirement']);
+    expect(document.querySelectorAll('#workingTable table tbody tr').length).toBe(2);
+    expect(document.querySelectorAll('#retirementColumn table tbody tr').length).toBe(1);
 
     const resetDom = prevWin ? { window: prevWin, document: prevDoc } : new JSDOM('', { url: 'http://localhost' });
     global.window = resetDom.window || resetDom;

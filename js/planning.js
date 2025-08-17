@@ -300,17 +300,19 @@ export async function initPlanningPanel() {
         <label>Rolling Credit <input type="number" name="rollingCredit" value="${currentData.budget.rollingCredit ?? ''}" /></label>
       </div>
       </form>
-      <div class="planning-right">
+      <div id="workingColumn" class="planning-right">
         <div id="assetsTotal" style="margin-top:1em;"></div>
-        <div id="financeResult" style="margin-top:1em;"></div>
-        <div id="assetHistory" style="margin-top:1em;"></div>
+        <div id="workingTable" style="margin-top:1em;"></div>
       </div>
+      <div id="retirementColumn" class="planning-right"></div>
     </div>
+    <div id="assetHistory" style="margin-top:1em;"></div>
   `;
 
   const form = container.querySelector('#planningForm');
   const assetsTotalDiv = container.querySelector('#assetsTotal');
-  const financeResultDiv = container.querySelector('#financeResult');
+  const workingTableDiv = container.querySelector('#workingTable');
+  const retirementTableDiv = container.querySelector('#retirementColumn');
   const ssEstimateDiv = container.querySelector('#ssEstimate');
   const assetHistoryDiv = container.querySelector('#assetHistory');
 
@@ -390,19 +392,30 @@ export async function initPlanningPanel() {
       withdrawalRate: values.withdrawalRate
     });
 
-    function buildFinanceTable(rows) {
-      return '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Withdrawals</th><th>Pension</th><th>Social Security</th></tr></thead><tbody>' +
-        rows.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.pension ? '$' + r.pension.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
-        '</tbody></table>';
+    function buildFinanceTable(rows, showExtras = true) {
+      let html = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th>';
+      if (showExtras) {
+        html += '<th>Withdrawals</th><th>Pension</th><th>Social Security</th>';
+      }
+      html += '</tr></thead><tbody>';
+      html += rows.map(r => {
+        let row = `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td>`;
+        if (showExtras) {
+          row += `<td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.pension ? '$' + r.pension.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td>`;
+        }
+        row += '</tr>';
+        return row;
+      }).join('');
+      html += '</tbody></table>';
+      return html;
     }
 
     const retirementAgeNum = Number(values.retAge);
     const workingData = finData.filter(r => r.age <= retirementAgeNum);
     const retirementData = finData.filter(r => r.age > retirementAgeNum);
 
-    financeResultDiv.innerHTML =
-      `<div class="finance-tables"><div><h3>Working Years</h3>${buildFinanceTable(workingData)}</div>` +
-      `<div><h3>Retirement</h3>${buildFinanceTable(retirementData)}</div></div>`;
+    workingTableDiv.innerHTML = `<h3>Working Years</h3>${buildFinanceTable(workingData, false)}`;
+    retirementTableDiv.innerHTML = `<h3>Retirement</h3>${buildFinanceTable(retirementData)}`;
 
     currentData.finance = {
       curAge: values.curAge,

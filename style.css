@@ -1996,30 +1996,29 @@ h2 {
 #planningPanel .full-column {
   overflow-x: auto;
 }
-
-#financeResult {
+#workingColumn,
+#retirementColumn {
   overflow-x: auto;
 }
 
-.finance-tables {
-  display: flex;
-  gap: 1em;
-}
-
-#financeResult table {
+#workingColumn table,
+#retirementColumn table {
   width: max-content;
   border-collapse: collapse;
 }
 
-#financeResult th,
-#financeResult td {
+#workingColumn th,
+#workingColumn td,
+#retirementColumn th,
+#retirementColumn td {
   border: 1px solid #d0decf;
   padding: 4px;
   text-align: left;
   white-space: nowrap;
 }
 
-#financeResult tbody tr:nth-child(even) {
+#workingColumn tbody tr:nth-child(even),
+#retirementColumn tbody tr:nth-child(even) {
   background-color: #f8f5f0;
 }
 
