@@ -2183,7 +2183,7 @@ h2 {
 
 .diff-container .subscription-row,
 .diff-container .recurring-row {
-  grid-template-columns: 120px;
+  grid-template-columns: 2fr 100px 24px 24px;
 }
 
 .diff-container .subscription-row > *,
@@ -2191,9 +2191,13 @@ h2 {
   border-left: none;
 }
 
+.diff-container .item-diff {
+  grid-column: 2;
+}
+
 #scenarioDiff .budget-form,
 #scenarioDiff .budget-summary {
-  width: 150px;
+  width: 450px;
 }
 
 .item-diff {
