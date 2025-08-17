@@ -34,6 +34,38 @@ app.use((req, res, next) => {
   next();
 });
 
+// --- Description persistence ---
+const descFile = path.join(__dirname, 'descriptions.json');
+
+function readDescriptions() {
+  try {
+    const text = fs.readFileSync(descFile, 'utf8');
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
+}
+
+function writeDescriptions(data) {
+  fs.writeFileSync(descFile, JSON.stringify(data, null, 2));
+}
+
+app.get('/api/descriptions', (req, res) => {
+  res.json(readDescriptions());
+});
+
+app.post('/api/description', (req, res) => {
+  const { panelId, position, text } = req.body || {};
+  if (!panelId || !['top', 'bottom'].includes(position) || typeof text !== 'string') {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const data = readDescriptions();
+  data[panelId] = data[panelId] || {};
+  data[panelId][position] = text;
+  writeDescriptions(data);
+  res.json({ status: 'ok' });
+});
+
 // --- GeoLayers game endpoints ---
 const layerOrder = ['rivers','lakes','elevation','roads','outline','cities','label'];
 const locations = ['USA','CAN','MEX'];
