@@ -674,6 +674,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     td6.appendChild(upBtn);
 
     const clockBtn = makeIconBtn('🕒', 'Postpone', () => {});
+    clockBtn.style.marginLeft = '8px';
     td6.appendChild(clockBtn);
 
     const menu = document.createElement('div');
