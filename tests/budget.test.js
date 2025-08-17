@@ -204,17 +204,14 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
+    global.prompt = () => 'Test Recurring';
     document.getElementById('addCategoryBtn').click();
 
-    const nameInput = document.querySelector('#recurContainerB .recurring-row:last-child .recur-name');
     const costInput = document.querySelector('#recurContainerB .recurring-row:last-child .recur-cost');
-    nameInput.value = 'Test Recurring';
     costInput.value = '50';
-      nameInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-      costInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-      // Changes are persisted on change events rather than every keystroke.
-      nameInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-      costInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    costInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    // Changes are persisted on change events rather than every keystroke.
+    costInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 
     await new Promise(res => setTimeout(res, 0));
 
@@ -234,16 +231,19 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
+    global.prompt = vi.fn()
+      .mockReturnValueOnce('First')
+      .mockReturnValueOnce('Second');
+
     document.getElementById('addCategoryBtn').click();
     document.getElementById('addCategoryBtn').click();
 
     const rows = document.querySelectorAll('#recurContainerA .recurring-row');
-    rows[0].querySelector('.recur-name').value = 'First';
-    rows[1].querySelector('.recur-name').value = 'Second';
+    rows[rows.length - 1].querySelector('button[title="Move up"]').click();
 
-    rows[1].querySelector('button[title="Move up"]').click();
-
-    const order = Array.from(document.querySelectorAll('#recurContainerA .recurring-row .recur-name')).map(el => el.value);
+    const order = Array.from(document.querySelectorAll('#recurContainerA .recurring-row .recur-name'))
+      .slice(-2)
+      .map(el => el.textContent);
     expect(order[0]).toBe('Second');
   });
 

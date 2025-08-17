@@ -2067,7 +2067,7 @@ h2 {
 .subscription-row,
 .recurring-row {
   display: grid;
-  grid-template-columns: 1fr 100px 140px 24px 24px;
+  grid-template-columns: 2fr 100px 120px 24px 24px;
   align-items: center;
 }
 
@@ -2086,8 +2086,13 @@ h2 {
   border-left: 1px solid #ccc;
 }
 
-.subscription-row input[type="text"],
-.recurring-row input[type="text"] {
+.subscription-row input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.recurring-row .recur-name {
+  display: block;
   width: 100%;
   box-sizing: border-box;
 }
