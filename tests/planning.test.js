@@ -218,13 +218,25 @@ describe('planning persistence', () => {
     expect(data).toEqual({});
   });
 
-  it('prefers newer data source when merging', async () => {
+  it('ignores local data by default', async () => {
     getMock.mockResolvedValue({ exists: true, data: () => ({ finance: { curAge: '30', retAge: '60' }, lastUpdated: 200 }) });
-    localStorage.setItem('planningData', JSON.stringify({ finance: { curAge: '35' }, assets: { realEstate: 100 }, lastUpdated: 100 }));
+    localStorage.setItem('planningData', JSON.stringify({ finance: { curAge: '35' }, assets: { realEstate: 100 }, lastUpdated: 300 }));
     const { loadPlanningData } = await import('../js/planning.js');
     const res = await loadPlanningData();
     expect(res.finance.curAge).toBe('30');
-    expect(res.assets.realEstate).toBe(100);
+    expect(res.assets).toBeUndefined();
     expect(res.lastUpdated).toBe(200);
+  });
+
+  it('merges local data when recoverLocal is true', async () => {
+    getMock.mockResolvedValue({ exists: true, data: () => ({ finance: { curAge: '30', retAge: '60' }, lastUpdated: 200 }) });
+    localStorage.setItem('planningData', JSON.stringify({ finance: { curAge: '35' }, assets: { realEstate: 100 }, lastUpdated: 300 }));
+    const { loadPlanningData } = await import('../js/planning.js');
+    const res = await loadPlanningData({ recoverLocal: true });
+    expect(res.finance.curAge).toBe('35');
+    expect(res.assets.realEstate).toBe(100);
+    expect(res.lastUpdated).toBeGreaterThan(200);
+    expect(setMock).toHaveBeenCalled();
+    expect(localStorage.getItem('planningData')).toBeNull();
   });
 });
