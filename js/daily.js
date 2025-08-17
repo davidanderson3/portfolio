@@ -90,6 +90,9 @@ async function renderDailyTasksImpl(currentUser, db) {
   }
   let morningContainer = container.querySelector('#morningTasksList');
   if (!morningContainer) {
+    const divider = document.createElement('hr');
+    divider.style.margin = '40px 0';
+    container.appendChild(divider);
     morningContainer = document.createElement('div');
     morningContainer.id = 'morningTasksList';
     morningContainer.className = 'decision-container';
@@ -100,6 +103,9 @@ async function renderDailyTasksImpl(currentUser, db) {
   }
   let afternoonContainer = container.querySelector('#afternoonTasksList');
   if (!afternoonContainer) {
+    const divider = document.createElement('hr');
+    divider.style.margin = '40px 0';
+    container.appendChild(divider);
     afternoonContainer = document.createElement('div');
     afternoonContainer.id = 'afternoonTasksList';
     afternoonContainer.className = 'decision-container';
@@ -110,6 +116,9 @@ async function renderDailyTasksImpl(currentUser, db) {
   }
   let eveningContainer = container.querySelector('#eveningTasksList');
   if (!eveningContainer) {
+    const divider = document.createElement('hr');
+    divider.style.margin = '40px 0';
+    container.appendChild(divider);
     eveningContainer = document.createElement('div');
     eveningContainer.id = 'eveningTasksList';
     eveningContainer.className = 'decision-container';
@@ -120,6 +129,9 @@ async function renderDailyTasksImpl(currentUser, db) {
   }
   let endOfDayContainer = container.querySelector('#endOfDayTasksList');
   if (!endOfDayContainer) {
+    const divider = document.createElement('hr');
+    divider.style.margin = '40px 0';
+    container.appendChild(divider);
     endOfDayContainer = document.createElement('div');
     endOfDayContainer.id = 'endOfDayTasksList';
     endOfDayContainer.className = 'decision-container';
