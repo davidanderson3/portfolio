@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const deleteMock = vi.fn();
 const setMock = vi.fn();
+const getMock = vi.fn();
 let currentUser = null;
 
 vi.mock('../js/auth.js', () => ({
@@ -11,7 +12,7 @@ vi.mock('../js/auth.js', () => ({
     collection: () => ({
       doc: () => ({
         collection: () => ({
-          doc: () => ({ delete: deleteMock, set: setMock })
+          doc: () => ({ delete: deleteMock, set: setMock, get: getMock })
         })
       })
     })
@@ -33,6 +34,7 @@ global.localStorage = storage;
 beforeEach(() => {
   deleteMock.mockClear();
   setMock.mockClear();
+  getMock.mockClear();
   currentUser = null;
   vi.resetModules();
   localStorage.clear();
@@ -61,5 +63,26 @@ describe('saveHiddenTabs', () => {
     const { saveHiddenTabs } = await import('../js/settings.js');
     await saveHiddenTabs({});
     expect(setMock.mock.calls[0]).toEqual([{ tabs: {} }]);
+  });
+});
+
+describe('loadHiddenTabs', () => {
+  it('defaults to localStorage for new users', async () => {
+    currentUser = { uid: 'u1' };
+    getMock.mockResolvedValue({ exists: false });
+    const hidden = { calendarPanel: '9999-12-31T00:00:00.000Z' };
+    localStorage.setItem('hiddenTabs', JSON.stringify(hidden));
+    const { loadHiddenTabs } = await import('../js/settings.js');
+    const result = await loadHiddenTabs();
+    expect(result).toEqual(hidden);
+    expect(setMock).toHaveBeenCalledWith({ tabs: hidden });
+  });
+
+  it('uses Firestore data when available', async () => {
+    currentUser = { uid: 'u1' };
+    getMock.mockResolvedValue({ exists: true, data: () => ({ tabs: { a: 'b' } }) });
+    const { loadHiddenTabs } = await import('../js/settings.js');
+    const result = await loadHiddenTabs();
+    expect(result).toEqual({ a: 'b' });
   });
 });
