@@ -1,7 +1,6 @@
 import { auth, db, getCurrentUser } from './auth.js';
 import { PANELS, PANEL_NAMES } from './tabs.js';
 import { getSiteName, setSiteName } from './siteName.js';
-import { getShowDescriptions, setShowDescriptions } from './descriptions.js';
 
 const KEY = 'hiddenTabs';
 const ORDER_KEY = 'tabOrder';
@@ -147,15 +146,10 @@ export async function initSettingsPage() {
     const resetBtn = document.getElementById('settingsResetBtn');
     const emailSpan = document.getElementById('settingsEmail');
     const siteNameInput = document.getElementById('siteNameInput');
-    const descCheckbox = document.getElementById('showDescriptionsCheckbox');
     let panels = PANELS;
 
     if (siteNameInput) {
       siteNameInput.value = getSiteName();
-    }
-
-    if (descCheckbox) {
-      descCheckbox.checked = getShowDescriptions();
     }
 
   const order = await loadTabOrder();
@@ -223,9 +217,6 @@ export async function initSettingsPage() {
       });
       if (siteNameInput) {
         setSiteName(siteNameInput.value);
-      }
-      if (descCheckbox) {
-        setShowDescriptions(descCheckbox.checked);
       }
       const order = Array.from(listDiv.querySelectorAll('.settings-option input[type=checkbox]'))
         .map(cb => cb.value);
