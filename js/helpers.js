@@ -570,7 +570,12 @@ export function makeIconBtn(symbol, title, fn) {
     border: 'none',
     cursor: 'pointer',
     fontSize: '1.1em',
-    padding: '0'
+    padding: '0',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: '1',
+    verticalAlign: 'middle'
   });
   b.addEventListener('mousedown', e => e.stopPropagation());
   b.addEventListener('click', e => e.stopPropagation());
