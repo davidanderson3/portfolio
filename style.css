@@ -918,6 +918,25 @@ button:hover {
 .settings-back-link:hover {
   text-decoration: underline;
 }
+
+/* Floating link for contacting developer */
+.contact-link {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  background: #ffffff;
+  color: #333;
+  text-decoration: none;
+  padding: 6px 12px;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  font-size: 0.9em;
+  z-index: 1000;
+}
+
+.contact-link:hover {
+  background: #f0f0f0;
+}
 .settings-container.main-layout {
   justify-content: flex-start;
   flex-direction: column;

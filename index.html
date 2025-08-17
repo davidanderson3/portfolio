@@ -364,6 +364,29 @@
     <div id="listsFormWrapper" class="modal-content" style="max-height:80vh;overflow:auto"></div>
   </div>
 
+  <a href="#" id="contactDeveloperLink" class="contact-link">Contact Developer</a>
+
+  <div id="contactModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:400px;width:90%;max-height:80vh;overflow:auto;">
+      <h3>Contact Developer</h3>
+      <form id="contactForm">
+        <div style="margin-bottom:8px;">
+          <label>Name<br><input type="text" id="contactName" /></label>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label>Email<br><input type="email" id="contactEmailInput" required /></label>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label>Message<br><textarea id="contactMessage" required style="width:100%;height:100px;"></textarea></label>
+        </div>
+        <div class="modal-actions" style="margin-top:1em;">
+          <button type="submit">Send</button>
+          <button type="button" id="contactCancelBtn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module" src="js/main.js"></script>
