@@ -64,6 +64,36 @@ describe('initTabs persistence', () => {
     expect(dailyBtn.classList.contains('active')).toBe(true);
     expect(document.getElementById('dailyPanel').style.display).toBe('flex');
   });
+
+  it('ignores contactsPanel as initial when signed out', async () => {
+    const dom = new JSDOM(`
+      <button class="tab-button" data-target="projectsPanel"></button>
+      <button class="tab-button" data-target="calendarPanel"></button>
+      <button class="tab-button" data-target="dailyPanel"></button>
+      <button class="tab-button" data-target="contactsPanel"></button>
+      <div id="projectsPanel"></div>
+      <div id="calendarPanel"></div>
+      <div id="dailyPanel"></div>
+      <div id="contactsPanel"></div>
+    `, { url: 'http://localhost/' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+
+    global.localStorage = {
+      getItem: () => 'contactsPanel',
+      setItem: () => {}
+    };
+
+    global.window.initContactsPanel = vi.fn();
+
+    const mod = await import('../js/tabs.js');
+    mod.initTabs(null, {});
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+
+    const active = document.querySelector('.tab-button.active');
+    expect(active.dataset.target).toBe('dailyPanel');
+    expect(window.initContactsPanel).not.toHaveBeenCalled();
+  });
 });
 
 describe('routine tab behavior', () => {

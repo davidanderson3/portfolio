@@ -42,7 +42,7 @@ export function initTabs(user, db) {
   const LAST_PANEL_KEY = 'lastPanel';
 
   const tabButtons = document.querySelectorAll('.tab-button');
-  const panels    = PANELS;
+  const panels    = user ? PANELS : PANELS.filter(id => id !== 'contactsPanel');
 
   tabButtons.forEach(btn => {
     btn.addEventListener('click', async () => {
