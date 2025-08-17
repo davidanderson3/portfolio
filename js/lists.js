@@ -160,6 +160,10 @@ async function initListsPanel() {
   itemForm.id = 'itemForm';
   itemForm.style.margin = '1rem 0';
 
+  const listActions = document.createElement('div');
+  listActions.id = 'listActions';
+  listActions.style.margin = '0.5rem 0';
+
   const listWrapper = document.createElement('div');
   listWrapper.id = 'listWrapper';
   listWrapper.className = 'list-wrapper';
@@ -190,7 +194,8 @@ async function initListsPanel() {
   listWrapper.append(
     listsContainer,
     addColumnBtnForList,
-    itemForm
+    itemForm,
+    listActions
   );
   panel.append(
     tabsContainer,
@@ -280,6 +285,7 @@ async function initListsPanel() {
                 itemForm.style.border = '';
                 itemForm.style.padding = '';
                 itemForm.style.borderRadius = '';
+                listActions.innerHTML = '';
               }
             }
           });
@@ -994,6 +1000,7 @@ function openRowEditor(rowIdx) {
       padding: '.5rem',
       borderRadius: '4px'
     });
+    listActions.innerHTML = '';
     const inputsContainer = itemForm.querySelector('#itemInputs');
 
     list.columns.forEach((col, colIdx) => {
@@ -1067,7 +1074,7 @@ function openRowEditor(rowIdx) {
       cursor: 'pointer',
       padding: '.25rem .75rem'
     });
-    itemForm.append(hideBtn);
+    listActions.append(hideBtn);
 
     const menu = document.createElement('div');
     Object.assign(menu.style, {
@@ -1145,6 +1152,7 @@ function openRowEditor(rowIdx) {
             itemForm.style.border = '';
             itemForm.style.padding = '';
             itemForm.style.borderRadius = '';
+            listActions.innerHTML = '';
           }
         });
         menu.appendChild(btn);
@@ -1190,9 +1198,10 @@ function openRowEditor(rowIdx) {
           itemForm.style.border = '';
           itemForm.style.padding = '';
           itemForm.style.borderRadius = '';
+          listActions.innerHTML = '';
         }
       });
-      itemForm.append(deleteListBtn);
+      listActions.append(deleteListBtn);
     }
 
 
