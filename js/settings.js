@@ -65,7 +65,17 @@ export async function loadHiddenTabs() {
     .collection('users').doc(user.uid)
     .collection('settings').doc(KEY)
     .get();
-  return snap.exists ? normalize(snap.data().tabs) : {};
+  if (snap.exists) return normalize(snap.data().tabs);
+  let stored = {};
+  try {
+    stored = JSON.parse(localStorage.getItem(KEY) || '{}');
+  } catch (err) {
+    console.error('Failed to parse hidden tabs from localStorage:', err);
+    stored = {};
+  }
+  const obj = normalize(stored);
+  if (Object.keys(obj).length) saveHiddenTabs(obj).catch(() => {});
+  return obj;
 }
 
 export async function saveHiddenTabs(tabs) {
