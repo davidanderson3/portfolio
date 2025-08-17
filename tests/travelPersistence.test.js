@@ -26,8 +26,12 @@ const db = {
     doc: () => ({
       collection: () => ({
         doc: () => ({ set: setMock }),
-        onSnapshot: (cb) => {
-          cb({ docs: [{ id: storedDoc.id, data: () => ({ ...storedDoc }) }] });
+        onSnapshot: (...args) => {
+          const cb = args.find(a => typeof a === 'function');
+          cb && cb({
+            docs: [{ id: storedDoc.id, data: () => ({ ...storedDoc }) }],
+            metadata: { fromCache: false }
+          });
           return () => {};
         }
       })
