@@ -10,6 +10,17 @@ function deepFreeze(obj) {
   return obj;
 }
 
+function futureDate(daysFromNow) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().split('T')[0];
+}
+
+const sampleConferenceDate = futureDate(10);
+const sampleMeetingDate = futureDate(11);
+const sampleEventStart = futureDate(15);
+const sampleEventEnd = futureDate(16);
+
 export const SAMPLE_DECISIONS = [
   {
     id: 'demo-goal',
@@ -126,7 +137,7 @@ export const SAMPLE_DECISIONS = [
     completed: false,
     resolution: '',
     dateCompleted: '',
-    scheduled: '2025-07-10',
+    scheduled: sampleConferenceDate,
     parentGoalId: null,
     deadline: '',
     scheduledEnd: ''
@@ -157,7 +168,7 @@ export const SAMPLE_DECISIONS = [
     resolution: '',
     dateCompleted: '',
     parentGoalId: null,
-    scheduled: '2025-07-11',
+    scheduled: sampleMeetingDate,
     scheduledEnd: ''
   },
   {
@@ -240,8 +251,8 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     parentGoalId: null,
     deadline: '',
-    scheduled: '2025-07-15',
-    scheduledEnd: '2025-07-16'
+    scheduled: sampleEventStart,
+    scheduledEnd: sampleEventEnd
   },
   {
     id: 'demo-goal-6a',
