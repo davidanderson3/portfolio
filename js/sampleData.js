@@ -503,6 +503,93 @@ export const SAMPLE_LISTS = [
       { Item: 'Socks', Packed: false },
       { Item: 'Sunglasses', Packed: false }
     ]
+  },
+  {
+    name: 'Workout Routine',
+    columns: [
+      { name: 'Exercise', type: 'text' },
+      { name: 'Sets', type: 'number' },
+      { name: 'Reps', type: 'number' }
+    ],
+    items: [
+      { Exercise: 'Push-ups', Sets: '3', Reps: '15' },
+      { Exercise: 'Squats', Sets: '3', Reps: '20' },
+      { Exercise: 'Lunges', Sets: '3', Reps: '12' },
+      { Exercise: 'Plank', Sets: '3', Reps: '60' },
+      { Exercise: 'Burpees', Sets: '3', Reps: '10' },
+      { Exercise: 'Mountain Climbers', Sets: '3', Reps: '30' },
+      { Exercise: 'Sit-ups', Sets: '3', Reps: '20' },
+      { Exercise: 'Jumping Jacks', Sets: '3', Reps: '25' }
+    ]
+  },
+  {
+    name: 'Weekly Meal Prep',
+    columns: [
+      { name: 'Day', type: 'text' },
+      { name: 'Meal', type: 'text' }
+    ],
+    items: [
+      { Day: 'Monday', Meal: 'Grilled chicken salad' },
+      { Day: 'Tuesday', Meal: 'Veggie stir-fry' },
+      { Day: 'Wednesday', Meal: 'Spaghetti bolognese' },
+      { Day: 'Thursday', Meal: 'Fish tacos' },
+      { Day: 'Friday', Meal: 'Pizza night' },
+      { Day: 'Saturday', Meal: 'BBQ burgers' },
+      { Day: 'Sunday', Meal: 'Roast beef' },
+      { Day: 'Snack', Meal: 'Fruit & yogurt' }
+    ]
+  },
+  {
+    name: 'Project Tasks',
+    columns: [
+      { name: 'Task', type: 'text' },
+      { name: 'Due', type: 'date' },
+      { name: 'Done', type: 'checkbox' }
+    ],
+    items: [
+      { Task: 'Design mockups', Due: '2024-07-01', Done: false },
+      { Task: 'Write documentation', Due: '2024-07-05', Done: false },
+      { Task: 'Setup CI pipeline', Due: '2024-07-07', Done: true },
+      { Task: 'Implement authentication', Due: '2024-07-10', Done: false },
+      { Task: 'Create unit tests', Due: '2024-07-12', Done: false },
+      { Task: 'Optimize database', Due: '2024-07-15', Done: false },
+      { Task: 'Deploy to staging', Due: '2024-07-18', Done: false },
+      { Task: 'Code review', Due: '2024-07-20', Done: false }
+    ]
+  },
+  {
+    name: 'Languages to Learn',
+    columns: [
+      { name: 'Language', type: 'text' },
+      { name: 'Level', type: 'text' }
+    ],
+    items: [
+      { Language: 'Spanish', Level: 'Beginner' },
+      { Language: 'French', Level: 'Beginner' },
+      { Language: 'German', Level: 'Beginner' },
+      { Language: 'Japanese', Level: 'Beginner' },
+      { Language: 'Mandarin', Level: 'Beginner' },
+      { Language: 'Italian', Level: 'Beginner' },
+      { Language: 'Russian', Level: 'Beginner' },
+      { Language: 'Portuguese', Level: 'Beginner' }
+    ]
+  },
+  {
+    name: 'Wishlist',
+    columns: [
+      { name: 'Item', type: 'text' },
+      { name: 'Price', type: 'number' }
+    ],
+    items: [
+      { Item: 'Laptop', Price: '1200' },
+      { Item: 'Headphones', Price: '200' },
+      { Item: 'Smartwatch', Price: '250' },
+      { Item: 'Camera', Price: '800' },
+      { Item: 'Electric Scooter', Price: '500' },
+      { Item: 'Coffee Maker', Price: '100' },
+      { Item: 'Bookshelf', Price: '150' },
+      { Item: 'Gaming Chair', Price: '300' }
+    ]
   }
 ];
 
