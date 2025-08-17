@@ -11,14 +11,24 @@ import { appendGoalToDOM } from './goals.js';
 
 const BASE_KEY = 'travelData';
 
+function storageKeyForUser(uid) {
+  return uid ? `${BASE_KEY}-${uid}` : BASE_KEY;
+}
+
 function storageKey() {
   const user = getCurrentUser?.();
-  return user ? `${BASE_KEY}-${user.uid}` : BASE_KEY;
+  return storageKeyForUser(user?.uid);
 }
+
+let lastUserId = null;
 
 auth.onAuthStateChanged(user => {
   mapInitialized = false;
   travelData = [];
+  if (lastUserId && lastUserId !== user?.uid) {
+    localStorage.removeItem(storageKeyForUser(lastUserId));
+  }
+  lastUserId = user ? user.uid : null;
   if (!user) {
     localStorage.removeItem(BASE_KEY);
   }
@@ -162,35 +172,18 @@ export async function initTravelPanel() {
     });
   });
 
+  let initialRemoteLoadComplete = false;
+  let pendingAdds = [];
+  let pendingUpdates = [];
+  let pendingDeletes = [];
+
   const user = getCurrentUser?.();
-  let cached = null;
-  if (user) {
-    cached = localStorage.getItem(storageKey());
-  }
-  travelData = cached ? JSON.parse(cached) : [];
-  if (travelData.length === 0) {
-    if (user) {
-      try {
-        const snap = await db
-          .collection('users')
-          .doc(user.uid)
-          .collection('travel')
-          .get();
-        travelData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      } catch (err) {
-        console.error('Failed to load travel data', err);
-      }
-    } else {
-      travelData = getRandomPlaces();
-    }
-  }
+  const cached = user ? localStorage.getItem(storageKey()) : null;
+  travelData = cached ? JSON.parse(cached) : user ? [] : getRandomPlaces();
   travelData.forEach(p => {
     ensureDefaultTag(p);
     applyVisitedFlag(p);
   });
-  if (user) {
-    localStorage.setItem(storageKey(), JSON.stringify(travelData));
-  }
 
   allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
 
@@ -457,16 +450,21 @@ export async function initTravelPanel() {
           const user = getCurrentUser?.();
           if (user) {
             localStorage.setItem(storageKey(), JSON.stringify(travelData));
-            try {
-              if (p.id)
-                await db
-                  .collection('users')
-                  .doc(user.uid)
-                  .collection('travel')
-                  .doc(p.id)
-                  .set(p, { merge: true });
-            } catch (err) {
-              console.error('Failed to update place', err);
+            if (p.id) {
+              if (initialRemoteLoadComplete) {
+                try {
+                  await db
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('travel')
+                    .doc(p.id)
+                    .set(p, { merge: true });
+                } catch (err) {
+                  console.error('Failed to update place', err);
+                }
+              } else {
+                pendingUpdates.push({ id: p.id, data: JSON.parse(JSON.stringify(p)) });
+              }
             }
           }
           allTags = Array.from(new Set(travelData.flatMap(pl => pl.tags || []))).sort();
@@ -497,21 +495,7 @@ export async function initTravelPanel() {
       delBtn.addEventListener('click', async e => {
         e.stopPropagation();
         if (!confirm('Delete this place?')) return;
-        const user = getCurrentUser?.();
-        if (user && p.id) {
-          try {
-            await db.collection('users').doc(user.uid).collection('travel').doc(p.id).delete();
-          } catch (err) {
-            console.error('Failed to delete place', err);
-          }
-        }
-        travelData.splice(travelData.indexOf(p), 1);
-        if (user) {
-          localStorage.setItem(storageKey(), JSON.stringify(travelData));
-        }
-        allTags = Array.from(new Set(travelData.flatMap(pl => pl.tags || []))).sort();
-        renderTagFilters();
-        renderList(currentSearch);
+        await deletePlace(p);
       });
       actionsTd.append(delBtn);
 
@@ -560,24 +544,101 @@ export async function initTravelPanel() {
     if (placeInput) placeInput.value = '';
     clearSearchResults();
   });
+
+  async function flushPendingOperations() {
+    const user = getCurrentUser?.();
+    if (!initialRemoteLoadComplete || !user) return;
+    for (const place of pendingAdds) {
+      try {
+        const docRef = await db
+          .collection('users')
+          .doc(user.uid)
+          .collection('travel')
+          .add(place);
+        place.id = docRef.id;
+      } catch (err) {
+        console.error('Failed to save place to Firestore', err);
+      }
+    }
+    pendingAdds = [];
+    for (const { id, data } of pendingUpdates) {
+      try {
+        await db
+          .collection('users')
+          .doc(user.uid)
+          .collection('travel')
+          .doc(id)
+          .set(data, { merge: true });
+      } catch (err) {
+        console.error('Failed to update place', err);
+      }
+    }
+    pendingUpdates = [];
+    for (const id of pendingDeletes) {
+      try {
+        await db
+          .collection('users')
+          .doc(user.uid)
+          .collection('travel')
+          .doc(id)
+          .delete();
+      } catch (err) {
+        console.error('Failed to delete place', err);
+      }
+    }
+    pendingDeletes = [];
+  }
+
   async function storePlace(place) {
     ensureDefaultTag(place);
     applyVisitedFlag(place);
-    try {
-      const user = getCurrentUser?.();
-      if (user) {
-        const docRef = await db.collection("users").doc(user.uid).collection("travel").add(place);
-        place.id = docRef.id;
-      }
-    } catch (err) {
-      console.error("Failed to save place to Firestore", err);
-    }
+    const user = getCurrentUser?.();
     travelData.push(place);
-    const currentUser = getCurrentUser?.();
-    if (currentUser) {
+    if (user) {
       localStorage.setItem(storageKey(), JSON.stringify(travelData));
+      if (initialRemoteLoadComplete) {
+        try {
+          const docRef = await db
+            .collection('users')
+            .doc(user.uid)
+            .collection('travel')
+            .add(place);
+          place.id = docRef.id;
+        } catch (err) {
+          console.error('Failed to save place to Firestore', err);
+        }
+      } else {
+        pendingAdds.push(place);
+      }
     }
     allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
+    renderTagFilters();
+    renderList(currentSearch);
+  }
+
+  async function deletePlace(p) {
+    const user = getCurrentUser?.();
+    if (user && p.id) {
+      if (initialRemoteLoadComplete) {
+        try {
+          await db
+            .collection('users')
+            .doc(user.uid)
+            .collection('travel')
+            .doc(p.id)
+            .delete();
+        } catch (err) {
+          console.error('Failed to delete place', err);
+        }
+      } else {
+        pendingDeletes.push(p.id);
+      }
+    }
+    travelData.splice(travelData.indexOf(p), 1);
+    if (user) {
+      localStorage.setItem(storageKey(), JSON.stringify(travelData));
+    }
+    allTags = Array.from(new Set(travelData.flatMap(pl => pl.tags || []))).sort();
     renderTagFilters();
     renderList(currentSearch);
   }
@@ -617,22 +678,35 @@ export async function initTravelPanel() {
       .doc(user.uid)
       .collection('travel')
       .onSnapshot(
+        { includeMetadataChanges: true },
         snap => {
-          travelData = snap.docs.map(doc => {
-            const data = { id: doc.id, ...doc.data() };
-            ensureDefaultTag(data);
-            applyVisitedFlag(data);
-            return data;
+          const fromServer = !snap.metadata.fromCache;
+          const data = snap.docs.map(doc => {
+            const d = { id: doc.id, ...doc.data() };
+            ensureDefaultTag(d);
+            applyVisitedFlag(d);
+            return d;
           });
-          localStorage.setItem(storageKey(), JSON.stringify(travelData));
-          allTags = Array.from(new Set(travelData.flatMap(p => p.tags || []))).sort();
-          renderTagFilters();
-          renderList(currentSearch);
+          if (fromServer || travelData.length === 0) {
+            travelData = data;
+            localStorage.setItem(storageKey(), JSON.stringify(travelData));
+            allTags = Array.from(
+              new Set(travelData.flatMap(p => p.tags || []))
+            ).sort();
+            renderTagFilters();
+            renderList(currentSearch);
+          }
+          if (fromServer && !initialRemoteLoadComplete) {
+            initialRemoteLoadComplete = true;
+            flushPendingOperations();
+          }
         },
         err => {
           console.error('Failed to sync travel data', err);
         }
       );
+  } else {
+    initialRemoteLoadComplete = true;
   }
 
 
