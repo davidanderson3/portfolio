@@ -1447,20 +1447,20 @@ h2 {
 }
 
 #travelTagFilters {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  gap: 4px;
-  max-height: 360px;
   flex: 1 1 33%;
+  column-count: 3;
+  column-gap: 4px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .rain-percent {
   color: blue;
 }
 
-#travelTagFilters label {
-  margin-right: 8px;
+#travelTagFilters button {
+  width: 100%;
+  margin-bottom: 4px;
   white-space: nowrap;
 }
 
