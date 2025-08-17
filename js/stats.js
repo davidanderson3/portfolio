@@ -441,7 +441,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
   // header row
-  ['Metric', `Value (${dayKey})`, 'Rank', 'Percentile', 'Average', 'Status', 'Actions'].forEach(text => {
+  ['Metric', 'Value', 'Rank', 'Percentile', 'Average', 'Status', 'Actions'].forEach(text => {
     const th = document.createElement('th');
     th.textContent = text;
     Object.assign(th.style, { borderBottom: '2px solid #444', textAlign: 'left', padding: '8px' });
@@ -518,7 +518,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     // inside renderStatsSummary(), in the Today’s Value cell:
     const td2 = document.createElement('td');
     Object.assign(td2.style, { padding: '8px', borderBottom: '1px solid #ddd' });
-    td2.dataset.label = `Value (${dayKey})`;
+    td2.dataset.label = 'Value';
     const span = document.createElement('span');
     span.textContent = `${display} ${cfg.unitLabel}`;
     if (cfg.unit === 'list' && editValue) span.title = editValue;
