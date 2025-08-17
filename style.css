@@ -913,7 +913,7 @@ button:hover {
 
 .settings-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
   margin: 16px 0;
 }
@@ -922,6 +922,23 @@ button:hover {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 4px 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.settings-option button {
+  margin: 0;
+  padding: 2px 6px;
+  background: transparent;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #333;
+}
+
+.settings-option button:hover {
+  background: #e0e0e0;
 }
 
 .settings-option input[type="checkbox"] {
