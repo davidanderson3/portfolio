@@ -20,7 +20,7 @@ describe('sample data immutability', () => {
     expect(() => {
       SAMPLE_LISTS[0].items.push({ Title: 'https://example.com', Title_label: 'Test', Author: 'Tester' });
     }).toThrow();
-    expect(SAMPLE_LISTS[0].items).toHaveLength(2);
+    expect(SAMPLE_LISTS[0].items).toHaveLength(3);
     expect(() => {
       SAMPLE_LISTS[0].items[0].Title_label = 'Changed';
     }).toThrow();
