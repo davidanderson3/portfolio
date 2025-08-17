@@ -115,10 +115,21 @@ function deepMerge(base = {}, override = {}) {
 export function clearPlanningCache() {
   planningCache = null;
   planningInitialized = false;
+  try {
+    localStorage.removeItem(PLANNING_KEY);
+  } catch (err) {
+    console.warn('Failed to clear planning data:', err);
+  }
 }
 
 export async function loadPlanningData() {
   const user = getCurrentUser?.();
+  if (!user) {
+    localStorage.removeItem(PLANNING_KEY);
+    planningCache = {};
+    return planningCache;
+  }
+
   let localData = {};
   const stored = localStorage.getItem(PLANNING_KEY);
   if (stored) {
@@ -127,11 +138,6 @@ export async function loadPlanningData() {
     } catch (err) {
       console.warn('Failed to parse stored planning data:', err);
     }
-  }
-
-  if (!user) {
-    planningCache = localData;
-    return planningCache;
   }
 
   let cloudData = {};
@@ -171,8 +177,11 @@ export async function savePlanningData(data) {
   planningCache = { ...(data || {}) };
   planningCache.lastUpdated = Date.now();
   const user = getCurrentUser?.();
+  if (!user) {
+    localStorage.removeItem(PLANNING_KEY);
+    return;
+  }
   localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
-  if (!user) return;
   try {
     await db
       .collection('users').doc(user.uid)
