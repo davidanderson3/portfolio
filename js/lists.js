@@ -4,7 +4,8 @@ import {
   loadDecisions,
   saveDecisions,
   generateId,
-  pickDate
+  pickDate,
+  makeIconBtn
 } from './helpers.js';
 import { appendGoalToDOM } from './goals.js';
 import { auth } from './auth.js';
@@ -551,11 +552,7 @@ async function initListsPanel() {
       actionCell.style.whiteSpace = 'nowrap';
 
       // Up button
-      const upBtn = document.createElement('button');
-      upBtn.textContent = '⬆️';
-      upBtn.title = 'Move up';
-      Object.assign(upBtn.style, { background: 'none', border: 'none', cursor: 'pointer' });
-      upBtn.addEventListener('click', async () => {
+      const upBtn = makeIconBtn('⬆️', 'Move up', async () => {
         if (rowIdx === 0) return; // already at top
         const itemsArr = listsArray[selectedListIndex].items;
         [itemsArr[rowIdx - 1], itemsArr[rowIdx]] = [itemsArr[rowIdx], itemsArr[rowIdx - 1]];
