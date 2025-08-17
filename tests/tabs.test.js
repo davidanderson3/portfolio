@@ -122,6 +122,31 @@ describe('initTabs persistence', () => {
     expect(active.dataset.target).toBe('dailyPanel');
     expect(window.initBackupsPanel).not.toHaveBeenCalled();
   });
+
+  it('ignores geolayersPanel as initial when signed out', async () => {
+    const dom = new JSDOM(`
+      <button class="tab-button" data-target="projectsPanel"></button>
+      <button class="tab-button" data-target="dailyPanel"></button>
+      <button class="tab-button" data-target="geolayersPanel"></button>
+      <div id="projectsPanel"></div>
+      <div id="dailyPanel"></div>
+      <div id="geolayersPanel"></div>
+    `, { url: 'http://localhost/' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+
+    global.localStorage = {
+      getItem: () => 'geolayersPanel',
+      setItem: () => {}
+    };
+
+    const mod = await import('../js/tabs.js');
+    await mod.initTabs(null, {});
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+
+    const active = document.querySelector('.tab-button.active');
+    expect(active.dataset.target).toBe('dailyPanel');
+  });
 });
 
 describe('routine tab behavior', () => {

@@ -361,8 +361,7 @@ window.addEventListener('DOMContentLoaded', () => {
     'listsPanel',
     'travelPanel',
     'planningPanel',
-    'budgetPanel',
-    'geolayersPanel'
+    'budgetPanel'
   ];
 
   function showOnlySignedOutTabs() {
