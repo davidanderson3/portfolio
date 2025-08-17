@@ -8,16 +8,25 @@ describe('initMoviesPanel', () => {
     const dom = new JSDOM('<div id="movieList"></div>');
     global.document = dom.window.document;
     global.window = dom.window;
+    window.tmdbApiKey = 'TEST_KEY';
   });
 
-  it('renders movie titles with review info from external API', async () => {
-    const csv = 'movie_title,title_year,imdb_score,num_critic_for_reviews,num_user_for_reviews\n' +
-                'Sample Movie,2024,7.5,10,5';
+  it('renders movie titles with review info from TMDB', async () => {
+    const apiData = {
+      results: [
+        {
+          title: 'Sample Movie',
+          release_date: '2024-01-01',
+          vote_average: 7.5,
+          vote_count: 5
+        }
+      ]
+    };
 
     global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
-        text: () => Promise.resolve(csv)
+        json: () => Promise.resolve(apiData)
       })
     );
 
@@ -25,7 +34,8 @@ describe('initMoviesPanel', () => {
 
     const item = document.querySelector('#movieList li');
     expect(item.textContent).toContain('Sample Movie');
-    expect(item.textContent).toContain('IMDB score: 7.5');
-    expect(fetch).toHaveBeenCalledWith('https://raw.githubusercontent.com/sundeepblue/movie_rating_prediction/master/movie_metadata.csv');
+    expect(item.textContent).toContain('TMDB score: 7.5');
+    expect(fetch).toHaveBeenCalledWith('https://api.themoviedb.org/3/trending/movie/week?api_key=TEST_KEY');
   });
 });
+
