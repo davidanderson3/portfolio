@@ -28,6 +28,9 @@ The Planning tab models long-term finances. Enter current savings, income, annua
 ### Budget
 Budget breaks down monthly income into recurring expenses and subscriptions. It estimates federal taxes, calculates net pay, and shows what remains after bills. Categories are customizable so the plan can reflect your real spending.
 
+### Shows
+Shows lists upcoming concerts using the Bandsintown API. Enter an artist name and an App ID, then press **Load Shows** to fetch events. The App ID can be any unique string that identifies your application (for example, your website or email) and is required by Bandsintown for analytics. The tab requests `https://rest.bandsintown.com/artists/{artist}/events?app_id={your-app-id}` and displays the returned events with links. See the [Bandsintown API documentation](https://artists.bandsintown.com/support/bandsintown-api) for more details.
+
 ### Contacts
 Contacts is a lightweight list of people you want to stay in touch with. Each person stores desired frequencies (in days) for reaching out, having a meaningful conversation, or meeting in person. Logging an interaction records the date and optional notes.
 
