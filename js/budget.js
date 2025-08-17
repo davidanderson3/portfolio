@@ -191,8 +191,8 @@ export async function initBudgetPanel() {
           <div class="section-title">Subscriptions</div>
           <div id="subsContainerB" class="subscriptions-list"></div>
         </form>
-        <div id="budgetSummaryB" class="budget-summary"></div>
       </div>
+      <div id="budgetSummaryB" class="budget-summary"></div>
     </div>
     <button type="button" id="addCategoryBtn">+ Add Category</button>
   `;
