@@ -13,7 +13,7 @@ vi.mock('../js/auth.js', () => ({
   db: { collection: (...args) => collectionMock(...args) }
 }));
 
-currentUser = null;
+currentUser = { uid: 'u1' };
 setMock = vi.fn();
 getMock = vi.fn(() => ({ docs: [] }));
 docMock = vi.fn(() => ({ collection: collectionMock, doc: docMock, get: getMock, set: setMock }));
@@ -32,7 +32,7 @@ const storage = (() => {
 global.localStorage = storage;
 
 describe('planning UI persistence', () => {
-  it('restores saved values after reload and auth change', async () => {
+  it('clears saved values after sign out', async () => {
     let dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
     global.window = dom.window;
     global.document = dom.window.document;
@@ -68,7 +68,8 @@ describe('planning UI persistence', () => {
     expect(saved.finance.postYears).toBe(20);
 
     mod1.clearPlanningCache();
-    currentUser = { uid: 'u1' };
+    expect(localStorage.getItem('planningData')).toBeNull();
+    currentUser = { uid: 'u2' };
 
     dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
     global.window = dom.window;
@@ -90,18 +91,18 @@ describe('planning UI persistence', () => {
     const raise2 = document.querySelector('#planningForm input[name="annualRaise"]').value;
     const wd2 = document.querySelector('#planningForm input[name="withdrawalRate"]').value;
     const post2 = document.querySelector('#planningForm input[name="postYears"]').value;
-    expect(age2).toBe('30');
-    expect(estate2).toBe('100000');
-    expect(checking2).toBe('2500');
-    expect(annual2).toBe('5000');
-    expect(raise2).toBe('5');
-    expect(wd2).toBe('6');
-    expect(post2).toBe('20');
+    expect(age2).toBe('');
+    expect(estate2).toBe('');
+    expect(checking2).toBe('');
+    expect(annual2).toBe('');
+    expect(raise2).toBe('');
+    expect(wd2).toBe('4');
+    expect(post2).toBe('30');
   });
 
   it('records only one snapshot per day and updates balance', async () => {
     vi.resetModules();
-    currentUser = null;
+    currentUser = { uid: 'u1' };
     const dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
     global.window = dom.window;
     global.document = dom.window.document;
@@ -141,7 +142,7 @@ describe('planning UI persistence', () => {
 
   it('records a new snapshot on a new day', async () => {
     vi.resetModules();
-    currentUser = null;
+    currentUser = { uid: 'u1' };
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2023-01-01T10:00:00Z'));
 
@@ -183,7 +184,7 @@ describe('planning UI persistence', () => {
 
   it('skips snapshot when fields are incomplete', async () => {
     vi.resetModules();
-    currentUser = null;
+    currentUser = { uid: 'u1' };
     const dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
     global.window = dom.window;
     global.document = dom.window.document;
@@ -216,7 +217,7 @@ describe('planning UI persistence', () => {
 
   it('removes snapshots without a timestamp', async () => {
     vi.resetModules();
-    currentUser = null;
+    currentUser = { uid: 'u1' };
     const dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
     global.window = dom.window;
     global.document = dom.window.document;

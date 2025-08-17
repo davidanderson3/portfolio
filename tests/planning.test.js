@@ -209,15 +209,13 @@ describe('planning persistence', () => {
     expect(setMock).toHaveBeenCalledWith(saved, { merge: true });
   });
 
-  it('uses localStorage when anonymous', async () => {
+  it('does not persist data when anonymous', async () => {
     vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {}, auth: { onAuthStateChanged: vi.fn() } }));
     const { savePlanningData, loadPlanningData } = await import('../js/planning.js');
     await savePlanningData({ finance: { curAge: '25' } });
-    const stored = JSON.parse(localStorage.getItem('planningData'));
-    expect(stored.finance.curAge).toBe('25');
-    expect(typeof stored.lastUpdated).toBe('number');
+    expect(localStorage.getItem('planningData')).toBeNull();
     const data = await loadPlanningData();
-    expect(data.finance.curAge).toBe('25');
+    expect(data).toEqual({});
   });
 
   it('prefers newer data source when merging', async () => {
