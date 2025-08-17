@@ -11,16 +11,51 @@ export async function initMoviesPanel() {
       return;
     }
 
+    // Sort movies by year (most recent first) and take the first 100
+    const recent = movies
+      .filter(m => typeof m.year === 'number')
+      .sort((a, b) => b.year - a.year)
+      .slice(0, 100);
+
     const ul = document.createElement('ul');
-    movies.slice(0, 10).forEach(m => {
+    recent.forEach(m => {
       const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.textContent = `${m.title}${m.year ? ` (${m.year})` : ''}`;
-      if (m.href) {
-        a.href = m.href;
-        a.target = '_blank';
+
+      // Title with optional link
+      if (m.title) {
+        const titleEl = document.createElement('strong');
+        if (m.href) {
+          const a = document.createElement('a');
+          a.textContent = `${m.title} (${m.year})`;
+          a.href = m.href;
+          a.target = '_blank';
+          titleEl.appendChild(a);
+        } else {
+          titleEl.textContent = `${m.title} (${m.year})`;
+        }
+        li.appendChild(titleEl);
       }
-      li.appendChild(a);
+
+      // Display all metadata fields
+      const metaList = document.createElement('ul');
+      for (const [key, value] of Object.entries(m)) {
+        if (key === 'title') continue; // title already shown
+        const metaItem = document.createElement('li');
+        if (key === 'href' && value) {
+          const a = document.createElement('a');
+          a.href = value;
+          a.target = '_blank';
+          a.textContent = value;
+          metaItem.append(`${key}: `);
+          metaItem.appendChild(a);
+        } else {
+          const text = Array.isArray(value) ? value.join(', ') : value;
+          metaItem.textContent = `${key}: ${text}`;
+        }
+        metaList.appendChild(metaItem);
+      }
+      li.appendChild(metaList);
+
       ul.appendChild(li);
     });
 
