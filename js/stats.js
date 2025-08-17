@@ -48,14 +48,11 @@ function shiftSampleMetricData(data) {
   return shifted;
 }
 
-async function ensureMoodConfig() {
+async function ensureDefaultMetrics() {
   const user = getCurrentUser();
   if (!user) {
     const stored = JSON.parse(localStorage.getItem(METRICS_KEY) || 'null');
     let updated = Array.isArray(stored) && stored.length ? stored : SAMPLE_METRICS.slice();
-    if (!updated.find(m => m.id === 'mood')) {
-      updated = [{ id: 'mood', label: 'Mood Rating', unit: 'rating', direction: 'higher' }, ...updated];
-    }
     if (!updated.find(m => m.id === 'count')) {
       updated = [...updated, { id: 'count', label: 'Count', unit: 'count', direction: 'higher' }];
     }
@@ -68,9 +65,6 @@ async function ensureMoodConfig() {
   const snap = await docRef.get();
   const current = snap.exists ? snap.data().metrics || [] : [];
   let updated = current;
-  if (!updated.find(m => m.id === 'mood')) {
-    updated = [{ id: 'mood', label: 'Mood Rating', unit: 'rating', direction: 'higher' }, ...updated];
-  }
   if (!updated.find(m => m.id === 'count')) {
     updated = [...updated, { id: 'count', label: 'Count', unit: 'count', direction: 'higher' }];
   }
@@ -762,15 +756,13 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     configEdit.style.marginLeft = '8px';
     tdActions.appendChild(configEdit);
 
-    if (cfg.id !== 'mood') {
-      const del = makeIconBtn('❌', 'Delete metric', async () => {
-        await saveMetricsConfig((await loadMetricsConfig()).filter(m => m.id !== cfg.id));
-        await renderConfigForm();
-        await renderStatsSummary();
-      });
-      del.style.marginLeft = '8px';
-      tdActions.appendChild(del);
-    }
+    const del = makeIconBtn('❌', 'Delete metric', async () => {
+      await saveMetricsConfig((await loadMetricsConfig()).filter(m => m.id !== cfg.id));
+      await renderConfigForm();
+      await renderStatsSummary();
+    });
+    del.style.marginLeft = '8px';
+    tdActions.appendChild(del);
 
     row.appendChild(tdActions);
 
@@ -788,7 +780,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
 
 async function renderConfigForm() {
   let config = await loadMetricsConfig();
-  config = await ensureMoodConfig();
+  config = await ensureDefaultMetrics();
   config.forEach(m => { if (!('direction' in m)) m.direction = 'higher'; applyUnitLabels(m); });
 
   const section = document.getElementById('metricsConfigSection');
@@ -861,7 +853,7 @@ export async function initMetricsUI() {
     next.addEventListener('click', () => changeMetricsDate(1));
     next.dataset.bound = '1';
   }
-  await ensureMoodConfig();
+  await ensureDefaultMetrics();
   await renderStatsSummary();
   await renderConfigForm();
 }
