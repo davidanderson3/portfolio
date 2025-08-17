@@ -3,16 +3,20 @@ export async function initRecipesPanel() {
   if (!listEl) return;
   const queryInput = document.getElementById('recipesQuery');
   const apiKeyInput = document.getElementById('recipesApiKey');
+  const apiKeyContainer = document.getElementById('recipesApiKeyContainer');
   const loadBtn = document.getElementById('recipesLoadBtn');
 
   const savedQuery = localStorage.getItem('recipesQuery') || '';
   const savedApiKey = localStorage.getItem('recipesApiKey') || '';
   if (queryInput) queryInput.value = savedQuery;
   if (apiKeyInput) apiKeyInput.value = savedApiKey;
+  if (savedApiKey && apiKeyContainer) apiKeyContainer.style.display = 'none';
+
+  let currentApiKey = savedApiKey;
 
   const loadRecipes = async () => {
     const query = queryInput?.value.trim();
-    const apiKey = apiKeyInput?.value.trim();
+    const apiKey = currentApiKey || apiKeyInput?.value.trim();
     if (!query || !apiKey) {
       listEl.textContent = 'Please enter search and API key.';
       return;
@@ -49,7 +53,11 @@ export async function initRecipesPanel() {
       listEl.innerHTML = '';
       listEl.appendChild(ul);
       localStorage.setItem('recipesQuery', query);
-      localStorage.setItem('recipesApiKey', apiKey);
+      if (!currentApiKey) {
+        currentApiKey = apiKey;
+        localStorage.setItem('recipesApiKey', apiKey);
+        if (apiKeyContainer) apiKeyContainer.style.display = 'none';
+      }
     } catch (err) {
       console.error('Failed to load recipes', err);
       listEl.textContent = 'Failed to load recipes.';
