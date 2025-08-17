@@ -143,6 +143,7 @@ export async function loadPlanningData({ recoverLocal = false } = {}) {
   } catch (err) {
     console.error('Failed to fetch planning data:', err);
   }
+  const hasCloudData = Object.keys(cloudData).length > 0;
 
   planningCache = cloudData || {};
   if (!planningCache.lastUpdated) {
@@ -159,6 +160,13 @@ export async function loadPlanningData({ recoverLocal = false } = {}) {
     } catch (err) {
       console.warn('Failed to parse stored planning data:', err);
     }
+  }
+
+  if (!hasCloudData && Object.keys(localData).length) {
+    planningCache = { ...localData };
+    planningCache.lastUpdated = planningCache.lastUpdated || Date.now();
+    localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
+    return planningCache;
   }
 
   const localTs = localData.lastUpdated || 0;
@@ -257,6 +265,7 @@ export async function initPlanningPanel() {
       return acc;
     }, {});
   currentData.history = Object.values(currentData.history);
+  localStorage.setItem(PLANNING_KEY, JSON.stringify(currentData));
 
   const container = document.getElementById('planningContainer');
   container.innerHTML = `

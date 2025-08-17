@@ -4,7 +4,12 @@ const fs = require('fs');
 const { execFile } = require('child_process');
 const util = require('util');
 const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
-const nodemailer = require('nodemailer');
+let nodemailer;
+try {
+  nodemailer = require('nodemailer');
+} catch {
+  nodemailer = null;
+}
 
 const execFileAsync = util.promisify(execFile);
 const app = express();
@@ -12,7 +17,7 @@ const PORT = 3002;
 
 const CONTACT_EMAIL = Buffer.from('ZHZkbmRyc25AZ21haWwuY29t', 'base64').toString('utf8');
 const mailer = (() => {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
+  if (!nodemailer || !process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),

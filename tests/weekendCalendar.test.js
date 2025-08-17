@@ -74,8 +74,8 @@ describe('weekend calendar display', () => {
   it('shows weekend days with year and days until', async () => {
     await renderGoalsAndSubitems();
     const hdr = document.querySelector('.weekend-section h3');
-    const sat = new Date('2025-08-23');
-    const sun = new Date('2025-08-24');
+    const sat = new Date(2025, 7, 23);
+    const sun = new Date(2025, 7, 24);
     const satLabel = sat.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
     const sunLabel = sun.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
     const satDays = helpers.formatDaysUntil('2025-08-23');
