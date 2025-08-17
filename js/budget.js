@@ -245,13 +245,13 @@ export async function initBudgetPanel() {
     addSubscriptionRow(subsContainerB, name, costB, id);
   }
 
-  function addRecurRow(container, name = '', cost = '', fixed = false, key = '', id) {
+  function addRecurRow(container, name = '', cost = '', key = '', id) {
     const row = document.createElement('div');
     row.className = 'recurring-row';
     if (id) row.dataset.id = id;
     if (key) row.dataset.field = key;
     row.innerHTML = `
-      <input type="text" class="recur-name" placeholder="Name" value="${name}" ${fixed ? 'readonly' : ''}>
+      <span class="recur-name">${name}</span>
       <input type="number" class="recur-cost" value="${cost}">
       <span class="item-diff"></span>
     `;
@@ -267,22 +267,14 @@ export async function initBudgetPanel() {
       });
       render();
     });
-    const nameEl = row.querySelector('.recur-name');
-    if (!fixed) {
-      nameEl.addEventListener('input', () => {
-        panel.querySelectorAll(`.recurring-row[data-id="${id}"] .recur-name`).forEach(el => {
-          if (el !== nameEl) el.value = nameEl.value;
-        });
-      });
-    }
     row.append(up, rem);
     container.append(row);
   }
 
-  function addRecurRowPair(name = '', costA = '', costB = '', fixed = false, key = '') {
+  function addRecurRowPair(name = '', costA = '', costB = '', key = '') {
     const id = key || Math.random().toString(36).slice(2);
-    addRecurRow(recurContainerA, name, costA, fixed, key, id);
-    addRecurRow(recurContainerB, name, costB, fixed, key, id);
+    addRecurRow(recurContainerA, name, costA, key, id);
+    addRecurRow(recurContainerB, name, costB, key, id);
   }
 
   const subNames = new Set([
@@ -301,11 +293,17 @@ export async function initBudgetPanel() {
   ]);
   DEFAULT_RECURRING.forEach(([key, label]) => {
     if (!removedBuiltIns.has(key)) {
-      addRecurRowPair(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', true, key);
+      addRecurRowPair(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key);
     }
   });
   recurNames.forEach(n => addRecurRowPair(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? ''));
-  addCategoryBtn.addEventListener('click', () => { addRecurRowPair(); render(); });
+  addCategoryBtn.addEventListener('click', () => {
+    const name = typeof prompt === 'function' ? prompt('Category name?') : '';
+    if (name) {
+      addRecurRowPair(name);
+      render();
+    }
+  });
 
   function collectScenario(recurContainer, subsContainer, removedSet, options = {}) {
     const prefix = options.prefix || '';
@@ -317,7 +315,7 @@ export async function initBudgetPanel() {
     const saveData = { removedBuiltIns: Array.from(removedSet) };
     recurContainer.querySelectorAll('.recurring-row').forEach(row => {
       const nameEl = row.querySelector('.recur-name');
-      const n = nameEl.value.trim();
+      const n = nameEl.textContent.trim();
       const v = row.querySelector('.recur-cost').value;
       if (!n) return;
       categories[n] = v;
