@@ -1,4 +1,5 @@
-import { auth } from './auth.js';
+import { auth, db } from './auth.js';
+import { generateId } from './helpers.js';
 
 const DESC_KEY = 'showDescriptions';
 
@@ -20,16 +21,33 @@ export function setShowDescriptions(show) {
   } catch {}
 }
 
+function getSampleSessionId() {
+  const key = 'sampleSessionId';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = generateId();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
+export async function loadDescriptions() {
+  if (auth.currentUser) return {};
+  try {
+    const sessionId = getSampleSessionId();
+    const snap = await db.collection('sample').doc(sessionId).get();
+    return snap.data()?.descriptions || {};
+  } catch {
+    return {};
+  }
+}
+
 export async function initDescriptions() {
   const panelIds = Array.from(document.querySelectorAll('.tab-button'))
     .map(btn => btn.dataset.target)
     .filter(Boolean);
 
-  let saved = {};
-  try {
-    const res = await fetch('/api/descriptions');
-    if (res.ok) saved = await res.json();
-  } catch {}
+  const saved = await loadDescriptions();
 
   const descElems = [];
 
@@ -72,12 +90,13 @@ export async function initDescriptions() {
   updateVisibility(auth.currentUser);
 }
 
-async function saveDescription(panelId, position, text) {
+export async function saveDescription(panelId, position, text) {
+  if (auth.currentUser) return;
   try {
-    await fetch('/api/description', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ panelId, position, text })
-    });
+    const sessionId = getSampleSessionId();
+    await db
+      .collection('sample')
+      .doc(sessionId)
+      .set({ descriptions: { [panelId]: { [position]: text } } }, { merge: true });
   } catch {}
 }

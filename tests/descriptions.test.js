@@ -1,23 +1,25 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, vi } from 'vitest';
 import request from 'supertest';
-import fs from 'fs';
-import path from 'path';
 import server from '../backend/server.js';
 
-const file = path.join(process.cwd(), 'backend', 'descriptions.json');
-
-describe('description api', () => {
-  it('saves and loads descriptions', async () => {
-    const original = fs.readFileSync(file, 'utf8');
-    try {
-      await request(server)
-        .post('/api/description')
-        .send({ panelId: 'testPanel', position: 'top', text: 'hello' });
-      const res = await request(server).get('/api/descriptions');
-      expect(res.body.testPanel.top).toBe('hello');
-    } finally {
-      fs.writeFileSync(file, original);
-    }
+describe('sample descriptions', () => {
+  it('loads and saves via Firestore', async () => {
+    const setMock = vi.fn(() => Promise.resolve());
+    const getMock = vi.fn(() => Promise.resolve({ data: () => ({ descriptions: { panel1: { top: 'test' } } }) }));
+    vi.doMock('../js/auth.js', () => ({
+      auth: { currentUser: null, onAuthStateChanged: vi.fn() },
+      db: { collection: () => ({ doc: () => ({ set: setMock, get: getMock }) }) }
+    }));
+    vi.doMock('../js/helpers.js', () => ({ generateId: () => 'session1' }));
+    vi.stubGlobal('localStorage', {
+      getItem: () => 'session1',
+      setItem: vi.fn(),
+    });
+    const { loadDescriptions, saveDescription } = await import('../js/descriptions.js');
+    const loaded = await loadDescriptions();
+    expect(loaded).toEqual({ panel1: { top: 'test' } });
+    await saveDescription('panel1', 'top', 'hello');
+    expect(setMock).toHaveBeenCalledWith({ descriptions: { panel1: { top: 'hello' } } }, { merge: true });
   });
 });
 
