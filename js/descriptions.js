@@ -1,26 +1,6 @@
 import { auth, db } from './auth.js';
 import { generateId } from './helpers.js';
 
-const DESC_KEY = 'showDescriptions';
-
-export function getShowDescriptions() {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      const value = localStorage.getItem(DESC_KEY);
-      return value !== 'false';
-    }
-  } catch {}
-  return true;
-}
-
-export function setShowDescriptions(show) {
-  try {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(DESC_KEY, show ? 'true' : 'false');
-    }
-  } catch {}
-}
-
 function getSampleSessionId() {
   const key = 'sampleSessionId';
   let id = localStorage.getItem(key);
@@ -80,7 +60,7 @@ export async function initDescriptions() {
   });
 
   const updateVisibility = (user) => {
-    const show = !user && getShowDescriptions();
+    const show = !user;
     descElems.forEach(el => {
       el.style.display = show ? '' : 'none';
     });
