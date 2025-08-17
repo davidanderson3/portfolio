@@ -908,6 +908,16 @@ button:hover {
 }
 
 /* Settings page */
+.settings-back-link {
+  align-self: flex-start;
+  margin-bottom: 1em;
+  text-decoration: none;
+  color: #333;
+}
+
+.settings-back-link:hover {
+  text-decoration: underline;
+}
 .settings-container.main-layout {
   justify-content: flex-start;
   flex-direction: column;
