@@ -369,7 +369,9 @@ async function renderDailyTasksImpl(currentUser, db) {
         : period === 'weekly'
           ? weeklyContainer
           : monthlyContainer;
-    hiddenContainer.appendChild(makeTaskElement(task, period, target));
+    hiddenContainer.appendChild(
+      makeTaskElement(task, period, target, getCategoryLabel(task, period))
+    );
   });
 
   const completedTasks = [
@@ -384,7 +386,9 @@ async function renderDailyTasksImpl(currentUser, db) {
         : period === 'weekly'
           ? weeklyContainer
           : monthlyContainer;
-    completedContainer.appendChild(makeTaskElement(task, period, target));
+    completedContainer.appendChild(
+      makeTaskElement(task, period, target, getCategoryLabel(task, period))
+    );
   });
 
   // Remove any duplicate task elements by ID
@@ -438,7 +442,21 @@ async function renderDailyTasksImpl(currentUser, db) {
     return Math.max(diff - 1, 0);
   }
 
-  function makeTaskElement(task, period = 'daily', listElOverride) {
+  function getCategoryLabel(task, period) {
+    if (period === 'daily') {
+      const map = {
+        firstThing: 'First Thing',
+        morning: 'Morning',
+        afternoon: 'Afternoon',
+        evening: 'Evening',
+        endOfDay: 'End of Day'
+      };
+      return map[task.timeOfDay || 'morning'] || 'Daily';
+    }
+    return period.charAt(0).toUpperCase() + period.slice(1);
+  }
+
+  function makeTaskElement(task, period = 'daily', listElOverride, categoryLabel) {
     const config = {
       daily: { set: doneDaily, key: todayKey, container: container },
       weekly: { set: doneWeekly, key: weekKey, container: weeklyContainer },
@@ -496,6 +514,12 @@ async function renderDailyTasksImpl(currentUser, db) {
     const titleSpan = document.createElement('div');
     titleSpan.style.overflowWrap = 'anywhere';
     titleSpan.innerHTML = linkify(task.text);
+    if (categoryLabel) {
+      const catSpan = document.createElement('span');
+      catSpan.className = 'task-category';
+      catSpan.textContent = ` (${categoryLabel})`;
+      titleSpan.appendChild(catSpan);
+    }
     label.appendChild(titleSpan);
     if (task.notes) {
       const noteSpan = document.createElement('div');
