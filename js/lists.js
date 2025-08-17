@@ -188,7 +188,7 @@ async function initListsPanel() {
   addColumnBtnForList.type = 'button';
   addColumnBtnForList.id = 'addColumnToListBtn';
   addColumnBtnForList.textContent = '+ Add Column';
-  addColumnBtnForList.style.alignSelf = 'flex-start';
+  addColumnBtnForList.style.alignSelf = 'flex-end';
   addColumnBtnForList.style.margin = '0.5rem 0';
 
   // ─── 4) Append scaffolding (button will go just after listsContainer) ───
@@ -908,7 +908,7 @@ function openRowEditor(rowIdx) {
     // add‐column
     const addColBtn = document.createElement('button');
     addColBtn.textContent = '+ Add Column';
-    Object.assign(addColBtn.style, { display: 'block', margin: '0.5rem 0' });
+    Object.assign(addColBtn.style, { display: 'block', margin: '0.5rem 0 0.5rem auto' });
     addColBtn.addEventListener('click', () => {
       const nm = prompt('New column name:');
       if (!nm) return;
