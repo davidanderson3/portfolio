@@ -277,7 +277,7 @@ describe('budget panel', () => {
     expect(summaryB).not.toContain('Rent After Escrow');
   });
 
-  it('places goal summary outside the goal section', async () => {
+  it('shows summaries inside their respective sections', async () => {
     getMock.mockResolvedValue({ exists: false });
 
     const dom = new JSDOM('<div id="budgetContainer"></div>');
@@ -288,8 +288,11 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
+    const scenarioA = document.getElementById('scenarioA');
+    const summaryA = document.getElementById('budgetSummaryA');
     const scenarioB = document.getElementById('scenarioB');
     const summaryB = document.getElementById('budgetSummaryB');
-    expect(scenarioB.contains(summaryB)).toBe(false);
+    expect(scenarioA.contains(summaryA)).toBe(true);
+    expect(scenarioB.contains(summaryB)).toBe(true);
   });
 });
