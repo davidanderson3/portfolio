@@ -1,3 +1,5 @@
+import { auth } from './auth.js';
+
 const DESC_KEY = 'showDescriptions';
 
 export function getShowDescriptions() {
@@ -19,7 +21,6 @@ export function setShowDescriptions(show) {
 }
 
 export async function initDescriptions() {
-  const show = getShowDescriptions();
   const panelIds = Array.from(document.querySelectorAll('.tab-button'))
     .map(btn => btn.dataset.target)
     .filter(Boolean);
@@ -29,6 +30,8 @@ export async function initDescriptions() {
     const res = await fetch('/api/descriptions');
     if (res.ok) saved = await res.json();
   } catch {}
+
+  const descElems = [];
 
   panelIds.forEach(id => {
     const panel = document.getElementById(id);
@@ -40,21 +43,33 @@ export async function initDescriptions() {
     const topDesc = document.createElement('textarea');
     topDesc.className = 'tab-description top-description';
     topDesc.value = saved[id]?.top || '';
-    if (!show) topDesc.style.display = 'none';
+    topDesc.style.display = 'none';
     if (header) {
       header.insertAdjacentElement('afterend', topDesc);
     } else {
       container.prepend(topDesc);
     }
     topDesc.addEventListener('input', () => saveDescription(id, 'top', topDesc.value));
+    descElems.push(topDesc);
 
     const bottomDesc = document.createElement('textarea');
     bottomDesc.className = 'tab-description bottom-description';
     bottomDesc.value = saved[id]?.bottom || '';
-    if (!show) bottomDesc.style.display = 'none';
+    bottomDesc.style.display = 'none';
     container.appendChild(bottomDesc);
     bottomDesc.addEventListener('input', () => saveDescription(id, 'bottom', bottomDesc.value));
+    descElems.push(bottomDesc);
   });
+
+  const updateVisibility = (user) => {
+    const show = !user && getShowDescriptions();
+    descElems.forEach(el => {
+      el.style.display = show ? '' : 'none';
+    });
+  };
+
+  auth.onAuthStateChanged(updateVisibility);
+  updateVisibility(auth.currentUser);
 }
 
 async function saveDescription(panelId, position, text) {
