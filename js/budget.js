@@ -49,7 +49,7 @@ const DEFAULT_RECURRING = [
   ['healthInsurance', 'Health Insurance'],
   ['dentalInsurance', 'Dental Insurance'],
   ['savings', 'Savings'],
-  ['tsp', 'TSP'],
+  ['investmentAccounts', 'Investment Accounts'],
   ['federalDeductions', 'Federal Deductions'],
   ['stateTaxes', 'State Taxes'],
   ['misc', 'Misc']

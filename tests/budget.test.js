@@ -70,7 +70,7 @@ describe('budget calculations', () => {
         mortgageInterest: 500,
         'Amazon Prime': 15,
         tolls: 30,
-        tsp: 300,
+        investmentAccounts: 300,
         dentalInsurance: 50
       }
     });
@@ -99,7 +99,7 @@ describe('budget calculations', () => {
     planningMock = { finance: { income: 120000 } };
     const stored = {
       subscriptions: { Netflix: 15 },
-      tsp: 300
+      investmentAccounts: 300
     };
     localStorage.setItem('budgetConfig', JSON.stringify(stored));
     const res = await calculateCurrentMonthlyBudgetForTest();
