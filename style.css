@@ -1260,6 +1260,12 @@ h2 {
   border: none !important;
   color: #0077cc !important;
   cursor: pointer !important;
+  margin: 0;
+  vertical-align: middle;
+}
+
+#listsContainer button + button {
+  margin-left: 4px;
 }
 
 #listWrapper {
