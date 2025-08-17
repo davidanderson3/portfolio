@@ -234,8 +234,12 @@
           </div>
           <div id="bandsintownForm" style="margin-bottom:1rem;">
             <input type="text" id="bandsintownArtist" placeholder="Artist" style="margin-right:.5rem;">
-            <input type="text" id="bandsintownAppId" placeholder="App ID" style="margin-right:.5rem;">
+            <input type="text" id="bandsintownAppId" placeholder="App ID (e.g. your site or email)" style="margin-right:.5rem;">
             <button type="button" id="bandsintownLoadBtn">Load Shows</button>
+            <div style="font-size:0.8rem;margin-top:0.5rem;">
+              Uses the <a href="https://artists.bandsintown.com/support/bandsintown-api" target="_blank" rel="noopener noreferrer">Bandsintown API</a>.
+              App ID can be any unique string identifying your app.
+            </div>
           </div>
           <div id="bandsintownList" class="decision-container"></div>
         </div>
