@@ -175,6 +175,22 @@ describe('hidden and completed sections', () => {
     expect(document.querySelector('#hiddenTasksList [data-task-id="hw"]')).toBeTruthy();
     expect(document.querySelector('#completedTasksList [data-task-id="c"]')).toBeTruthy();
     expect(document.querySelector('#completedTasksList [data-task-id="cw"]')).toBeTruthy();
+    expect(
+      document.querySelector('#hiddenTasksList [data-task-id="h"] .task-category')
+        ?.textContent
+    ).toBe(' (Morning)');
+    expect(
+      document.querySelector('#hiddenTasksList [data-task-id="hw"] .task-category')
+        ?.textContent
+    ).toBe(' (Weekly)');
+    expect(
+      document.querySelector('#completedTasksList [data-task-id="c"] .task-category')
+        ?.textContent
+    ).toBe(' (Morning)');
+    expect(
+      document.querySelector('#completedTasksList [data-task-id="cw"] .task-category')
+        ?.textContent
+    ).toBe(' (Weekly)');
     vi.useRealTimers();
   });
 });
