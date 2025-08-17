@@ -2062,11 +2062,11 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 400px;
+  width: 450px;
 }
 
 .budget-summary {
-  width: 400px;
+  width: 450px;
 }
 
 .budget-form label {
