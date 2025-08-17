@@ -1404,7 +1404,7 @@ h2 {
 #travelMap {
   flex: 0 1 66%;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: 300px;
   border: 1px solid #ccc;
 }
 
