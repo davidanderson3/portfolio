@@ -250,8 +250,8 @@ describe('shift+A hotkey', () => {
   });
 });
 
-describe('signed-out tabs', () => {
-  it('hides contacts and backups when not signed in', async () => {
+  describe('signed-out tabs', () => {
+    it('hides contacts, backups, and geolayers when not signed in', async () => {
     const dom = new JSDOM(`
       <button id="signupBtn"></button>
       <button id="loginBtn"></button>
@@ -298,13 +298,15 @@ describe('signed-out tabs', () => {
 
     const contactsBtn = dom.window.document.querySelector('.tab-button[data-target="contactsPanel"]');
     const backupsBtn = dom.window.document.querySelector('.tab-button[data-target="backupsPanel"]');
+    const geolayersBtn = dom.window.document.querySelector('.tab-button[data-target="geolayersPanel"]');
     const dailyBtn = dom.window.document.querySelector('.tab-button[data-target="dailyPanel"]');
 
     expect(contactsBtn.style.display).toBe('none');
     expect(backupsBtn.style.display).toBe('none');
+    expect(geolayersBtn.style.display).toBe('none');
     expect(dailyBtn.style.display).not.toBe('none');
+    });
   });
-});
 
 describe('initial load', () => {
   beforeEach(() => {

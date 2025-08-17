@@ -28,7 +28,8 @@ body.mild-glow {
   display: flex;
   justify-content: center;
   gap: 32px;
-  max-width: 1440px;
+  /* Expand panels to use most of the viewport on wider screens */
+  max-width: 95vw;
   width: 100%;
   box-sizing: border-box;
   padding-left: 0;
@@ -39,7 +40,8 @@ body.mild-glow {
 
 .left-column {
   width: 60%;
-  max-width: 1080px;
+  /* Remove fixed max width so columns can expand on large displays */
+  max-width: none;
 }
 
 .right-column {
@@ -63,7 +65,8 @@ body.mild-glow {
 
 .navbar-inner {
   width: 100%;
-  max-width: 1200px;
+  /* Allow the navbar to stretch nearly full width */
+  max-width: 95vw;
   margin: 0 auto;
   box-sizing: border-box;
   padding: 5px 24px;
@@ -969,8 +972,8 @@ button:hover {
   align-items: stretch;
   margin: 0 auto 30px;
   /* give some breathing room vertically */
-  max-width: 1200px;
-  /* match your global container */
+  /* Use most of the screen width on desktops */
+  max-width: 95vw;
   width: 100%;
   box-sizing: border-box;
   padding: 0 20px;
@@ -983,10 +986,9 @@ button:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 1200px;
-  /* match your page-width */
+  /* Stretch inner container nearly full width */
+  max-width: 95vw;
   margin: 0 auto;
-  /* center on page */
   padding: 0 20px;
   /* gutter */
   display: flex;
