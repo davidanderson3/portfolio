@@ -450,7 +450,8 @@ export function renderTodaySchedule(_all, listEl, weather) {
                 const span = document.createElement('span');
                 span.className = 'hour-weather';
                 const icon = window.chooseWeatherIcon ? window.chooseWeatherIcon(w.rain) : '';
-                span.textContent = `${icon} ${w.temp}\u00B0`;
+                const rainText = w.rain !== undefined ? ` ${w.rain}%` : '';
+                span.textContent = `${icon} ${w.temp}\u00B0${rainText}`;
                 label.appendChild(span);
                 row.style.backgroundColor = tempToColor(w.temp);
                 if (w.temp >= 58 && w.temp <= 77) {
@@ -649,8 +650,12 @@ function renderCalendarSection(all, calendarContent, weather) {
             if (isCurrentWeekend) section.classList.add('current-weekend');
             const satW = dailyWeather[key];
             const sunW = dailyWeather[sunKey];
-            const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
-            const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
+            const satInfo = satW
+                ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0${satW.rain !== undefined ? ' ' + satW.rain + '%' : ''}`
+                : '';
+            const sunInfo = sunW
+                ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0${sunW.rain !== undefined ? ' ' + sunW.rain + '%' : ''}`
+                : '';
             hdr.innerHTML = `Weekend:<br>${satLabel} (${satDays})${satInfo}<br>${sunLabel} (${sunDays})${sunInfo}`;
             const highTemp = Math.max(satW?.high ?? -Infinity, sunW?.high ?? -Infinity);
             if (isFinite(highTemp)) hdr.style.backgroundColor = tempToColor(highTemp);
@@ -698,8 +703,12 @@ function renderCalendarSection(all, calendarContent, weather) {
             if (isCurrentWeekend) section.classList.add('current-weekend');
             const satW = dailyWeather[satKey];
             const sunW = dailyWeather[key];
-            const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
-            const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
+            const satInfo = satW
+                ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0${satW.rain !== undefined ? ' ' + satW.rain + '%' : ''}`
+                : '';
+            const sunInfo = sunW
+                ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0${sunW.rain !== undefined ? ' ' + sunW.rain + '%' : ''}`
+                : '';
             hdr.innerHTML = `Weekend:<br>${satLabel} (${satDays})${satInfo}<br>${sunLabel} (${sunDays})${sunInfo}`;
             const highTemp2 = Math.max(satW?.high ?? -Infinity, sunW?.high ?? -Infinity);
             if (isFinite(highTemp2)) hdr.style.backgroundColor = tempToColor(highTemp2);
@@ -731,7 +740,9 @@ function renderCalendarSection(all, calendarContent, weather) {
             const dateStr = d.toLocaleDateString();
             const daysText = formatDaysUntil(key);
             const w = dailyWeather[key];
-            const weatherInfo = w ? ` ${window.chooseWeatherIcon?.(w.rain) || ''} ${w.high}\u00B0/${w.low}\u00B0` : '';
+            const weatherInfo = w
+                ? ` ${window.chooseWeatherIcon?.(w.rain) || ''} ${w.high}\u00B0/${w.low}\u00B0${w.rain !== undefined ? ' ' + w.rain + '%' : ''}`
+                : '';
             header.textContent = `${dowLabel} ${dateStr} (${daysText})${weatherInfo}`;
             if (w) header.style.backgroundColor = tempToColor(w.high);
             calendarContent.appendChild(header);
