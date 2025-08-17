@@ -1916,11 +1916,19 @@ h2 {
 }
 
 /* Finances panel form layout */
+.planning-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
 .planning-form {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   max-width: 400px;
+  flex: 1 1 300px;
 }
 
 .planning-form label {
@@ -1941,6 +1949,10 @@ h2 {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+.planning-right {
+  flex: 1 1 300px;
 }
 
 #planningPanel .full-column {
