@@ -5,7 +5,7 @@ export function getRandomPlaces() {
       description: 'Paris, France',
       lat: 48.8584,
       lon: 2.2945,
-      tags: ['landmark'],
+      tags: ['landmark', 'historic', 'architecture'],
       Rating: '',
       Date: '',
       visited: false
@@ -15,7 +15,7 @@ export function getRandomPlaces() {
       description: 'New York, USA',
       lat: 40.6892,
       lon: -74.0445,
-      tags: ['landmark'],
+      tags: ['landmark', 'monument', 'historic'],
       Rating: '',
       Date: '',
       visited: false
@@ -25,7 +25,7 @@ export function getRandomPlaces() {
       description: 'Giza, Egypt',
       lat: 29.9792,
       lon: 31.1342,
-      tags: ['landmark'],
+      tags: ['landmark', 'ancient', 'world wonder'],
       Rating: '',
       Date: '',
       visited: false
@@ -35,7 +35,7 @@ export function getRandomPlaces() {
       description: 'Sydney, Australia',
       lat: -33.8568,
       lon: 151.2153,
-      tags: ['landmark'],
+      tags: ['landmark', 'performing arts', 'architecture'],
       Rating: '',
       Date: '',
       visited: false
@@ -45,7 +45,7 @@ export function getRandomPlaces() {
       description: 'Agra, India',
       lat: 27.1751,
       lon: 78.0421,
-      tags: ['landmark'],
+      tags: ['landmark', 'heritage', 'mausoleum'],
       Rating: '',
       Date: '',
       visited: false
@@ -55,7 +55,7 @@ export function getRandomPlaces() {
       description: 'Honshu, Japan',
       lat: 35.3606,
       lon: 138.7274,
-      tags: ['landmark'],
+      tags: ['landmark', 'natural', 'mountain'],
       Rating: '',
       Date: '',
       visited: false
@@ -1096,6 +1096,56 @@ export function getRandomPlaces() {
       lat: 25.02924,
       lon: 55.25277,
       tags: ['landmark'],
+      Rating: '',
+      Date: '',
+      visited: false
+    },
+    {
+      name: 'Louvre Museum',
+      description: 'Paris, France',
+      lat: 48.8606,
+      lon: 2.3376,
+      tags: ['museum', 'art', 'landmark'],
+      Rating: '',
+      Date: '',
+      visited: false
+    },
+    {
+      name: 'Grand Canyon',
+      description: 'Arizona, USA',
+      lat: 36.1069,
+      lon: -112.1129,
+      tags: ['nature', 'park', 'landmark'],
+      Rating: '',
+      Date: '',
+      visited: false
+    },
+    {
+      name: 'Niagara Falls',
+      description: 'Ontario, Canada',
+      lat: 43.0962,
+      lon: -79.0377,
+      tags: ['nature', 'waterfall', 'landmark'],
+      Rating: '',
+      Date: '',
+      visited: false
+    },
+    {
+      name: 'Great Barrier Reef',
+      description: 'Queensland, Australia',
+      lat: -18.2871,
+      lon: 147.6992,
+      tags: ['nature', 'reef', 'marine'],
+      Rating: '',
+      Date: '',
+      visited: false
+    },
+    {
+      name: 'Serengeti National Park',
+      description: 'Tanzania',
+      lat: -2.3333,
+      lon: 34.8333,
+      tags: ['nature', 'wildlife', 'park'],
       Rating: '',
       Date: '',
       visited: false
