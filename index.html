@@ -183,7 +183,10 @@
             <h2>Places</h2>
             <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
           </div>
-          <input id="placeSearch" type="text" placeholder="Search all places or coordinates..." style="margin-bottom:8px;max-width:260px;">
+          <div style="display:flex; gap:4px; align-items:center; margin-bottom:8px;">
+            <input id="placeSearch" type="text" placeholder="Search all places or coordinates..." style="max-width:260px;">
+            <button type="button" id="clearPlaceSearch">Clear</button>
+          </div>
         <ul id="placeResults" class="search-results"></ul>
         <div id="travelMapWrapper">
           <div id="travelMap"></div>

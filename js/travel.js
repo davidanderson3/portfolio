@@ -119,6 +119,7 @@ export async function initTravelPanel() {
   const searchInput = document.getElementById('travelSearch');
   const placeInput = document.getElementById('placeSearch');
   const resultsList = document.getElementById('placeResults');
+  const clearResultsBtn = document.getElementById('clearPlaceSearch');
   const tagFiltersDiv = document.getElementById('travelTagFilters');
   const placeCountEl = document.getElementById('placeCount');
   const paginationDiv = document.getElementById('paginationControls');
@@ -555,6 +556,10 @@ export async function initTravelPanel() {
     resultMarkers.forEach(m => m.remove());
     resultMarkers = [];
   };
+  clearResultsBtn?.addEventListener('click', () => {
+    if (placeInput) placeInput.value = '';
+    clearSearchResults();
+  });
   async function storePlace(place) {
     ensureDefaultTag(place);
     applyVisitedFlag(place);
