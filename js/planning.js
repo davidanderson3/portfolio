@@ -345,8 +345,8 @@ export async function initPlanningPanel() {
       withdrawalRate: values.withdrawalRate
     });
 
-    financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Income (Today)</th><th>Withdrawals</th><th>Pension</th><th>Social Security</th></tr></thead><tbody>' +
-      finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.realIncome ? '$' + r.realIncome.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.pension ? '$' + r.pension.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
+    financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Withdrawals</th><th>Pension</th><th>Social Security</th></tr></thead><tbody>' +
+      finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.pension ? '$' + r.pension.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
       '</tbody></table>';
 
     currentData.finance = {

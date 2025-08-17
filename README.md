@@ -22,8 +22,8 @@ Lists builds custom tables with user-defined columns and types. Columns may be t
 ### Places
 Places logs travel destinations on an interactive map. Entries can be searched by name or coordinates, filtered by tags, and toggled to show only unvisited spots. Markers turn green once visited and red otherwise. A table lists distance from your current location, ratings, visit dates, and actions for each place, and you can double-click the map to add new locations.
 
-### Planning
-The Planning tab models long-term finances. Enter current savings, income, annual contributions, and assumptions like investment return or inflation to project account balances through retirement and beyond. The tab records total assets with timestamps so you can track wealth over time, and an annual savings field helps plan future contributions.
+### Finances
+The Finances tab models long-term finances. Enter current savings, income, annual contributions, and assumptions like investment return or inflation to project account balances through retirement and beyond. The tab records total assets with timestamps so you can track wealth over time, and an annual savings field helps plan future contributions.
 
 ### Budget
 Budget breaks down monthly income into recurring expenses and subscriptions. It estimates federal taxes, calculates net pay, and shows what remains after bills. Categories are customizable so the plan can reflect your real spending.
