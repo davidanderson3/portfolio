@@ -212,6 +212,7 @@ export async function initBudgetPanel() {
       </div>
       <div class="scenario" id="scenarioDiff">
         <div class="scenario-title">Diff</div>
+        <div id="budgetSummaryDiff" class="budget-summary"></div>
         <form id="budgetFormDiff" class="budget-form">
           <div class="section-title">Recurring Expenses</div>
           <div id="recurContainerDiff" class="recurring-list diff-container"></div>
@@ -234,6 +235,7 @@ export async function initBudgetPanel() {
   const summaryB = panel.querySelector('#budgetSummaryB');
   const subsContainerB = formB.querySelector('#subsContainerB');
   const recurContainerB = formB.querySelector('#recurContainerB');
+  const summaryDiff = panel.querySelector('#budgetSummaryDiff');
   const formDiff = panel.querySelector('#budgetFormDiff');
   const subsContainerDiff = formDiff.querySelector('#subsContainerDiff');
   const recurContainerDiff = formDiff.querySelector('#recurContainerDiff');
@@ -425,6 +427,12 @@ export async function initBudgetPanel() {
     summaryB.innerHTML =
       `Total Expenses: $${resultB.expenses.toLocaleString()}<br>` +
       `Leftover: $${resultB.leftover.toLocaleString()}`;
+    const diffExpenses = resultA.expenses - resultB.expenses;
+    const diffLeftover = resultA.leftover - resultB.leftover;
+    const fmt = n => `${n > 0 ? '+' : n < 0 ? '-' : ''}$${Math.abs(n).toLocaleString()}`;
+    summaryDiff.innerHTML =
+      `Total Expenses: ${fmt(diffExpenses)}<br>` +
+      `Leftover: ${fmt(diffLeftover)}`;
 
     updateDiffs();
 
