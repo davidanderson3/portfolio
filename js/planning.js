@@ -364,9 +364,20 @@ export async function initPlanningPanel() {
       withdrawalRate: values.withdrawalRate
     });
 
-    financeResultDiv.innerHTML = '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Withdrawals</th><th>Pension</th><th>Social Security</th></tr></thead><tbody>' +
-      finData.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.pension ? '$' + r.pension.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
-      '</tbody></table>';
+    function buildFinanceTable(rows) {
+      return '<table><thead><tr><th>Age</th><th>Balance</th><th>Income</th><th>Withdrawals</th><th>Pension</th><th>Social Security</th></tr></thead><tbody>' +
+        rows.map(r => `<tr><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td><td>${r.income ? '$' + r.income.toLocaleString() : ''}</td><td>${r.withdrawal ? '$' + r.withdrawal.toLocaleString() : ''}</td><td>${r.pension ? '$' + r.pension.toLocaleString() : ''}</td><td>${r.socialSecurity ? '$' + r.socialSecurity.toLocaleString() : ''}</td></tr>`).join('') +
+        '</tbody></table>';
+    }
+
+    const retirementAgeNum = Number(values.retAge);
+    const workingData = finData.filter(r => r.age <= retirementAgeNum);
+    const retirementData = finData.filter(r => r.age > retirementAgeNum);
+
+    financeResultDiv.innerHTML = '<h3>Working Years</h3>' +
+      buildFinanceTable(workingData) +
+      '<h3>Retirement</h3>' +
+      buildFinanceTable(retirementData);
 
     currentData.finance = {
       curAge: values.curAge,
