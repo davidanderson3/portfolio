@@ -251,7 +251,7 @@ export async function initPlanningPanel() {
       <label>Real Estate <input type="number" name="realEstate" value="${currentData.assets.realEstate ?? ''}" /></label>
       <label>Car <input type="number" name="carValue" value="${currentData.assets.carValue ?? ''}" /></label>
       <label>Savings <input type="number" name="assetSavings" value="${currentData.assets.assetSavings ?? ''}" /></label>
-      <label>Savings Account Return Rate % <input type="number" name="savingsReturnRate" value="${currentData.finance.savingsReturnRate ?? ''}" /></label>
+      <label>Savings Return Rate % <input type="number" name="savingsReturnRate" value="${currentData.finance.savingsReturnRate ?? ''}" /></label>
       <label>Checking <input type="number" name="checking" value="${currentData.assets.checking ?? ''}" /></label>
       <label>Investment Accounts <input type="number" name="investment" value="${currentData.assets.investment ?? ''}" /></label>
       <label>Investment Return Rate % <input type="number" name="investmentReturnRate" value="${currentData.finance.investmentReturnRate ?? ''}" /></label>
