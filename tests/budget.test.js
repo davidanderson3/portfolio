@@ -246,4 +246,36 @@ describe('budget panel', () => {
     const order = Array.from(document.querySelectorAll('#recurContainerA .recurring-row .recur-name')).map(el => el.value);
     expect(order[0]).toBe('Second');
   });
+
+  it('shows rent after escrow in the summaries', async () => {
+    getMock.mockResolvedValue({ exists: false });
+
+    const dom = new JSDOM('<div id="budgetContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.Event = dom.window.Event;
+
+    const { initBudgetPanel } = await import('../js/budget.js');
+    await initBudgetPanel();
+
+    function setCost(containerId, field, value) {
+      const input = document.querySelector(`${containerId} .recurring-row[data-field="${field}"] .recur-cost`);
+      input.value = String(value);
+      input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    }
+
+    setCost('#recurContainerA', 'mortgagePrincipal', 1000);
+    setCost('#recurContainerA', 'mortgageInterest', 500);
+    setCost('#recurContainerA', 'escrow', 300);
+
+    setCost('#recurContainerB', 'mortgagePrincipal', 900);
+    setCost('#recurContainerB', 'mortgageInterest', 400);
+    setCost('#recurContainerB', 'escrow', 200);
+
+    const summaryA = document.getElementById('budgetSummaryA').textContent;
+    const summaryB = document.getElementById('budgetSummaryB').textContent;
+
+    expect(summaryA).toContain('Rent After Escrow: $1,500');
+    expect(summaryB).toContain('Rent After Escrow: $1,300');
+  });
 });

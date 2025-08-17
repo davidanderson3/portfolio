@@ -383,12 +383,21 @@ export async function initBudgetPanel() {
     const resultA = calculateMonthlyBudget({ salary, categories: aData.categories });
     const resultB = calculateMonthlyBudget({ salary, categories: bData.categories });
 
+    const rentA =
+      (Number(aData.saveData.mortgagePrincipal) || 0) +
+      (Number(aData.saveData.mortgageInterest) || 0);
+    const rentB =
+      (Number(bData.saveData.goal_mortgagePrincipal) || 0) +
+      (Number(bData.saveData.goal_mortgageInterest) || 0);
+
     summaryA.innerHTML =
       `Total Expenses: $${resultA.expenses.toLocaleString()}<br>` +
-      `Leftover: $${resultA.leftover.toLocaleString()}`;
+      `Leftover: $${resultA.leftover.toLocaleString()}<br>` +
+      `Rent After Escrow: $${rentA.toLocaleString()}`;
     summaryB.innerHTML =
       `Total Expenses: $${resultB.expenses.toLocaleString()}<br>` +
-      `Leftover: $${resultB.leftover.toLocaleString()}`;
+      `Leftover: $${resultB.leftover.toLocaleString()}<br>` +
+      `Rent After Escrow: $${rentB.toLocaleString()}`;
 
     updateDiffs();
 
