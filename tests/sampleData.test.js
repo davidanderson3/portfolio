@@ -25,5 +25,10 @@ describe('sample data immutability', () => {
       SAMPLE_LISTS[0].items[0].Title_label = 'Changed';
     }).toThrow();
     expect(SAMPLE_LISTS[0].items[0].Title_label).toBe('Deep Work');
+
+    const last = SAMPLE_LISTS[SAMPLE_LISTS.length - 1];
+    expect(Object.isFrozen(last)).toBe(true);
+    expect(Object.isFrozen(last.items)).toBe(true);
+    expect(Object.isFrozen(last.items[0])).toBe(true);
   });
 });
