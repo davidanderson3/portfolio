@@ -57,7 +57,7 @@ describe('initTabs persistence', () => {
     global.window.initBackupsPanel = vi.fn();
 
     const mod = await import('../js/tabs.js');
-    mod.initTabs(null, {});
+    await mod.initTabs(null, {});
     dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
 
     const dailyBtn = document.querySelector('.tab-button[data-target="dailyPanel"]');
@@ -87,7 +87,7 @@ describe('initTabs persistence', () => {
     global.window.initContactsPanel = vi.fn();
 
     const mod = await import('../js/tabs.js');
-    mod.initTabs(null, {});
+    await mod.initTabs(null, {});
     dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
 
     const active = document.querySelector('.tab-button.active');
@@ -144,7 +144,7 @@ describe('routine tab behavior', () => {
     global.window.initBackupsPanel = vi.fn();
 
     const mod = await import('../js/tabs.js');
-    mod.initTabs(null, {});
+    await mod.initTabs(null, {});
 
     const btn = document.querySelector('.tab-button[data-target="dailyPanel"]');
     btn.dispatchEvent(new dom.window.Event('click', { bubbles: true }));

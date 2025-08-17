@@ -1,4 +1,5 @@
 import { currentUser } from './auth.js';
+import { loadTabOrder } from './settings.js';
 
 export const PANELS = [
   'dailyPanel',
@@ -34,15 +35,32 @@ export const PANEL_NAMES = {
 
 let tabsInitialized = false;
 
-export function initTabs(user, db) {
+export async function initTabs(user, db) {
   // Only attach listeners once; handlers reference the shared currentUser
   if (tabsInitialized) return;
   tabsInitialized = true;
 
   const LAST_PANEL_KEY = 'lastPanel';
 
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const panels    = user ? PANELS : PANELS.filter(id => id !== 'contactsPanel');
+  const container = document.getElementById('tabsContainer');
+  let tabButtons = Array.from(document.querySelectorAll('.tab-button'));
+  let panels    = user ? PANELS : PANELS.filter(id => id !== 'contactsPanel');
+
+  try {
+    const saved = await loadTabOrder();
+    if (Array.isArray(saved) && saved.length) {
+      const ordered = saved.filter(id => panels.includes(id));
+      ordered.push(...panels.filter(id => !ordered.includes(id)));
+      panels = ordered;
+      if (container) {
+        panels.forEach(id => {
+          const btn = container.querySelector(`.tab-button[data-target="${id}"]`);
+          if (btn) container.appendChild(btn);
+        });
+        tabButtons = Array.from(container.querySelectorAll('.tab-button'));
+      }
+    }
+  } catch {}
 
   tabButtons.forEach(btn => {
     btn.addEventListener('click', async () => {
