@@ -294,7 +294,7 @@ describe('signed-out tabs', () => {
 
     await import('../js/main.js');
     dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
-    await Promise.resolve();
+    await new Promise(r => setTimeout(r, 0));
 
     const contactsBtn = dom.window.document.querySelector('.tab-button[data-target="contactsPanel"]');
     const backupsBtn = dom.window.document.querySelector('.tab-button[data-target="backupsPanel"]');
@@ -334,7 +334,7 @@ describe('initial load', () => {
     dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
     const cb = auth.initAuth.mock.calls[0][1];
     await cb(null);
-    expect(daily.renderDailyTasks).not.toHaveBeenCalled();
+    expect(daily.renderDailyTasks).toHaveBeenCalled();
   });
 });
 

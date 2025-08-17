@@ -389,10 +389,6 @@ window.addEventListener('DOMContentLoaded', () => {
   // Clear any stale content immediately to avoid flashing old tasks on mobile
   clearTaskLists();
 
-  if (!currentUser) {
-    showOnlySignedOutTabs();
-  }
-
   // Re-render UI components whenever decisions are updated
   window.addEventListener('decisionsUpdated', () => {
     renderQueue = renderQueue.then(() => renderGoalsAndSubitems());
@@ -419,6 +415,8 @@ window.addEventListener('DOMContentLoaded', () => {
         const hidden = await loadHiddenTabs();
         applyHiddenTabs(hidden);
         showOnlySignedOutTabs();
+        // Render sample routine tasks for visitors
+        await renderDailyTasks(null, db);
         if (hiddenTabsTimer) clearInterval(hiddenTabsTimer);
         hiddenTabsTimer = setInterval(async () => {
           const h = await loadHiddenTabs();
