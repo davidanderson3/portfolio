@@ -278,4 +278,20 @@ describe('budget panel', () => {
     expect(summaryA).toContain('Rent After Escrow: $1,500');
     expect(summaryB).toContain('Rent After Escrow: $1,300');
   });
+
+  it('places goal summary outside the goal section', async () => {
+    getMock.mockResolvedValue({ exists: false });
+
+    const dom = new JSDOM('<div id="budgetContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.Event = dom.window.Event;
+
+    const { initBudgetPanel } = await import('../js/budget.js');
+    await initBudgetPanel();
+
+    const scenarioB = document.getElementById('scenarioB');
+    const summaryB = document.getElementById('budgetSummaryB');
+    expect(scenarioB.contains(summaryB)).toBe(false);
+  });
 });
