@@ -32,3 +32,22 @@ describe('sample data immutability', () => {
     expect(Object.isFrozen(last.items[0])).toBe(true);
   });
 });
+
+describe('sample calendar items', () => {
+  it('use future dates for scheduled items', () => {
+    const today = new Date();
+    const dates = [];
+    SAMPLE_DECISIONS.forEach(d => {
+      if (d.scheduled) {
+        dates.push(new Date(d.scheduled));
+      }
+      if (d.scheduledEnd) {
+        dates.push(new Date(d.scheduledEnd));
+      }
+    });
+    expect(dates.length).toBeGreaterThan(0);
+    dates.forEach(date => {
+      expect(date.getTime()).toBeGreaterThan(today.getTime());
+    });
+  });
+});
