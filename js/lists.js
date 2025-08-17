@@ -128,6 +128,9 @@ async function initListsPanel() {
 
   // Preserve existing hide button (added in index.html)
   const panelHideBtn = panel.querySelector('.tab-hide-btn');
+  // Preserve tab descriptions created by descriptions.js
+  const topDesc = panel.querySelector('.tab-description.top-description');
+  const bottomDesc = panel.querySelector('.tab-description.bottom-description');
 
   // ─── 1) Clear & style the panel ─────────────────────────────
   panel.innerHTML = '';
@@ -148,6 +151,7 @@ async function initListsPanel() {
   if (panelHideBtn) actions.appendChild(panelHideBtn);
   header.appendChild(actions);
   panel.appendChild(header);
+  if (topDesc) panel.appendChild(topDesc);
 
   // ─── 2) Create static scaffolding ──────────────────────────
   const tabsContainer = document.createElement('div');
@@ -237,6 +241,10 @@ async function initListsPanel() {
   }
 
   const hiddenContent = initHiddenSection();
+  if (bottomDesc) {
+    // place bottom description before hidden lists section
+    panel.insertBefore(bottomDesc, hiddenContent.parentElement);
+  }
 
 
   // ─── 5) Load data & wire persistence ─────────────────────────

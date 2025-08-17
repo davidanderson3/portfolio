@@ -168,3 +168,18 @@ describe('unhide list button', () => {
     vi.useRealTimers();
   });
 });
+
+describe('tab descriptions', () => {
+  it('preserves description textareas when initializing panel', async () => {
+    document.getElementById('listsPanel').innerHTML = `
+      <div class="panel-header"><h2>Lists</h2></div>
+      <textarea class="tab-description top-description">top</textarea>
+      <textarea class="tab-description bottom-description">bottom</textarea>
+    `;
+    const top = document.querySelector('.tab-description.top-description');
+    const bottom = document.querySelector('.tab-description.bottom-description');
+    await window.initListsPanel();
+    expect(document.querySelector('.tab-description.top-description')).toBe(top);
+    expect(document.querySelector('.tab-description.bottom-description')).toBe(bottom);
+  });
+});
