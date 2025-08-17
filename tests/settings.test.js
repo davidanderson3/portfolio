@@ -52,8 +52,10 @@ describe('clearHiddenTabs', () => {
   it('deletes Firestore doc for signed-in users', async () => {
     currentUser = { uid: 'u1' };
     const { clearHiddenTabs } = await import('../js/settings.js');
+    localStorage.setItem('hiddenTabs-u1', JSON.stringify({ a: 'b' }));
     await clearHiddenTabs();
     expect(deleteMock).toHaveBeenCalled();
+    expect(localStorage.getItem('hiddenTabs-u1')).toBeNull();
   });
 });
 
@@ -71,7 +73,7 @@ describe('loadHiddenTabs', () => {
     currentUser = { uid: 'u1' };
     getMock.mockResolvedValue({ exists: false });
     const hidden = { calendarPanel: '9999-12-31T00:00:00.000Z' };
-    localStorage.setItem('hiddenTabs', JSON.stringify(hidden));
+    localStorage.setItem('hiddenTabs-u1', JSON.stringify(hidden));
     const { loadHiddenTabs } = await import('../js/settings.js');
     const result = await loadHiddenTabs();
     expect(result).toEqual(hidden);
@@ -84,5 +86,18 @@ describe('loadHiddenTabs', () => {
     const { loadHiddenTabs } = await import('../js/settings.js');
     const result = await loadHiddenTabs();
     expect(result).toEqual({ a: 'b' });
+  });
+
+  it('migrates legacy keys without uploading', async () => {
+    currentUser = { uid: 'u1' };
+    getMock.mockResolvedValue({ exists: false });
+    const hidden = { calendarPanel: '9999-12-31T00:00:00.000Z' };
+    localStorage.setItem('hiddenTabs', JSON.stringify(hidden));
+    const { loadHiddenTabs } = await import('../js/settings.js');
+    const result = await loadHiddenTabs();
+    expect(result).toEqual(hidden);
+    expect(setMock).not.toHaveBeenCalled();
+    expect(localStorage.getItem('hiddenTabs')).toBeNull();
+    expect(localStorage.getItem('hiddenTabs-u1')).toEqual(JSON.stringify(hidden));
   });
 });
