@@ -499,7 +499,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     }
 
     visible++;
-    let display = '—', editValue = '', pct = '—', rank = '—';
+    let display = '—', editValue = '', pct = '—', rank = '—', pctValue = null;
     const latestEntry = entries.reduce((a, b) => (!a || a.timestamp < b.timestamp) ? b : a, null);
     if (validEntries.length) {
       filled++;
@@ -522,7 +522,8 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       }
       const allVals = valuesByMetric[cfg.id] || [];
       const raw = computePercentile(val, allVals);
-      pct = `${cfg.direction === 'lower' ? 100 - raw : raw}th`;
+      pctValue = cfg.direction === 'lower' ? 100 - raw : raw;
+      pct = `${pctValue}th`;
       rank = computeRank(val, allVals, cfg.direction);
     } else if (wasPostponed && latestEntry && latestEntry.value != null) {
       // show the postponed value but exclude it from stats
@@ -765,6 +766,10 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     tdActions.appendChild(del);
 
     row.appendChild(tdActions);
+
+    if (pctValue !== null) {
+      row.style.background = `linear-gradient(to right, rgba(0,128,0,0.15) ${pctValue}%, transparent ${pctValue}%)`;
+    }
 
     tbody.appendChild(row);
   }
