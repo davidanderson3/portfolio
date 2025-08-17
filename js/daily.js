@@ -454,6 +454,33 @@ async function renderDailyTasksImpl(currentUser, db) {
     return Math.max(diff - 1, 0);
   }
 
+  function getWeeksMissed(taskId) {
+    let last = null;
+    for (const [date, ids] of Object.entries(completionMap)) {
+      if (ids.includes(taskId)) {
+        const d = new Date(date);
+        if (!last || d > last) last = d;
+      }
+    }
+    if (!last) return 0;
+    const diffWeeks = Math.floor((monday - last) / 604800000);
+    return Math.max(diffWeeks - 1, 0);
+  }
+
+  function getMonthsMissed(taskId) {
+    let last = null;
+    for (const [date, ids] of Object.entries(completionMap)) {
+      if (ids.includes(taskId)) {
+        const d = new Date(date);
+        if (!last || d > last) last = d;
+      }
+    }
+    if (!last) return 0;
+    const diffMonths = (monthStart.getFullYear() - last.getFullYear()) * 12 +
+      (monthStart.getMonth() - last.getMonth());
+    return Math.max(diffMonths - 1, 0);
+  }
+
   function getCategoryLabel(task, period) {
     if (period === 'daily') {
       const map = {
@@ -495,6 +522,22 @@ async function renderDailyTasksImpl(currentUser, db) {
     let borderColor = '#ffbb55';
     if (period === 'daily' && !isDone) {
       const missed = getDaysMissed(task.id);
+      if (missed > 0) {
+        const intensity = Math.min(missed, 7);
+        const alpha = 0.2 + (intensity - 1) * 0.1;
+        bgColor = `rgba(255,165,0,${alpha})`;
+        borderColor = `rgba(255,165,0,${Math.min(alpha + 0.2, 1)})`;
+      }
+    } else if (period === 'weekly' && !isDone) {
+      const missed = getWeeksMissed(task.id);
+      if (missed > 0) {
+        const intensity = Math.min(missed, 7);
+        const alpha = 0.2 + (intensity - 1) * 0.1;
+        bgColor = `rgba(255,165,0,${alpha})`;
+        borderColor = `rgba(255,165,0,${Math.min(alpha + 0.2, 1)})`;
+      }
+    } else if (period === 'monthly' && !isDone) {
+      const missed = getMonthsMissed(task.id);
       if (missed > 0) {
         const intensity = Math.min(missed, 7);
         const alpha = 0.2 + (intensity - 1) * 0.1;
