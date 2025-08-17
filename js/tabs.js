@@ -25,7 +25,7 @@ export const PANEL_NAMES = {
   listsPanel: 'Lists',
   travelPanel: 'Places',
   moviesPanel: 'Movies',
-  showsPanel: 'Shows',
+  showsPanel: 'Live Music',
   planningPanel: 'Planning',
   budgetPanel: 'Budget',
   contactsPanel: 'Contacts',
