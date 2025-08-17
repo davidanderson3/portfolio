@@ -464,6 +464,30 @@ export const SAMPLE_LISTS = [
       { Item: 'Milk', Qty: '1' },
       { Item: 'Eggs', Qty: '12' }
     ]
+  },
+  {
+    name: 'Movies to Watch',
+    columns: [
+      { name: 'Title', type: 'link' },
+      { name: 'Year', type: 'number' },
+      { name: 'Watched', type: 'checkbox' }
+    ],
+    items: [
+      { Title: 'https://example.com/inception', Title_label: 'Inception', Year: '2010', Watched: false },
+      { Title: 'https://example.com/interstellar', Title_label: 'Interstellar', Year: '2014', Watched: true }
+    ]
+  },
+  {
+    name: 'Travel Packing',
+    columns: [
+      { name: 'Item', type: 'text' },
+      { name: 'Packed', type: 'checkbox' }
+    ],
+    items: [
+      { Item: 'Passport', Packed: true },
+      { Item: 'Toothbrush', Packed: false },
+      { Item: 'Socks', Packed: false }
+    ]
   }
 ];
 
