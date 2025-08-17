@@ -237,7 +237,7 @@ export async function initPlanningPanel() {
     <div class="planning-grid">
       <form id="planningForm" class="planning-form">
         <div class="planning-section">
-          <h3>Financial Variables</h3>
+          <h3>Finances</h3>
         <label>Current Age <input type="number" name="curAge" value="${currentData.finance.curAge ?? ''}" /></label>
         <label>Retirement Age <input type="number" name="retAge" value="${currentData.finance.retAge ?? ''}" /></label>
         <label>Current Net Income <input type="number" name="income" value="${currentData.finance.income ?? ''}" /></label>
