@@ -192,21 +192,22 @@ export async function loadDecisions(forceRefresh = false) {
   }
 
   if (!currentUser) {
+    const shifted = shiftSampleCalendarItems(SAMPLE_DECISIONS);
     const sessionId = getSampleSessionId();
     try {
       const snap = await db.collection('sample').doc(sessionId).get();
       const data = snap.data();
       const items = Array.isArray(data?.items) ? dedupeDecisions(data.items) : null;
       if (items && items.length) {
-        setDecisionsCache(items);
+        const merged = dedupeDecisions([...items, ...shifted]);
+        setDecisionsCache(merged);
         notifyDecisionsUpdated();
-        return items;
+        return merged;
       }
     } catch (err) {
       console.warn('Failed to load sample decisions:', err);
     }
     console.warn('🚫 No current user — returning sample data');
-    const shifted = shiftSampleCalendarItems(SAMPLE_DECISIONS);
     setDecisionsCache(shifted);
     notifyDecisionsUpdated();
     return shifted;
