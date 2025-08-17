@@ -46,6 +46,20 @@ let showVisited = true;
 const pageSize = Infinity;
 let currentPage = 0;
 
+function resizeTravelMap() {
+  const mapEl = document.getElementById('travelMap');
+  if (!mapEl) return;
+  const rect = mapEl.getBoundingClientRect();
+  const availableHeight = window.innerHeight - rect.top - 16;
+  const height = Math.min(rect.width, availableHeight);
+  mapEl.style.height = `${height}px`;
+  if (map) {
+    map.invalidateSize();
+  }
+}
+
+window.addEventListener('resize', resizeTravelMap);
+
 // Simple circle markers for map points. Visited places are green.
 const createSvgUrl = color =>
   `data:image/svg+xml,${encodeURIComponent(
@@ -95,7 +109,7 @@ export async function initTravelPanel() {
   if (!panel) return;
   if (mapInitialized) {
     // panel is being re-shown; resize the map to fill its container
-    map.invalidateSize();
+    resizeTravelMap();
     return;
   }
   mapInitialized = true;
@@ -125,9 +139,7 @@ export async function initTravelPanel() {
     attribution: '© OpenStreetMap contributors',
     noWrap: true
   }).addTo(map);
-
-  // Ensure map fills its container once it is visible
-  setTimeout(() => map.invalidateSize(), 0);
+  resizeTravelMap();
 
   map.on('dblclick', async e => {
     const name = prompt('Place name:');
