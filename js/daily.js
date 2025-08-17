@@ -403,6 +403,27 @@ async function renderDailyTasksImpl(currentUser, db) {
     );
   });
 
+  function toggleSection(listEl) {
+    const hasTasks = !!listEl.querySelector('.daily-task-wrapper');
+    const hdr = listEl.previousElementSibling;
+    listEl.style.display = hasTasks ? '' : 'none';
+    if (hdr && hdr.tagName === 'H3') hdr.style.display = hasTasks ? '' : 'none';
+  }
+
+  function toggleSubsection(listEl) {
+    const hasTasks = !!listEl.querySelector('.daily-task-wrapper');
+    const hdr = listEl.previousElementSibling;
+    const prev = hdr?.previousElementSibling;
+    listEl.style.display = hasTasks ? '' : 'none';
+    if (hdr && hdr.tagName === 'H3') hdr.style.display = hasTasks ? '' : 'none';
+    if (prev && prev.tagName === 'HR') prev.style.display = hasTasks ? '' : 'none';
+  }
+
+  function toggleDetails(detailsEl, listEl) {
+    const hasTasks = !!listEl.querySelector('.daily-task-wrapper');
+    detailsEl.style.display = hasTasks ? '' : 'none';
+  }
+
   // Remove any duplicate task elements by ID
   const wrappers = Array.from(panel.querySelectorAll('.daily-task-wrapper'));
   const renderedIds = new Set();
@@ -411,6 +432,14 @@ async function renderDailyTasksImpl(currentUser, db) {
     if (renderedIds.has(id)) w.remove();
     else renderedIds.add(id);
   }
+
+  // Hide empty subsections and categories
+  [firstThingContainer, morningContainer, afternoonContainer, eveningContainer, endOfDayContainer].forEach(toggleSubsection);
+  toggleSection(container);
+  toggleSection(weeklyContainer);
+  toggleSection(monthlyContainer);
+  toggleDetails(hiddenContainer.parentElement, hiddenContainer);
+  toggleDetails(completedContainer.parentElement, completedContainer);
 
   // ——— Helpers —————————————————————————
 
