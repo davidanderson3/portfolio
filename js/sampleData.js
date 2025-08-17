@@ -158,6 +158,7 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'daily',
     parentGoalId: null,
+    timeOfDay: 'morning',
   },
   {
     id: 'daily-task-2',
@@ -188,6 +189,7 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'daily',
     parentGoalId: null,
+    timeOfDay: 'firstThing',
   },
   {
     id: 'daily-task-5',
@@ -198,6 +200,7 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'daily',
     parentGoalId: null,
+    timeOfDay: 'morning',
   },
   {
     id: 'daily-task-6',
@@ -208,6 +211,7 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'daily',
     parentGoalId: null,
+    timeOfDay: 'afternoon',
   },
   {
     id: 'daily-task-7',
@@ -218,6 +222,7 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'daily',
     parentGoalId: null,
+    timeOfDay: 'afternoon',
   },
   {
     id: 'daily-task-8',
@@ -228,6 +233,7 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'daily',
     parentGoalId: null,
+    timeOfDay: 'evening',
   },
   {
     id: 'daily-task-9',
@@ -238,6 +244,7 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'daily',
     parentGoalId: null,
+    timeOfDay: 'endOfDay',
   },
   {
     id: 'daily-task-10',
@@ -248,6 +255,7 @@ export const SAMPLE_DECISIONS = [
     dateCompleted: '',
     recurs: 'daily',
     parentGoalId: null,
+    timeOfDay: 'endOfDay',
   },
   {
     id: 'daily-task-11',
