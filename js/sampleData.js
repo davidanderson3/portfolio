@@ -450,7 +450,8 @@ export const SAMPLE_LISTS = [
     ],
     items: [
       { Title: 'https://example.com/book1', Title_label: 'Deep Work', Author: 'Cal Newport' },
-      { Title: 'https://example.com/book2', Title_label: 'Atomic Habits', Author: 'James Clear' }
+      { Title: 'https://example.com/book2', Title_label: 'Atomic Habits', Author: 'James Clear' },
+      { Title: 'https://example.com/book3', Title_label: 'The Pragmatic Programmer', Author: 'Andrew Hunt and David Thomas' }
     ]
   },
   {
@@ -462,7 +463,8 @@ export const SAMPLE_LISTS = [
     items: [
       { Item: 'Apples', Qty: '3' },
       { Item: 'Milk', Qty: '1' },
-      { Item: 'Eggs', Qty: '12' }
+      { Item: 'Eggs', Qty: '12' },
+      { Item: 'Bread', Qty: '2' }
     ]
   },
   {
@@ -474,7 +476,8 @@ export const SAMPLE_LISTS = [
     ],
     items: [
       { Title: 'https://example.com/inception', Title_label: 'Inception', Year: '2010', Watched: false },
-      { Title: 'https://example.com/interstellar', Title_label: 'Interstellar', Year: '2014', Watched: true }
+      { Title: 'https://example.com/interstellar', Title_label: 'Interstellar', Year: '2014', Watched: true },
+      { Title: 'https://example.com/matrix', Title_label: 'The Matrix', Year: '1999', Watched: false }
     ]
   },
   {
@@ -486,7 +489,8 @@ export const SAMPLE_LISTS = [
     items: [
       { Item: 'Passport', Packed: true },
       { Item: 'Toothbrush', Packed: false },
-      { Item: 'Socks', Packed: false }
+      { Item: 'Socks', Packed: false },
+      { Item: 'Sunglasses', Packed: false }
     ]
   }
 ];
