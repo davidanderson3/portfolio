@@ -19,9 +19,7 @@ describe('contacts panel', () => {
       desiredContact: 7,
       desiredConversation: 30,
       desiredMeet: 60,
-      lastContact: null,
-      lastConversation: null,
-      lastMeet: null
+      logs: []
     }];
     localStorage.setItem('contacts', JSON.stringify(sample));
     initContactsPanel();
@@ -30,7 +28,7 @@ describe('contacts panel', () => {
     const nameInput = list.querySelector('input[type="text"]');
     expect(nameInput.value).toBe('Alice');
     const buttons = list.querySelectorAll('button');
-    expect(buttons.length).toBe(5);
+    expect(buttons.length).toBe(6);
   });
 
   it('adds a contact and saves to localStorage', () => {
@@ -44,6 +42,7 @@ describe('contacts panel', () => {
     expect(stored[0].desiredContact).toBe(1);
     expect(stored[0].desiredConversation).toBe(2);
     expect(stored[0].desiredMeet).toBe(3);
+    expect(stored[0].logs.length).toBe(0);
   });
 
   it('logs interactions for a contact', () => {
@@ -51,17 +50,21 @@ describe('contacts panel', () => {
     addContact('Bob', { desiredContact: 1, desiredConversation: 2, desiredMeet: 3 });
     logContactEvent('Bob', 'contact', 'quick hello');
     let stored = JSON.parse(localStorage.getItem('contacts'))[0];
-    expect(stored.lastContact).not.toBeNull();
     expect(stored.logs.length).toBe(1);
     expect(stored.logs[0].note).toBe('quick hello');
+    expect(stored.logs[0].type).toBe('contact');
     logContactEvent('Bob', 'conversation', 'chatted about project');
     stored = JSON.parse(localStorage.getItem('contacts'))[0];
-    expect(stored.lastConversation).not.toBeNull();
     expect(stored.logs.length).toBe(2);
+    expect(stored.logs[1].type).toBe('conversation');
     logContactEvent('Bob', 'meet', 'met at cafe');
     stored = JSON.parse(localStorage.getItem('contacts'))[0];
-    expect(stored.lastMeet).not.toBeNull();
     expect(stored.logs.length).toBe(3);
+    expect(stored.logs[2].type).toBe('meet');
+    logContactEvent('Bob', 'date', 'dinner');
+    stored = JSON.parse(localStorage.getItem('contacts'))[0];
+    expect(stored.logs.length).toBe(4);
+    expect(stored.logs[3].type).toBe('date');
   });
 
   it('stores notes for interactions', () => {
