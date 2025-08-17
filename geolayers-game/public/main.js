@@ -1,6 +1,7 @@
 let locationId = '';
 let finished = false;
 const guess = document.getElementById('guess');
+let map;
 
 function pickLocation(locations) {
   return locations[Math.floor(Math.random() * locations.length)];
@@ -19,10 +20,11 @@ fetch('countries.json').then(r=>r.json()).then(data=>{
   loadCountry();
 });
 
-const map = L.map('map', { zoomControl:false, attributionControl:false });
-
 function loadCountry() {
   fetch(`data/${locationId}/outline.geojson`).then(r=>r.json()).then(outlineGeo=>{
+    if (!map) {
+      map = L.map('map', { zoomControl:false, attributionControl:false });
+    }
     const outline = L.geoJSON(outlineGeo);
     map.fitBounds(outline.getBounds());
     loadRivers();
