@@ -29,7 +29,7 @@ The Finances tab models long-term finances. Enter current savings, income, annua
 Budget breaks down monthly income into recurring expenses and subscriptions. It estimates federal taxes, calculates net pay, and shows what remains after bills. Categories are customizable so the plan can reflect your real spending.
 
 ### Live Music
-The Live Music tab lists upcoming concerts using the Ticketmaster Discovery API. Enter a search keyword (such as an artist or event name) and your Ticketmaster API key, then press **Load Shows** to fetch events. The tab requests `https://app.ticketmaster.com/discovery/v2/events.json?apikey={your-api-key}&keyword={keyword}` and displays the returned events with links. See the [Ticketmaster Discovery API documentation](https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/) for more details.
+The Live Music tab lists upcoming concerts for the artists you listen to most. Enter a Spotify access token and your Ticketmaster API key, then press **Load Shows** to fetch events. The tab uses the [Spotify Web API](https://developer.spotify.com/documentation/web-api/) to retrieve your top artists and then requests `https://app.ticketmaster.com/discovery/v2/events.json?apikey={your-api-key}&keyword={artist-name}` for each artist, displaying the returned events with links. See the [Ticketmaster Discovery API documentation](https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/) for more details.
 
 ### Contacts
 Contacts is a lightweight list of people you want to stay in touch with. Each person stores desired frequencies (in days) for reaching out, having a meaningful conversation, or meeting in person. Logging an interaction records the date and optional notes.
