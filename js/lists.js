@@ -126,44 +126,30 @@ async function initListsPanel() {
   const panel = document.getElementById('listsPanel');
   if (!panel) return;
 
-  // Preserve existing hide button (added in index.html)
-  const panelHideBtn = panel.querySelector('.tab-hide-btn');
-  // Preserve tab descriptions created by descriptions.js
-  const topDesc = panel.querySelector('.tab-description.top-description');
-  const bottomDesc = panel.querySelector('.tab-description.bottom-description');
+  const content = panel.querySelector('.full-column');
+  if (!content) return;
 
-  // ─── 1) Clear & style the panel ─────────────────────────────
-  panel.innerHTML = '';
-  panel.style.display = 'flex';
-  panel.style.flexDirection = 'column';
-  panel.style.width = '100%';
-  panel.style.boxSizing = 'border-box';
-  panel.style.padding = '0 1rem';
+  // Preserve existing elements before we clear
+  const header = content.querySelector('.panel-header');
+  const topDesc = content.querySelector('.tab-description.top-description');
+  const bottomDesc = content.querySelector('.tab-description.bottom-description');
 
-  // Recreate header with hide button
-  const header = document.createElement('div');
-  header.className = 'panel-header';
-  const h = document.createElement('h2');
-  h.textContent = 'Lists';
-  header.appendChild(h);
-  const actions = document.createElement('div');
-  actions.className = 'header-actions';
-  if (panelHideBtn) actions.appendChild(panelHideBtn);
-  header.appendChild(actions);
-  panel.appendChild(header);
-  if (topDesc) panel.appendChild(topDesc);
+  // Clear existing content but keep header & descriptions
+  content.innerHTML = '';
+  if (header) content.appendChild(header);
+  if (topDesc) content.appendChild(topDesc);
 
   // ─── 2) Create static scaffolding ──────────────────────────
   const tabsContainer = document.createElement('div');
   tabsContainer.id = 'listTabs';
-  tabsContainer.style.margin = '1rem 0';
+  tabsContainer.style.margin = '0.5rem 0';
 
   const listsContainer = document.createElement('div');
   listsContainer.id = 'listsContainer';
 
   const itemForm = document.createElement('div');
   itemForm.id = 'itemForm';
-  itemForm.style.margin = '1rem 0';
+  itemForm.style.margin = '0.5rem 0';
 
   const listActions = document.createElement('div');
   listActions.id = 'listActions';
@@ -202,7 +188,7 @@ async function initListsPanel() {
     itemForm,
     listActions
   );
-  panel.append(
+  content.append(
     tabsContainer,
     listWrapper
   );
@@ -212,7 +198,7 @@ async function initListsPanel() {
     formsWrapper.innerHTML = '';
     formsWrapper.append(createForm);
   } else {
-    panel.append(createForm);
+    content.append(createForm);
   }
 
   function initHiddenSection() {
@@ -228,13 +214,13 @@ async function initListsPanel() {
         <div id="hiddenListsContent" style="display:none"></div>
         <hr style="margin:40px 0;" />
       `;
-      panel.append(hidden);
+      content.append(hidden);
       const toggle = hidden.querySelector('#toggleHiddenLists');
-      const content = hidden.querySelector('#hiddenListsContent');
+      const hiddenListsContent = hidden.querySelector('#hiddenListsContent');
       toggle.onclick = () => {
-        const open = content.style.display === 'block';
+        const open = hiddenListsContent.style.display === 'block';
         toggle.textContent = open ? '▶' : '▼';
-        content.style.display = open ? 'none' : 'block';
+        hiddenListsContent.style.display = open ? 'none' : 'block';
       };
     }
     return hidden.querySelector('#hiddenListsContent');
@@ -243,7 +229,7 @@ async function initListsPanel() {
   const hiddenContent = initHiddenSection();
   if (bottomDesc) {
     // place bottom description before hidden lists section
-    panel.insertBefore(bottomDesc, hiddenContent.parentElement);
+    content.insertBefore(bottomDesc, hiddenContent.parentElement);
   }
 
 
