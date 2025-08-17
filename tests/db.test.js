@@ -338,8 +338,10 @@ describe('database helpers', () => {
       auth: { onAuthStateChanged: vi.fn() }
     }));
     const { loadDecisions } = await import('../js/helpers.js');
+    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
     const loaded = await loadDecisions(true);
-    expect(loaded).toEqual([{ id: '1', text: 'a' }]);
+    expect(loaded.length).toBe(SAMPLE_DECISIONS.length + 1);
+    expect(loaded.some(i => i.id === '1' && i.text === 'a')).toBe(true);
   });
 
   it('does not write anonymous edits to user document after login', async () => {

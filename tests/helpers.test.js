@@ -140,6 +140,31 @@ describe('loadDecisions caching behavior', () => {
     expect(auth).toEqual([{ id: '1', text: 't' }]);
     expect(collectionMock).toHaveBeenCalledWith('decisions');
   });
+
+  it('merges stored anonymous items with default sample data', async () => {
+    const { loadDecisions, clearDecisionsCache } = await import('../js/helpers.js');
+    const { SAMPLE_DECISIONS } = await import('../js/sampleData.js');
+
+    currentUser = null;
+    collectionMock.mockClear();
+    docMock = vi.fn(name => ({
+      get: () => Promise.resolve({ data: () => (name === 'sample' ? { items: [{ id: 'extra', type: 'goal', text: 'Extra', parentGoalId: null }] } : undefined) }),
+      set: vi.fn()
+    }));
+    collectionMock = vi.fn(name => ({ doc: () => docMock(name) }));
+    clearDecisionsCache();
+
+    const merged = await loadDecisions(true);
+    expect(merged.some(i => i.id === 'extra')).toBe(true);
+    expect(merged.some(i => i.id === SAMPLE_DECISIONS[0].id)).toBe(true);
+    expect(merged.length).toBe(SAMPLE_DECISIONS.length + 1);
+
+    docMock = vi.fn(name => ({
+      get: name === 'decisions' ? getMock : vi.fn(() => Promise.resolve({ data: () => undefined })),
+      set: vi.fn()
+    }));
+    collectionMock = vi.fn(name => ({ doc: () => docMock(name) }));
+  });
 });
 
 describe('saveDecisions deduplication', () => {
