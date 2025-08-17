@@ -44,7 +44,9 @@ export async function initTabs(user, db) {
 
   const container = document.getElementById('tabsContainer');
   let tabButtons = Array.from(document.querySelectorAll('.tab-button'));
-  let panels    = user ? PANELS : PANELS.filter(id => id !== 'contactsPanel');
+  let panels = user
+    ? PANELS
+    : PANELS.filter(id => id !== 'contactsPanel' && id !== 'backupsPanel');
 
   try {
     const saved = await loadTabOrder();
