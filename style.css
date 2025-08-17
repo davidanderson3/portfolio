@@ -1865,7 +1865,7 @@ h2 {
   padding-left: 20px;
 }
 
-/* Planning panel profiles */
+/* Finances panel profiles */
 #profilesList {
   display: flex;
   flex-wrap: wrap;
@@ -1880,7 +1880,7 @@ h2 {
   padding: 8px;
 }
 
-/* Planning panel form layout */
+/* Finances panel form layout */
 .planning-form {
   display: flex;
   flex-wrap: wrap;
