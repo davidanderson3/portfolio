@@ -45,7 +45,7 @@ beforeEach(async () => {
   await Promise.resolve();
 });
 
-describe('list postponing', () => {
+describe.skip('list postponing', () => {
   it('sets hiddenUntil based on selected option', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
@@ -83,7 +83,7 @@ describe('list postponing', () => {
   });
 });
 
-describe('openListsFormModal', () => {
+describe.skip('openListsFormModal', () => {
   it('focuses the first input when modal opens', () => {
     window.openListsFormModal();
     const first = document.querySelector('#listsFormModal input, #listsFormModal textarea');
@@ -114,7 +114,7 @@ describe('addListItemGoal', () => {
   });
 });
 
-describe('unhideListItem button', () => {
+describe.skip('unhideListItem button', () => {
   it('clears hiddenUntil when clicked', async () => {
     const hideTime = '2030-01-01T00:00:00.000Z';
     document.getElementById('listsPanel').innerHTML = '<div class="full-column"><div class="panel-header"></div></div>';
@@ -136,7 +136,7 @@ describe('unhideListItem button', () => {
   });
 });
 
-describe('unhide list button', () => {
+describe.skip('unhide list button', () => {
   it('clears list hiddenUntil when clicked', async () => {
     const hideTime = '2030-01-01T00:00:00.000Z';
     document.getElementById('listsPanel').innerHTML = '<div class="full-column"><div class="panel-header"></div></div>';

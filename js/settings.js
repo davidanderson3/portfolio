@@ -2,14 +2,20 @@ import { auth, db, getCurrentUser } from './auth.js';
 import { PANELS, PANEL_NAMES } from './tabs.js';
 import { getSiteName, setSiteName } from './siteName.js';
 
-const KEY = 'hiddenTabs';
-const ORDER_KEY = 'tabOrder';
+const BASE_KEY = 'hiddenTabs';
+const BASE_ORDER_KEY = 'tabOrder';
+
+function storageKey(base, user) {
+  const uid = user?.uid;
+  return uid ? `${base}-${uid}` : base;
+}
 
 export async function loadTabOrder() {
   const user = getCurrentUser?.();
+  const localKey = storageKey(BASE_ORDER_KEY, user);
   if (!user) {
     try {
-      const stored = JSON.parse(localStorage.getItem(ORDER_KEY) || '[]');
+      const stored = JSON.parse(localStorage.getItem(localKey) || '[]');
       return Array.isArray(stored) ? stored : [];
     } catch {
       return [];
@@ -17,22 +23,37 @@ export async function loadTabOrder() {
   }
   const snap = await db
     .collection('users').doc(user.uid)
-    .collection('settings').doc(ORDER_KEY)
+    .collection('settings').doc(BASE_ORDER_KEY)
     .get();
-  const arr = snap.exists ? snap.data().order : [];
+  let arr = snap.exists ? snap.data().order : [];
+  if (!snap.exists) {
+    try {
+      let raw = localStorage.getItem(localKey);
+      if (!raw && localKey !== BASE_ORDER_KEY) {
+        raw = localStorage.getItem(BASE_ORDER_KEY);
+        if (raw) {
+          localStorage.setItem(localKey, raw);
+          localStorage.removeItem(BASE_ORDER_KEY);
+        }
+      }
+      if (raw) arr = JSON.parse(raw);
+    } catch {
+      arr = [];
+    }
+  }
   return Array.isArray(arr) ? arr : [];
 }
 
 export async function saveTabOrder(order) {
   if (!Array.isArray(order)) return;
   const user = getCurrentUser?.();
-  if (!user) {
-    localStorage.setItem(ORDER_KEY, JSON.stringify(order));
-    return;
-  }
+  const localKey = storageKey(BASE_ORDER_KEY, user);
+  localStorage.setItem(localKey, JSON.stringify(order));
+  if (localKey !== BASE_ORDER_KEY) localStorage.removeItem(BASE_ORDER_KEY);
+  if (!user) return;
   await db
     .collection('users').doc(user.uid)
-    .collection('settings').doc(ORDER_KEY)
+    .collection('settings').doc(BASE_ORDER_KEY)
     .set({ order });
 }
 
@@ -50,10 +71,11 @@ function normalize(data) {
 
 export async function loadHiddenTabs() {
   const user = getCurrentUser?.();
+  const localKey = storageKey(BASE_KEY, user);
   if (!user) {
     let stored = {};
     try {
-      stored = JSON.parse(localStorage.getItem(KEY) || '{}');
+      stored = JSON.parse(localStorage.getItem(localKey) || '{}');
     } catch (err) {
       console.error('Failed to parse hidden tabs from localStorage:', err);
       stored = {};
@@ -62,44 +84,55 @@ export async function loadHiddenTabs() {
   }
   const snap = await db
     .collection('users').doc(user.uid)
-    .collection('settings').doc(KEY)
+    .collection('settings').doc(BASE_KEY)
     .get();
   if (snap.exists) return normalize(snap.data().tabs);
   let stored = {};
+  let fromScoped = false;
   try {
-    stored = JSON.parse(localStorage.getItem(KEY) || '{}');
+    let raw = localStorage.getItem(localKey);
+    if (raw) {
+      fromScoped = true;
+    } else if (localKey !== BASE_KEY) {
+      raw = localStorage.getItem(BASE_KEY);
+      if (raw) {
+        localStorage.setItem(localKey, raw);
+        localStorage.removeItem(BASE_KEY);
+      }
+    }
+    stored = raw ? JSON.parse(raw) : {};
   } catch (err) {
     console.error('Failed to parse hidden tabs from localStorage:', err);
     stored = {};
   }
   const obj = normalize(stored);
-  if (Object.keys(obj).length) saveHiddenTabs(obj).catch(() => {});
+  if (fromScoped && Object.keys(obj).length) saveHiddenTabs(obj).catch(() => {});
   return obj;
 }
 
 export async function saveHiddenTabs(tabs) {
   const obj = normalize(tabs);
   const user = getCurrentUser?.();
-  if (!user) {
-    localStorage.setItem(KEY, JSON.stringify(obj));
-    return;
-  }
+  const localKey = storageKey(BASE_KEY, user);
+  localStorage.setItem(localKey, JSON.stringify(obj));
+  if (localKey !== BASE_KEY) localStorage.removeItem(BASE_KEY);
+  if (!user) return;
   await db
     .collection('users').doc(user.uid)
-    .collection('settings').doc(KEY)
+    .collection('settings').doc(BASE_KEY)
     .set({ tabs: obj });
 }
 
 export async function clearHiddenTabs() {
   const user = getCurrentUser?.();
-  if (!user) {
-    localStorage.removeItem(KEY);
-    return;
-  }
+  const localKey = storageKey(BASE_KEY, user);
+  localStorage.removeItem(localKey);
+  if (localKey !== BASE_KEY) localStorage.removeItem(BASE_KEY);
+  if (!user) return;
   try {
     await db
       .collection('users').doc(user.uid)
-      .collection('settings').doc(KEY)
+      .collection('settings').doc(BASE_KEY)
       .delete();
   } catch (err) {
     alert(`Failed to clear hidden tabs: ${err?.message || err}`);

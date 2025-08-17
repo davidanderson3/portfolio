@@ -122,7 +122,7 @@ export function clearPlanningCache() {
   }
 }
 
-export async function loadPlanningData() {
+export async function loadPlanningData({ recoverLocal = false } = {}) {
   const user = getCurrentUser?.();
   if (!user) {
     localStorage.removeItem(PLANNING_KEY);
@@ -130,16 +130,7 @@ export async function loadPlanningData() {
     return planningCache;
   }
 
-  let localData = {};
-  const stored = localStorage.getItem(PLANNING_KEY);
-  if (stored) {
-    try {
-      localData = JSON.parse(stored) || {};
-    } catch (err) {
-      console.warn('Failed to parse stored planning data:', err);
-    }
-  }
-
+  // Always pull from Firestore first and treat it as authoritative
   let cloudData = {};
   try {
     const snap = await db
@@ -153,23 +144,49 @@ export async function loadPlanningData() {
     console.error('Failed to fetch planning data:', err);
   }
 
-  const localTs = localData.lastUpdated || 0;
-  const cloudTs = cloudData.lastUpdated || 0;
-  const older = cloudTs >= localTs ? localData : cloudData;
-  const newer = cloudTs >= localTs ? cloudData : localData;
-  planningCache = deepMerge(older, newer);
-  planningCache.lastUpdated = Math.max(localTs, cloudTs);
+  planningCache = cloudData || {};
+  if (!planningCache.lastUpdated) {
+    planningCache.lastUpdated = Date.now();
+  }
+  const cloudTs = planningCache.lastUpdated || 0;
 
-  try {
-    await db
-      .collection('users').doc(user.uid)
-      .collection('settings').doc(PLANNING_KEY)
-      .set(planningCache, { merge: true });
-  } catch (err) {
-    console.error('Failed to save planning data:', err);
+  // Load any local data but do not automatically merge it
+  let localData = {};
+  const stored = localStorage.getItem(PLANNING_KEY);
+  if (stored) {
+    try {
+      localData = JSON.parse(stored) || {};
+    } catch (err) {
+      console.warn('Failed to parse stored planning data:', err);
+    }
   }
 
-  localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
+  const localTs = localData.lastUpdated || 0;
+  let shouldMerge = recoverLocal;
+  if (!shouldMerge && localTs > cloudTs && Object.keys(localData).length) {
+    if (typeof window !== 'undefined' && window.confirm) {
+      shouldMerge = window.confirm('Local planning data found. Merge with cloud data?');
+    }
+  }
+
+  if (shouldMerge) {
+    planningCache = deepMerge(cloudData, localData);
+    planningCache.lastUpdated = Date.now();
+    try {
+      await db
+        .collection('users').doc(user.uid)
+        .collection('settings').doc(PLANNING_KEY)
+        .set(planningCache, { merge: true });
+      // Clear local copy once it's synced to avoid repeat merges
+      localStorage.removeItem(PLANNING_KEY);
+    } catch (err) {
+      console.error('Failed to save planning data:', err);
+    }
+  } else {
+    // Use the cloud data as is and overwrite any stale local copy
+    localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
+  }
+
   return planningCache;
 }
 
@@ -374,10 +391,9 @@ export async function initPlanningPanel() {
     const workingData = finData.filter(r => r.age <= retirementAgeNum);
     const retirementData = finData.filter(r => r.age > retirementAgeNum);
 
-    financeResultDiv.innerHTML = '<h3>Working Years</h3>' +
-      buildFinanceTable(workingData) +
-      '<h3>Retirement</h3>' +
-      buildFinanceTable(retirementData);
+    financeResultDiv.innerHTML =
+      `<div class="finance-tables"><div><h3>Working Years</h3>${buildFinanceTable(workingData)}</div>` +
+      `<div><h3>Retirement</h3>${buildFinanceTable(retirementData)}</div></div>`;
 
     currentData.finance = {
       curAge: values.curAge,
