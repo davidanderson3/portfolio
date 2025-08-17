@@ -59,6 +59,8 @@
         </div>
     </section>
 
+    <a href="#" id="contactDeveloperLink" class="contact-link">Contact Developer</a>
+
     <nav id="bottomNav" class="bottom-nav">
         <a href="settings.html" class="icon-btn" id="bottomSettingsBtn"><img src="assets/gear.svg" alt="Settings" /></a>
         <button type="button" id="bottomAddBtn" class="icon-btn circle-btn icon-button"><img src="assets/plus.svg" alt="Add" /></button>
@@ -75,6 +77,27 @@
                 <button type="button" id="bottomAddCancel">Cancel</button>
                 <button type="button" id="bottomAddSubmit">Add</button>
             </div>
+        </div>
+    </div>
+
+    <div id="contactModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:400px;width:90%;max-height:80vh;overflow:auto;">
+            <h3>Contact Developer</h3>
+            <form id="contactForm">
+                <div style="margin-bottom:8px;">
+                    <label>Name<br><input type="text" id="contactName" /></label>
+                </div>
+                <div style="margin-bottom:8px;">
+                    <label>Email<br><input type="email" id="contactEmailInput" required /></label>
+                </div>
+                <div style="margin-bottom:8px;">
+                    <label>Message<br><textarea id="contactMessage" required style="width:100%;height:100px;"></textarea></label>
+                </div>
+                <div class="modal-actions" style="margin-top:1em;">
+                    <button type="submit">Send</button>
+                    <button type="button" id="contactCancelBtn">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 
