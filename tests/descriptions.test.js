@@ -34,6 +34,13 @@ describe('movies api', () => {
   });
 });
 
+describe('contact endpoint', () => {
+  it('requires sender and message', async () => {
+    const res = await request(server).post('/contact').send({});
+    expect(res.status).toBe(400);
+  });
+});
+
 afterAll(() => {
   server.close();
 });

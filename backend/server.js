@@ -4,10 +4,25 @@ const fs = require('fs');
 const { execFile } = require('child_process');
 const util = require('util');
 const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
+const nodemailer = require('nodemailer');
 
 const execFileAsync = util.promisify(execFile);
 const app = express();
 const PORT = 3002;
+
+const CONTACT_EMAIL = Buffer.from('ZHZkbmRyc25AZ21haWwuY29t', 'base64').toString('utf8');
+const mailer = (() => {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+})();
 
 app.use(express.json());
 
@@ -35,6 +50,29 @@ app.use(express.static(path.resolve(__dirname, '../')));
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   next();
+});
+
+app.post('/contact', async (req, res) => {
+  const { name, from, message } = req.body || {};
+  if (!from || !message) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  if (!mailer) {
+    return res.status(500).json({ error: 'mail disabled' });
+  }
+  try {
+    await mailer.sendMail({
+      to: CONTACT_EMAIL,
+      from: process.env.SMTP_USER,
+      replyTo: from,
+      subject: `Dashboard contact from ${name || 'Anonymous'}`,
+      text: message
+    });
+    res.json({ status: 'ok' });
+  } catch (err) {
+    console.error('Contact email failed', err);
+    res.status(500).json({ error: 'failed' });
+  }
 });
 
 // --- Description persistence ---
