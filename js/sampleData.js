@@ -1,4 +1,4 @@
-import { getSiteName } from './siteName.js';
+// Sample data used to populate the application for first-time users.
 
 function deepFreeze(obj) {
   if (obj && typeof obj === 'object') {
@@ -25,7 +25,7 @@ export const SAMPLE_DECISIONS = [
   {
     id: 'demo-goal',
     type: 'goal',
-    text: `Welcome to ${getSiteName()}`,
+    text: 'Explore this Application',
     completed: false,
     resolution: '',
     dateCompleted: '',

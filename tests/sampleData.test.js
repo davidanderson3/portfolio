@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { SAMPLE_DECISIONS, SAMPLE_LISTS } from '../js/sampleData.js';
-import { getSiteName } from '../js/siteName.js';
 
 describe('sample data immutability', () => {
   it('deeply freezes SAMPLE_DECISIONS', () => {
@@ -9,7 +8,7 @@ describe('sample data immutability', () => {
     expect(() => {
       SAMPLE_DECISIONS[0].text = 'changed';
     }).toThrow();
-      expect(SAMPLE_DECISIONS[0].text).toBe(`Welcome to ${getSiteName()}`);
+    expect(SAMPLE_DECISIONS[0].text).toBe('Explore this Application');
   });
 
   it('deeply freezes SAMPLE_LISTS', () => {
