@@ -7,7 +7,14 @@ vi.mock('../js/helpers.js', () => ({
   loadDecisions: vi.fn(),
   saveDecisions: vi.fn(),
   generateId: vi.fn(),
-  pickDate: vi.fn()
+  pickDate: vi.fn(),
+  makeIconBtn: (symbol, title, fn) => {
+    const b = document.createElement('button');
+    b.textContent = symbol;
+    b.title = title;
+    b.onclick = fn;
+    return b;
+  }
 }));
 
 vi.mock('../js/goals.js', () => ({
