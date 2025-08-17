@@ -246,3 +246,52 @@ describe('planning UI persistence', () => {
     expect(saved.history[0].timestamp).toBeDefined();
   });
 });
+
+describe('planning finance tables', () => {
+  it('splits projection into working and retirement tables', async () => {
+    vi.resetModules();
+    currentUser = { uid: 'u1' };
+    const dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>', { url: 'http://localhost' });
+    const prevWin = global.window;
+    const prevDoc = global.document;
+    global.window = dom.window;
+    global.document = dom.window.document;
+    localStorage.clear();
+
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'investmentReturnRate', 'savingsReturnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'mortgage', 'rollingCredit', 'other'];
+    names.forEach(n => {
+      Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
+        get() { return this.elements.namedItem(n); },
+        configurable: true
+      });
+    });
+
+    const mod = await import('../js/planning.js');
+    await mod.initPlanningPanel();
+
+    const form = document.querySelector('#planningForm');
+    form.curAge.value = '30';
+    form.retAge.value = '31';
+    form.income.value = '50000';
+    form.annualSavings.value = '1000';
+    form.postYears.value = '1';
+    form.realEstate.value = '1000';
+    form.carValue.value = '0';
+    form.assetSavings.value = '0';
+    form.checking.value = '0';
+    form.investment.value = '0';
+    form.rollingCredit.value = '0';
+    form.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+
+    const headings = Array.from(document.querySelectorAll('#financeResult h3')).map(h => h.textContent);
+    expect(headings).toEqual(['Working Years', 'Retirement']);
+    const tables = document.querySelectorAll('#financeResult table');
+    expect(tables.length).toBe(2);
+    expect(tables[0].querySelectorAll('tbody tr').length).toBe(2);
+    expect(tables[1].querySelectorAll('tbody tr').length).toBe(1);
+
+    const resetDom = prevWin ? { window: prevWin, document: prevDoc } : new JSDOM('', { url: 'http://localhost' });
+    global.window = resetDom.window || resetDom;
+    global.document = resetDom.document || resetDom.window.document;
+  });
+});
