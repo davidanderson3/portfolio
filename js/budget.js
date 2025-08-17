@@ -109,13 +109,15 @@ export async function loadBudgetData() {
   }
 
   let cloudData = {};
+  let cloudExists = false;
   try {
     const snap = await db
       .collection('users').doc(user.uid)
       .collection('settings').doc(BUDGET_KEY)
       .get();
     if (snap) {
-      cloudData = snap.exists ? snap.data() : {};
+      cloudExists = !!snap.exists;
+      cloudData = cloudExists ? snap.data() : {};
     }
   } catch (err) {
     console.error('Failed to fetch budget data:', err);
@@ -131,13 +133,27 @@ export async function loadBudgetData() {
   budgetCache.goalRecurring = budgetCache.goalRecurring || {};
   budgetCache.goalSubscriptions = budgetCache.goalSubscriptions || {};
   budgetCache.lastUpdated = Math.max(localTs, cloudTs);
-  try {
-    await db
-      .collection('users').doc(user.uid)
-      .collection('settings').doc(BUDGET_KEY)
-      .set(budgetCache, { merge: true });
-  } catch (err) {
-    console.error('Failed to save budget data:', err);
+
+  let shouldSave = !cloudExists;
+  if (cloudExists && localTs > cloudTs) {
+    const ask = () => {
+      if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+        return window.confirm('Upload local budget changes to the cloud?');
+      }
+      return false;
+    };
+    shouldSave = ask();
+  }
+
+  if (shouldSave) {
+    try {
+      await db
+        .collection('users').doc(user.uid)
+        .collection('settings').doc(BUDGET_KEY)
+        .set(budgetCache, { merge: true });
+    } catch (err) {
+      console.error('Failed to save budget data:', err);
+    }
   }
 
   localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetCache));

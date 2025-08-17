@@ -117,6 +117,9 @@ export function initAuth({ loginBtn, logoutBtn, userEmail, bottomLoginBtn, botto
     loginButtons.forEach(b => safeSet(b, 'style', user ? 'display:none' : 'display:inline-block'));
     logoutButtons.forEach(b => safeSet(b, 'style', user ? 'display:inline-block' : 'display:none'));
     updateBottomBtn(user);
+    if (user) {
+      try { localStorage.removeItem('budgetConfig'); } catch (e) { /* ignore */ }
+    }
     onLogin(user);
   });
 }
