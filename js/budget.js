@@ -216,6 +216,7 @@ export async function initBudgetPanel() {
     row.innerHTML = `
       <input type="text" class="sub-name" placeholder="Name" value="${name}">
       <input type="number" class="sub-cost" value="${cost}">
+      <span class="item-diff"></span>
     `;
     const rem = makeIconBtn('❌', 'Remove', () => {
       panel.querySelectorAll(`.subscription-row[data-id="${id}"]`).forEach(r => r.remove());
@@ -252,6 +253,7 @@ export async function initBudgetPanel() {
     row.innerHTML = `
       <input type="text" class="recur-name" placeholder="Name" value="${name}" ${fixed ? 'readonly' : ''}>
       <input type="number" class="recur-cost" value="${cost}">
+      <span class="item-diff"></span>
     `;
     const rem = makeIconBtn('❌', 'Remove', () => {
       if (key) removedBuiltIns.add(key);
@@ -339,6 +341,33 @@ export async function initBudgetPanel() {
     return { categories, recur, subs, saveData };
   }
 
+  function updateDiffs() {
+    function applyDiff(aContainer, bContainer, costSelector) {
+      bContainer.querySelectorAll('[data-id]').forEach(rowB => {
+        const id = rowB.dataset.id;
+        const rowA = aContainer.querySelector(`[data-id="${id}"]`);
+        const costA = parseFloat(rowA?.querySelector(costSelector).value) || 0;
+        const costB = parseFloat(rowB.querySelector(costSelector).value) || 0;
+        const diff = costB - costA;
+        const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
+        const absDiff = Math.abs(diff);
+        let percentText;
+        if (costA === 0) {
+          percentText = absDiff === 0 ? '0%' : 'n/a';
+        } else {
+          percentText = sign + ((absDiff / costA) * 100).toFixed(1) + '%';
+        }
+        const diffText = sign + '$' + absDiff.toFixed(2);
+        rowB.querySelector('.item-diff').textContent = `${percentText} (${diffText})`;
+      });
+      aContainer.querySelectorAll('.item-diff').forEach(el => {
+        el.textContent = '';
+      });
+    }
+    applyDiff(recurContainerA, recurContainerB, '.recur-cost');
+    applyDiff(subsContainerA, subsContainerB, '.sub-cost');
+  }
+
   function render(save = true) {
     const aData = collectScenario(recurContainerA, subsContainerA, removedBuiltIns, {
       prefix: '',
@@ -360,6 +389,8 @@ export async function initBudgetPanel() {
     summaryB.innerHTML =
       `Total Expenses: $${resultB.expenses.toLocaleString()}<br>` +
       `Leftover: $${resultB.leftover.toLocaleString()}`;
+
+    updateDiffs();
 
     if (save) {
       const dataToSave = { ...aData.saveData, ...bData.saveData };
