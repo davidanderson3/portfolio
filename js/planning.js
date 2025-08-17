@@ -254,7 +254,7 @@ export async function initPlanningPanel() {
         <label>Annual Raise % <input type="number" name="annualRaise" value="${currentData.finance.annualRaise ?? ''}" /></label>
         <label>Inflation Rate % <input type="number" name="inflation" value="${currentData.finance.inflation ?? 0}" /></label>
         <label>Estimated Pension <input type="number" name="pension" value="${currentData.finance.pension ?? ''}" /></label>
-        <label>Withdrawal Rate % <input type="number" name="withdrawalRate" value="${currentData.finance.withdrawalRate ?? 4}" /></label>
+        <label>Retirement Withdrawal % <input type="number" name="withdrawalRate" value="${currentData.finance.withdrawalRate ?? 4}" /></label>
         <label>Post Years <input type="number" name="postYears" value="${currentData.finance.postYears ?? 30}" /></label>
         <label>Social Security <input type="number" name="socialSecurity" value="${currentData.finance.socialSecurity ?? ''}" /></label>
         <div id="ssEstimate" style="margin-bottom:0.5em;font-style:italic"></div>
