@@ -100,10 +100,11 @@ export async function loadBudgetData() {
   }
 
   if (!user) {
-    budgetCache = migrateSubscriptions({ ...(localData || {}) });
-    budgetCache.recurring = budgetCache.recurring || {};
-    budgetCache.goalRecurring = budgetCache.goalRecurring || {};
-    budgetCache.goalSubscriptions = budgetCache.goalSubscriptions || {};
+    localStorage.removeItem(BUDGET_KEY);
+    budgetCache = migrateSubscriptions({});
+    budgetCache.recurring = {};
+    budgetCache.goalRecurring = {};
+    budgetCache.goalSubscriptions = {};
     return budgetCache;
   }
 
@@ -150,10 +151,11 @@ export async function saveBudgetData(data) {
   budgetCache.goalSubscriptions = budgetCache.goalSubscriptions || {};
   budgetCache.lastUpdated = Date.now();
   const user = getCurrentUser?.();
-  localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetCache));
   if (!user) {
+    localStorage.removeItem(BUDGET_KEY);
     return;
   }
+  localStorage.setItem(BUDGET_KEY, JSON.stringify(budgetCache));
   try {
     await db
       .collection('users').doc(user.uid)

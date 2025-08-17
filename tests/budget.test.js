@@ -136,15 +136,13 @@ describe('budget persistence', () => {
     expect(setMock).toHaveBeenCalledWith(saved, { merge: true });
   });
 
-  it('uses localStorage when anonymous', async () => {
+  it('does not persist data in localStorage when anonymous', async () => {
     vi.doMock('../js/auth.js', () => ({ getCurrentUser: () => null, db: {}, auth: { onAuthStateChanged: vi.fn() } }));
     const { saveBudgetData, loadBudgetData } = await import('../js/budget.js');
     await saveBudgetData({ escrow: 80 });
-    const stored = JSON.parse(localStorage.getItem('budgetConfig'));
-    expect(stored.escrow).toBe(80);
-    expect(typeof stored.lastUpdated).toBe('number');
+    expect(localStorage.getItem('budgetConfig')).toBeNull();
     const data = await loadBudgetData();
-    expect(data.escrow).toBe(80);
+    expect(data.escrow).toBeUndefined();
     expect(data.recurring).toEqual({});
     expect(data.goalSubscriptions).toEqual({});
     expect(data.goalRecurring).toEqual({});
