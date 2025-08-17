@@ -194,6 +194,10 @@ window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('addPlaceBtn')?.click();
       return;
     }
+    if (active === 'budgetPanel') {
+      document.getElementById('addCategoryBtn')?.click();
+      return;
+    }
     if (active === 'contactsPanel') {
       showAddModal({
         title: 'Add Contact',
