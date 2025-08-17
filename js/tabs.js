@@ -151,7 +151,12 @@ export async function initTabs(user, db) {
   // on load, fire any needed init. If DOMContentLoaded already fired,
   // run immediately instead of waiting for the event.
   const runInitial = () => {
-    if (initial === 'metricsPanel') {
+    if (initial === 'dailyPanel') {
+      if (typeof window.renderDailyTasks === 'function') {
+        window.renderDailyTasks(currentUser, db);
+      }
+    }
+    else if (initial === 'metricsPanel') {
       window.initMetricsUI();
     }
     else if (initial === 'listsPanel') {
