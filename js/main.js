@@ -313,7 +313,8 @@ window.addEventListener('DOMContentLoaded', () => {
     const panel = document.getElementById('calendarPanel');
     const dailyBtn = document.getElementById('calendarDailyTab');
     const hourlyBtn = document.getElementById('calendarHourlyTab');
-    if (!panel || !dailyBtn || !hourlyBtn) return;
+    const tabs = document.querySelector('.calendar-mobile-tabs');
+    if (!panel || !dailyBtn || !hourlyBtn || !tabs) return;
 
     const setView = view => {
       panel.classList.toggle('mobile-daily', view === 'daily');
@@ -324,7 +325,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
     dailyBtn.addEventListener('click', () => setView('daily'));
     hourlyBtn.addEventListener('click', () => setView('hourly'));
-    setView('daily');
+
+    const mq = window.matchMedia('(max-width: 768px)');
+    const updateVisibility = () => {
+      const isMobile = mq.matches;
+      tabs.style.display = isMobile ? '' : 'none';
+      if (isMobile) {
+        setView('daily');
+      } else {
+        panel.classList.remove('mobile-daily', 'mobile-hourly');
+        dailyBtn.classList.remove('active');
+        hourlyBtn.classList.remove('active');
+      }
+    };
+    updateVisibility();
+    if (mq.addEventListener) {
+      mq.addEventListener('change', updateVisibility);
+    } else if (mq.addListener) {
+      mq.addListener(updateVisibility);
+    }
   }
 
   function clearTaskLists() {
