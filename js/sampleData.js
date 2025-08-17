@@ -150,6 +150,29 @@ export const SAMPLE_DECISIONS = [
     parentGoalId: 'demo-goal-4',
   },
   {
+    id: 'demo-meeting',
+    type: 'task',
+    text: 'Meet with a friend',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    parentGoalId: null,
+    scheduled: '2025-07-11',
+    scheduledEnd: ''
+  },
+  {
+    id: 'demo-retreat',
+    type: 'goal',
+    text: 'Weekend retreat',
+    completed: false,
+    resolution: '',
+    dateCompleted: '',
+    parentGoalId: null,
+    deadline: '',
+    scheduled: '2025-07-15',
+    scheduledEnd: '2025-07-16'
+  },
+  {
     id: 'daily-task-1',
     type: 'task',
     text: 'Review tasks each morning',

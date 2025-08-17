@@ -122,8 +122,13 @@ describe('loadDecisions caching behavior', () => {
 
     const anon = await loadDecisions();
     expect(anon.length).toBe(SAMPLE_DECISIONS.length);
-    anon.filter(i => i.scheduled).forEach(i => {
+    const scheduled = anon.filter(i => i.scheduled);
+    expect(scheduled.length).toBeGreaterThan(1);
+    scheduled.forEach(i => {
       expect(new Date(i.scheduled).getTime()).toBeGreaterThan(Date.now());
+      if (i.scheduledEnd) {
+        expect(new Date(i.scheduledEnd).getTime()).toBeGreaterThan(Date.now());
+      }
     });
     expect(collectionMock).toHaveBeenCalledWith('sample');
 
