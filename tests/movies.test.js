@@ -10,22 +10,22 @@ describe('initMoviesPanel', () => {
     global.window = dom.window;
   });
 
-  it('renders movie titles from external API', async () => {
-    const mockMovies = [
-      { title: 'Sample Movie', year: 2024, href: 'https://example.com/sample' }
-    ];
+  it('renders movie titles with review info from external API', async () => {
+    const csv = 'movie_title,title_year,imdb_score,num_critic_for_reviews,num_user_for_reviews\n' +
+                'Sample Movie,2024,7.5,10,5';
 
     global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(mockMovies)
+        text: () => Promise.resolve(csv)
       })
     );
 
     await initMoviesPanel();
 
-    const link = document.querySelector('#movieList li a');
-    expect(link.textContent).toContain('Sample Movie');
-    expect(fetch).toHaveBeenCalledWith('https://raw.githubusercontent.com/prust/wikipedia-movie-data/master/movies.json');
+    const item = document.querySelector('#movieList li');
+    expect(item.textContent).toContain('Sample Movie');
+    expect(item.textContent).toContain('IMDB score: 7.5');
+    expect(fetch).toHaveBeenCalledWith('https://raw.githubusercontent.com/sundeepblue/movie_rating_prediction/master/movie_metadata.csv');
   });
 });
