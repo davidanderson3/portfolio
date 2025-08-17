@@ -1,29 +1,28 @@
 export async function initShowsPanel() {
-  const listEl = document.getElementById('songkickList');
+  const listEl = document.getElementById('bandsintownList');
   if (!listEl) return;
-  const userInput = document.getElementById('songkickUsername');
-  const keyInput = document.getElementById('songkickApiKey');
-  const loadBtn = document.getElementById('songkickLoadBtn');
+  const artistInput = document.getElementById('bandsintownArtist');
+  const appIdInput = document.getElementById('bandsintownAppId');
+  const loadBtn = document.getElementById('bandsintownLoadBtn');
 
-  const savedUser = localStorage.getItem('songkickUsername') || '';
-  const savedKey = localStorage.getItem('songkickApiKey') || '';
-  if (userInput) userInput.value = savedUser;
-  if (keyInput) keyInput.value = savedKey;
+  const savedArtist = localStorage.getItem('bandsintownArtist') || '';
+  const savedAppId = localStorage.getItem('bandsintownAppId') || '';
+  if (artistInput) artistInput.value = savedArtist;
+  if (appIdInput) appIdInput.value = savedAppId;
 
   const loadShows = async () => {
-    const username = userInput?.value.trim();
-    const apiKey = keyInput?.value.trim();
-    if (!username || !apiKey) {
-      if (listEl) listEl.textContent = 'Please enter username and API key.';
+    const artist = artistInput?.value.trim();
+    const appId = appIdInput?.value.trim();
+    if (!artist || !appId) {
+      if (listEl) listEl.textContent = 'Please enter artist and App ID.';
       return;
     }
     listEl.innerHTML = '<em>Loading...</em>';
     try {
-      const url = `https://api.songkick.com/api/3.0/users/${encodeURIComponent(username)}/calendar.json?reason=tracked_artist&apikey=${apiKey}`;
+      const url = `https://rest.bandsintown.com/artists/${encodeURIComponent(artist)}/events?app_id=${appId}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const events = data?.resultsPage?.results?.event || [];
+      const events = await res.json();
       if (!Array.isArray(events) || events.length === 0) {
         listEl.textContent = 'No upcoming shows.';
         return;
@@ -32,9 +31,10 @@ export async function initShowsPanel() {
       events.forEach(ev => {
         const li = document.createElement('li');
         const a = document.createElement('a');
-        a.textContent = `${ev.displayName} - ${ev.start?.date || ''}`;
-        if (ev.uri) {
-          a.href = ev.uri;
+        const date = ev.datetime ? ev.datetime.split('T')[0] : '';
+        a.textContent = `${ev.venue?.name || ''} - ${date}`;
+        if (ev.url) {
+          a.href = ev.url;
           a.target = '_blank';
         }
         li.appendChild(a);
@@ -42,17 +42,17 @@ export async function initShowsPanel() {
       });
       listEl.innerHTML = '';
       listEl.appendChild(ul);
-      localStorage.setItem('songkickUsername', username);
-      localStorage.setItem('songkickApiKey', apiKey);
+      localStorage.setItem('bandsintownArtist', artist);
+      localStorage.setItem('bandsintownAppId', appId);
     } catch (err) {
-      console.error('Failed to load Songkick shows', err);
+      console.error('Failed to load Bandsintown shows', err);
       listEl.textContent = 'Failed to load shows.';
     }
   };
 
   loadBtn?.addEventListener('click', loadShows);
 
-  if (savedUser && savedKey) {
+  if (savedArtist && savedAppId) {
     loadShows();
   }
 }
