@@ -1,28 +1,29 @@
 export async function initShowsPanel() {
-  const listEl = document.getElementById('bandsintownList');
+  const listEl = document.getElementById('ticketmasterList');
   if (!listEl) return;
-  const artistInput = document.getElementById('bandsintownArtist');
-  const appIdInput = document.getElementById('bandsintownAppId');
-  const loadBtn = document.getElementById('bandsintownLoadBtn');
+  const keywordInput = document.getElementById('ticketmasterKeyword');
+  const apiKeyInput = document.getElementById('ticketmasterApiKey');
+  const loadBtn = document.getElementById('ticketmasterLoadBtn');
 
-  const savedArtist = localStorage.getItem('bandsintownArtist') || '';
-  const savedAppId = localStorage.getItem('bandsintownAppId') || '';
-  if (artistInput) artistInput.value = savedArtist;
-  if (appIdInput) appIdInput.value = savedAppId;
+  const savedKeyword = localStorage.getItem('ticketmasterKeyword') || '';
+  const savedApiKey = localStorage.getItem('ticketmasterApiKey') || '';
+  if (keywordInput) keywordInput.value = savedKeyword;
+  if (apiKeyInput) apiKeyInput.value = savedApiKey;
 
   const loadShows = async () => {
-    const artist = artistInput?.value.trim();
-    const appId = appIdInput?.value.trim();
-    if (!artist || !appId) {
-      if (listEl) listEl.textContent = 'Please enter artist and App ID.';
+    const keyword = keywordInput?.value.trim();
+    const apiKey = apiKeyInput?.value.trim();
+    if (!keyword || !apiKey) {
+      if (listEl) listEl.textContent = 'Please enter keyword and API key.';
       return;
     }
     listEl.innerHTML = '<em>Loading...</em>';
     try {
-      const url = `https://rest.bandsintown.com/artists/${encodeURIComponent(artist)}/events?app_id=${appId}`;
+      const url = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&keyword=${encodeURIComponent(keyword)}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const events = await res.json();
+      const data = await res.json();
+      const events = data._embedded?.events;
       if (!Array.isArray(events) || events.length === 0) {
         listEl.textContent = 'No upcoming shows.';
         return;
@@ -31,8 +32,13 @@ export async function initShowsPanel() {
       events.forEach(ev => {
         const li = document.createElement('li');
         const a = document.createElement('a');
-        const date = ev.datetime ? ev.datetime.split('T')[0] : '';
-        a.textContent = `${ev.venue?.name || ''} - ${date}`;
+        const date = ev.dates?.start?.localDate || '';
+        const venue = ev._embedded?.venues?.[0];
+        const venueName = venue?.name || '';
+        const city = venue?.city?.name || '';
+        const state = venue?.state?.stateCode || venue?.state?.name || '';
+        const location = [city, state].filter(Boolean).join(', ');
+        a.textContent = `${ev.name || ''} - ${location} - ${date} - ${venueName}`;
         if (ev.url) {
           a.href = ev.url;
           a.target = '_blank';
@@ -42,17 +48,17 @@ export async function initShowsPanel() {
       });
       listEl.innerHTML = '';
       listEl.appendChild(ul);
-      localStorage.setItem('bandsintownArtist', artist);
-      localStorage.setItem('bandsintownAppId', appId);
+      localStorage.setItem('ticketmasterKeyword', keyword);
+      localStorage.setItem('ticketmasterApiKey', apiKey);
     } catch (err) {
-      console.error('Failed to load Bandsintown shows', err);
+      console.error('Failed to load Ticketmaster shows', err);
       listEl.textContent = 'Failed to load shows.';
     }
   };
 
   loadBtn?.addEventListener('click', loadShows);
 
-  if (savedArtist && savedAppId) {
+  if (savedKeyword && savedApiKey) {
     loadShows();
   }
 }
