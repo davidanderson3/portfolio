@@ -1,10 +1,21 @@
-import { restoreBackup } from './helpers.js';
+import { restoreBackup, loadDecisions } from './helpers.js';
 
 export function initBackupsPanel() {
   const panel = document.getElementById('backupsPanel');
   if (!panel) return;
   const list = panel.querySelector('#backupList');
   if (!list) return;
+
+  const backupBtn = panel.querySelector('#backupNowBtn');
+  if (backupBtn) {
+    backupBtn.onclick = async () => {
+      const data = await loadDecisions();
+      const key = `backup-${new Date().toISOString()}`;
+      localStorage.setItem(key, JSON.stringify(data));
+      initBackupsPanel();
+    };
+  }
+
   list.innerHTML = '';
   const backups = [];
   for (let i = 0; i < localStorage.length; i++) {
