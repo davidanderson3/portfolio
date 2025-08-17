@@ -99,6 +99,26 @@ describe('bottom add button', () => {
     expect(dom.window.document.activeElement).toBe(inp);
   });
 
+  it('adds a budget category when on budget tab', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+      <button id="bottomAddBtn"></button>
+      <button id="addCategoryBtn"></button>
+      <button class="tab-button active" data-target="budgetPanel"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+    const spy = vi.fn();
+    dom.window.document.getElementById('addCategoryBtn').addEventListener('click', spy);
+
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    dom.window.document.getElementById('bottomAddBtn').click();
+    expect(spy).toHaveBeenCalled();
+  });
+
 });
 
 describe('shift+A hotkey', () => {
@@ -207,6 +227,26 @@ describe('shift+A hotkey', () => {
     dom.window.document.getElementById('bottomAddBtn').click();
     const inp = dom.window.document.getElementById('metricLabel');
     expect(dom.window.document.activeElement).toBe(inp);
+  });
+
+  it('adds a budget category when on budget tab', async () => {
+    const dom = new JSDOM(`
+      <button id="signupBtn"></button>
+      <button id="loginBtn"></button>
+      <button id="bottomAddBtn"></button>
+      <button id="addCategoryBtn"></button>
+      <button class="tab-button active" data-target="budgetPanel"></button>
+    `);
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.firebase = { auth: () => ({ currentUser: null }) };
+    const spy = vi.fn();
+    dom.window.document.getElementById('addCategoryBtn').addEventListener('click', spy);
+
+    await import('../js/main.js');
+    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    dom.window.document.getElementById('bottomAddBtn').click();
+    expect(spy).toHaveBeenCalled();
   });
 });
 
