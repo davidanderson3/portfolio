@@ -919,11 +919,11 @@ button:hover {
   text-decoration: underline;
 }
 
-/* Floating link for contacting developer */
+/* Contact link positioned at page bottom */
 .contact-link {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
+  display: block;
+  width: fit-content;
+  margin: 1em auto 80px;
   background: #ffffff;
   color: #333;
   text-decoration: none;
@@ -931,7 +931,6 @@ button:hover {
   border: 1px solid #cccccc;
   border-radius: 4px;
   font-size: 0.9em;
-  z-index: 1000;
 }
 
 .contact-link:hover {

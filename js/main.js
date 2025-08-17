@@ -13,6 +13,7 @@ import { loadHiddenTabs, applyHiddenTabs, saveHiddenTabs } from './settings.js';
 import { clearPlanningCache } from './planning.js';
 import { applySiteName } from './siteName.js';
 import { initDescriptions } from './descriptions.js';
+import { initContactUI } from './contact.js';
 
 let hiddenTabsTimer = null;
 let renderQueue = Promise.resolve();
@@ -20,6 +21,7 @@ let renderQueue = Promise.resolve();
 window.addEventListener('DOMContentLoaded', () => {
   applySiteName();
   initDescriptions();
+  initContactUI();
   const uiRefs = {
     loginBtn: document.getElementById('loginBtn'),
     logoutBtn: document.getElementById('logoutBtn'),
@@ -42,14 +44,7 @@ window.addEventListener('DOMContentLoaded', () => {
     wizardStep: document.getElementById('wizardStep'),
     nextBtn: document.getElementById('wizardNextBtn'),
     backBtn: document.getElementById('wizardBackBtn'),
-    cancelBtn: document.getElementById('wizardCancelBtn'),
-    contactLink: document.getElementById('contactDeveloperLink'),
-    contactModal: document.getElementById('contactModal'),
-    contactCancelBtn: document.getElementById('contactCancelBtn'),
-    contactForm: document.getElementById('contactForm'),
-    contactName: document.getElementById('contactName'),
-    contactEmailInput: document.getElementById('contactEmailInput'),
-    contactMessage: document.getElementById('contactMessage')
+    cancelBtn: document.getElementById('wizardCancelBtn')
   };
 
   const goalsView = document.getElementById('goalsView');
@@ -59,34 +54,6 @@ window.addEventListener('DOMContentLoaded', () => {
   uiRefs.bottomAddBtn?.addEventListener('click', handleBottomAdd);
   document.querySelectorAll('.tab-hide-btn').forEach(btn => {
     setupHideTabButton(btn);
-  });
-
-  uiRefs.contactLink?.addEventListener('click', e => {
-    e.preventDefault();
-    uiRefs.contactModal.style.display = 'flex';
-  });
-  uiRefs.contactCancelBtn?.addEventListener('click', () => {
-    uiRefs.contactModal.style.display = 'none';
-  });
-  uiRefs.contactForm?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const payload = {
-      name: uiRefs.contactName?.value.trim(),
-      from: uiRefs.contactEmailInput?.value.trim(),
-      message: uiRefs.contactMessage?.value.trim()
-    };
-    try {
-      await fetch('/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      alert('Message sent');
-    } catch {
-      alert('Failed to send message');
-    }
-    uiRefs.contactModal.style.display = 'none';
-    uiRefs.contactForm.reset();
   });
 
   document.addEventListener('keydown', e => {
