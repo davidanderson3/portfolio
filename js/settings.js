@@ -4,6 +4,38 @@ import { getSiteName, setSiteName } from './siteName.js';
 import { getShowDescriptions, setShowDescriptions } from './descriptions.js';
 
 const KEY = 'hiddenTabs';
+const ORDER_KEY = 'tabOrder';
+
+export async function loadTabOrder() {
+  const user = getCurrentUser?.();
+  if (!user) {
+    try {
+      const stored = JSON.parse(localStorage.getItem(ORDER_KEY) || '[]');
+      return Array.isArray(stored) ? stored : [];
+    } catch {
+      return [];
+    }
+  }
+  const snap = await db
+    .collection('users').doc(user.uid)
+    .collection('settings').doc(ORDER_KEY)
+    .get();
+  const arr = snap.exists ? snap.data().order : [];
+  return Array.isArray(arr) ? arr : [];
+}
+
+export async function saveTabOrder(order) {
+  if (!Array.isArray(order)) return;
+  const user = getCurrentUser?.();
+  if (!user) {
+    localStorage.setItem(ORDER_KEY, JSON.stringify(order));
+    return;
+  }
+  await db
+    .collection('users').doc(user.uid)
+    .collection('settings').doc(ORDER_KEY)
+    .set({ order });
+}
 
 function normalize(data) {
   if (!data) return {};
@@ -106,7 +138,7 @@ export async function initSettingsPage() {
     const emailSpan = document.getElementById('settingsEmail');
     const siteNameInput = document.getElementById('siteNameInput');
     const descCheckbox = document.getElementById('showDescriptionsCheckbox');
-    const panels = PANELS;
+    let panels = PANELS;
 
     if (siteNameInput) {
       siteNameInput.value = getSiteName();
@@ -115,6 +147,13 @@ export async function initSettingsPage() {
     if (descCheckbox) {
       descCheckbox.checked = getShowDescriptions();
     }
+
+  const order = await loadTabOrder();
+  if (Array.isArray(order) && order.length) {
+    const ordered = order.filter(id => panels.includes(id));
+    ordered.push(...panels.filter(id => !ordered.includes(id)));
+    panels = ordered;
+  }
 
   if (listDiv && listDiv.children.length === 0) {
     panels.forEach(id => {
@@ -126,6 +165,31 @@ export async function initSettingsPage() {
       label.appendChild(cb);
       const name = PANEL_NAMES[id] || id.replace('Panel','');
       label.appendChild(document.createTextNode(' ' + name));
+
+      const controls = document.createElement('span');
+      controls.style.marginLeft = 'auto';
+      const upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.textContent = '↑';
+      const downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.textContent = '↓';
+      controls.append(upBtn, downBtn);
+      label.appendChild(controls);
+
+      upBtn.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const prev = label.previousElementSibling;
+        if (prev) listDiv.insertBefore(label, prev);
+      });
+      downBtn.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const next = label.nextElementSibling;
+        if (next) listDiv.insertBefore(next, label);
+      });
+
       listDiv.appendChild(label);
     });
   }
@@ -153,7 +217,10 @@ export async function initSettingsPage() {
       if (descCheckbox) {
         setShowDescriptions(descCheckbox.checked);
       }
+      const order = Array.from(listDiv.querySelectorAll('.settings-option input[type=checkbox]'))
+        .map(cb => cb.value);
       await saveHiddenTabs(hidden);
+      await saveTabOrder(order);
       window.location.href = 'index.html';
     });
 

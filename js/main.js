@@ -366,6 +366,10 @@ window.addEventListener('DOMContentLoaded', () => {
   // Clear any stale content immediately to avoid flashing old tasks on mobile
   clearTaskLists();
 
+  if (!currentUser) {
+    showOnlySignedOutTabs();
+  }
+
   // Re-render UI components whenever decisions are updated
   window.addEventListener('decisionsUpdated', () => {
     renderQueue = renderQueue.then(() => renderGoalsAndSubitems());
@@ -388,17 +392,17 @@ window.addEventListener('DOMContentLoaded', () => {
       if (!user) {
         clearPlanningCache();
         if (goalsView) goalsView.style.display = '';
-        initTabs(null, db);
-      const hidden = await loadHiddenTabs();
-      applyHiddenTabs(hidden);
-      showOnlySignedOutTabs();
-      if (hiddenTabsTimer) clearInterval(hiddenTabsTimer);
-      hiddenTabsTimer = setInterval(async () => {
-        const h = await loadHiddenTabs();
-        applyHiddenTabs(h);
+        await initTabs(null, db);
+        const hidden = await loadHiddenTabs();
+        applyHiddenTabs(hidden);
         showOnlySignedOutTabs();
-      }, 60 * 1000);
-      const tabsEl = document.getElementById('tabsContainer');
+        if (hiddenTabsTimer) clearInterval(hiddenTabsTimer);
+        hiddenTabsTimer = setInterval(async () => {
+          const h = await loadHiddenTabs();
+          applyHiddenTabs(h);
+          showOnlySignedOutTabs();
+        }, 60 * 1000);
+        const tabsEl = document.getElementById('tabsContainer');
         if (tabsEl) tabsEl.style.visibility = 'visible';
         renderGoalsAndSubitems();
         if (document.querySelector('.tab-button.active')?.dataset.target === 'dailyPanel') {
@@ -412,7 +416,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
       clearPlanningCache();
 
-      initTabs(user, db);
+      await initTabs(user, db);
       const hidden = await loadHiddenTabs();
       applyHiddenTabs(hidden);
       if (hiddenTabsTimer) clearInterval(hiddenTabsTimer);
