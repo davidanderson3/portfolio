@@ -17,8 +17,35 @@ function todayKey() {
   const d = new Date();
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function shiftSampleMetricData(data) {
+  const today = new Date();
+  const dates = Object.keys(data)
+    .map(k => new Date(k))
+    .filter(d => !isNaN(d));
+  if (!dates.length) return data;
+  const last = dates.sort((a, b) => b - a)[0];
+  const diffDays = Math.round((today.setHours(0, 0, 0, 0) - last.setHours(0, 0, 0, 0)) / 86400000);
+  if (!diffDays) return data;
+  const msShift = diffDays * 86400000;
+  const shifted = {};
+  Object.keys(data).forEach(key => {
+    const date = new Date(key);
+    date.setDate(date.getDate() + diffDays);
+    const newKey = date.toISOString().split('T')[0];
+    const metrics = {};
+    Object.keys(data[key]).forEach(id => {
+      metrics[id] = data[key][id].map(entry => ({
+        ...entry,
+        timestamp: entry.timestamp + msShift
+      }));
+    });
+    shifted[newKey] = metrics;
+  });
+  return shifted;
 }
 
 async function ensureMoodConfig() {
@@ -140,7 +167,10 @@ async function recordMetric(metricId, value, extra = null, dayKey = activeMetric
   if (!user) {
     let all = JSON.parse(localStorage.getItem(STATS_KEY) || 'null');
     if (!all || !Object.keys(all).length) {
-      all = JSON.parse(JSON.stringify(SAMPLE_METRIC_DATA));
+      all = shiftSampleMetricData(JSON.parse(JSON.stringify(SAMPLE_METRIC_DATA)));
+    } else if (!all[todayKey()]) {
+      const shifted = shiftSampleMetricData(JSON.parse(JSON.stringify(SAMPLE_METRIC_DATA)));
+      all[todayKey()] = shifted[todayKey()];
     }
     const day = dayKey;
     all[day] = all[day] || {};
@@ -221,8 +251,16 @@ async function deleteMetricEntry(metricId, dayKey, index) {
 async function loadAllStats() {
   const user = auth.currentUser;
   if (!user) {
-    const stored = JSON.parse(localStorage.getItem(STATS_KEY) || 'null');
-    return stored && Object.keys(stored).length ? stored : SAMPLE_METRIC_DATA;
+    let stored = JSON.parse(localStorage.getItem(STATS_KEY) || 'null');
+    if (!stored || !Object.keys(stored).length) {
+      stored = shiftSampleMetricData(JSON.parse(JSON.stringify(SAMPLE_METRIC_DATA)));
+      localStorage.setItem(STATS_KEY, JSON.stringify(stored));
+    } else if (!stored[todayKey()]) {
+      const shifted = shiftSampleMetricData(JSON.parse(JSON.stringify(SAMPLE_METRIC_DATA)));
+      stored[todayKey()] = shifted[todayKey()];
+      localStorage.setItem(STATS_KEY, JSON.stringify(stored));
+    }
+    return stored;
   }
   try {
     const snaps = await db
@@ -845,7 +883,8 @@ auth.onAuthStateChanged(user => {
 window._statsDebug = {
   loadMetricsConfig,
   renderStatsSummary,
-  renderConfigForm
+  renderConfigForm,
+  loadAllStats
 };
 
 const metricModal = document.getElementById('metricChartModal');
