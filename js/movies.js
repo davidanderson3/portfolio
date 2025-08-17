@@ -2,14 +2,22 @@ export async function initMoviesPanel() {
   const listEl = document.getElementById('movieList');
   if (!listEl) return;
   listEl.innerHTML = '<em>Loading...</em>';
+
+  const apiKey =
+    (typeof window !== 'undefined' && window.tmdbApiKey) ||
+    (typeof process !== 'undefined' && process.env.TMDB_API_KEY) ||
+    '';
+  if (!apiKey) {
+    listEl.textContent = 'TMDB API key not provided.';
+    return;
+  }
+
   try {
-    const res = await fetch('https://raw.githubusercontent.com/sundeepblue/movie_rating_prediction/master/movie_metadata.csv');
+    const url = `https://api.themoviedb.org/3/trending/movie/week?api_key=${apiKey}`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Network response was not ok');
-    const text = await res.text();
-    const movies = parseCSV(text)
-      .filter(m => m.movie_title)
-      .sort((a, b) => (parseInt(b.num_user_for_reviews || '0') - parseInt(a.num_user_for_reviews || '0')))
-      .slice(0, 100);
+    const data = await res.json();
+    const movies = (data.results || []).slice(0, 100);
     if (movies.length === 0) {
       listEl.textContent = 'No movies found.';
       return;
@@ -18,29 +26,21 @@ export async function initMoviesPanel() {
     const ul = document.createElement('ul');
     movies.forEach(m => {
       const li = document.createElement('li');
-      const title = (m.movie_title || '').trim();
-      const year = m.title_year || 'Unknown';
+      const title = (m.title || m.name || '').trim();
+      const year = (m.release_date || '').split('-')[0] || 'Unknown';
       const titleEl = document.createElement('strong');
       titleEl.textContent = `${title} (${year})`;
       li.appendChild(titleEl);
 
       const metaList = document.createElement('ul');
-      const imdb = m.imdb_score;
-      const critic = m.num_critic_for_reviews;
-      const user = m.num_user_for_reviews;
-      if (imdb) {
+      if (m.vote_average) {
         const mi = document.createElement('li');
-        mi.textContent = `IMDB score: ${imdb}`;
+        mi.textContent = `TMDB score: ${m.vote_average}`;
         metaList.appendChild(mi);
       }
-      if (critic) {
+      if (m.vote_count) {
         const mi = document.createElement('li');
-        mi.textContent = `Critic reviews: ${critic}`;
-        metaList.appendChild(mi);
-      }
-      if (user) {
-        const mi = document.createElement('li');
-        mi.textContent = `User reviews: ${user}`;
+        mi.textContent = `Vote count: ${m.vote_count}`;
         metaList.appendChild(mi);
       }
       if (metaList.childNodes.length) li.appendChild(metaList);
@@ -55,38 +55,7 @@ export async function initMoviesPanel() {
   }
 }
 
-function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  const headers = lines[0].split(',');
-  return lines.slice(1).map(line => {
-    const values = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') {
-          current += '"';
-          i++;
-        } else {
-          inQuotes = !inQuotes;
-        }
-      } else if (char === ',' && !inQuotes) {
-        values.push(current);
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    values.push(current);
-    const obj = {};
-    headers.forEach((h, idx) => {
-      obj[h] = values[idx] || '';
-    });
-    return obj;
-  });
-}
-
 if (typeof window !== 'undefined') {
   window.initMoviesPanel = initMoviesPanel;
 }
+
