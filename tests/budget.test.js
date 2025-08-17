@@ -247,7 +247,7 @@ describe('budget panel', () => {
     expect(order[0]).toBe('Second');
   });
 
-  it('shows rent after escrow in the summaries', async () => {
+  it('does not show rent after escrow in the summaries', async () => {
     getMock.mockResolvedValue({ exists: false });
 
     const dom = new JSDOM('<div id="budgetContainer"></div>');
@@ -275,8 +275,8 @@ describe('budget panel', () => {
     const summaryA = document.getElementById('budgetSummaryA').textContent;
     const summaryB = document.getElementById('budgetSummaryB').textContent;
 
-    expect(summaryA).toContain('Rent After Escrow: $1,500');
-    expect(summaryB).toContain('Rent After Escrow: $1,300');
+    expect(summaryA).not.toContain('Rent After Escrow');
+    expect(summaryB).not.toContain('Rent After Escrow');
   });
 
   it('places goal summary outside the goal section', async () => {
