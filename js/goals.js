@@ -390,7 +390,7 @@ function initTodayScheduleSection() {
             parent.appendChild(container);
         }
     }
-    container.innerHTML = '<h3>Weekly Schedule</h3><div id="todayScheduleList"></div>';
+    container.innerHTML = '<h3>Daily Planner</h3><div id="todayScheduleList"></div>';
     return container.querySelector('#todayScheduleList');
 }
 

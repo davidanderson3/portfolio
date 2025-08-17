@@ -31,7 +31,7 @@ vi.mock('../js/helpers.js', () => ({
   linkify: (t) => t
 }));
 
-vi.mock('../js/auth.js', () => ({ db: {}, auth: { onAuthStateChanged: vi.fn() }, currentUser: null }));
+vi.mock('../js/auth.js', () => ({ db: {}, auth: { onAuthStateChanged: vi.fn() }, currentUser: null, getCurrentUser: () => null }));
 
 let renderGoalsAndSubitems;
 let createGoalRow;
