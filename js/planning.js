@@ -234,9 +234,10 @@ export async function initPlanningPanel() {
 
   const container = document.getElementById('planningContainer');
   container.innerHTML = `
-    <form id="planningForm" class="planning-form">
-      <div class="planning-section">
-        <h3>Financial Variables</h3>
+    <div class="planning-grid">
+      <form id="planningForm" class="planning-form">
+        <div class="planning-section">
+          <h3>Financial Variables</h3>
         <label>Current Age <input type="number" name="curAge" value="${currentData.finance.curAge ?? ''}" /></label>
         <label>Retirement Age <input type="number" name="retAge" value="${currentData.finance.retAge ?? ''}" /></label>
         <label>Current Net Income <input type="number" name="income" value="${currentData.finance.income ?? ''}" /></label>
@@ -263,10 +264,13 @@ export async function initPlanningPanel() {
         <h3>Liabilities</h3>
         <label>Rolling Credit <input type="number" name="rollingCredit" value="${currentData.budget.rollingCredit ?? ''}" /></label>
       </div>
-    </form>
-    <div id="assetsTotal" style="margin-top:1em;"></div>
-    <div id="financeResult" style="margin-top:1em;"></div>
-    <div id="assetHistory" style="margin-top:1em;"></div>
+      </form>
+      <div class="planning-right">
+        <div id="assetsTotal" style="margin-top:1em;"></div>
+        <div id="financeResult" style="margin-top:1em;"></div>
+        <div id="assetHistory" style="margin-top:1em;"></div>
+      </div>
+    </div>
   `;
 
   const form = container.querySelector('#planningForm');
