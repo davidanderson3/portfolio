@@ -507,7 +507,7 @@ async function renderDailyTasksImpl(currentUser, db) {
       gridTemplateColumns: '24px 1fr auto',
       alignItems: 'center',
       columnGap: '10px',
-      padding: '6px 12px',
+      padding: '1.5px 12px',
       borderRadius: '8px',
       background: bgColor,
       borderLeft: `4px solid ${borderColor}`,
@@ -575,7 +575,7 @@ async function renderDailyTasksImpl(currentUser, db) {
         notesInput.value = task.notes || '';
         notesInput.rows = 2;
         notesInput.style.width = '100%';
-        notesInput.style.marginTop = '4px';
+        notesInput.style.marginTop = '1px';
         const select = document.createElement('select');
         ['firstThing', 'morning', 'afternoon', 'evening', 'endOfDay'].forEach(val => {
           const opt = document.createElement('option');
@@ -587,7 +587,7 @@ async function renderDailyTasksImpl(currentUser, db) {
           select.appendChild(opt);
         });
         select.value = task.timeOfDay || 'morning';
-        select.style.marginTop = '4px';
+        select.style.marginTop = '1px';
         label.innerHTML = '';
         label.append(textInput, notesInput, select);
       } else {
