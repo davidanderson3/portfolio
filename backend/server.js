@@ -1,8 +1,11 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { execFile } = require('child_process');
+const util = require('util');
 const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
-const { XMLParser } = require('fast-xml-parser');
+
+const execFileAsync = util.promisify(execFile);
 const app = express();
 const PORT = 3002;
 
@@ -124,35 +127,15 @@ app.get('/leaderboard', (req, res) => {
 
 app.get('/api/movies', async (req, res) => {
   try {
-    const rssUrl = 'https://www.fandango.com/rss/moviesnearme_20190.rss';
-    const rssText = await fetch(rssUrl).then(r => r.text());
-    const parser = new XMLParser();
-    const rss = parser.parse(rssText);
-    const items = rss?.rss?.channel?.item || [];
-    const results = [];
-
-    for (const item of items) {
-      const title = item.title;
-      try {
-        const searchUrl = `https://www.rottentomatoes.com/api/private/v2.0/search?q=${encodeURIComponent(title)}`;
-        const searchData = await fetch(searchUrl).then(r => r.json());
-        const movie = searchData?.movies?.find(m => m.name?.toLowerCase() === title.toLowerCase());
-        if (!movie) continue;
-        const score = Number(movie.meterScore || movie.rottenTomatoesScore);
-        const reviews = Number(movie.reviewCount || movie.rottenTomatoesScoreReviews);
-        if (score >= 88 && reviews >= 20) {
-          results.push({
-            title: movie.name,
-            score,
-            reviews,
-            url: `https://www.rottentomatoes.com${movie.url || movie.urlPath || ''}`
-          });
-        }
-      } catch (err) {
-        console.error('Failed to fetch movie from Rotten Tomatoes', err);
-      }
-    }
-
+    const url = 'https://raw.githubusercontent.com/FEND16/movie-json-data/master/json/top-rated-movies-01.json';
+    const { stdout } = await execFileAsync('curl', ['-sL', url], { maxBuffer: 5 * 1024 * 1024 });
+    const data = JSON.parse(stdout);
+    const results = data
+      .map(m => ({
+        title: m.title,
+        score: m.ratings.reduce((a, b) => a + b, 0) / m.ratings.length
+      }))
+      .slice(0, 10);
     res.json(results);
   } catch (err) {
     console.error('Failed to fetch movies', err);
