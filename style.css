@@ -1201,6 +1201,12 @@ h2 {
   cursor: pointer !important;
 }
 
+#listWrapper {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
 /* ------------------------------
    Report Table
 ------------------------------ */
@@ -1411,6 +1417,7 @@ h2 {
   }
 
   #listTabs,
+  #listWrapper,
   #listsContainer,
   #itemForm,
   #listForm {

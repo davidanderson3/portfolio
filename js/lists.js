@@ -160,6 +160,10 @@ async function initListsPanel() {
   itemForm.id = 'itemForm';
   itemForm.style.margin = '1rem 0';
 
+  const listWrapper = document.createElement('div');
+  listWrapper.id = 'listWrapper';
+  listWrapper.className = 'list-wrapper';
+
   const createForm = document.createElement('div');
   createForm.id = 'listForm';
   createForm.innerHTML = `
@@ -183,12 +187,15 @@ async function initListsPanel() {
   addColumnBtnForList.style.margin = '0.5rem 0';
 
   // ─── 4) Append scaffolding (button will go just after listsContainer) ───
+  listWrapper.append(
+    listsContainer,
+    addColumnBtnForList,
+    itemForm
+  );
   panel.append(
     tabsContainer,
-    listsContainer
+    listWrapper
   );
-
-  panel.append(itemForm);
 
   const formsWrapper = document.getElementById('listsFormWrapper');
   if (formsWrapper) {
