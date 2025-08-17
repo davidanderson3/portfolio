@@ -391,10 +391,9 @@ export async function initPlanningPanel() {
     const workingData = finData.filter(r => r.age <= retirementAgeNum);
     const retirementData = finData.filter(r => r.age > retirementAgeNum);
 
-    financeResultDiv.innerHTML = '<h3>Working Years</h3>' +
-      buildFinanceTable(workingData) +
-      '<h3>Retirement</h3>' +
-      buildFinanceTable(retirementData);
+    financeResultDiv.innerHTML =
+      `<div class="finance-tables"><div><h3>Working Years</h3>${buildFinanceTable(workingData)}</div>` +
+      `<div><h3>Retirement</h3>${buildFinanceTable(retirementData)}</div></div>`;
 
     currentData.finance = {
       curAge: values.curAge,

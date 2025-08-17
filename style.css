@@ -2001,6 +2001,11 @@ h2 {
   overflow-x: auto;
 }
 
+.finance-tables {
+  display: flex;
+  gap: 1em;
+}
+
 #financeResult table {
   width: max-content;
   border-collapse: collapse;
