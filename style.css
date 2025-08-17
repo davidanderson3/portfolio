@@ -1402,8 +1402,9 @@ h2 {
 }
 
 #travelMap {
-  width: 360px;
-  height: 360px;
+  flex: 0 1 66%;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   border: 1px solid #ccc;
 }
 
@@ -1413,6 +1414,7 @@ h2 {
   flex-wrap: wrap;
   gap: 4px;
   max-height: 360px;
+  flex: 1 1 33%;
 }
 
 .rain-percent {
