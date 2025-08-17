@@ -2,18 +2,8 @@ let locationId = '';
 let finished = false;
 const guess = document.getElementById('guess');
 
-function dailySeed() {
-  const today = new Date().toISOString().slice(0,10);
-  let seed = 0;
-  for (const c of today) {
-    seed = (seed * 31 + c.charCodeAt(0)) >>> 0;
-  }
-  return seed;
-}
-
 function pickLocation(locations) {
-  const seed = dailySeed();
-  return locations[seed % locations.length];
+  return locations[Math.floor(Math.random() * locations.length)];
 }
 
 fetch('countries.json').then(r=>r.json()).then(data=>{
@@ -26,15 +16,22 @@ fetch('countries.json').then(r=>r.json()).then(data=>{
   }
   const locations = data.map(c=>c.code);
   locationId = pickLocation(locations);
-  loadRivers();
+  loadCountry();
 });
 
-const map = L.map('map', { zoomControl:false, attributionControl:false }).setView([0,0],2);
+const map = L.map('map', { zoomControl:false, attributionControl:false });
+
+function loadCountry() {
+  fetch(`data/${locationId}/outline.geojson`).then(r=>r.json()).then(outlineGeo=>{
+    const outline = L.geoJSON(outlineGeo);
+    map.fitBounds(outline.getBounds());
+    loadRivers();
+  });
+}
 
 function loadRivers() {
   fetch(`data/${locationId}/rivers.geojson`).then(r=>r.json()).then(geo=>{
-    const gj = L.geoJSON(geo, { style: { color: '#0ff' } }).addTo(map);
-    map.fitBounds(gj.getBounds());
+    L.geoJSON(geo, { style: { color: '#0ff' } }).addTo(map);
   });
 }
 
