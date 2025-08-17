@@ -641,15 +641,17 @@ function renderCalendarSection(all, calendarContent, weather) {
             section.className = 'weekend-section';
 
             const hdr = document.createElement('h3');
-            const satLabel = sat.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+            const satLabel = sat.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
             const sunLabel = sun.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+            const satDays = formatDaysUntil(key);
+            const sunDays = formatDaysUntil(sunKey);
             const isCurrentWeekend = today >= sat && today <= sun;
             if (isCurrentWeekend) section.classList.add('current-weekend');
             const satW = dailyWeather[key];
             const sunW = dailyWeather[sunKey];
             const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
             const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
-            hdr.innerHTML = `Weekend:<br>${satLabel}${satInfo}<br>${sunLabel}${sunInfo}`;
+            hdr.innerHTML = `Weekend:<br>${satLabel} (${satDays})${satInfo}<br>${sunLabel} (${sunDays})${sunInfo}`;
             const highTemp = Math.max(satW?.high ?? -Infinity, sunW?.high ?? -Infinity);
             if (isFinite(highTemp)) hdr.style.backgroundColor = tempToColor(highTemp);
             section.appendChild(hdr);
@@ -688,15 +690,17 @@ function renderCalendarSection(all, calendarContent, weather) {
             section.className = 'weekend-section';
 
             const hdr = document.createElement('h3');
-            const satLabel = sat.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+            const satLabel = sat.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
             const sunLabel = d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+            const satDays = formatDaysUntil(satKey);
+            const sunDays = formatDaysUntil(key);
             const isCurrentWeekend = today >= sat && today <= d;
             if (isCurrentWeekend) section.classList.add('current-weekend');
             const satW = dailyWeather[satKey];
             const sunW = dailyWeather[key];
             const satInfo = satW ? ` ${window.chooseWeatherIcon?.(satW.rain) || ''} ${satW.high}\u00B0/${satW.low}\u00B0` : '';
             const sunInfo = sunW ? ` ${window.chooseWeatherIcon?.(sunW.rain) || ''} ${sunW.high}\u00B0/${sunW.low}\u00B0` : '';
-            hdr.innerHTML = `Weekend:<br>${satLabel}${satInfo}<br>${sunLabel}${sunInfo}`;
+            hdr.innerHTML = `Weekend:<br>${satLabel} (${satDays})${satInfo}<br>${sunLabel} (${sunDays})${sunInfo}`;
             const highTemp2 = Math.max(satW?.high ?? -Infinity, sunW?.high ?? -Infinity);
             if (isFinite(highTemp2)) hdr.style.backgroundColor = tempToColor(highTemp2);
             section.appendChild(hdr);
