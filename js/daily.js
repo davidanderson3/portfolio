@@ -463,6 +463,16 @@ async function renderDailyTasksImpl(currentUser, db) {
       } else {
         listEl.prepend(wrapper);
       }
+
+      if (listEl === weeklyContainer) {
+        toggleSection(weeklyContainer);
+      } else if (listEl === monthlyContainer) {
+        toggleSection(monthlyContainer);
+      } else {
+        toggleSubsection(listEl);
+        toggleSection(container);
+      }
+      toggleDetails(completedContainer.parentElement, completedContainer);
     } catch (err) {
       console.error(err);
       alert('⚠️ Could not update completion. Reverting.');
