@@ -338,3 +338,61 @@ describe('empty routine sections', () => {
     expect(document.getElementById('morningTasksList').style.display).not.toBe('none');
   });
 });
+
+describe('routine section headers', () => {
+  it('hides daily subsection headers when last task completed', async () => {
+    vi.resetModules();
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'm1', type: 'task', text: 'M', recurs: 'daily', timeOfDay: 'morning' }
+    ]);
+
+    const { renderDailyTasks } = await import('../js/daily.js');
+    await renderDailyTasks(null, {});
+
+    const list = document.getElementById('morningTasksList');
+    const hdr = list.previousElementSibling;
+    expect(hdr.style.display).not.toBe('none');
+
+    const cb = list.querySelector('input[type="checkbox"]');
+    cb.checked = true;
+    cb.dispatchEvent(new dom.window.Event('change'));
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(list.style.display).toBe('none');
+    expect(hdr.style.display).toBe('none');
+  });
+
+  it('hides weekly section header when last task completed', async () => {
+    vi.resetModules();
+    const dom = new JSDOM('<div id="dailyPanel"><h3 id="weeklyHeader">Weekly</h3><div id="weeklyTasksList" class="decision-container"></div></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'w1', type: 'task', text: 'W', recurs: 'weekly' }
+    ]);
+
+    const { renderDailyTasks } = await import('../js/daily.js');
+    await renderDailyTasks(null, {});
+
+    const list = document.getElementById('weeklyTasksList');
+    const hdr = document.getElementById('weeklyHeader');
+    expect(hdr.style.display).not.toBe('none');
+
+    const cb = list.querySelector('input[type="checkbox"]');
+    cb.checked = true;
+    cb.dispatchEvent(new dom.window.Event('change'));
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(list.style.display).toBe('none');
+    expect(hdr.style.display).toBe('none');
+  });
+});
