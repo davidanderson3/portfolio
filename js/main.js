@@ -20,7 +20,7 @@ let renderQueue = Promise.resolve();
 
 window.addEventListener('DOMContentLoaded', () => {
   if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/js/service-worker.js');
+    navigator.serviceWorker.register('/service-worker.js');
   } else {
     console.warn('Service workers are not supported; offline features will be limited.');
   }
