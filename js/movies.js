@@ -22,6 +22,16 @@ export async function initMoviesPanel() {
       listEl.textContent = 'TMDB API key not provided.';
       return;
     }
+
+    if (!currentApiKey) {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('moviesApiKey', apiKey);
+      }
+      if (typeof window !== 'undefined') {
+        window.tmdbApiKey = apiKey;
+      }
+    }
+
     listEl.innerHTML = '<em>Loading...</em>';
     try {
       const url = `https://api.themoviedb.org/3/trending/movie/week?api_key=${apiKey}`;
@@ -62,9 +72,6 @@ export async function initMoviesPanel() {
       listEl.appendChild(ul);
       if (!currentApiKey) {
         currentApiKey = apiKey;
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('moviesApiKey', apiKey);
-        }
         if (apiKeyContainer) apiKeyContainer.style.display = 'none';
       }
     } catch (err) {

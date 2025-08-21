@@ -75,5 +75,33 @@ describe('initMoviesPanel', () => {
     expect(fetch).toHaveBeenCalledWith('https://api.themoviedb.org/3/trending/movie/week?api_key=INPUT_KEY');
     expect(stored).toBe('INPUT_KEY');
   });
+
+  it('caches API key even when fetch fails', async () => {
+    const dom = new JSDOM(`
+      <div id="movieList"></div>
+      <div id="moviesApiKeyContainer"><input id="moviesApiKey" /></div>
+      <button id="moviesLoadBtn"></button>
+    `);
+    global.document = dom.window.document;
+    global.window = dom.window;
+
+    let stored = '';
+    global.localStorage = {
+      getItem: key => (key === 'moviesApiKey' ? stored : ''),
+      setItem: (key, value) => {
+        if (key === 'moviesApiKey') stored = value;
+      }
+    };
+
+    global.fetch = vi.fn(() => Promise.reject(new Error('fail')));
+
+    await initMoviesPanel();
+    document.getElementById('moviesApiKey').value = 'FAIL_KEY';
+    document.getElementById('moviesLoadBtn').click();
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(fetch).toHaveBeenCalledWith('https://api.themoviedb.org/3/trending/movie/week?api_key=FAIL_KEY');
+    expect(stored).toBe('FAIL_KEY');
+  });
 });
 
