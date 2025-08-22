@@ -92,6 +92,26 @@ describe('routine task reordering', () => {
       expect.objectContaining({ id: 'a', text: 'A', recurs: 'daily' })
     ]);
   });
+
+  it('moves task up without triggering reload', async () => {
+    helpers.saveDecisions.mockImplementation((items, opts) => {
+      if (!opts?.skipNotify) {
+        window.dispatchEvent(new window.Event('decisionsUpdated'));
+      }
+      return Promise.resolve();
+    });
+    const reloadSpy = vi.fn();
+    window.addEventListener('decisionsUpdated', reloadSpy);
+    await renderDailyTasks(null, {});
+    reloadSpy.mockClear();
+    const upBtn = [...document.querySelector('[data-task-id="b"]').querySelectorAll('button')]
+      .find(b => b.textContent === '⬆️');
+    upBtn.click();
+    await new Promise(r => setTimeout(r, 0));
+    expect(reloadSpy).not.toHaveBeenCalled();
+    const opts = helpers.saveDecisions.mock.calls.at(-1)[1];
+    expect(opts).toEqual({ skipNotify: true });
+  });
 });
 
 describe('missed task shading', () => {
