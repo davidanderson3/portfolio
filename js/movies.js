@@ -54,16 +54,14 @@ export async function initMoviesPanel() {
         li.appendChild(titleEl);
 
         const metaList = document.createElement('ul');
-        if (m.vote_average) {
+        Object.entries(m).forEach(([key, value]) => {
+          if (value === null || value === undefined) return;
           const mi = document.createElement('li');
-          mi.textContent = `TMDB score: ${m.vote_average}`;
+          mi.textContent = `${key}: ${
+            typeof value === 'object' ? JSON.stringify(value) : value
+          }`;
           metaList.appendChild(mi);
-        }
-        if (m.vote_count) {
-          const mi = document.createElement('li');
-          mi.textContent = `Vote count: ${m.vote_count}`;
-          metaList.appendChild(mi);
-        }
+        });
         if (metaList.childNodes.length) li.appendChild(metaList);
         ul.appendChild(li);
       });
