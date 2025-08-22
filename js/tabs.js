@@ -15,6 +15,7 @@ export const PANELS = [
   'budgetPanel',
   'contactsPanel',
   'backupsPanel',
+  'pointlessPanel',
   'geolayersPanel'
 ];
 
@@ -32,6 +33,7 @@ export const PANEL_NAMES = {
   budgetPanel: 'Budget',
   contactsPanel: 'Contacts',
   backupsPanel: 'Backups',
+  pointlessPanel: 'Pointless',
   geolayersPanel: 'GeoLayers'
 };
 
@@ -126,6 +128,9 @@ export async function initTabs(user, db) {
       else if (target === 'backupsPanel') {
         await window.initBackupsPanel();
       }
+      else if (target === 'pointlessPanel') {
+        window.initPointlessPanel();
+      }
     });
   });
 
@@ -185,6 +190,9 @@ export async function initTabs(user, db) {
     }
     else if (initial === 'backupsPanel') {
       window.initBackupsPanel();
+    }
+    else if (initial === 'pointlessPanel') {
+      window.initPointlessPanel();
     }
   };
 

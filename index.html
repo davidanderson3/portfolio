@@ -45,6 +45,7 @@
         <button class="tab-button" data-target="budgetPanel">Budget</button>
         <button class="tab-button" data-target="contactsPanel">Contacts</button>
         <button class="tab-button" data-target="backupsPanel">Backups</button>
+        <button class="tab-button" data-target="pointlessPanel">Pointless</button>
         <button class="tab-button" data-target="geolayersPanel">GeoLayers</button>
       </div>
     </nav>
@@ -338,6 +339,17 @@
         </div>
       </div>
 
+      <!-- POINTLESS PANEL -->
+      <div id="pointlessPanel" class="main-layout" style="display:none;">
+        <div class="full-column">
+          <div class="panel-header">
+            <h2>Pointless Geography</h2>
+            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
+          </div>
+          <div id="pointlessGame"></div>
+        </div>
+      </div>
+
       <!-- GEOLAYERS PANEL -->
       <div id="geolayersPanel" class="main-layout" style="display:none;">
         <div class="full-column">
@@ -411,6 +423,7 @@
   <script type="module" src="js/budget.js"></script>
   <script type="module" src="js/contacts.js"></script>
   <script type="module" src="js/backups.js"></script>
+  <script type="module" src="js/pointless.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
