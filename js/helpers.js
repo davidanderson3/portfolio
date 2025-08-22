@@ -292,7 +292,7 @@ export async function removeDuplicateDecisionsFromDb() {
   return deduped;
 }
 
-export async function saveDecisions(items) {
+export async function saveDecisions(items, { skipNotify = false } = {}) {
   if (!Array.isArray(items)) return;
   // Remove duplicate IDs before caching/saving
   items = dedupeDecisions(items);
@@ -309,7 +309,7 @@ export async function saveDecisions(items) {
   if (isSampleDataset(items)) return;
 
   setDecisionsCache(items);
-  notifyDecisionsUpdated();
+  if (!skipNotify) notifyDecisionsUpdated();
   const user = getCurrentUser();
   if (!user) {
     const sessionId = getSampleSessionId();

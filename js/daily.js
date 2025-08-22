@@ -796,7 +796,7 @@ async function renderDailyTasksImpl(currentUser, db) {
     const ids = wrappers.map(w => w.dataset.taskId);
     const others = all.filter(t => !ids.includes(t.id));
     const reordered = ids.map(id => all.find(t => t.id === id)).filter(Boolean);
-    await saveDecisions([...others, ...reordered]);
+    await saveDecisions([...others, ...reordered], { skipNotify: true });
   }
 }
 
