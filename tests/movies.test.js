@@ -34,7 +34,8 @@ describe('initMoviesPanel', () => {
 
     const item = document.querySelector('#movieList li');
     expect(item.textContent).toContain('Sample Movie');
-    expect(item.textContent).toContain('TMDB score: 7.5');
+    expect(item.textContent).toContain('vote_average: 7.5');
+    expect(item.textContent).toContain('vote_count: 5');
     expect(fetch).toHaveBeenCalledWith('https://api.themoviedb.org/3/trending/movie/week?api_key=TEST_KEY');
   });
 
