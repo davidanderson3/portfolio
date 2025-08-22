@@ -190,143 +190,57 @@ export async function initBudgetPanel() {
   const saved = await loadBudgetData();
   panel.innerHTML = `
     <div id="budgetLayout">
-      <div class="scenario" id="scenarioA">
-        <div class="scenario-title">Current</div>
-        <div id="budgetSummaryA" class="budget-summary"></div>
-        <form id="budgetFormA" class="budget-form">
-          <div class="section-title">Recurring Expenses</div>
-          <div id="recurContainerA" class="recurring-list"></div>
-          <div class="section-title">Subscriptions</div>
-          <div id="subsContainerA" class="subscriptions-list"></div>
-        </form>
-      </div>
-      <div class="scenario" id="scenarioB">
-        <div class="scenario-title">Goal</div>
-        <div id="budgetSummaryB" class="budget-summary"></div>
-        <form id="budgetFormB" class="budget-form">
-          <div class="section-title">Recurring Expenses</div>
-          <div id="recurContainerB" class="recurring-list"></div>
-          <div class="section-title">Subscriptions</div>
-          <div id="subsContainerB" class="subscriptions-list"></div>
-        </form>
-      </div>
-      <div class="scenario" id="scenarioDiff">
-        <div class="scenario-title">Diff</div>
-        <div id="budgetSummaryDiff" class="budget-summary"></div>
-        <form id="budgetFormDiff" class="budget-form">
-          <div class="section-title">Recurring Expenses</div>
-          <div id="recurContainerDiff" class="recurring-list diff-container"></div>
-          <div class="section-title">Subscriptions</div>
-          <div id="subsContainerDiff" class="subscriptions-list diff-container"></div>
-        </form>
-      </div>
+      <table id="budgetTable">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Current</th>
+            <th>Goal</th>
+            <th>Change</th>
+            <th>% Change</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="budgetTbody"></tbody>
+      </table>
+      <div id="budgetSummary" class="budget-summary"></div>
+      <button type="button" id="addCategoryBtn">+ Add Category</button>
     </div>
-    <button type="button" id="addCategoryBtn">+ Add Category</button>
   `;
 
-  const formA = panel.querySelector('#budgetFormA');
-  const summaryA = panel.querySelector('#budgetSummaryA');
-  const subsContainerA = formA.querySelector('#subsContainerA');
-  const recurContainerA = formA.querySelector('#recurContainerA');
+  const tbody = panel.querySelector('#budgetTbody');
+  const summary = panel.querySelector('#budgetSummary');
   const addCategoryBtn = panel.querySelector('#addCategoryBtn');
   const removedBuiltIns = new Set(saved.removedBuiltIns || []);
 
-  const formB = panel.querySelector('#budgetFormB');
-  const summaryB = panel.querySelector('#budgetSummaryB');
-  const subsContainerB = formB.querySelector('#subsContainerB');
-  const recurContainerB = formB.querySelector('#recurContainerB');
-  const summaryDiff = panel.querySelector('#budgetSummaryDiff');
-  const formDiff = panel.querySelector('#budgetFormDiff');
-  const subsContainerDiff = formDiff.querySelector('#subsContainerDiff');
-  const recurContainerDiff = formDiff.querySelector('#recurContainerDiff');
-
-  function addSubscriptionRow(container, name = '', cost = '', id) {
-    const row = document.createElement('div');
-    row.className = 'subscription-row';
-    if (id) row.dataset.id = id;
-    row.innerHTML = `
-      <input type="text" class="sub-name" placeholder="Name" value="${name}">
-      <input type="number" class="sub-cost" value="${cost}">
+  function addRow(name = '', current = '', goal = '', key = '') {
+    const id = key || Math.random().toString(36).slice(2);
+    const tr = document.createElement('tr');
+    tr.className = 'budget-row';
+    tr.dataset.id = id;
+    if (key) tr.dataset.field = key;
+    tr.innerHTML = `
+      <td class="cat-name">${name}</td>
+      <td><input type="number" class="current-cost" value="${current}"></td>
+      <td><input type="number" class="goal-cost" value="${goal}"></td>
+      <td class="change-cell"></td>
+      <td class="percent-cell"></td>
+      <td class="actions"></td>
     `;
-    const rem = makeIconBtn('❌', 'Remove', () => {
-      panel.querySelectorAll(`.subscription-row[data-id="${id}"]`).forEach(r => r.remove());
-      render();
-    });
+    const actions = tr.querySelector('.actions');
     const up = makeIconBtn('⬆️', 'Move up', () => {
-      panel.querySelectorAll(`.subscription-row[data-id="${id}"]`).forEach(r => {
-        const prev = r.previousElementSibling;
-        if (prev) r.parentElement.insertBefore(r, prev);
-      });
+      const prev = tr.previousElementSibling;
+      if (prev) tbody.insertBefore(tr, prev);
       render();
     });
-    const nameEl = row.querySelector('.sub-name');
-    nameEl.addEventListener('input', () => {
-      panel.querySelectorAll(`.subscription-row[data-id="${id}"] .sub-name`).forEach(el => {
-        if (el !== nameEl) el.value = nameEl.value;
-      });
-    });
-    row.append(up, rem);
-    container.append(row);
-  }
-
-  function addDiffRow(container, type, id) {
-    const row = document.createElement('div');
-    row.className = type === 'sub' ? 'subscription-row' : 'recurring-row';
-    if (id) row.dataset.id = id;
-    row.innerHTML = `
-      <span class="item-diff"></span>
-    `;
-    container.append(row);
-  }
-
-  function addSubscriptionRowPair(name = '', costA = '', costB = '') {
-    const id = Math.random().toString(36).slice(2);
-    addSubscriptionRow(subsContainerA, name, costA, id);
-    addSubscriptionRow(subsContainerB, name, costB, id);
-    addDiffRow(subsContainerDiff, 'sub', id);
-  }
-
-  function addRecurRow(container, name = '', cost = '', key = '', id) {
-    const row = document.createElement('div');
-    row.className = 'recurring-row';
-    if (id) row.dataset.id = id;
-    if (key) row.dataset.field = key;
-    row.innerHTML = `
-      <span class="recur-name">${name}</span>
-      <input type="number" class="recur-cost" value="${cost}">
-    `;
     const rem = makeIconBtn('❌', 'Remove', () => {
       if (key) removedBuiltIns.add(key);
-      panel.querySelectorAll(`.recurring-row[data-id="${id}"]`).forEach(r => r.remove());
+      tr.remove();
       render();
     });
-    const up = makeIconBtn('⬆️', 'Move up', () => {
-      panel.querySelectorAll(`.recurring-row[data-id="${id}"]`).forEach(r => {
-        const prev = r.previousElementSibling;
-        if (prev) r.parentElement.insertBefore(r, prev);
-      });
-      render();
-    });
-    row.append(up, rem);
-    container.append(row);
+    actions.append(up, rem);
+    tbody.append(tr);
   }
-
-  function addRecurRowPair(name = '', costA = '', costB = '', key = '') {
-    const id = key || Math.random().toString(36).slice(2);
-    addRecurRow(recurContainerA, name, costA, key, id);
-    addRecurRow(recurContainerB, name, costB, key, id);
-    addDiffRow(recurContainerDiff, 'recur', id);
-  }
-
-  const subNames = new Set([
-    ...Object.keys(saved.subscriptions || {}),
-    ...Object.keys(saved.goalSubscriptions || {})
-  ]);
-  if (subNames.size === 0) {
-    subNames.add('Amazon Prime');
-    subNames.add('Spotify');
-  }
-  subNames.forEach(n => addSubscriptionRowPair(n, saved.subscriptions?.[n] ?? '', saved.goalSubscriptions?.[n] ?? ''));
 
   const recurNames = new Set([
     ...Object.keys(saved.recurring || {}),
@@ -334,121 +248,82 @@ export async function initBudgetPanel() {
   ]);
   DEFAULT_RECURRING.forEach(([key, label]) => {
     if (!removedBuiltIns.has(key)) {
-      addRecurRowPair(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key);
+      addRow(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key);
     }
   });
-  recurNames.forEach(n => addRecurRowPair(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? ''));
+  recurNames.forEach(n => addRow(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? ''));
+
   addCategoryBtn.addEventListener('click', () => {
     const name = typeof prompt === 'function' ? prompt('Category name?') : '';
     if (name) {
-      addRecurRowPair(name);
+      addRow(name);
       render();
     }
   });
 
-  function collectScenario(recurContainer, subsContainer, removedSet, options = {}) {
-    const prefix = options.prefix || '';
-    const recurField = options.recurringField || 'recurring';
-    const subsField = options.subscriptionsField || 'subscriptions';
-    const categories = {};
-    const recur = {};
-    const subs = {};
-    const saveData = { removedBuiltIns: Array.from(removedSet) };
-    recurContainer.querySelectorAll('.recurring-row').forEach(row => {
-      const nameEl = row.querySelector('.recur-name');
-      const n = nameEl.textContent.trim();
-      const v = row.querySelector('.recur-cost').value;
-      if (!n) return;
-      categories[n] = v;
-      const key = row.dataset.field;
-      if (key) {
-        saveData[prefix + key] = v;
-      } else {
-        recur[n] = v;
-      }
-    });
-    subsContainer.querySelectorAll('.subscription-row').forEach(row => {
-      const n = row.querySelector('.sub-name').value.trim();
-      const v = row.querySelector('.sub-cost').value;
-      if (n) {
-        categories[n] = v;
-        subs[n] = v;
-      }
-    });
-    saveData[recurField] = recur;
-    saveData[subsField] = subs;
-    return { categories, recur, subs, saveData };
-  }
-
-  function updateDiffs() {
-    function applyDiff(aContainer, bContainer, diffContainer, costSelector) {
-      diffContainer.querySelectorAll('[data-id]').forEach(rowC => {
-        const id = rowC.dataset.id;
-        const rowA = aContainer.querySelector(`[data-id="${id}"]`);
-        const rowB = bContainer.querySelector(`[data-id="${id}"]`);
-        const costA = parseFloat(rowA?.querySelector(costSelector).value) || 0;
-        const costB = parseFloat(rowB?.querySelector(costSelector).value) || 0;
-        const diff = costA - costB;
-        const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
-        const absDiff = Math.abs(diff);
-        let percentText;
-        if (costA === 0) {
-          percentText = absDiff === 0 ? '0%' : 'n/a';
+  function collectData() {
+    const categoriesCurrent = {};
+    const categoriesGoal = {};
+    const saveData = {
+      removedBuiltIns: Array.from(removedBuiltIns),
+      recurring: {},
+      goalRecurring: {},
+      subscriptions: {},
+      goalSubscriptions: {}
+    };
+    tbody.querySelectorAll('tr').forEach(row => {
+      const name = row.querySelector('.cat-name').textContent.trim();
+      const curVal = row.querySelector('.current-cost').value;
+      const goalVal = row.querySelector('.goal-cost').value;
+      const field = row.dataset.field;
+      if (name) {
+        categoriesCurrent[name] = curVal;
+        categoriesGoal[name] = goalVal;
+        if (field) {
+          saveData[field] = curVal;
+          saveData['goal_' + field] = goalVal;
         } else {
-          percentText = ((absDiff / costA) * 100).toFixed(1) + '%';
-          if (sign) percentText = sign + percentText;
+          if (curVal) saveData.recurring[name] = curVal;
+          if (goalVal) saveData.goalRecurring[name] = goalVal;
         }
-        const diffText = sign + '$' + absDiff.toFixed(2);
-        rowC.querySelector('.item-diff').textContent = `${percentText} (${diffText})`;
-      });
-    }
-    applyDiff(recurContainerA, recurContainerB, recurContainerDiff, '.recur-cost');
-    applyDiff(subsContainerA, subsContainerB, subsContainerDiff, '.sub-cost');
+      }
+    });
+    return { categoriesCurrent, categoriesGoal, saveData };
   }
 
   function render(save = true) {
-    const aData = collectScenario(recurContainerA, subsContainerA, removedBuiltIns, {
-      prefix: '',
-      recurringField: 'recurring',
-      subscriptionsField: 'subscriptions'
+    const { categoriesCurrent, categoriesGoal, saveData } = collectData();
+    tbody.querySelectorAll('tr').forEach(row => {
+      const cur = parseFloat(row.querySelector('.current-cost').value) || 0;
+      const goal = parseFloat(row.querySelector('.goal-cost').value) || 0;
+      const diff = goal - cur;
+      const sign = diff > 0 ? '+' : diff < 0 ? '-' : '';
+      row.querySelector('.change-cell').textContent = `${sign}$${Math.abs(diff).toFixed(2)}`;
+      let pct;
+      if (cur === 0) {
+        pct = goal === 0 ? '0%' : 'n/a';
+      } else {
+        pct = ((Math.abs(diff) / cur) * 100).toFixed(1) + '%';
+        if (sign) pct = sign + pct;
+      }
+      row.querySelector('.percent-cell').textContent = pct;
     });
-    const bData = collectScenario(recurContainerB, subsContainerB, removedBuiltIns, {
-      prefix: 'goal_',
-      recurringField: 'goalRecurring',
-      subscriptionsField: 'goalSubscriptions'
-    });
-
-    const resultA = calculateMonthlyBudget({ salary, categories: aData.categories });
-    const resultB = calculateMonthlyBudget({ salary, categories: bData.categories });
-
-    summaryA.innerHTML =
-      `Total Expenses: $${resultA.expenses.toLocaleString()}<br>` +
-      `Leftover: $${resultA.leftover.toLocaleString()}`;
-    summaryB.innerHTML =
-      `Total Expenses: $${resultB.expenses.toLocaleString()}<br>` +
-      `Leftover: $${resultB.leftover.toLocaleString()}`;
-    const diffExpenses = resultA.expenses - resultB.expenses;
-    const diffLeftover = resultA.leftover - resultB.leftover;
-    const fmt = n => `${n > 0 ? '+' : n < 0 ? '-' : ''}$${Math.abs(n).toLocaleString()}`;
-    summaryDiff.innerHTML =
-      `Total Expenses: ${fmt(diffExpenses)}<br>` +
-      `Leftover: ${fmt(diffLeftover)}`;
-
-    updateDiffs();
-
-    if (save) {
-      const dataToSave = { ...aData.saveData, ...bData.saveData };
-      saveBudgetData(dataToSave);
-    }
+    const toNumber = obj => Object.values(obj).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+    const totalCur = toNumber(categoriesCurrent);
+    const totalGoal = toNumber(categoriesGoal);
+    const changeTotal = totalGoal - totalCur;
+    const signTotal = changeTotal > 0 ? '+' : changeTotal < 0 ? '-' : '';
+    summary.innerHTML =
+      `Current Expenses: $${totalCur.toLocaleString()}<br>` +
+      `Goal Expenses: $${totalGoal.toLocaleString()}<br>` +
+      `Change: ${signTotal}$${Math.abs(changeTotal).toLocaleString()}`;
+    if (save) saveBudgetData(saveData);
   }
-    // Update summaries as the user types but avoid saving on every keystroke.
-    formA.addEventListener('input', () => render(false));
-    formB.addEventListener('input', () => render(false));
-    // Persist data only after the user commits a change.
-    formA.addEventListener('change', () => render(true));
-    formB.addEventListener('change', () => render(true));
-    render(false);
-  }
+
+  tbody.addEventListener('input', () => render(false));
+  tbody.addEventListener('change', () => render(true));
+  render(false);
+}
 
 if (typeof window !== 'undefined') {
   window.initBudgetPanel = initBudgetPanel;
