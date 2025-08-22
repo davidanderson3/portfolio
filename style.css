@@ -2084,47 +2084,36 @@ h2 {
 /* Budget layout */
 #budgetLayout {
   display: flex;
-  gap: 16px;
+  flex-direction: column;
   align-items: flex-start;
 }
 
-.scenario {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+#budgetTable {
+  border-collapse: collapse;
+  width: 100%;
 }
 
-.scenario-title {
-  font-weight: bold;
-  margin-bottom: 4px;
+#budgetTable th,
+#budgetTable td {
+  border: 1px solid #ccc;
+  padding: 4px;
 }
 
-.budget-form {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 450px;
+#budgetTable th:first-child,
+#budgetTable td:first-child {
+  text-align: left;
+}
+
+.actions button {
+  margin-left: 4px;
 }
 
 .budget-summary {
-  width: 450px;
-}
-
-.budget-form label {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-}
-
-.budget-form label input {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.budget-form .section-title {
   margin-top: 8px;
-  font-weight: bold;
+}
+
+#addCategoryBtn {
+  margin-top: 8px;
 }
 
 /* Align budget panel content to the left instead of centering */
@@ -2132,93 +2121,10 @@ h2 {
   justify-content: flex-start;
 }
 
-
-.subscriptions-list,
-.recurring-list {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #ccc;
-}
-
-.subscription-row,
-.recurring-row {
-  display: grid;
-  grid-template-columns: 2fr 100px 24px 24px;
-  align-items: center;
-}
-
-.subscription-row:not(:last-child),
-.recurring-row:not(:last-child) {
-  border-bottom: 1px solid #ccc;
-}
-
-.subscription-row > *,
-.recurring-row > * {
-  padding: 4px;
-}
-
-.subscription-row > *:not(:first-child),
-.recurring-row > *:not(:first-child) {
-  border-left: 1px solid #ccc;
-}
-
-.subscription-row input[type="text"] {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.recurring-row .recur-name {
-  display: block;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.subscription-row input.sub-cost,
-.recurring-row input.recur-cost {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.diff-container .subscription-row,
-.diff-container .recurring-row {
-  grid-template-columns: 2fr 100px 24px 24px;
-}
-
-.diff-container .subscription-row > *,
-.diff-container .recurring-row > * {
-  border-left: none;
-}
-
-.diff-container .item-diff {
-  grid-column: 2;
-}
-
-#scenarioDiff .budget-form,
-#scenarioDiff .budget-summary {
-  width: 450px;
-}
-
-.item-diff {
-  text-align: right;
-  font-size: 0.9em;
-  white-space: nowrap;
-}
-
-#addCategoryBtn {
-  display: block;
-  width: 100%;
-  margin-top: 8px;
-}
-
 @media (max-width: 600px) {
-  #budgetLayout {
-    flex-direction: column;
-  }
-  .budget-form {
-    width: 100%;
-  }
-  .budget-summary {
-    width: 100%;
+  #budgetTable th,
+  #budgetTable td {
+    padding: 2px;
   }
 }
 

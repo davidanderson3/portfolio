@@ -205,10 +205,9 @@ describe('budget panel', () => {
     global.prompt = () => 'Test Recurring';
     document.getElementById('addCategoryBtn').click();
 
-    const costInput = document.querySelector('#recurContainerB .recurring-row:last-child .recur-cost');
+    const costInput = document.querySelector('#budgetTbody tr:last-child .goal-cost');
     costInput.value = '50';
     costInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
-    // Changes are persisted on change events rather than every keystroke.
     costInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 
     await new Promise(res => setTimeout(res, 0));
@@ -236,10 +235,10 @@ describe('budget panel', () => {
     document.getElementById('addCategoryBtn').click();
     document.getElementById('addCategoryBtn').click();
 
-    const rows = document.querySelectorAll('#recurContainerA .recurring-row');
+    const rows = document.querySelectorAll('#budgetTbody tr');
     rows[rows.length - 1].querySelector('button[title="Move up"]').click();
 
-    const order = Array.from(document.querySelectorAll('#recurContainerA .recurring-row .recur-name'))
+    const order = Array.from(document.querySelectorAll('#budgetTbody .cat-name'))
       .slice(-2)
       .map(el => el.textContent);
     expect(order[0]).toBe('Second');
@@ -256,28 +255,25 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
-    function setCost(containerId, field, value) {
-      const input = document.querySelector(`${containerId} .recurring-row[data-field="${field}"] .recur-cost`);
-      input.value = String(value);
-      input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    function setCost(field, current, goal) {
+      const row = document.querySelector(`#budgetTbody tr[data-field="${field}"]`);
+      const curInput = row.querySelector('.current-cost');
+      const goalInput = row.querySelector('.goal-cost');
+      curInput.value = String(current);
+      curInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      goalInput.value = String(goal);
+      goalInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     }
 
-    setCost('#recurContainerA', 'mortgagePrincipal', 1000);
-    setCost('#recurContainerA', 'mortgageInterest', 500);
-    setCost('#recurContainerA', 'escrow', 300);
+    setCost('mortgagePrincipal', 1000, 900);
+    setCost('mortgageInterest', 500, 400);
+    setCost('escrow', 300, 200);
 
-    setCost('#recurContainerB', 'mortgagePrincipal', 900);
-    setCost('#recurContainerB', 'mortgageInterest', 400);
-    setCost('#recurContainerB', 'escrow', 200);
-
-    const summaryA = document.getElementById('budgetSummaryA').textContent;
-    const summaryB = document.getElementById('budgetSummaryB').textContent;
-
-    expect(summaryA).not.toContain('Rent After Escrow');
-    expect(summaryB).not.toContain('Rent After Escrow');
+    const summary = document.getElementById('budgetSummary').textContent;
+    expect(summary).not.toContain('Rent After Escrow');
   });
 
-  it('shows summaries inside their respective sections', async () => {
+  it('shows the summary inside the layout', async () => {
     getMock.mockResolvedValue({ exists: false });
 
     const dom = new JSDOM('<div id="budgetContainer"></div>');
@@ -288,11 +284,8 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
-    const scenarioA = document.getElementById('scenarioA');
-    const summaryA = document.getElementById('budgetSummaryA');
-    const scenarioB = document.getElementById('scenarioB');
-    const summaryB = document.getElementById('budgetSummaryB');
-    expect(scenarioA.contains(summaryA)).toBe(true);
-    expect(scenarioB.contains(summaryB)).toBe(true);
+    const layout = document.getElementById('budgetLayout');
+    const summary = document.getElementById('budgetSummary');
+    expect(layout.contains(summary)).toBe(true);
   });
 });
