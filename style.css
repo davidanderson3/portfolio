@@ -571,7 +571,7 @@ button:hover {
 }
 
 .goal-card.do-later .decision-row {
-  background-color: transparent;
+  background: transparent;
 }
 
 .main-layout,
