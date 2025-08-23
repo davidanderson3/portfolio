@@ -1,9 +1,9 @@
 const CACHE_NAME = 'dashboard-cache-v1';
 const OFFLINE_URLS = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/js/main.js'
+  './',
+  './index.html',
+  './style.css',
+  './js/main.js'
 ];
 
 self.addEventListener('install', event => {
