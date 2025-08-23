@@ -16,7 +16,7 @@ vi.mock('../js/helpers.js', () => ({
 }));
 
 vi.mock('../js/auth.js', () => ({ db: {}, currentUser: null, auth: { onAuthStateChanged: vi.fn() } }));
-vi.mock('../js/googleCalendar.js', () => ({ createCalendarEvent: vi.fn() }));
+vi.mock('../js/calendarEvents.js', () => ({ createCalendarEvent: vi.fn() }));
 
 describe('daily task ordering', () => {
   let renderDailyTasks;

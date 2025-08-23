@@ -1,6 +1,5 @@
 import { parseNaturalDate, generateId, loadDecisions, saveDecisions, saveGoalOrder, loadGoalOrder } from './helpers.js';
 import { appendGoalToDOM, refreshGoalInDOM } from './goals.js';
-import { createCalendarEvent } from './googleCalendar.js';
 
 
 export const wizardState = {
@@ -182,22 +181,7 @@ async function saveGoalWizard() {
 
   await saveDecisions([...updatedItems, ...newItems]);
 
-  if (wizardState.calendarStartDate) {
-    const recur = prompt(
-      'Repeat how often? (daily/weekly/monthly or blank for none):',
-      ''
-    ) || '';
-    try {
-      await createCalendarEvent(
-        newGoal.text,
-        wizardState.calendarStartDate,
-        wizardState.calendarEndDate || wizardState.calendarStartDate,
-        recur
-      );
-    } catch (err) {
-      console.error('Failed to create calendar event', err);
-    }
-  }
+  // calendarStartDate/End already persisted on the goal above
 
   const currentGoalOrder = await loadGoalOrder();
   const newGoalOrder = isEdit ? currentGoalOrder : [...currentGoalOrder, goalId];

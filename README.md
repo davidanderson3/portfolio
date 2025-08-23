@@ -11,7 +11,7 @@ The Routine tab helps keep track of recurring tasks throughout the day. Tasks ar
 Projects capture larger goals and their subtasks. Tasks can be nested under parent goals and rearranged with drag-and-drop. A project wizard walks through creating new projects and subprojects, and projects may be scheduled on the calendar as single dates or ranges. Inline editing and progress indicators make it easy to monitor completion.
 
 ### Calendar
-The Calendar tab displays scheduled projects and tasks in either a daily or hourly view. Items can be added directly to the schedule and sent to Google Calendar. A separate schedule panel summarizes what's happening today, making it a central hub for time management.
+The Calendar tab displays scheduled projects and tasks in either a daily or hourly view. Items can be added directly to the schedule. A separate schedule panel summarizes what's happening today, making it a central hub for time management.
 
 ### Metrics
 Metrics offers flexible tracking for anything that can be measured. Users define their own metrics (such as mood or counts) and record values for each day. The tab renders charts and value history, lets you browse previous days, and postpones entries when needed. It doubles as a lightweight journaling tool for data-driven habits.

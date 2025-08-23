@@ -8,7 +8,6 @@ import { initMetricsUI } from './stats.js';
 import { initTabs } from './tabs.js';
 import { initButtonStyles } from './buttonStyles.js';
 import { initTabReports } from './tabReports.js';
-import { initGoogleCalendar } from './googleCalendar.js';
 import { loadHiddenTabs, applyHiddenTabs, saveHiddenTabs } from './settings.js';
 import { clearPlanningCache } from './planning.js';
 import { applySiteName } from './siteName.js';
@@ -480,7 +479,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   initCalendarMobileTabs();
   initButtonStyles();
-  initGoogleCalendar();
 
   // Persist any unsaved decisions when the page is hidden or closed
   document.addEventListener('visibilitychange', () => {
