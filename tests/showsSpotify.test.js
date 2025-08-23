@@ -22,13 +22,12 @@ describe('initShowsPanel', () => {
     storage.clear();
     const dom = new JSDOM(`
       <input id="spotifyClientId" />
-      <input id="spotifyClientSecret" />
       <button id="spotifyTokenBtn"></button>
       <input id="spotifyToken" />
       <input id="ticketmasterApiKey" />
       <button id="ticketmasterLoadBtn"></button>
       <div id="ticketmasterList"></div>
-    `);
+    `, { url: 'http://localhost/' });
     global.window = dom.window;
     global.document = dom.window.document;
     global.fetch = vi.fn();
@@ -53,15 +52,17 @@ describe('initShowsPanel', () => {
     expect(document.querySelectorAll('#ticketmasterList li').length).toBe(1);
   });
 
-  it('caches credentials and token even when fetch fails', async () => {
+  it('stores credentials and cached values during OAuth flow', async () => {
     fetch.mockRejectedValue(new Error('fail'));
-
     await initShowsPanel();
+    window.__NO_SPOTIFY_REDIRECT = true;
     document.getElementById('spotifyClientId').value = 'cid';
-    document.getElementById('spotifyClientSecret').value = 'sec';
     document.getElementById('spotifyTokenBtn').dispatchEvent(new window.Event('click'));
 
     await flush();
+
+    expect(localStorage.getItem('spotifyClientId')).toBe('cid');
+    expect(localStorage.getItem('spotifyCodeVerifier')).toBeTruthy();
 
     document.getElementById('spotifyToken').value = 'tok';
     document.getElementById('ticketmasterApiKey').value = 'key';
@@ -69,10 +70,31 @@ describe('initShowsPanel', () => {
 
     await flush();
 
-    expect(localStorage.getItem('spotifyClientId')).toBe('cid');
-    expect(localStorage.getItem('spotifyClientSecret')).toBe('sec');
     expect(localStorage.getItem('spotifyToken')).toBe('tok');
     expect(localStorage.getItem('ticketmasterApiKey')).toBe('key');
+  });
+
+  it('exchanges authorization code for token', async () => {
+    const dom = new JSDOM(`
+      <input id="spotifyClientId" />
+      <button id="spotifyTokenBtn"></button>
+      <input id="spotifyToken" />
+      <input id="ticketmasterApiKey" />
+      <button id="ticketmasterLoadBtn"></button>
+      <div id="ticketmasterList"></div>
+    `, { url: 'http://localhost/?code=abc' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ access_token: 'newTok' }) });
+    localStorage.setItem('spotifyClientId', 'cid');
+    localStorage.setItem('spotifyCodeVerifier', 'ver');
+    ({ initShowsPanel } = await import('../js/shows.js'));
+
+    await initShowsPanel();
+    await flush();
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(document.getElementById('spotifyToken').value).toBe('newTok');
   });
 });
 

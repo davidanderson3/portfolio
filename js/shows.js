@@ -1,8 +1,35 @@
+function randomString(length) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let str = '';
+  for (let i = 0; i < length; i++) {
+    str += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return str;
+}
+
+async function pkceChallenge(verifier) {
+  const data = new TextEncoder().encode(verifier);
+  if (globalThis.crypto?.subtle) {
+    const digest = await globalThis.crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(digest)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  } else {
+    const { createHash } = await import('crypto');
+    return createHash('sha256')
+      .update(verifier)
+      .digest('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+  }
+}
+
 export async function initShowsPanel() {
   const listEl = document.getElementById('ticketmasterList');
   if (!listEl) return;
   const clientIdInput = document.getElementById('spotifyClientId');
-  const clientSecretInput = document.getElementById('spotifyClientSecret');
   const tokenBtn = document.getElementById('spotifyTokenBtn');
   const tokenInput = document.getElementById('spotifyToken');
   const apiKeyInput = document.getElementById('ticketmasterApiKey');
@@ -10,49 +37,77 @@ export async function initShowsPanel() {
 
   const savedClientId =
     (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyClientId')) || '';
-  const savedClientSecret =
-    (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyClientSecret')) || '';
   const savedToken =
     (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyToken')) || '';
   const savedApiKey =
     (typeof localStorage !== 'undefined' && localStorage.getItem('ticketmasterApiKey')) || '';
   if (clientIdInput) clientIdInput.value = savedClientId;
-  if (clientSecretInput) clientSecretInput.value = savedClientSecret;
   if (tokenInput) tokenInput.value = savedToken;
   if (apiKeyInput) apiKeyInput.value = savedApiKey;
 
-  const fetchToken = async () => {
+  const redirectUri = window.location.origin + window.location.pathname;
+
+  const startAuth = async () => {
     const clientId = clientIdInput?.value.trim();
-    const clientSecret = clientSecretInput?.value.trim();
-    if (!clientId || !clientSecret || !tokenInput) {
-      listEl.textContent = 'Please enter Spotify client credentials.';
+    if (!clientId) {
+      listEl.textContent = 'Please enter Spotify client ID.';
       return;
     }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('spotifyClientId', clientId);
-      localStorage.setItem('spotifyClientSecret', clientSecret);
     }
-    try {
-      listEl.textContent = '';
-      const res = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: 'grant_type=client_credentials'
-      });
-      if (!res.ok) throw new Error(`Token HTTP ${res.status}`);
-      const data = await res.json();
-      tokenInput.value = data.access_token || '';
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('spotifyToken', tokenInput.value);
+    const verifier = randomString(64);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('spotifyCodeVerifier', verifier);
+    }
+    const challenge = await pkceChallenge(verifier);
+    const authUrl =
+      'https://accounts.spotify.com/authorize' +
+      `?response_type=code&client_id=${encodeURIComponent(clientId)}` +
+      `&scope=${encodeURIComponent('user-top-read')}` +
+      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+      '&code_challenge_method=S256' +
+      `&code_challenge=${challenge}`;
+    if (!window.__NO_SPOTIFY_REDIRECT) {
+      try {
+        window.location.href = authUrl;
+      } catch (e) {
+        // jsdom doesn't implement navigation; ignore
       }
-    } catch (err) {
-      console.error('Failed to get token', err);
-      listEl.textContent = 'Failed to get token.';
     }
   };
+
+  const params = new URLSearchParams(window.location.search);
+  const authCode = params.get('code');
+  if (authCode && savedClientId && tokenInput) {
+    try {
+      const verifier =
+        (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyCodeVerifier')) || '';
+      const body = new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: authCode,
+        redirect_uri: redirectUri,
+        client_id: savedClientId,
+        code_verifier: verifier
+      });
+      const res = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        tokenInput.value = data.access_token || '';
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('spotifyToken', tokenInput.value);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to exchange code', err);
+    } finally {
+      window.history.replaceState({}, '', redirectUri);
+    }
+  }
 
   const loadShows = async () => {
     const token = tokenInput?.value.trim();
@@ -116,7 +171,7 @@ export async function initShowsPanel() {
     }
   };
 
-  tokenBtn?.addEventListener('click', fetchToken);
+  tokenBtn?.addEventListener('click', startAuth);
   loadBtn?.addEventListener('click', loadShows);
 
   if (savedToken && savedApiKey) {
