@@ -2167,20 +2167,3 @@ h2 {
   }
 }
 
-/* Contacts Panel */
-#contactsPanel .contacts-options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 1rem;
-}
-
-#contactsList {
-  margin-top: 1rem;
-  list-style: none;
-  padding: 0;
-}
-
-#contactsList li {
-  padding: 4px 0;
-}

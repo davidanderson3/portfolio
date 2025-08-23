@@ -43,7 +43,6 @@
         <button class="tab-button" data-target="recipesPanel">Recipes</button>
         <button class="tab-button" data-target="planningPanel">Finances</button>
         <button class="tab-button" data-target="budgetPanel">Budget</button>
-        <button class="tab-button" data-target="contactsPanel">Contacts</button>
         <button class="tab-button" data-target="backupsPanel">Backups</button>
         <button class="tab-button" data-target="pointlessPanel">Pointless</button>
         <button class="tab-button" data-target="geolayersPanel">GeoLayers</button>
@@ -308,23 +307,6 @@
         </div>
       </div>
 
-      <div id="contactsPanel" class="main-layout" style="display:none">
-        <div class="full-column">
-          <div class="panel-header">
-            <h2>Contacts</h2>
-            <button type="button" class="icon-btn tab-hide-btn" title="Hide Tab">🕒</button>
-          </div>
-          <div id="contactForm" style="margin-bottom:1rem;">
-            <input type="text" id="newContactName" placeholder="Name" style="margin-right:.5rem;">
-            <input type="number" id="newContactContact" placeholder="Contact days" style="width:7rem;margin-right:.5rem;">
-            <input type="number" id="newContactConversation" placeholder="Conversation days" style="width:7rem;margin-right:.5rem;">
-            <input type="number" id="newContactMeet" placeholder="Meet days" style="width:7rem;margin-right:.5rem;">
-            <button type="button" id="addContactBtn">Add</button>
-          </div>
-          <ul id="contactsList"></ul>
-        </div>
-      </div>
-
       <!-- BACKUPS PANEL -->
       <div id="backupsPanel" class="main-layout" style="display:none">
         <div class="full-column">
@@ -421,7 +403,6 @@
   <script type="module" src="js/weather.js"></script>
   <script type="module" src="js/planning.js"></script>
   <script type="module" src="js/budget.js"></script>
-  <script type="module" src="js/contacts.js"></script>
   <script type="module" src="js/backups.js"></script>
   <script type="module" src="js/pointless.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
