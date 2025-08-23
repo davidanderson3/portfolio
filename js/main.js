@@ -13,7 +13,6 @@ import { loadHiddenTabs, applyHiddenTabs, saveHiddenTabs } from './settings.js';
 import { clearPlanningCache } from './planning.js';
 import { applySiteName } from './siteName.js';
 import { initDescriptions } from './descriptions.js';
-import { initContactUI } from './contact.js';
 
 let hiddenTabsTimer = null;
 let renderQueue = Promise.resolve();
@@ -28,9 +27,8 @@ window.addEventListener('DOMContentLoaded', () => {
   } else {
     console.warn('Service workers are not supported; offline features will be limited.');
   }
-  applySiteName();
-  initDescriptions();
-  initContactUI();
+    applySiteName();
+    initDescriptions();
   const uiRefs = {
     loginBtn: document.getElementById('loginBtn'),
     logoutBtn: document.getElementById('logoutBtn'),
