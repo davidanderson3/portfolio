@@ -95,6 +95,19 @@ describe('budget calculations', () => {
     expect(res.leftover).toBe(5955);
   });
 
+  it('adds income categories to the summary', () => {
+    const res = calculateMonthlyBudget({
+      salary: 120000,
+      categories: { mortgagePrincipal: 1500 },
+      incomeCategories: { sideJob: 500 }
+    });
+    expect(res.expenses).toBe(1500);
+    expect(res.income).toBe(500);
+    expect(res.netPay).toBe(9500);
+    expect(res.leftover).toBe(9000);
+    expect(res.monthlyIncome).toBe(10000);
+  });
+
   it('calculates the current monthly budget from saved data', async () => {
     planningMock = { finance: { income: 120000 } };
     const stored = {
