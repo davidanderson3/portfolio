@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 
-const createEventMock = vi.fn();
-
 vi.mock('../js/helpers.js', () => ({
   loadDecisions: vi.fn(async () => []),
   saveDecisions: vi.fn(async () => {}),
@@ -17,11 +15,8 @@ vi.mock('../js/goals.js', () => ({
   appendGoalToDOM: vi.fn()
 }));
 
-vi.mock('../js/googleCalendar.js', () => ({ createCalendarEvent: createEventMock }));
-
 beforeEach(() => {
   vi.resetModules();
-  createEventMock.mockClear();
   global.firebase = {
     auth: () => ({ currentUser: { uid: 'user1' } })
   };
@@ -29,7 +24,7 @@ beforeEach(() => {
 });
 
 describe('saveGoalWizard', () => {
-  it('creates calendar event when scheduled', async () => {
+  it('saves scheduled goal when dates provided', async () => {
     const mod = await import('../js/wizard.js');
     const { wizardState, initWizard, saveGoalWizard } = mod;
     initWizard({
@@ -41,7 +36,7 @@ describe('saveGoalWizard', () => {
       wizardStep: {}
     });
 
-  Object.assign(wizardState, {
+    Object.assign(wizardState, {
       goalText: 'My goal',
       calendarStartDate: '2024-01-02',
       calendarEndDate: '',
@@ -50,7 +45,16 @@ describe('saveGoalWizard', () => {
     });
 
     await saveGoalWizard();
-    expect(createEventMock).toHaveBeenCalledWith('My goal', '2024-01-02', '2024-01-02', '');
+    const helpers = await import('../js/helpers.js');
+    expect(helpers.saveDecisions).toHaveBeenCalled();
+    const saved = helpers.saveDecisions.mock.calls[0][0];
+    expect(saved).toEqual([
+      expect.objectContaining({
+        text: 'My goal',
+        scheduled: '2024-01-02',
+        scheduledEnd: ''
+      })
+    ]);
   });
 });
 

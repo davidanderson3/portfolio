@@ -1,6 +1,6 @@
 import { loadDecisions, saveDecisions, generateId, makeIconBtn, linkify, pickDate } from './helpers.js';
 import { db, currentUser } from './auth.js';
-import { createCalendarEvent } from './googleCalendar.js';
+import { createCalendarEvent } from './calendarEvents.js';
 
 // Shared skip intervals (same as goals)
 const skipOptions = [

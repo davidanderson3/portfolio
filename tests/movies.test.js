@@ -23,7 +23,8 @@ describe('initMoviesPanel', () => {
           adult: false,
           backdrop_path: '/path.jpg',
           id: 123,
-          original_title: 'Original Title'
+          original_title: 'Original Title',
+          poster_path: '/poster.jpg'
         }
       ]
     };
@@ -51,6 +52,10 @@ describe('initMoviesPanel', () => {
     expect(item.textContent).not.toContain('backdrop_path:');
     expect(item.textContent).not.toContain('id:');
     expect(item.textContent).not.toContain('original_title:');
+    const img = document.querySelector('#movieList li img');
+    expect(img).not.toBeNull();
+    expect(img.src).toContain('https://image.tmdb.org/t/p/w200/poster.jpg');
+    expect(document.querySelector('#movieList li button')).not.toBeNull();
     expect(fetch).toHaveBeenNthCalledWith(
       1,
       'https://api.themoviedb.org/3/trending/movie/week?api_key=TEST_KEY'
@@ -71,12 +76,21 @@ describe('initMoviesPanel', () => {
     global.window = dom.window;
 
     let stored = '';
+    let hidden = '[]';
     global.localStorage = {
-      getItem: key => (key === 'moviesApiKey' ? stored : ''),
+      getItem: key => {
+        if (key === 'moviesApiKey') return stored;
+        if (key === 'hiddenMovieIds') return hidden;
+        return '';
+      },
       setItem: (key, value) => {
         if (key === 'moviesApiKey') stored = value;
+        if (key === 'hiddenMovieIds') hidden = value;
       }
     };
+    Object.defineProperty(window, 'localStorage', { value: global.localStorage });
+    global.sessionStorage = { getItem: () => '', setItem: () => {} };
+    Object.defineProperty(window, 'sessionStorage', { value: global.sessionStorage });
 
     const apiData = {
       results: [
@@ -121,12 +135,21 @@ describe('initMoviesPanel', () => {
     global.window = dom.window;
 
     let stored = '';
+    let hidden = '[]';
     global.localStorage = {
-      getItem: key => (key === 'moviesApiKey' ? stored : ''),
+      getItem: key => {
+        if (key === 'moviesApiKey') return stored;
+        if (key === 'hiddenMovieIds') return hidden;
+        return '';
+      },
       setItem: (key, value) => {
         if (key === 'moviesApiKey') stored = value;
+        if (key === 'hiddenMovieIds') hidden = value;
       }
     };
+    Object.defineProperty(window, 'localStorage', { value: global.localStorage });
+    global.sessionStorage = { getItem: () => '', setItem: () => {} };
+    Object.defineProperty(window, 'sessionStorage', { value: global.sessionStorage });
 
     global.fetch = vi.fn(() => Promise.reject(new Error('fail')));
 
@@ -137,6 +160,73 @@ describe('initMoviesPanel', () => {
 
     expect(fetch).toHaveBeenCalledWith('https://api.themoviedb.org/3/trending/movie/week?api_key=FAIL_KEY');
     expect(stored).toBe('FAIL_KEY');
+  });
+
+  it('removes movie on hide and persists id', async () => {
+    const dom = new JSDOM('<div id="movieList"></div>');
+    global.document = dom.window.document;
+    global.window = dom.window;
+    window.tmdbApiKey = 'TEST_KEY';
+
+    let hidden = '[]';
+    global.localStorage = {
+      getItem: key => (key === 'hiddenMovieIds' ? hidden : ''),
+      setItem: (key, value) => {
+        if (key === 'hiddenMovieIds') hidden = value;
+      }
+    };
+    Object.defineProperty(window, 'localStorage', { value: global.localStorage });
+    global.sessionStorage = { getItem: () => '', setItem: () => {} };
+    Object.defineProperty(window, 'sessionStorage', { value: global.sessionStorage });
+
+    const apiData = {
+      results: [
+        { id: 321, title: 'Hide Me', release_date: '2024-01-01', poster_path: '/a.jpg', genre_ids: [] }
+      ]
+    };
+    const genreData = { genres: [] };
+
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(apiData) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) });
+
+    await initMoviesPanel();
+    const btn = document.querySelector('#movieList li button');
+    btn.click();
+
+    expect(document.querySelector('#movieList li')).toBeNull();
+    expect(JSON.parse(hidden)).toEqual(['321']);
+  });
+
+  it('does not render movies already hidden', async () => {
+    const dom = new JSDOM('<div id="movieList"></div>');
+    global.document = dom.window.document;
+    global.window = dom.window;
+    window.tmdbApiKey = 'TEST_KEY';
+
+    global.localStorage = {
+      getItem: key => (key === 'hiddenMovieIds' ? '["555"]' : ''),
+      setItem: () => {}
+    };
+    Object.defineProperty(window, 'localStorage', { value: global.localStorage });
+    global.sessionStorage = { getItem: () => '', setItem: () => {} };
+    Object.defineProperty(window, 'sessionStorage', { value: global.sessionStorage });
+
+    const apiData = {
+      results: [
+        { id: 555, title: 'Skip Me', release_date: '2024-01-01', genre_ids: [], poster_path: '/a.jpg' }
+      ]
+    };
+    const genreData = { genres: [] };
+
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(apiData) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) });
+
+    await initMoviesPanel();
+    expect(document.querySelector('#movieList li')).toBeNull();
   });
 });
 
