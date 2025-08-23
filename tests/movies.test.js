@@ -20,6 +20,7 @@ describe('initMoviesPanel', () => {
           vote_average: 7.5,
           vote_count: 5,
           genre_ids: [28],
+          overview: 'An exciting film',
           adult: false,
           backdrop_path: '/path.jpg',
           id: 123,
@@ -48,6 +49,8 @@ describe('initMoviesPanel', () => {
     expect(item.textContent).toContain('vote_average: 7.5');
     expect(item.textContent).toContain('vote_count: 5');
     expect(item.textContent).toContain('genres: Action');
+    expect(item.textContent).toContain('An exciting film');
+    expect(item.textContent).not.toContain('overview:');
     expect(item.textContent).not.toContain('adult:');
     expect(item.textContent).not.toContain('backdrop_path:');
     expect(item.textContent).not.toContain('id:');

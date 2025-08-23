@@ -3,6 +3,7 @@ export async function initMoviesPanel() {
   if (!listEl) return;
   const apiKeyInput = document.getElementById('moviesApiKey');
   const apiKeyContainer = document.getElementById('moviesApiKeyContainer');
+  const saveBtn = document.getElementById('moviesSaveBtn');
 
   const hiddenKey = 'hiddenMovieIds';
 
@@ -84,7 +85,7 @@ export async function initMoviesPanel() {
         // ignore genre fetch errors
       }
 
-      const exclude = new Set(['adult', 'backdrop_path', 'id', 'original_title', 'poster_path']);
+      const exclude = new Set(['adult', 'backdrop_path', 'id', 'original_title', 'poster_path', 'title']);
       const ul = document.createElement('ul');
       movies.forEach(m => {
         const li = document.createElement('li');
@@ -127,6 +128,8 @@ export async function initMoviesPanel() {
               .filter(Boolean);
             const display = names.length ? names.join(', ') : (value || []).join(', ');
             mi.textContent = `genres: ${display}`;
+          } else if (key === 'overview') {
+            mi.textContent = `${value}`;
           } else {
             mi.textContent = `${key}: ${
               typeof value === 'object' ? JSON.stringify(value) : value
@@ -158,6 +161,7 @@ export async function initMoviesPanel() {
     }
   });
   apiKeyInput?.addEventListener('change', loadMovies);
+  saveBtn?.addEventListener('click', loadMovies);
 
   await loadMovies();
 }
