@@ -5,6 +5,8 @@ import { getSiteName, setSiteName } from './siteName.js';
 const BASE_KEY = 'hiddenTabs';
 const BASE_ORDER_KEY = 'tabOrder';
 
+let hiddenTabsTimeout = null;
+
 function storageKey(base, user) {
   const uid = user?.uid;
   return uid ? `${base}-${uid}` : base;
@@ -146,6 +148,7 @@ export function applyHiddenTabs(tabs) {
   let active = document.querySelector('.tab-button.active');
   const now = Date.now();
   let changed = false;
+  let nextCheck = Infinity;
   buttons.forEach(btn => {
     const target = btn.dataset.target;
     const panel = document.getElementById(target);
@@ -155,6 +158,7 @@ export function applyHiddenTabs(tabs) {
       btn.style.display = 'none';
       if (panel) panel.style.display = 'none';
       if (btn === active) active = null;
+      if (hideUntil < nextCheck) nextCheck = hideUntil;
     } else {
       if (until && hideUntil && now >= hideUntil) {
         delete obj[target];
@@ -169,6 +173,13 @@ export function applyHiddenTabs(tabs) {
     if (first) first.click();
   }
   if (changed) saveHiddenTabs(obj).catch(() => {});
+  if (nextCheck !== Infinity) {
+    if (hiddenTabsTimeout) clearTimeout(hiddenTabsTimeout);
+    hiddenTabsTimeout = setTimeout(async () => {
+      const h = await loadHiddenTabs();
+      applyHiddenTabs(h);
+    }, nextCheck - now);
+  }
 }
 
 
