@@ -29,6 +29,10 @@ describe('initMoviesPanel', () => {
         }
       ]
     };
+    const creditsData = {
+      cast: [{ name: 'Actor A' }, { name: 'Actor B' }],
+      crew: [{ job: 'Director', name: 'Dir One' }]
+    };
     const genreData = { genres: [{ id: 28, name: 'Action' }] };
 
     global.fetch = vi
@@ -36,6 +40,10 @@ describe('initMoviesPanel', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(apiData)
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(creditsData)
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -48,6 +56,8 @@ describe('initMoviesPanel', () => {
     expect(item.textContent).toContain('Sample Movie');
     expect(item.textContent).toContain('vote_average: 7.5');
     expect(item.textContent).toContain('vote_count: 5');
+    expect(item.textContent).toContain('director: Dir One');
+    expect(item.textContent).toContain('actors: Actor A, Actor B');
     expect(item.textContent).toContain('genres: Action');
     expect(item.textContent).toContain('An exciting film');
     expect(item.textContent).not.toContain('overview:');
@@ -65,6 +75,10 @@ describe('initMoviesPanel', () => {
     );
     expect(fetch).toHaveBeenNthCalledWith(
       2,
+      'https://api.themoviedb.org/3/movie/123/credits?api_key=TEST_KEY'
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      3,
       'https://api.themoviedb.org/3/genre/movie/list?api_key=TEST_KEY'
     );
   });
@@ -96,15 +110,20 @@ describe('initMoviesPanel', () => {
 
     const apiData = {
       results: [
-        { title: 'Any Movie', release_date: '2024-01-01', genre_ids: [] }
+        { id: 1, title: 'Any Movie', release_date: '2024-01-01', genre_ids: [] }
       ]
     };
+    const creditsData = { cast: [], crew: [] };
     const genreData = { genres: [] };
     global.fetch = vi
       .fn()
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(apiData)
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(creditsData)
       })
       .mockResolvedValueOnce({
         ok: true,
@@ -123,6 +142,10 @@ describe('initMoviesPanel', () => {
     );
     expect(fetch).toHaveBeenNthCalledWith(
       2,
+      'https://api.themoviedb.org/3/movie/1/credits?api_key=INPUT_KEY'
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      3,
       'https://api.themoviedb.org/3/genre/movie/list?api_key=INPUT_KEY'
     );
     expect(stored).toBe('INPUT_KEY');
