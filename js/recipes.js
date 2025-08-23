@@ -39,14 +39,54 @@ export async function initRecipesPanel() {
         title.textContent = r.title || 'Untitled';
         li.appendChild(title);
 
-        const metaList = document.createElement('ul');
-        Object.entries(r).forEach(([key, value]) => {
-          if (key === 'title') return;
-          const metaItem = document.createElement('li');
-          metaItem.textContent = `${key}: ${value}`;
-          metaList.appendChild(metaItem);
-        });
-        li.appendChild(metaList);
+        // Ingredients
+        if (r.ingredients) {
+          const ingHeader = document.createElement('div');
+          ingHeader.textContent = 'Ingredients';
+          li.appendChild(ingHeader);
+          const ingList = document.createElement('ul');
+          const rawIngredients = r.ingredients.includes('|') ? r.ingredients.split('|') : r.ingredients.split(',');
+          rawIngredients.map(i => i.trim()).filter(Boolean).forEach(i => {
+            const ingItem = document.createElement('li');
+            ingItem.textContent = i;
+            ingList.appendChild(ingItem);
+          });
+          li.appendChild(ingList);
+        }
+
+        // Servings
+        if (r.servings) {
+          const servingsEl = document.createElement('p');
+          servingsEl.textContent = `Servings: ${r.servings}`;
+          li.appendChild(servingsEl);
+        }
+
+        // Instructions
+        if (r.instructions) {
+          const instrHeader = document.createElement('div');
+          instrHeader.textContent = 'Instructions';
+          li.appendChild(instrHeader);
+          const instrList = document.createElement('ol');
+          r.instructions.split('.').map(s => s.trim()).filter(Boolean).forEach(step => {
+            const stepItem = document.createElement('li');
+            stepItem.textContent = step;
+            instrList.appendChild(stepItem);
+          });
+          li.appendChild(instrList);
+        }
+
+        // Other metadata
+        const metaEntries = Object.entries(r).filter(([key]) => !['title', 'ingredients', 'servings', 'instructions'].includes(key));
+        if (metaEntries.length) {
+          const metaList = document.createElement('ul');
+          metaEntries.forEach(([key, value]) => {
+            const metaItem = document.createElement('li');
+            metaItem.textContent = `${key}: ${value}`;
+            metaList.appendChild(metaItem);
+          });
+          li.appendChild(metaList);
+        }
+
         ul.appendChild(li);
       });
       listEl.innerHTML = '';

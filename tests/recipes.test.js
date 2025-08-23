@@ -43,10 +43,10 @@ describe('initRecipesPanel', () => {
     );
   });
 
-  it('renders all metadata for multiple recipes', async () => {
+  it('renders formatted metadata for multiple recipes', async () => {
     const mockRecipes = [
-      { title: 'Soup', ingredients: 'chicken, water', instructions: 'boil', servings: 2 },
-      { title: 'Stew', ingredients: 'beef, salt', instructions: 'cook', time: '30 mins' }
+      { title: 'Soup', ingredients: 'chicken|water', instructions: 'boil', servings: 2 },
+      { title: 'Stew', ingredients: 'beef|salt', instructions: 'cook', time: '30 mins' }
     ];
     global.fetch = vi.fn(() => Promise.resolve({
       ok: true,
@@ -61,7 +61,20 @@ describe('initRecipesPanel', () => {
 
     const items = document.querySelectorAll('#recipesList > ul > li');
     expect(items.length).toBe(2);
-    expect(items[0].textContent).toContain('servings: 2');
+
+    const ingredientsList = items[0].querySelector('div + ul');
+    const ingItems = ingredientsList.querySelectorAll('li');
+    expect(ingItems.length).toBe(2);
+    expect(ingItems[0].textContent).toBe('chicken');
+    expect(ingItems[1].textContent).toBe('water');
+
+    const instructions = items[0].querySelectorAll('ol li');
+    expect(instructions.length).toBe(1);
+    expect(instructions[0].textContent).toBe('boil');
+
+    const servingsText = items[0].querySelector('p').textContent;
+    expect(servingsText).toBe('Servings: 2');
+
     expect(items[1].textContent).toContain('time: 30 mins');
   });
 
