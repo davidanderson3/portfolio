@@ -233,10 +233,6 @@
             <div id="moviesApiKeyContainer" style="display:inline-block;">
               <input type="text" id="moviesApiKey" placeholder="TMDB API Key" style="margin-right:.5rem;">
             </div>
-            <button type="button" id="moviesLoadBtn">Load Movies</button>
-            <div style="font-size:0.8rem;margin-top:0.5rem;">
-              Uses the <a href="https://developer.themoviedb.org/reference/intro/getting-started" target="_blank" rel="noopener noreferrer">TMDB API</a>.
-            </div>
           </div>
           <div id="movieList" class="decision-container"></div>
         </div>
@@ -423,6 +419,9 @@
       </form>
     </div>
   </div>
+  <footer id="tmdbNotice" class="tmdb-notice">
+    Uses the <a href="https://developer.themoviedb.org/reference/intro/getting-started" target="_blank" rel="noopener noreferrer">TMDB API</a>.
+  </footer>
   <script src="https://apis.google.com/js/api.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module" src="js/main.js"></script>
