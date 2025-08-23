@@ -8,10 +8,14 @@ export async function initShowsPanel() {
   const apiKeyInput = document.getElementById('ticketmasterApiKey');
   const loadBtn = document.getElementById('ticketmasterLoadBtn');
 
-  const savedClientId = localStorage.getItem('spotifyClientId') || '';
-  const savedClientSecret = localStorage.getItem('spotifyClientSecret') || '';
-  const savedToken = localStorage.getItem('spotifyToken') || '';
-  const savedApiKey = localStorage.getItem('ticketmasterApiKey') || '';
+  const savedClientId =
+    (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyClientId')) || '';
+  const savedClientSecret =
+    (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyClientSecret')) || '';
+  const savedToken =
+    (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyToken')) || '';
+  const savedApiKey =
+    (typeof localStorage !== 'undefined' && localStorage.getItem('ticketmasterApiKey')) || '';
   if (clientIdInput) clientIdInput.value = savedClientId;
   if (clientSecretInput) clientSecretInput.value = savedClientSecret;
   if (tokenInput) tokenInput.value = savedToken;
@@ -23,6 +27,10 @@ export async function initShowsPanel() {
     if (!clientId || !clientSecret || !tokenInput) {
       listEl.textContent = 'Please enter Spotify client credentials.';
       return;
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('spotifyClientId', clientId);
+      localStorage.setItem('spotifyClientSecret', clientSecret);
     }
     try {
       listEl.textContent = '';
@@ -37,9 +45,9 @@ export async function initShowsPanel() {
       if (!res.ok) throw new Error(`Token HTTP ${res.status}`);
       const data = await res.json();
       tokenInput.value = data.access_token || '';
-      localStorage.setItem('spotifyClientId', clientId);
-      localStorage.setItem('spotifyClientSecret', clientSecret);
-      localStorage.setItem('spotifyToken', tokenInput.value);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('spotifyToken', tokenInput.value);
+      }
     } catch (err) {
       console.error('Failed to get token', err);
       listEl.textContent = 'Failed to get token.';
@@ -52,6 +60,10 @@ export async function initShowsPanel() {
     if (!token || !apiKey) {
       listEl.textContent = 'Please enter Spotify token and API key.';
       return;
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('spotifyToken', token);
+      localStorage.setItem('ticketmasterApiKey', apiKey);
     }
     listEl.innerHTML = '<em>Loading...</em>';
     try {
@@ -98,8 +110,6 @@ export async function initShowsPanel() {
       } else {
         listEl.textContent = 'No upcoming shows.';
       }
-      localStorage.setItem('spotifyToken', token);
-      localStorage.setItem('ticketmasterApiKey', apiKey);
     } catch (err) {
       console.error('Failed to load shows', err);
       listEl.textContent = 'Failed to load shows.';
