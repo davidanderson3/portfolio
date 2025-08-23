@@ -32,6 +32,33 @@ const storage = (() => {
 global.localStorage = storage;
 
 describe('planning UI persistence', () => {
+  it('waits for sign-in before initializing', async () => {
+    currentUser = null;
+    const dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    localStorage.clear();
+
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'investmentReturnRate',
+      'savingsReturnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings',
+      'checking', 'investment', 'mortgage', 'rollingCredit', 'other'];
+    names.forEach(n => {
+      Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
+        get() { return this.elements.namedItem(n); },
+        configurable: true
+      });
+    });
+
+    vi.resetModules();
+    const mod = await import('../js/planning.js');
+    await mod.initPlanningPanel();
+    expect(dom.window.document.getElementById('planningContainer').innerHTML).toBe('');
+
+    currentUser = { uid: 'u1' };
+    await mod.initPlanningPanel();
+    expect(dom.window.document.querySelector('#planningForm')).toBeTruthy();
+    vi.resetModules();
+  });
   it('clears saved values after sign out', async () => {
     let dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
     global.window = dom.window;

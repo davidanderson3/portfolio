@@ -249,6 +249,8 @@ async function loadAssetHistoryFromDB() {
 export async function initPlanningPanel() {
   const panel = document.getElementById('planningPanel');
   if (!panel || planningInitialized) return;
+  const user = getCurrentUser?.();
+  if (!user) return;
   planningInitialized = true;
 
   const saved = await loadPlanningData();
