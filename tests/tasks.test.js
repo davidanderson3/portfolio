@@ -122,3 +122,22 @@ describe('duplicate handling', () => {
     expect(helpers.saveDecisions).not.toHaveBeenCalled();
   });
 });
+
+describe('do later styling', () => {
+  it('adds do-later class to subgoal wrapper when doLater is true', async () => {
+    const parent = { id: 'g1', type: 'goal', parentGoalId: null, completed: false };
+    const sub = {
+      id: 'g2',
+      type: 'goal',
+      text: 'sub',
+      notes: '',
+      parentGoalId: 'g1',
+      completed: false,
+      doLater: true
+    };
+    const all = [parent, sub];
+    await renderChildren(parent, all, container);
+    const wrap = container.querySelector('[data-goal-id="g2"]');
+    expect(wrap.classList.contains('do-later')).toBe(true);
+  });
+});
