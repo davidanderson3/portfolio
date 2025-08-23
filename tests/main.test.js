@@ -251,7 +251,7 @@ describe('shift+A hotkey', () => {
 });
 
   describe('signed-out tabs', () => {
-    it('hides contacts, backups, and geolayers when not signed in', async () => {
+    it('hides backups and geolayers when not signed in', async () => {
     const dom = new JSDOM(`
       <button id="signupBtn"></button>
       <button id="loginBtn"></button>
@@ -265,7 +265,6 @@ describe('shift+A hotkey', () => {
         <button class="tab-button" data-target="travelPanel"></button>
         <button class="tab-button" data-target="planningPanel"></button>
         <button class="tab-button" data-target="budgetPanel"></button>
-        <button class="tab-button" data-target="contactsPanel"></button>
         <button class="tab-button" data-target="backupsPanel"></button>
         <button class="tab-button" data-target="geolayersPanel"></button>
       </div>
@@ -277,7 +276,6 @@ describe('shift+A hotkey', () => {
       <div id="travelPanel"></div>
       <div id="planningPanel"></div>
       <div id="budgetPanel"></div>
-      <div id="contactsPanel"></div>
       <div id="backupsPanel"></div>
       <div id="geolayersPanel"></div>
     `);
@@ -296,12 +294,10 @@ describe('shift+A hotkey', () => {
     dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
     await new Promise(r => setTimeout(r, 0));
 
-    const contactsBtn = dom.window.document.querySelector('.tab-button[data-target="contactsPanel"]');
     const backupsBtn = dom.window.document.querySelector('.tab-button[data-target="backupsPanel"]');
     const geolayersBtn = dom.window.document.querySelector('.tab-button[data-target="geolayersPanel"]');
     const dailyBtn = dom.window.document.querySelector('.tab-button[data-target="dailyPanel"]');
 
-    expect(contactsBtn.style.display).toBe('none');
     expect(backupsBtn.style.display).toBe('none');
     expect(geolayersBtn.style.display).toBe('none');
     expect(dailyBtn.style.display).not.toBe('none');

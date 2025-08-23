@@ -13,7 +13,6 @@ export const PANELS = [
   'recipesPanel',
   'planningPanel',
   'budgetPanel',
-  'contactsPanel',
   'backupsPanel',
   'pointlessPanel',
   'geolayersPanel'
@@ -31,7 +30,6 @@ export const PANEL_NAMES = {
   recipesPanel: 'Recipes',
   planningPanel: 'Finances',
   budgetPanel: 'Budget',
-  contactsPanel: 'Contacts',
   backupsPanel: 'Backups',
   pointlessPanel: 'Pointless',
   geolayersPanel: 'GeoLayers'
@@ -50,7 +48,7 @@ export async function initTabs(user, db) {
   let tabButtons = Array.from(document.querySelectorAll('.tab-button'));
   let panels = user
     ? PANELS
-    : PANELS.filter(id => id !== 'contactsPanel' && id !== 'backupsPanel' && id !== 'geolayersPanel');
+    : PANELS.filter(id => id !== 'backupsPanel' && id !== 'geolayersPanel');
 
   try {
     const saved = await loadTabOrder();
@@ -122,9 +120,6 @@ export async function initTabs(user, db) {
       else if (target === 'budgetPanel') {
         await window.initBudgetPanel();
       }
-      else if (target === 'contactsPanel') {
-        await window.initContactsPanel();
-      }
       else if (target === 'backupsPanel') {
         await window.initBackupsPanel();
       }
@@ -184,9 +179,6 @@ export async function initTabs(user, db) {
       }
     else if (initial === 'budgetPanel') {
       window.initBudgetPanel();
-    }
-    else if (initial === 'contactsPanel') {
-      window.initContactsPanel();
     }
     else if (initial === 'backupsPanel') {
       window.initBackupsPanel();

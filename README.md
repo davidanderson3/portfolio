@@ -31,9 +31,6 @@ Budget breaks down monthly income into recurring expenses and subscriptions. It 
 ### Live Music
 The Live Music tab lists upcoming concerts for the artists you listen to most. Enter your Spotify Client ID and Client Secret to fetch an access token, add your Ticketmaster API key, then press **Load Shows** to retrieve events. The tab uses the [Spotify Web API](https://developer.spotify.com/documentation/web-api/) to retrieve your top artists and then requests `https://app.ticketmaster.com/discovery/v2/events.json?apikey={your-api-key}&keyword={artist-name}` for each artist, displaying the returned events with links. See the [Ticketmaster Discovery API documentation](https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/) for more details.
 
-### Contacts
-Contacts is a lightweight list of people you want to stay in touch with. Each person stores desired frequencies (in days) for reaching out, having a meaningful conversation, or meeting in person. Logging an interaction records the date and optional notes.
-
 ### Backups
 Backups scans local storage for saved snapshots of your data. Each backup can be restored with a single click, making it easy to recover from mistakes or sync between devices.
 

@@ -18,7 +18,6 @@ describe('initTabs persistence', () => {
       <button class="tab-button" data-target="travelPanel"></button>
       <button class="tab-button" data-target="planningPanel"></button>
       <button class="tab-button" data-target="budgetPanel"></button>
-      <button class="tab-button" data-target="contactsPanel"></button>
       <button class="tab-button" data-target="backupsPanel"></button>
       <button class="tab-button" data-target="geolayersPanel"></button>
       <div id="projectsPanel"></div>
@@ -29,7 +28,6 @@ describe('initTabs persistence', () => {
       <div id="travelPanel"></div>
       <div id="planningPanel"></div>
       <div id="budgetPanel"></div>
-      <div id="contactsPanel"></div>
       <div id="backupsPanel"></div>
       <div id="geolayersPanel"></div>
     `, { url: 'http://localhost/' });
@@ -63,36 +61,6 @@ describe('initTabs persistence', () => {
     const dailyBtn = document.querySelector('.tab-button[data-target="dailyPanel"]');
     expect(dailyBtn.classList.contains('active')).toBe(true);
     expect(document.getElementById('dailyPanel').style.display).toBe('flex');
-  });
-
-  it('ignores contactsPanel as initial when signed out', async () => {
-    const dom = new JSDOM(`
-      <button class="tab-button" data-target="projectsPanel"></button>
-      <button class="tab-button" data-target="calendarPanel"></button>
-      <button class="tab-button" data-target="dailyPanel"></button>
-      <button class="tab-button" data-target="contactsPanel"></button>
-      <div id="projectsPanel"></div>
-      <div id="calendarPanel"></div>
-      <div id="dailyPanel"></div>
-      <div id="contactsPanel"></div>
-    `, { url: 'http://localhost/' });
-    global.window = dom.window;
-    global.document = dom.window.document;
-
-    global.localStorage = {
-      getItem: () => 'contactsPanel',
-      setItem: () => {}
-    };
-
-    global.window.initContactsPanel = vi.fn();
-
-    const mod = await import('../js/tabs.js');
-    await mod.initTabs(null, {});
-    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
-
-    const active = document.querySelector('.tab-button.active');
-    expect(active.dataset.target).toBe('dailyPanel');
-    expect(window.initContactsPanel).not.toHaveBeenCalled();
   });
 
   it('ignores backupsPanel as initial when signed out', async () => {
@@ -160,7 +128,6 @@ describe('routine tab behavior', () => {
       <button class="tab-button" data-target="travelPanel"></button>
       <button class="tab-button" data-target="planningPanel"></button>
       <button class="tab-button" data-target="budgetPanel"></button>
-      <button class="tab-button" data-target="contactsPanel"></button>
       <button class="tab-button" data-target="backupsPanel"></button>
       <button class="tab-button" data-target="geolayersPanel"></button>
       <div id="projectsPanel"></div>
@@ -173,7 +140,6 @@ describe('routine tab behavior', () => {
       <div id="travelPanel"></div>
       <div id="planningPanel"></div>
       <div id="budgetPanel"></div>
-      <div id="contactsPanel"></div>
       <div id="backupsPanel"></div>
       <div id="geolayersPanel"></div>
     `, { url: 'http://localhost/' });
