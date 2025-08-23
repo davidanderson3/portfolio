@@ -78,7 +78,11 @@ describe('planning UI persistence', () => {
     const form = document.querySelector('#planningForm');
     form.curAge.value = '30';
     form.realEstate.value = '100000';
+    form.carValue.value = '0';
+    form.assetSavings.value = '0';
     form.checking.value = '2500';
+    form.investment.value = '0';
+    form.rollingCredit.value = '0';
     form.annualSavings.value = '5000';
     form.annualRaise.value = '5';
     form.withdrawalRate.value = '6';
@@ -240,6 +244,53 @@ describe('planning UI persistence', () => {
 
     const saved = JSON.parse(localStorage.getItem('planningData'));
     expect(saved.history.length).toBe(0);
+  });
+
+  it('does not save data or snapshot when asset total is zero', async () => {
+    vi.resetModules();
+    currentUser = { uid: 'u1' };
+    setMock = vi.fn();
+    getMock = vi.fn(() => ({ docs: [] }));
+    docMock = vi.fn(() => ({ collection: collectionMock, doc: docMock, get: getMock, set: setMock }));
+    collectionMock = vi.fn(() => ({ doc: docMock, collection: collectionMock, orderBy: () => ({ limit: () => ({ get: getMock }) }) }));
+
+    const dom = new JSDOM('<div id="planningPanel"></div><div id="planningContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    localStorage.clear();
+
+    const names = ['curAge', 'retAge', 'income', 'annualSavings', 'annualRaise', 'expenses', 'inflation', 'investmentReturnRate',
+      'savingsReturnRate', 'withdrawalRate', 'postYears', 'pension', 'socialSecurity', 'realEstate', 'carValue', 'assetSavings',
+      'checking', 'investment', 'mortgage', 'rollingCredit', 'other'];
+    names.forEach(n => {
+      Object.defineProperty(dom.window.HTMLFormElement.prototype, n, {
+        get() { return this.elements.namedItem(n); },
+        configurable: true
+      });
+    });
+
+    const mod = await import('../js/planning.js');
+    await mod.initPlanningPanel();
+
+    const form = document.querySelector('#planningForm');
+    form.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+    let saved = JSON.parse(localStorage.getItem('planningData'));
+    expect(saved.history.length).toBe(0);
+    expect(setMock).not.toHaveBeenCalled();
+
+    form.curAge.value = '30';
+    form.realEstate.value = '1000';
+    form.carValue.value = '1';
+    form.assetSavings.value = '2';
+    form.checking.value = '3';
+    form.investment.value = '4';
+    form.rollingCredit.value = '0';
+    form.dispatchEvent(new window.Event('input', { bubbles: true }));
+
+    saved = JSON.parse(localStorage.getItem('planningData'));
+    expect(saved.history.length).toBe(1);
+    expect(setMock).toHaveBeenCalled();
   });
 
   it('removes snapshots without a timestamp', async () => {
