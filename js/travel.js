@@ -130,6 +130,7 @@ export async function initTravelPanel() {
   const placeInput = document.getElementById('placeSearch');
   const resultsList = document.getElementById('placeResults');
   const clearResultsBtn = document.getElementById('clearPlaceSearch');
+  const searchPlaceBtn = document.getElementById('placeSearchBtn');
   const tagFiltersDiv = document.getElementById('travelTagFilters');
   const placeCountEl = document.getElementById('placeCount');
   const paginationDiv = document.getElementById('paginationControls');
@@ -823,90 +824,98 @@ export async function initTravelPanel() {
     return null;
   };
 
-  if (placeInput) {
-    placeInput.addEventListener('keydown', async e => {
-      if (e.key !== 'Enter') return;
-      e.preventDefault();
-      const term = placeInput.value.trim();
-      if (!term) return;
-      clearSearchResults();
-      const coords = parseCoordinates(term);
-      if (coords) {
-        const { lat, lon } = coords;
-        const m = L.marker([lat, lon], { icon: defaultIcon }).addTo(map);
-        resultMarkers.push(m);
-        const popupDiv = document.createElement('div');
-        const title = document.createElement('div');
-        title.textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-        const btn = document.createElement('button');
-        btn.textContent = 'Add to list';
-        popupDiv.append(title, btn);
-        m.bindPopup(popupDiv);
-        btn.addEventListener('click', async () => {
-          const name = prompt('Place name:', '');
-          if (!name) return;
-          await storePlace({ name, description: '', lat, lon, tags: [], Rating: '', Date: '', visited: false });
-          clearSearchResults();
-          placeInput.value = '';
-        });
-        const li = document.createElement('li');
-        li.textContent = title.textContent;
-        li.addEventListener('click', () => {
-          map.setView([lat, lon], 8);
-          m.openPopup();
-        });
-        if (resultsList) resultsList.append(li);
+  const searchForPlace = async () => {
+    if (!placeInput) return;
+    const term = placeInput.value.trim();
+    if (!term) return;
+    clearSearchResults();
+    const coords = parseCoordinates(term);
+    if (coords) {
+      const { lat, lon } = coords;
+      const m = L.marker([lat, lon], { icon: defaultIcon }).addTo(map);
+      resultMarkers.push(m);
+      const popupDiv = document.createElement('div');
+      const title = document.createElement('div');
+      title.textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      const btn = document.createElement('button');
+      btn.textContent = 'Add to list';
+      popupDiv.append(title, btn);
+      m.bindPopup(popupDiv);
+      btn.addEventListener('click', async () => {
+        const name = prompt('Place name:', '');
+        if (!name) return;
+        await storePlace({ name, description: '', lat, lon, tags: [], Rating: '', Date: '', visited: false });
+        clearSearchResults();
+        placeInput.value = '';
+      });
+      const li = document.createElement('li');
+      li.textContent = title.textContent;
+      li.addEventListener('click', () => {
         map.setView([lat, lon], 8);
-        return;
-      }
-      try {
-        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(term)}`);
-        const data = await resp.json();
-        if (data && data.length) {
-          const latLngs = [];
-          data.forEach((res, idx) => {
-            const { lat, lon, display_name } = res;
-            const latitude = parseFloat(lat);
-            const longitude = parseFloat(lon);
-            latLngs.push([latitude, longitude]);
-            const m = L.marker([latitude, longitude], { icon: defaultIcon }).addTo(map);
-            resultMarkers.push(m);
-            const popupDiv = document.createElement('div');
-            const title = document.createElement('div');
-            title.textContent = display_name;
-            const btn = document.createElement('button');
-            btn.textContent = 'Add to list';
-            popupDiv.append(title, btn);
-            m.bindPopup(popupDiv);
-            btn.addEventListener('click', async () => {
-              const name = prompt('Place name:', display_name.split(',')[0]);
-              if (!name) return;
-              await storePlace({ name, description: '', lat: latitude, lon: longitude, tags: [], Rating: '', Date: '', visited: false });
-              clearSearchResults();
-              placeInput.value = '';
-            });
-
-            const li = document.createElement('li');
-            li.textContent = display_name;
-            li.addEventListener('click', () => {
-              map.setView([latitude, longitude], 8);
-              m.openPopup();
-            });
-            if (resultsList) resultsList.append(li);
+        m.openPopup();
+      });
+      if (resultsList) resultsList.append(li);
+      map.setView([lat, lon], 8);
+      return;
+    }
+    try {
+      const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(term)}`);
+      const data = await resp.json();
+      if (data && data.length) {
+        const latLngs = [];
+        data.forEach(res => {
+          const { lat, lon, display_name } = res;
+          const latitude = parseFloat(lat);
+          const longitude = parseFloat(lon);
+          latLngs.push([latitude, longitude]);
+          const m = L.marker([latitude, longitude], { icon: defaultIcon }).addTo(map);
+          resultMarkers.push(m);
+          const popupDiv = document.createElement('div');
+          const title = document.createElement('div');
+          title.textContent = display_name;
+          const btn = document.createElement('button');
+          btn.textContent = 'Add to list';
+          popupDiv.append(title, btn);
+          m.bindPopup(popupDiv);
+          btn.addEventListener('click', async () => {
+            const name = prompt('Place name:', display_name.split(',')[0]);
+            if (!name) return;
+            await storePlace({ name, description: '', lat: latitude, lon: longitude, tags: [], Rating: '', Date: '', visited: false });
+            clearSearchResults();
+            placeInput.value = '';
           });
-          if (latLngs.length === 1) {
-            map.setView(latLngs[0], 8);
-          } else {
-            map.fitBounds(latLngs);
-          }
+
+          const li = document.createElement('li');
+          li.textContent = display_name;
+          li.addEventListener('click', () => {
+            map.setView([latitude, longitude], 8);
+            m.openPopup();
+          });
+          if (resultsList) resultsList.append(li);
+        });
+        if (latLngs.length === 1) {
+          map.setView(latLngs[0], 8);
         } else {
-          alert('Place not found');
+          map.fitBounds(latLngs);
         }
-      } catch (err) {
-        console.error('Error searching place', err);
+      } else {
+        alert('Place not found');
       }
-    });
-  }
+    } catch (err) {
+      console.error('Error searching place', err);
+    }
+  };
+
+  placeInput?.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    searchForPlace();
+  });
+
+  searchPlaceBtn?.addEventListener('click', e => {
+    e.preventDefault();
+    searchForPlace();
+  });
 
   const addBtn = document.getElementById('addPlaceBtn');
   addBtn?.addEventListener('click', async () => {
