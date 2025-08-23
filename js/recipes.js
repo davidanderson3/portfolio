@@ -4,7 +4,7 @@ export async function initRecipesPanel() {
   const queryInput = document.getElementById('recipesQuery');
   const apiKeyInput = document.getElementById('recipesApiKey');
   const apiKeyContainer = document.getElementById('recipesApiKeyContainer');
-  const loadBtn = document.getElementById('recipesLoadBtn');
+  const searchBtn = document.getElementById('recipesSearchBtn');
 
   const savedQuery = localStorage.getItem('recipesQuery') || '';
   const savedApiKey = localStorage.getItem('recipesApiKey') || '';
@@ -23,7 +23,7 @@ export async function initRecipesPanel() {
     }
     listEl.innerHTML = '<em>Loading...</em>';
     try {
-      const res = await fetch(`https://api.api-ninjas.com/v1/recipe?query=${encodeURIComponent(query)}`, {
+      const res = await fetch(`https://api.api-ninjas.com/v1/recipe?query=${encodeURIComponent(query)}&limit=10`, {
         headers: { 'X-Api-Key': apiKey }
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -42,6 +42,19 @@ export async function initRecipesPanel() {
         const title = document.createElement('strong');
         title.textContent = r.title || 'Untitled';
         li.appendChild(title);
+
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save';
+        saveBtn.addEventListener('click', () => {
+          const saved = JSON.parse(localStorage.getItem('recipesSaved') || '[]');
+          if (!saved.some(s => s.title === r.title)) {
+            saved.push(r);
+            localStorage.setItem('recipesSaved', JSON.stringify(saved));
+          }
+          saveBtn.textContent = 'Saved';
+          saveBtn.disabled = true;
+        });
+        li.appendChild(saveBtn);
 
         const hideBtn = document.createElement('button');
         hideBtn.textContent = 'Hide';
@@ -119,7 +132,7 @@ export async function initRecipesPanel() {
     }
   };
 
-  loadBtn?.addEventListener('click', loadRecipes);
+  searchBtn?.addEventListener('click', loadRecipes);
 
   if (savedQuery && savedApiKey) {
     loadRecipes();

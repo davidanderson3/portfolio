@@ -10,7 +10,7 @@ describe('initRecipesPanel', () => {
       <div id="recipesApiKeyContainer">
         <input id="recipesApiKey" />
       </div>
-      <button id="recipesLoadBtn"></button>
+      <button id="recipesSearchBtn"></button>
     `);
     global.document = dom.window.document;
     global.window = dom.window;
@@ -32,13 +32,13 @@ describe('initRecipesPanel', () => {
     await initRecipesPanel();
     document.getElementById('recipesQuery').value = 'chicken';
     document.getElementById('recipesApiKey').value = 'testkey';
-    document.getElementById('recipesLoadBtn').click();
+    document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
     const textEl = document.querySelector('#recipesList li strong');
     expect(textEl.textContent).toBe('Chicken Soup');
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.api-ninjas.com/v1/recipe?query=chicken',
+      'https://api.api-ninjas.com/v1/recipe?query=chicken&limit=10',
       { headers: { 'X-Api-Key': 'testkey' } }
     );
   });
@@ -56,7 +56,7 @@ describe('initRecipesPanel', () => {
     await initRecipesPanel();
     document.getElementById('recipesQuery').value = 'meat';
     document.getElementById('recipesApiKey').value = 'testkey';
-    document.getElementById('recipesLoadBtn').click();
+    document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
     const items = document.querySelectorAll('#recipesList > ul > li');
@@ -92,7 +92,7 @@ describe('initRecipesPanel', () => {
     await initRecipesPanel();
     document.getElementById('recipesQuery').value = 'anything';
     document.getElementById('recipesApiKey').value = 'key';
-    document.getElementById('recipesLoadBtn').click();
+    document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
     const items = document.querySelectorAll('#recipesList > ul > li');
@@ -117,20 +117,45 @@ describe('initRecipesPanel', () => {
     await initRecipesPanel();
     document.getElementById('recipesQuery').value = 'test';
     document.getElementById('recipesApiKey').value = 'key';
-    document.getElementById('recipesLoadBtn').click();
+    document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
-    const hideBtn = document.querySelector('#recipesList li button');
+    const hideBtn = document.querySelectorAll('#recipesList li button')[1];
     hideBtn.click();
     await new Promise(r => setTimeout(r, 0));
 
-    document.getElementById('recipesLoadBtn').click();
+    document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
     const items = document.querySelectorAll('#recipesList > ul > li');
     expect(items.length).toBe(1);
     expect(items[0].querySelector('strong').textContent).toBe('B');
     expect(JSON.parse(store['recipesHidden'])).toContain('A');
+  });
+
+  it('saves a recipe when save is clicked', async () => {
+    const store = {};
+    global.localStorage = {
+      getItem: (key) => store[key] || '',
+      setItem: (key, val) => { store[key] = val; }
+    };
+    const mockRecipes = [
+      { title: 'Toast', ingredients: '', instructions: '' }
+    ];
+    global.fetch = vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(mockRecipes)
+    }));
+
+    await initRecipesPanel();
+    document.getElementById('recipesQuery').value = 'bread';
+    document.getElementById('recipesApiKey').value = 'key';
+    document.getElementById('recipesSearchBtn').click();
+    await new Promise(r => setTimeout(r, 0));
+
+    const saveBtn = document.querySelector('#recipesList li button');
+    saveBtn.click();
+    expect(JSON.parse(store['recipesSaved'])).toEqual(mockRecipes);
   });
 
   it('hides API key input when one is cached', async () => {
@@ -144,7 +169,7 @@ describe('initRecipesPanel', () => {
       <div id="recipesApiKeyContainer">
         <input id="recipesApiKey" />
       </div>
-      <button id="recipesLoadBtn"></button>
+      <button id="recipesSearchBtn"></button>
     `);
     global.document = dom.window.document;
     global.window = dom.window;
