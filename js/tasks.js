@@ -242,6 +242,7 @@ export async function renderChildren(goal, all, container) {
         const wrap = document.createElement('div');
         wrap.className = 'decision goal-card indent-1';
         wrap.dataset.goalId = g.id;
+        if (g.doLater) wrap.classList.add('do-later');
 
         const row = createGoalRow(g, {
             hideScheduled: true,
@@ -463,9 +464,10 @@ export async function renderChildren(goal, all, container) {
                 doneContainer.append(wrapper);
             } else if (item.type === 'goal') {
                 const wrap = document.createElement('div');
-                wrap.className = 'decision indent-1 completed-decision-inline';
+                wrap.className = 'decision goal-card indent-1 completed-decision-inline';
                 wrap.dataset.goalId = item.id;
                 wrap.setAttribute('draggable', 'false');
+                if (item.doLater) wrap.classList.add('do-later');
 
                 const row = createGoalRow(item, {
                     hideScheduled: true,
