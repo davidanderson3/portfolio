@@ -137,6 +137,11 @@ export async function initTravelPanel() {
   const nextPageBtn = document.getElementById('nextPageBtn');
   const pageInfoSpan = document.getElementById('pageInfo');
   const showVisitedToggle = document.getElementById('showVisitedToggle');
+  const addPlaceModal = document.getElementById('addPlaceModal');
+  const addPlaceForm = document.getElementById('addPlaceForm');
+  const placeTagsDiv = document.getElementById('placeTags');
+  const extraTagsInput = document.getElementById('extraTags');
+  const placeCancelBtn = document.getElementById('placeCancel');
   map = L.map(mapEl, {
     maxBounds: [
       [-90, -180],
@@ -152,25 +157,86 @@ export async function initTravelPanel() {
   }).addTo(map);
   resizeTravelMap();
 
-  map.on('dblclick', async e => {
-    const name = prompt('Place name:');
-    if (!name) return;
-    const description = prompt('Description:');
-    const tags = prompt('Tags (comma separated):');
-    const rating = prompt('Rating:');
-    const date = await pickDate('');
-    const visited = confirm('Visited?');
-    await storePlace({
-      name,
-      description: description || '',
-      lat: e.latlng.lat,
-      lon: e.latlng.lng,
-      tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-      Rating: rating || '',
-      Date: date || '',
-      visited
+  async function openAddPlaceForm(lat, lon) {
+    if (!addPlaceModal || !addPlaceForm || !placeTagsDiv) {
+      const name = prompt('Place name:');
+      if (!name) return;
+      const description = prompt('Description:');
+      const tagsStr = prompt('Tags (comma separated):');
+      const rating = prompt('Rating:');
+      const date = await pickDate('');
+      const visited = confirm('Visited?');
+      await storePlace({
+        name,
+        description: description || '',
+        lat,
+        lon,
+        tags: tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [],
+        Rating: rating || '',
+        Date: date || '',
+        visited
+      });
+      return;
+    }
+
+    addPlaceForm.reset();
+    if (extraTagsInput) extraTagsInput.value = '';
+    placeTagsDiv.innerHTML = '';
+    allTags.forEach(tag => {
+      const label = document.createElement('label');
+      label.style.marginRight = '8px';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = tag;
+      label.append(cb, document.createTextNode(' ' + tag));
+      placeTagsDiv.append(label);
     });
-  });
+    addPlaceModal.style.display = 'flex';
+
+    const submitHandler = async e => {
+      e.preventDefault();
+      const name = addPlaceForm.querySelector('#placeName').value.trim();
+      if (!name) return;
+      const description = addPlaceForm
+        .querySelector('#placeDescription')
+        .value.trim();
+      const rating = addPlaceForm.querySelector('#placeRating').value.trim();
+      const date = addPlaceForm.querySelector('#placeDate').value.trim();
+      const visited = addPlaceForm.querySelector('#placeVisited').checked;
+      const tags = Array.from(
+        placeTagsDiv.querySelectorAll('input[type="checkbox"]:checked')
+      ).map(cb => cb.value);
+      if (extraTagsInput && extraTagsInput.value.trim()) {
+        tags.push(
+          ...extraTagsInput.value
+            .split(',')
+            .map(t => t.trim())
+            .filter(Boolean)
+        );
+      }
+      addPlaceModal.style.display = 'none';
+      addPlaceForm.removeEventListener('submit', submitHandler);
+      await storePlace({
+        name,
+        description,
+        lat,
+        lon,
+        tags,
+        Rating: rating,
+        Date: date,
+        visited
+      });
+    };
+
+    addPlaceForm.addEventListener('submit', submitHandler);
+    const cancelHandler = () => {
+      addPlaceModal.style.display = 'none';
+      addPlaceForm.removeEventListener('submit', submitHandler);
+    };
+    placeCancelBtn?.addEventListener('click', cancelHandler, { once: true });
+  }
+
+  map.on('dblclick', e => openAddPlaceForm(e.latlng.lat, e.latlng.lng));
 
   let initialRemoteLoadComplete = false;
   let pendingAdds = [];
