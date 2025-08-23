@@ -38,7 +38,7 @@ describe('initRecipesPanel', () => {
     const textEl = document.querySelector('#recipesList li strong');
     expect(textEl.textContent).toBe('Chicken Soup');
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.api-ninjas.com/v1/recipe?query=chicken',
+      'https://api.api-ninjas.com/v1/recipe?query=chicken&limit=10',
       { headers: { 'X-Api-Key': 'testkey' } }
     );
   });
