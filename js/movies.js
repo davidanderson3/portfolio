@@ -44,6 +44,22 @@ export async function initMoviesPanel() {
         return;
       }
 
+      // Fetch genre list to map IDs to names
+      let genreMap = {};
+      try {
+        const genreUrl = `https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}`;
+        const genreRes = await fetch(genreUrl);
+        if (genreRes.ok) {
+          const genreData = await genreRes.json();
+          genreMap = Object.fromEntries(
+            (genreData.genres || []).map(g => [g.id, g.name])
+          );
+        }
+      } catch (_) {
+        // ignore genre fetch errors
+      }
+
+      const exclude = new Set(['adult', 'backdrop_path', 'id', 'original_title']);
       const ul = document.createElement('ul');
       movies.forEach(m => {
         const li = document.createElement('li');
@@ -56,10 +72,19 @@ export async function initMoviesPanel() {
         const metaList = document.createElement('ul');
         Object.entries(m).forEach(([key, value]) => {
           if (value === null || value === undefined) return;
+          if (exclude.has(key)) return;
           const mi = document.createElement('li');
-          mi.textContent = `${key}: ${
-            typeof value === 'object' ? JSON.stringify(value) : value
-          }`;
+          if (key === 'genre_ids') {
+            const names = (value || [])
+              .map(id => genreMap[id])
+              .filter(Boolean);
+            const display = names.length ? names.join(', ') : (value || []).join(', ');
+            mi.textContent = `genres: ${display}`;
+          } else {
+            mi.textContent = `${key}: ${
+              typeof value === 'object' ? JSON.stringify(value) : value
+            }`;
+          }
           metaList.appendChild(mi);
         });
         if (metaList.childNodes.length) li.appendChild(metaList);
