@@ -8,21 +8,32 @@ export const FEDERAL_TAX_RATE = 0.10;
  * The returned expenses exclude federal taxes and represent only recurring
  * expenses and subscriptions.
 */
-export function calculateMonthlyBudget({ salary, netPay, categories }) {
+export function calculateMonthlyBudget({ salary, netPay, categories, incomeCategories = {} }) {
   salary = Number(salary) || 0;
   netPay = Number(netPay) || 0;
   const cats = { ...categories };
   Object.keys(cats).forEach(k => { cats[k] = Number(cats[k]) || 0; });
+  const incomes = { ...incomeCategories };
+  Object.keys(incomes).forEach(k => { incomes[k] = Number(incomes[k]) || 0; });
 
   const monthlyIncome = salary ? salary / 12 : netPay;
   const federalTax = Math.round(monthlyIncome * FEDERAL_TAX_RATE);
   const tax = federalTax;
 
-  const calculatedNetPay = monthlyIncome - tax;
+  const additionalIncome = Object.values(incomes).reduce((s, v) => s + v, 0);
+  const calculatedNetPay = monthlyIncome - tax + additionalIncome;
   const categoryTotal = Object.values(cats).reduce((s, v) => s + v, 0);
   const expenses = categoryTotal;
-  const leftover = monthlyIncome - categoryTotal;
-  return { federalTax, tax, netPay: calculatedNetPay, monthlyIncome, expenses, leftover };
+  const leftover = monthlyIncome + additionalIncome - categoryTotal;
+  return {
+    federalTax,
+    tax,
+    netPay: calculatedNetPay,
+    monthlyIncome,
+    expenses,
+    leftover,
+    income: additionalIncome
+  };
 }
 
 import { loadPlanningData } from './planning.js';
