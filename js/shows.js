@@ -33,7 +33,6 @@ export async function initShowsPanel() {
   const tokenBtn = document.getElementById('spotifyTokenBtn');
   const tokenInput = document.getElementById('spotifyToken');
   const apiKeyInput = document.getElementById('ticketmasterApiKey');
-  const loadBtn = document.getElementById('ticketmasterLoadBtn');
 
   const savedClientId =
     (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyClientId')) || '';
@@ -135,7 +134,10 @@ export async function initShowsPanel() {
 
       const ul = document.createElement('ul');
       for (const artist of artists) {
-        const url = `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&keyword=${encodeURIComponent(artist.name)}`;
+        const url =
+          `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&classificationName=music&keyword=${encodeURIComponent(
+            artist.name
+          )}`;
         const res = await fetch(url);
         if (!res.ok) continue;
         const data = await res.json();
@@ -143,19 +145,9 @@ export async function initShowsPanel() {
         if (!Array.isArray(events)) continue;
         for (const ev of events) {
           const li = document.createElement('li');
-          const a = document.createElement('a');
-          const date = ev.dates?.start?.localDate || '';
-          const venue = ev._embedded?.venues?.[0];
-          const venueName = venue?.name || '';
-          const city = venue?.city?.name || '';
-          const state = venue?.state?.stateCode || venue?.state?.name || '';
-          const location = [city, state].filter(Boolean).join(', ');
-          a.textContent = `${ev.name || ''} - ${location} - ${date} - ${venueName}`;
-          if (ev.url) {
-            a.href = ev.url;
-            a.target = '_blank';
-          }
-          li.appendChild(a);
+          const pre = document.createElement('pre');
+          pre.textContent = JSON.stringify(ev, null, 2);
+          li.appendChild(pre);
           ul.appendChild(li);
         }
       }
@@ -172,11 +164,8 @@ export async function initShowsPanel() {
   };
 
   tokenBtn?.addEventListener('click', startAuth);
-  loadBtn?.addEventListener('click', loadShows);
 
-  if (savedToken && savedApiKey) {
-    loadShows();
-  }
+  await loadShows();
 }
 
 window.initShowsPanel = initShowsPanel;
