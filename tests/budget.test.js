@@ -253,10 +253,14 @@ describe('budget panel', () => {
     global.prompt = () => 'Side Job';
     document.getElementById('addIncomeBtn').click();
 
-    const incomeInput = document.querySelector('#incomeTbody tr:last-child .current-cost');
+    const incomeRows = document.querySelectorAll('#budgetTbody tr[data-type="income"]');
+    const incomeRow = incomeRows[incomeRows.length - 1];
+    const incomeInput = incomeRow.querySelector('.current-cost');
     incomeInput.value = '200';
     incomeInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     incomeInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+
+    expect(incomeRow.querySelector('.type-cell').textContent).toBe('Income');
 
     await new Promise(res => setTimeout(res, 0));
 

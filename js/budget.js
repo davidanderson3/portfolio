@@ -198,23 +198,10 @@ export async function initBudgetPanel() {
   const saved = await loadBudgetData();
   panel.innerHTML = `
     <div id="budgetLayout">
-      <h3>Income</h3>
-      <table id="incomeTable">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Current</th>
-            <th>Goal</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="incomeTbody"></tbody>
-      </table>
-      <button type="button" id="addIncomeBtn">+ Add Income</button>
-      <h3>Expenses</h3>
       <table id="budgetTable">
         <thead>
           <tr>
+            <th>Type</th>
             <th>Category</th>
             <th>Current</th>
             <th>Goal</th>
@@ -226,42 +213,46 @@ export async function initBudgetPanel() {
         <tbody id="budgetTbody"></tbody>
       </table>
       <div id="budgetSummary" class="budget-summary"></div>
+      <button type="button" id="addIncomeBtn">+ Add Income</button>
       <button type="button" id="addCategoryBtn">+ Add Category</button>
     </div>
   `;
 
   const tbody = panel.querySelector('#budgetTbody');
-  const incomeTbody = panel.querySelector('#incomeTbody');
   const summary = panel.querySelector('#budgetSummary');
   const addCategoryBtn = panel.querySelector('#addCategoryBtn');
   const addIncomeBtn = panel.querySelector('#addIncomeBtn');
   const removedBuiltIns = new Set(saved.removedBuiltIns || []);
 
-  function addRow(container, name = '', current = '', goal = '', key = '') {
+  function addRow(name = '', current = '', goal = '', key = '', type = 'expense') {
     const id = key || Math.random().toString(36).slice(2);
     const tr = document.createElement('tr');
     tr.className = 'budget-row';
     tr.dataset.id = id;
+    tr.dataset.type = type;
     if (key) tr.dataset.field = key;
     tr.innerHTML = `
+      <td class="type-cell">${type === 'income' ? 'Income' : 'Expense'}</td>
       <td class="cat-name">${name}</td>
       <td><input type="number" class="current-cost" value="${current}"></td>
       <td><input type="number" class="goal-cost" value="${goal}"></td>
-      ${container === incomeTbody ? '<td class="actions"></td>' : '<td class="change-cell"></td><td class="percent-cell"></td><td class="actions"></td>'}
+      <td class="change-cell"></td>
+      <td class="percent-cell"></td>
+      <td class="actions"></td>
     `;
     const actions = tr.querySelector('.actions');
     const up = makeIconBtn('⬆️', 'Move up', () => {
       const prev = tr.previousElementSibling;
-      if (prev) container.insertBefore(tr, prev);
+      if (prev) tbody.insertBefore(tr, prev);
       render();
     });
     const rem = makeIconBtn('❌', 'Remove', () => {
-      if (key && container === tbody) removedBuiltIns.add(key);
+      if (key && type === 'expense') removedBuiltIns.add(key);
       tr.remove();
       render();
     });
     actions.append(up, rem);
-    container.append(tr);
+    tbody.append(tr);
   }
 
   const recurNames = new Set([
@@ -270,15 +261,15 @@ export async function initBudgetPanel() {
   ]);
   DEFAULT_RECURRING.forEach(([key, label]) => {
     if (!removedBuiltIns.has(key)) {
-      addRow(tbody, label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key);
+      addRow(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key, 'expense');
     }
   });
-  recurNames.forEach(n => addRow(tbody, n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? ''));
+  recurNames.forEach(n => addRow(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? '', '', 'expense'));
 
   addCategoryBtn.addEventListener('click', () => {
     const name = typeof prompt === 'function' ? prompt('Category name?') : '';
     if (name) {
-      addRow(tbody, name);
+      addRow(name);
       render();
     }
   });
@@ -286,7 +277,7 @@ export async function initBudgetPanel() {
   addIncomeBtn.addEventListener('click', () => {
     const name = typeof prompt === 'function' ? prompt('Income name?') : '';
     if (name) {
-      addRow(incomeTbody, name);
+      addRow(name, '', '', '', 'income');
       render();
     }
   });
@@ -310,7 +301,14 @@ export async function initBudgetPanel() {
       const curVal = row.querySelector('.current-cost').value;
       const goalVal = row.querySelector('.goal-cost').value;
       const field = row.dataset.field;
-      if (name) {
+      const type = row.dataset.type || 'expense';
+      if (!name) return;
+      if (type === 'income') {
+        incomeCurrent[name] = curVal;
+        incomeGoal[name] = goalVal;
+        if (curVal) saveData.incomeRecurring[name] = curVal;
+        if (goalVal) saveData.goalIncomeRecurring[name] = goalVal;
+      } else {
         categoriesCurrent[name] = curVal;
         categoriesGoal[name] = goalVal;
         if (field) {
@@ -320,17 +318,6 @@ export async function initBudgetPanel() {
           if (curVal) saveData.recurring[name] = curVal;
           if (goalVal) saveData.goalRecurring[name] = goalVal;
         }
-      }
-    });
-    incomeTbody.querySelectorAll('tr').forEach(row => {
-      const name = row.querySelector('.cat-name').textContent.trim();
-      const curVal = row.querySelector('.current-cost').value;
-      const goalVal = row.querySelector('.goal-cost').value;
-      if (name) {
-        incomeCurrent[name] = curVal;
-        incomeGoal[name] = goalVal;
-        if (curVal) saveData.incomeRecurring[name] = curVal;
-        if (goalVal) saveData.goalIncomeRecurring[name] = goalVal;
       }
     });
     return { categoriesCurrent, categoriesGoal, incomeCurrent, incomeGoal, saveData };
@@ -374,14 +361,12 @@ export async function initBudgetPanel() {
 
   tbody.addEventListener('input', () => render(false));
   tbody.addEventListener('change', () => render(true));
-  incomeTbody.addEventListener('input', () => render(false));
-  incomeTbody.addEventListener('change', () => render(true));
 
   const incomeNames = new Set([
     ...Object.keys(saved.incomeRecurring || {}),
     ...Object.keys(saved.goalIncomeRecurring || {})
   ]);
-  incomeNames.forEach(n => addRow(incomeTbody, n, saved.incomeRecurring?.[n] ?? '', saved.goalIncomeRecurring?.[n] ?? ''));
+  incomeNames.forEach(n => addRow(n, saved.incomeRecurring?.[n] ?? '', saved.goalIncomeRecurring?.[n] ?? '', '', 'income'));
 
   render(false);
 }
