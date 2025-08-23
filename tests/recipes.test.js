@@ -78,6 +78,61 @@ describe('initRecipesPanel', () => {
     expect(items[1].textContent).toContain('time: 30 mins');
   });
 
+  it('limits displayed recipes to 10', async () => {
+    const mockRecipes = Array.from({ length: 12 }, (_, i) => ({
+      title: `Recipe ${i}`,
+      ingredients: '',
+      instructions: ''
+    }));
+    global.fetch = vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(mockRecipes)
+    }));
+
+    await initRecipesPanel();
+    document.getElementById('recipesQuery').value = 'anything';
+    document.getElementById('recipesApiKey').value = 'key';
+    document.getElementById('recipesLoadBtn').click();
+    await new Promise(r => setTimeout(r, 0));
+
+    const items = document.querySelectorAll('#recipesList > ul > li');
+    expect(items.length).toBe(10);
+  });
+
+  it('allows hiding a recipe persistently', async () => {
+    const store = {};
+    global.localStorage = {
+      getItem: (key) => store[key] || '',
+      setItem: (key, val) => { store[key] = val; }
+    };
+    const mockRecipes = [
+      { title: 'A', ingredients: '', instructions: '' },
+      { title: 'B', ingredients: '', instructions: '' }
+    ];
+    global.fetch = vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(mockRecipes)
+    }));
+
+    await initRecipesPanel();
+    document.getElementById('recipesQuery').value = 'test';
+    document.getElementById('recipesApiKey').value = 'key';
+    document.getElementById('recipesLoadBtn').click();
+    await new Promise(r => setTimeout(r, 0));
+
+    const hideBtn = document.querySelector('#recipesList li button');
+    hideBtn.click();
+    await new Promise(r => setTimeout(r, 0));
+
+    document.getElementById('recipesLoadBtn').click();
+    await new Promise(r => setTimeout(r, 0));
+
+    const items = document.querySelectorAll('#recipesList > ul > li');
+    expect(items.length).toBe(1);
+    expect(items[0].querySelector('strong').textContent).toBe('B');
+    expect(JSON.parse(store['recipesHidden'])).toContain('A');
+  });
+
   it('hides API key input when one is cached', async () => {
     global.localStorage = {
       getItem: (key) => (key === 'recipesApiKey' ? 'cached' : ''),

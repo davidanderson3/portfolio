@@ -32,12 +32,28 @@ export async function initRecipesPanel() {
         listEl.textContent = 'No recipes found.';
         return;
       }
+      const hidden = JSON.parse(localStorage.getItem('recipesHidden') || '[]');
+      const limited = recipes
+        .filter(r => !hidden.includes(r.title))
+        .slice(0, 10);
       const ul = document.createElement('ul');
-      recipes.forEach(r => {
+      limited.forEach(r => {
         const li = document.createElement('li');
         const title = document.createElement('strong');
         title.textContent = r.title || 'Untitled';
         li.appendChild(title);
+
+        const hideBtn = document.createElement('button');
+        hideBtn.textContent = 'Hide';
+        hideBtn.addEventListener('click', () => {
+          const stored = JSON.parse(localStorage.getItem('recipesHidden') || '[]');
+          if (!stored.includes(r.title)) {
+            stored.push(r.title);
+            localStorage.setItem('recipesHidden', JSON.stringify(stored));
+          }
+          li.remove();
+        });
+        li.appendChild(hideBtn);
 
         // Ingredients
         if (r.ingredients) {
