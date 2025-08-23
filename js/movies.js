@@ -1,11 +1,34 @@
+function makeIconBtn(symbol, title, fn) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = symbol;
+  b.title = title;
+  Object.assign(b.style, {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '1.1em',
+    padding: '0',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: '1',
+    verticalAlign: 'middle'
+  });
+  b.addEventListener('mousedown', e => e.stopPropagation());
+  b.addEventListener('click', e => e.stopPropagation());
+  b.onclick = fn;
+  return b;
+}
+
 export async function initMoviesPanel() {
   const listEl = document.getElementById('movieList');
   if (!listEl) return;
   const apiKeyInput = document.getElementById('moviesApiKey');
   const apiKeyContainer = document.getElementById('moviesApiKeyContainer');
-  const saveBtn = document.getElementById('moviesSaveBtn');
 
   const hiddenKey = 'hiddenMovieIds';
+  const savedKey = 'savedMovieIds';
 
   const getHidden = () => {
     if (typeof localStorage === 'undefined') return new Set();
@@ -23,6 +46,27 @@ export async function initMoviesPanel() {
     if (typeof localStorage === 'undefined') return;
     try {
       localStorage.setItem(hiddenKey, JSON.stringify(Array.from(ids)));
+    } catch (_) {
+      /* ignore */
+    }
+  };
+
+  const getSaved = () => {
+    if (typeof localStorage === 'undefined') return new Set();
+    try {
+      const stored = localStorage.getItem(savedKey);
+      return new Set(
+        (stored ? JSON.parse(stored) : []).map(id => String(id))
+      );
+    } catch (_) {
+      return new Set();
+    }
+  };
+
+  const saveSaved = ids => {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(savedKey, JSON.stringify(Array.from(ids)));
     } catch (_) {
       /* ignore */
     }
@@ -62,9 +106,12 @@ export async function initMoviesPanel() {
       if (!res.ok) throw new Error('Network response was not ok');
       const data = await res.json();
       const hidden = getHidden();
+      const saved = getSaved();
       const movies = (data.results || [])
         .slice(0, 100)
-        .filter(m => !hidden.has(String(m.id)));
+        .filter(
+          m => !hidden.has(String(m.id)) && !saved.has(String(m.id))
+        );
       if (movies.length === 0) {
         listEl.textContent = 'No movies found.';
         return;
@@ -137,14 +184,23 @@ export async function initMoviesPanel() {
         titleEl.textContent = `${title} (${year})`;
         info.appendChild(titleEl);
 
-        const hideBtn = document.createElement('button');
-        hideBtn.textContent = 'Hide';
-        hideBtn.addEventListener('click', () => {
+        const btnRow = document.createElement('div');
+        btnRow.className = 'button-row';
+
+        const saveBtn = makeIconBtn('💾', 'Save movie', () => {
+          saved.add(String(m.id));
+          saveSaved(saved);
+          li.remove();
+        });
+
+        const hideBtn = makeIconBtn('❌', 'Hide movie', () => {
           hidden.add(String(m.id));
           saveHidden(hidden);
           li.remove();
         });
-        info.appendChild(hideBtn);
+
+        btnRow.append(saveBtn, hideBtn);
+        info.appendChild(btnRow);
 
         const metaList = document.createElement('ul');
         metaList.className = 'movie-meta';
@@ -203,8 +259,6 @@ export async function initMoviesPanel() {
     }
   });
   apiKeyInput?.addEventListener('change', loadMovies);
-  saveBtn?.addEventListener('click', loadMovies);
-
   await loadMovies();
 }
 

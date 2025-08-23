@@ -68,7 +68,10 @@ describe('initMoviesPanel', () => {
     const img = document.querySelector('#movieList li img');
     expect(img).not.toBeNull();
     expect(img.src).toContain('https://image.tmdb.org/t/p/w200/poster.jpg');
-    expect(document.querySelector('#movieList li button')).not.toBeNull();
+    const buttons = document.querySelectorAll('#movieList li button');
+    expect(buttons.length).toBe(2);
+    expect(buttons[0].textContent).toBe('💾');
+    expect(buttons[1].textContent).toBe('❌');
     expect(fetch).toHaveBeenNthCalledWith(
       1,
       'https://api.themoviedb.org/3/trending/movie/week?api_key=TEST_KEY'
@@ -218,11 +221,48 @@ describe('initMoviesPanel', () => {
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) });
 
     await initMoviesPanel();
-    const btn = document.querySelector('#movieList li button');
+    const btn = document.querySelector('#movieList li button[title="Hide movie"]');
     btn.click();
 
     expect(document.querySelector('#movieList li')).toBeNull();
     expect(JSON.parse(hidden)).toEqual(['321']);
+  });
+
+  it('saves movie on save and persists id', async () => {
+    const dom = new JSDOM('<div id="movieList"></div>');
+    global.document = dom.window.document;
+    global.window = dom.window;
+    window.tmdbApiKey = 'TEST_KEY';
+
+    let saved = '[]';
+    global.localStorage = {
+      getItem: key => (key === 'savedMovieIds' ? saved : ''),
+      setItem: (key, value) => {
+        if (key === 'savedMovieIds') saved = value;
+      }
+    };
+    Object.defineProperty(window, 'localStorage', { value: global.localStorage });
+    global.sessionStorage = { getItem: () => '', setItem: () => {} };
+    Object.defineProperty(window, 'sessionStorage', { value: global.sessionStorage });
+
+    const apiData = {
+      results: [
+        { id: 777, title: 'Save Me', release_date: '2024-01-01', poster_path: '/a.jpg', genre_ids: [] }
+      ]
+    };
+    const genreData = { genres: [] };
+
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(apiData) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) });
+
+    await initMoviesPanel();
+    const saveButton = document.querySelector('#movieList li button[title="Save movie"]');
+    saveButton.click();
+
+    expect(document.querySelector('#movieList li')).toBeNull();
+    expect(JSON.parse(saved)).toEqual(['777']);
   });
 
   it('does not render movies already hidden', async () => {
