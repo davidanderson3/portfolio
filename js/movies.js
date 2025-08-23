@@ -70,6 +70,27 @@ export async function initMoviesPanel() {
         return;
       }
 
+      // Fetch cast and crew for each movie
+      await Promise.all(
+        movies.map(async m => {
+          try {
+            const creditUrl = `https://api.themoviedb.org/3/movie/${m.id}/credits?api_key=${apiKey}`;
+            const creditRes = await fetch(creditUrl);
+            if (creditRes.ok) {
+              const creditData = await creditRes.json();
+              m.actors = (creditData.cast || [])
+                .slice(0, 5)
+                .map(c => c.name)
+                .join(', ');
+              const director = (creditData.crew || []).find(c => c.job === 'Director');
+              if (director) m.director = director.name;
+            }
+          } catch (_) {
+            /* ignore credit fetch errors */
+          }
+        })
+      );
+
       // Fetch genre list to map IDs to names
       let genreMap = {};
       try {
@@ -85,7 +106,16 @@ export async function initMoviesPanel() {
         // ignore genre fetch errors
       }
 
-      const exclude = new Set(['adult', 'backdrop_path', 'id', 'original_title', 'poster_path', 'title']);
+      const exclude = new Set([
+        'adult',
+        'backdrop_path',
+        'id',
+        'original_title',
+        'poster_path',
+        'title',
+        'actors',
+        'director'
+      ]);
       const ul = document.createElement('ul');
       movies.forEach(m => {
         const li = document.createElement('li');
@@ -118,6 +148,18 @@ export async function initMoviesPanel() {
 
         const metaList = document.createElement('ul');
         metaList.className = 'movie-meta';
+
+        if (m.director) {
+          const mi = document.createElement('li');
+          mi.textContent = `director: ${m.director}`;
+          metaList.appendChild(mi);
+        }
+        if (m.actors) {
+          const mi = document.createElement('li');
+          mi.textContent = `actors: ${m.actors}`;
+          metaList.appendChild(mi);
+        }
+
         Object.entries(m).forEach(([key, value]) => {
           if (value === null || value === undefined) return;
           if (exclude.has(key)) return;
