@@ -1137,6 +1137,8 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                 await saveDecisions(all);
                 item.doLater = newState;
                 const wrapper = buttonWrap.closest('.decision.goal-card');
+                const rowEl = buttonWrap.closest('.decision-row');
+                if (rowEl) rowEl.style.background = '';
                 if (wrapper) wrapper.classList.toggle('do-later', newState);
                 refreshGoalInDOM(item, all);
             }
