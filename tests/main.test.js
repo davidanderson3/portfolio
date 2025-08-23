@@ -21,7 +21,6 @@ vi.mock('../js/stats.js', () => ({ initMetricsUI: vi.fn() }));
 vi.mock('../js/tabs.js', () => ({ initTabs: vi.fn() }));
 vi.mock('../js/buttonStyles.js', () => ({ initButtonStyles: vi.fn() }));
 vi.mock('../js/tabReports.js', () => ({ initTabReports: vi.fn() }));
-vi.mock('../js/googleCalendar.js', () => ({ initGoogleCalendar: vi.fn() }));
 vi.mock('../js/settings.js', () => ({ loadHiddenTabs: vi.fn(), applyHiddenTabs: vi.fn() }));
 vi.mock('../js/planning.js', () => ({ clearPlanningCache: vi.fn() }));
 

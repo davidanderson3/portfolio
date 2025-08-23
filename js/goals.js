@@ -41,7 +41,6 @@ import {
     attachTaskButtons,
     renderChildren
 } from './tasks.js';
-import { createCalendarEvent } from './googleCalendar.js';
 import { loadHourNotes, saveHourNotes } from './hourNotes.js';
 import { currentUser } from './auth.js';
 
@@ -95,12 +94,6 @@ export async function addCalendarGoal(date = '') {
     }
 
     await saveDecisions(deduped);
-    const recur = prompt('Repeat how often? (daily/weekly/monthly or blank for none):', '') || '';
-    try {
-        await createCalendarEvent(newGoal.text, newGoal.scheduled, newGoal.scheduledEnd || newGoal.scheduled, recur);
-    } catch (err) {
-        console.error('Failed to create calendar event', err);
-    }
     // UI re-render handled by decisionsUpdated event
 }
 
@@ -1153,26 +1146,12 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
             item.scheduledEnd || ''
         );
         if (!range.start) return;
-        const recurrence = prompt(
-            'Repeat how often? (daily/weekly/monthly or blank for none):',
-            ''
-        ) || '';
         const all = await loadDecisions();
         const idx = all.findIndex(d => d.id === item.id);
         if (idx !== -1) {
             all[idx].scheduled = range.start.trim();
             all[idx].scheduledEnd = range.end.trim();
             await saveDecisions(all);
-            try {
-                await createCalendarEvent(
-                    item.text,
-                    range.start.trim(),
-                    range.end.trim() || range.start.trim(),
-                    recurrence
-                );
-            } catch (err) {
-                console.error('Failed to sync with Google Calendar', err);
-            }
             item.scheduled = range.start.trim();
             item.scheduledEnd = range.end.trim();
             refreshGoalInDOM(item, all);
