@@ -5,6 +5,29 @@ export async function initMoviesPanel() {
   const apiKeyContainer = document.getElementById('moviesApiKeyContainer');
   const loadBtn = document.getElementById('moviesLoadBtn');
 
+  const hiddenKey = 'hiddenMovieIds';
+
+  const getHidden = () => {
+    if (typeof localStorage === 'undefined') return new Set();
+    try {
+      const stored = localStorage.getItem(hiddenKey);
+      return new Set(
+        (stored ? JSON.parse(stored) : []).map(id => String(id))
+      );
+    } catch (_) {
+      return new Set();
+    }
+  };
+
+  const saveHidden = ids => {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(hiddenKey, JSON.stringify(Array.from(ids)));
+    } catch (_) {
+      /* ignore */
+    }
+  };
+
   const savedApiKey =
     (typeof localStorage !== 'undefined' && localStorage.getItem('moviesApiKey')) || '';
   if (apiKeyInput) apiKeyInput.value = savedApiKey;
@@ -38,7 +61,10 @@ export async function initMoviesPanel() {
       const res = await fetch(url);
       if (!res.ok) throw new Error('Network response was not ok');
       const data = await res.json();
-      const movies = (data.results || []).slice(0, 100);
+      const hidden = getHidden();
+      const movies = (data.results || [])
+        .slice(0, 100)
+        .filter(m => !hidden.has(String(m.id)));
       if (movies.length === 0) {
         listEl.textContent = 'No movies found.';
         return;
@@ -59,15 +85,32 @@ export async function initMoviesPanel() {
         // ignore genre fetch errors
       }
 
-      const exclude = new Set(['adult', 'backdrop_path', 'id', 'original_title']);
+      const exclude = new Set(['adult', 'backdrop_path', 'id', 'original_title', 'poster_path']);
       const ul = document.createElement('ul');
       movies.forEach(m => {
         const li = document.createElement('li');
         const title = (m.title || m.name || '').trim();
         const year = (m.release_date || '').split('-')[0] || 'Unknown';
+
+        if (m.poster_path) {
+          const img = document.createElement('img');
+          img.src = `https://image.tmdb.org/t/p/w200${m.poster_path}`;
+          img.alt = `${title} poster`;
+          li.appendChild(img);
+        }
+
         const titleEl = document.createElement('strong');
         titleEl.textContent = `${title} (${year})`;
         li.appendChild(titleEl);
+
+        const hideBtn = document.createElement('button');
+        hideBtn.textContent = 'Hide';
+        hideBtn.addEventListener('click', () => {
+          hidden.add(String(m.id));
+          saveHidden(hidden);
+          li.remove();
+        });
+        li.appendChild(hideBtn);
 
         const metaList = document.createElement('ul');
         Object.entries(m).forEach(([key, value]) => {
