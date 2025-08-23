@@ -324,3 +324,34 @@ describe('project progress', () => {
   });
 });
 
+describe('do later button', () => {
+  it('toggles doLater and adds class', async () => {
+    const goal = {
+      id: 'g1',
+      type: 'goal',
+      text: 'G',
+      notes: '',
+      completed: false,
+      parentGoalId: null,
+      doLater: false
+    };
+    helpers.loadDecisions.mockResolvedValue([goal]);
+    helpers.saveDecisions.mockClear();
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'decision goal-card';
+    wrapper.dataset.goalId = goal.id;
+    document.getElementById('goalList').appendChild(wrapper);
+
+    const row = createGoalRow(goal, { itemsRef: [goal] });
+    wrapper.appendChild(row);
+
+    const btn = row.querySelector('button[title="Mark as do later"]');
+    await btn.onclick(new window.Event('click'));
+
+    const saved = helpers.saveDecisions.mock.calls[0][0][0];
+    expect(saved.doLater).toBe(true);
+    expect(wrapper.classList.contains('do-later')).toBe(true);
+  });
+});
+

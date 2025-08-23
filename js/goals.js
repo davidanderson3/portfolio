@@ -186,7 +186,9 @@ export function createGoalRow(goal, options = {}) {
         if (descendants.length) {
             const done = descendants.filter(c => c.completed).length;
             const pct = Math.round((done / descendants.length) * 100);
-            row.style.background = `linear-gradient(90deg, rgba(144, 238, 144, 0.2) ${pct}%, #fbfdfc ${pct}%)`;
+            if (!goal.doLater) {
+                row.style.background = `linear-gradient(90deg, rgba(144, 238, 144, 0.2) ${pct}%, #fbfdfc ${pct}%)`;
+            }
             const prog = document.createElement('div');
             prog.className = 'progress-text';
             prog.textContent = `${pct}%`;
@@ -805,6 +807,7 @@ async function renderRemainingGoals(all, sortedGoals, hiddenContent) {
 function makeGoalWrapper(goal) {
     const wrapper = document.createElement('div');
     wrapper.className = 'decision goal-card';
+    if (goal.doLater) wrapper.classList.add('do-later');
     wrapper.dataset.goalId = goal.id;
     wrapper.setAttribute('draggable', 'true');
     enableGoalDragAndDrop(wrapper);
@@ -915,6 +918,7 @@ export function refreshGoalInDOM(goal, allItems) {
     const wasOpen = openGoalIds.has(goal.id);
 
     wrapper.innerHTML = '';
+    wrapper.classList.toggle('do-later', !!goal.doLater);
     const row = createGoalRow(goal, { hideScheduled: true, itemsRef: allItems });
     wrapper.appendChild(row);
 
@@ -1120,6 +1124,24 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                 menu.style.display = 'none';
             }
         });
+
+        const laterBtn = makeIconBtn(
+            '⏳',
+            item.doLater ? 'Remove do later' : 'Mark as do later',
+            async () => {
+                const all = await loadDecisions();
+                const idx = all.findIndex(d => d.id === item.id);
+                if (idx === -1) return;
+                const newState = !all[idx].doLater;
+                all[idx].doLater = newState;
+                await saveDecisions(all);
+                item.doLater = newState;
+                const wrapper = buttonWrap.closest('.decision.goal-card');
+                if (wrapper) wrapper.classList.toggle('do-later', newState);
+                refreshGoalInDOM(item, all);
+            }
+        );
+        buttonWrap.appendChild(laterBtn);
     }
 
     // 📅 Schedule button

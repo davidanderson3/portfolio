@@ -560,6 +560,20 @@ button:hover {
   z-index: 1;
 }
 
+.goal-card.do-later {
+  background: repeating-linear-gradient(
+    45deg,
+    #fefbea,
+    #fefbea 10px,
+    #f9f5d7 10px,
+    #f9f5d7 20px
+  );
+}
+
+.goal-card.do-later .decision-row {
+  background-color: transparent;
+}
+
 .main-layout,
 .decision-container {
   overflow: visible !important;
