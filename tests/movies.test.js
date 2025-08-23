@@ -70,7 +70,6 @@ describe('initMoviesPanel', () => {
     const dom = new JSDOM(`
       <div id="movieList"></div>
       <div id="moviesApiKeyContainer"><input id="moviesApiKey" /></div>
-      <button id="moviesLoadBtn"></button>
     `);
     global.document = dom.window.document;
     global.window = dom.window;
@@ -110,8 +109,9 @@ describe('initMoviesPanel', () => {
       });
 
     await initMoviesPanel();
-    document.getElementById('moviesApiKey').value = 'INPUT_KEY';
-    document.getElementById('moviesLoadBtn').click();
+    const input = document.getElementById('moviesApiKey');
+    input.value = 'INPUT_KEY';
+    input.dispatchEvent(new dom.window.Event('change'));
     await new Promise(r => setTimeout(r, 0));
 
     expect(fetch).toHaveBeenNthCalledWith(
@@ -129,7 +129,6 @@ describe('initMoviesPanel', () => {
     const dom = new JSDOM(`
       <div id="movieList"></div>
       <div id="moviesApiKeyContainer"><input id="moviesApiKey" /></div>
-      <button id="moviesLoadBtn"></button>
     `);
     global.document = dom.window.document;
     global.window = dom.window;
@@ -154,8 +153,9 @@ describe('initMoviesPanel', () => {
     global.fetch = vi.fn(() => Promise.reject(new Error('fail')));
 
     await initMoviesPanel();
-    document.getElementById('moviesApiKey').value = 'FAIL_KEY';
-    document.getElementById('moviesLoadBtn').click();
+    const input = document.getElementById('moviesApiKey');
+    input.value = 'FAIL_KEY';
+    input.dispatchEvent(new dom.window.Event('change'));
     await new Promise(r => setTimeout(r, 0));
 
     expect(fetch).toHaveBeenCalledWith('https://api.themoviedb.org/3/trending/movie/week?api_key=FAIL_KEY');

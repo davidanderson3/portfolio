@@ -2150,3 +2150,50 @@ h2 {
   }
 }
 
+/* Movies panel styling */
+.tmdb-notice {
+  text-align: center;
+  font-size: 0.8rem;
+  margin: 2rem 0;
+}
+
+.movie-card {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0.5rem;
+  background: #f9f9f9;
+}
+
+.movie-card img {
+  width: 100px;
+  border-radius: 4px;
+}
+
+.movie-info {
+  flex: 1;
+}
+
+.movie-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.movie-meta {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0 0;
+}
+
+.movie-meta li {
+  font-size: 0.85rem;
+}
+
+#movieList ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+

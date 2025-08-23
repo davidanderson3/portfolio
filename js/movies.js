@@ -3,7 +3,6 @@ export async function initMoviesPanel() {
   if (!listEl) return;
   const apiKeyInput = document.getElementById('moviesApiKey');
   const apiKeyContainer = document.getElementById('moviesApiKeyContainer');
-  const loadBtn = document.getElementById('moviesLoadBtn');
 
   const hiddenKey = 'hiddenMovieIds';
 
@@ -89,6 +88,7 @@ export async function initMoviesPanel() {
       const ul = document.createElement('ul');
       movies.forEach(m => {
         const li = document.createElement('li');
+        li.className = 'movie-card';
         const title = (m.title || m.name || '').trim();
         const year = (m.release_date || '').split('-')[0] || 'Unknown';
 
@@ -99,9 +99,12 @@ export async function initMoviesPanel() {
           li.appendChild(img);
         }
 
-        const titleEl = document.createElement('strong');
+        const info = document.createElement('div');
+        info.className = 'movie-info';
+
+        const titleEl = document.createElement('h3');
         titleEl.textContent = `${title} (${year})`;
-        li.appendChild(titleEl);
+        info.appendChild(titleEl);
 
         const hideBtn = document.createElement('button');
         hideBtn.textContent = 'Hide';
@@ -110,9 +113,10 @@ export async function initMoviesPanel() {
           saveHidden(hidden);
           li.remove();
         });
-        li.appendChild(hideBtn);
+        info.appendChild(hideBtn);
 
         const metaList = document.createElement('ul');
+        metaList.className = 'movie-meta';
         Object.entries(m).forEach(([key, value]) => {
           if (value === null || value === undefined) return;
           if (exclude.has(key)) return;
@@ -130,7 +134,9 @@ export async function initMoviesPanel() {
           }
           metaList.appendChild(mi);
         });
-        if (metaList.childNodes.length) li.appendChild(metaList);
+        if (metaList.childNodes.length) info.appendChild(metaList);
+
+        li.appendChild(info);
         ul.appendChild(li);
       });
 
@@ -146,13 +152,14 @@ export async function initMoviesPanel() {
     }
   };
 
-  loadBtn?.addEventListener('click', loadMovies);
+  apiKeyInput?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      loadMovies();
+    }
+  });
+  apiKeyInput?.addEventListener('change', loadMovies);
 
-  if (currentApiKey) {
-    await loadMovies();
-  } else {
-    listEl.textContent = 'TMDB API key not provided.';
-  }
+  await loadMovies();
 }
 
 if (typeof window !== 'undefined') {
