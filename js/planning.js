@@ -456,7 +456,7 @@ export async function initPlanningPanel() {
     const nowIso = nowDate.toISOString();
     const required = ['curAge', 'realEstate', 'carValue', 'assetSavings', 'checking', 'investment', 'rollingCredit'];
     const allFilled = required.every(name => form[name].value.trim() !== '');
-    if (allFilled) {
+    if (allFilled && assetTotal > 0) {
       const snapObj = { timestamp: nowIso, age: values.curAge, balance: assetTotal };
       if (!last || new Date(last.timestamp).toDateString() !== nowDate.toDateString()) {
         hist.push(snapObj);
@@ -464,9 +464,9 @@ export async function initPlanningPanel() {
         Object.assign(last, snapObj);
       }
       saveAssetSnapshotToDB(snapObj);
+      savePlanningData(currentData);
     }
 
-    savePlanningData(currentData);
     renderAssetHistory();
   }
 
