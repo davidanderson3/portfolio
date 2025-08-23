@@ -1417,6 +1417,18 @@ h2 {
   background-color: #fff8b3;
 }
 
+/* Place search bar */
+#placeSearchRow {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+#placeSearchRow input {
+  max-width: 260px;
+}
+
 /* Prevent horizontal overflow of travel table on small screens */
 #travelPanel .full-column {
   overflow-x: auto;
