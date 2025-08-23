@@ -195,6 +195,12 @@ export async function loadPlanningData({ recoverLocal = false } = {}) {
     localStorage.setItem(PLANNING_KEY, JSON.stringify(planningCache));
   }
 
+  if (planningCache && planningCache.finance) {
+    console.log('Finance data found:', planningCache.finance);
+  } else {
+    console.log('No finance data found in planning cache');
+  }
+
   return planningCache;
 }
 
