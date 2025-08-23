@@ -14,7 +14,6 @@ export const PANELS = [
   'planningPanel',
   'budgetPanel',
   'backupsPanel',
-  'geoscorePanel',
   'geolayersPanel'
 ];
 
@@ -31,7 +30,6 @@ export const PANEL_NAMES = {
   planningPanel: 'Finances',
   budgetPanel: 'Budget',
   backupsPanel: 'Backups',
-  geoscorePanel: 'GeoScore',
   geolayersPanel: 'GeoLayers'
 };
 
@@ -120,12 +118,9 @@ export async function initTabs(user, db) {
       else if (target === 'budgetPanel') {
         await window.initBudgetPanel();
       }
-      else if (target === 'backupsPanel') {
-        await window.initBackupsPanel();
-      }
-      else if (target === 'geoscorePanel') {
-        window.initGeoScorePanel();
-      }
+        else if (target === 'backupsPanel') {
+          await window.initBackupsPanel();
+        }
     });
   });
 
@@ -180,12 +175,9 @@ export async function initTabs(user, db) {
     else if (initial === 'budgetPanel') {
       window.initBudgetPanel();
     }
-    else if (initial === 'backupsPanel') {
-      window.initBackupsPanel();
-    }
-    else if (initial === 'geoscorePanel') {
-      window.initGeoScorePanel();
-    }
+      else if (initial === 'backupsPanel') {
+        window.initBackupsPanel();
+      }
   };
 
   if (document.readyState === 'loading') {

@@ -933,23 +933,6 @@ button:hover {
   text-decoration: underline;
 }
 
-/* Contact link positioned at page bottom */
-.contact-link {
-  display: block;
-  width: fit-content;
-  margin: 1em auto 80px;
-  background: #ffffff;
-  color: #333;
-  text-decoration: none;
-  padding: 6px 12px;
-  border: 1px solid #cccccc;
-  border-radius: 4px;
-  font-size: 0.9em;
-}
-
-.contact-link:hover {
-  background: #f0f0f0;
-}
 .settings-container.main-layout {
   justify-content: flex-start;
   flex-direction: column;
