@@ -18,17 +18,27 @@ describe('initMoviesPanel', () => {
           title: 'Sample Movie',
           release_date: '2024-01-01',
           vote_average: 7.5,
-          vote_count: 5
+          vote_count: 5,
+          genre_ids: [28],
+          adult: false,
+          backdrop_path: '/path.jpg',
+          id: 123,
+          original_title: 'Original Title'
         }
       ]
     };
+    const genreData = { genres: [{ id: 28, name: 'Action' }] };
 
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(apiData)
       })
-    );
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(genreData)
+      });
 
     await initMoviesPanel();
 
@@ -36,7 +46,19 @@ describe('initMoviesPanel', () => {
     expect(item.textContent).toContain('Sample Movie');
     expect(item.textContent).toContain('vote_average: 7.5');
     expect(item.textContent).toContain('vote_count: 5');
-    expect(fetch).toHaveBeenCalledWith('https://api.themoviedb.org/3/trending/movie/week?api_key=TEST_KEY');
+    expect(item.textContent).toContain('genres: Action');
+    expect(item.textContent).not.toContain('adult:');
+    expect(item.textContent).not.toContain('backdrop_path:');
+    expect(item.textContent).not.toContain('id:');
+    expect(item.textContent).not.toContain('original_title:');
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      'https://api.themoviedb.org/3/trending/movie/week?api_key=TEST_KEY'
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      'https://api.themoviedb.org/3/genre/movie/list?api_key=TEST_KEY'
+    );
   });
 
   it('uses entered API key and caches it', async () => {
@@ -58,22 +80,34 @@ describe('initMoviesPanel', () => {
 
     const apiData = {
       results: [
-        { title: 'Any Movie', release_date: '2024-01-01' }
+        { title: 'Any Movie', release_date: '2024-01-01', genre_ids: [] }
       ]
     };
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
+    const genreData = { genres: [] };
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(apiData)
       })
-    );
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(genreData)
+      });
 
     await initMoviesPanel();
     document.getElementById('moviesApiKey').value = 'INPUT_KEY';
     document.getElementById('moviesLoadBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
-    expect(fetch).toHaveBeenCalledWith('https://api.themoviedb.org/3/trending/movie/week?api_key=INPUT_KEY');
+    expect(fetch).toHaveBeenNthCalledWith(
+      1,
+      'https://api.themoviedb.org/3/trending/movie/week?api_key=INPUT_KEY'
+    );
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      'https://api.themoviedb.org/3/genre/movie/list?api_key=INPUT_KEY'
+    );
     expect(stored).toBe('INPUT_KEY');
   });
 
