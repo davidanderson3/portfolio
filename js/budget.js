@@ -36,7 +36,6 @@ export function calculateMonthlyBudget({ salary, netPay, categories, incomeCateg
   };
 }
 
-import { loadPlanningData } from './planning.js';
 import { getCurrentUser, db } from './auth.js';
 import { makeIconBtn } from './helpers.js';
 
@@ -196,11 +195,23 @@ export async function saveBudgetData(data) {
 export async function initBudgetPanel() {
   const panel = document.getElementById('budgetContainer');
   if (!panel) return;
-  const planning = await loadPlanningData();
-  const salary = Number(planning?.finance?.income || 0);
   const saved = await loadBudgetData();
   panel.innerHTML = `
     <div id="budgetLayout">
+      <h3>Income</h3>
+      <table id="incomeTable">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Current</th>
+            <th>Goal</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="incomeTbody"></tbody>
+      </table>
+      <button type="button" id="addIncomeBtn">+ Add Income</button>
+      <h3>Expenses</h3>
       <table id="budgetTable">
         <thead>
           <tr>
@@ -220,11 +231,13 @@ export async function initBudgetPanel() {
   `;
 
   const tbody = panel.querySelector('#budgetTbody');
+  const incomeTbody = panel.querySelector('#incomeTbody');
   const summary = panel.querySelector('#budgetSummary');
   const addCategoryBtn = panel.querySelector('#addCategoryBtn');
+  const addIncomeBtn = panel.querySelector('#addIncomeBtn');
   const removedBuiltIns = new Set(saved.removedBuiltIns || []);
 
-  function addRow(name = '', current = '', goal = '', key = '') {
+  function addRow(container, name = '', current = '', goal = '', key = '') {
     const id = key || Math.random().toString(36).slice(2);
     const tr = document.createElement('tr');
     tr.className = 'budget-row';
@@ -234,23 +247,21 @@ export async function initBudgetPanel() {
       <td class="cat-name">${name}</td>
       <td><input type="number" class="current-cost" value="${current}"></td>
       <td><input type="number" class="goal-cost" value="${goal}"></td>
-      <td class="change-cell"></td>
-      <td class="percent-cell"></td>
-      <td class="actions"></td>
+      ${container === incomeTbody ? '<td class="actions"></td>' : '<td class="change-cell"></td><td class="percent-cell"></td><td class="actions"></td>'}
     `;
     const actions = tr.querySelector('.actions');
     const up = makeIconBtn('⬆️', 'Move up', () => {
       const prev = tr.previousElementSibling;
-      if (prev) tbody.insertBefore(tr, prev);
+      if (prev) container.insertBefore(tr, prev);
       render();
     });
     const rem = makeIconBtn('❌', 'Remove', () => {
-      if (key) removedBuiltIns.add(key);
+      if (key && container === tbody) removedBuiltIns.add(key);
       tr.remove();
       render();
     });
     actions.append(up, rem);
-    tbody.append(tr);
+    container.append(tr);
   }
 
   const recurNames = new Set([
@@ -259,15 +270,23 @@ export async function initBudgetPanel() {
   ]);
   DEFAULT_RECURRING.forEach(([key, label]) => {
     if (!removedBuiltIns.has(key)) {
-      addRow(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key);
+      addRow(tbody, label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key);
     }
   });
-  recurNames.forEach(n => addRow(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? ''));
+  recurNames.forEach(n => addRow(tbody, n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? ''));
 
   addCategoryBtn.addEventListener('click', () => {
     const name = typeof prompt === 'function' ? prompt('Category name?') : '';
     if (name) {
-      addRow(name);
+      addRow(tbody, name);
+      render();
+    }
+  });
+
+  addIncomeBtn.addEventListener('click', () => {
+    const name = typeof prompt === 'function' ? prompt('Income name?') : '';
+    if (name) {
+      addRow(incomeTbody, name);
       render();
     }
   });
@@ -275,12 +294,16 @@ export async function initBudgetPanel() {
   function collectData() {
     const categoriesCurrent = {};
     const categoriesGoal = {};
+    const incomeCurrent = {};
+    const incomeGoal = {};
     const saveData = {
       removedBuiltIns: Array.from(removedBuiltIns),
       recurring: {},
       goalRecurring: {},
       subscriptions: {},
-      goalSubscriptions: {}
+      goalSubscriptions: {},
+      incomeRecurring: {},
+      goalIncomeRecurring: {}
     };
     tbody.querySelectorAll('tr').forEach(row => {
       const name = row.querySelector('.cat-name').textContent.trim();
@@ -299,11 +322,22 @@ export async function initBudgetPanel() {
         }
       }
     });
-    return { categoriesCurrent, categoriesGoal, saveData };
+    incomeTbody.querySelectorAll('tr').forEach(row => {
+      const name = row.querySelector('.cat-name').textContent.trim();
+      const curVal = row.querySelector('.current-cost').value;
+      const goalVal = row.querySelector('.goal-cost').value;
+      if (name) {
+        incomeCurrent[name] = curVal;
+        incomeGoal[name] = goalVal;
+        if (curVal) saveData.incomeRecurring[name] = curVal;
+        if (goalVal) saveData.goalIncomeRecurring[name] = goalVal;
+      }
+    });
+    return { categoriesCurrent, categoriesGoal, incomeCurrent, incomeGoal, saveData };
   }
 
   function render(save = true) {
-    const { categoriesCurrent, categoriesGoal, saveData } = collectData();
+    const { categoriesCurrent, categoriesGoal, incomeCurrent, incomeGoal, saveData } = collectData();
     tbody.querySelectorAll('tr').forEach(row => {
       const cur = parseFloat(row.querySelector('.current-cost').value) || 0;
       const goal = parseFloat(row.querySelector('.goal-cost').value) || 0;
@@ -324,15 +358,31 @@ export async function initBudgetPanel() {
     const totalGoal = toNumber(categoriesGoal);
     const changeTotal = totalGoal - totalCur;
     const signTotal = changeTotal > 0 ? '+' : changeTotal < 0 ? '-' : '';
+    const incomeCurTotal = toNumber(incomeCurrent);
+    const incomeGoalTotal = toNumber(incomeGoal);
+    const incomeChange = incomeGoalTotal - incomeCurTotal;
+    const incomeSign = incomeChange > 0 ? '+' : incomeChange < 0 ? '-' : '';
     summary.innerHTML =
+      `Current Income: $${incomeCurTotal.toLocaleString()}<br>` +
+      `Goal Income: $${incomeGoalTotal.toLocaleString()}<br>` +
       `Current Expenses: $${totalCur.toLocaleString()}<br>` +
       `Goal Expenses: $${totalGoal.toLocaleString()}<br>` +
-      `Change: ${signTotal}$${Math.abs(changeTotal).toLocaleString()}`;
+      `Change: ${signTotal}$${Math.abs(changeTotal).toLocaleString()}<br>` +
+      `Income Change: ${incomeSign}$${Math.abs(incomeChange).toLocaleString()}`;
     if (save) saveBudgetData(saveData);
   }
 
   tbody.addEventListener('input', () => render(false));
   tbody.addEventListener('change', () => render(true));
+  incomeTbody.addEventListener('input', () => render(false));
+  incomeTbody.addEventListener('change', () => render(true));
+
+  const incomeNames = new Set([
+    ...Object.keys(saved.incomeRecurring || {}),
+    ...Object.keys(saved.goalIncomeRecurring || {})
+  ]);
+  incomeNames.forEach(n => addRow(incomeTbody, n, saved.incomeRecurring?.[n] ?? '', saved.goalIncomeRecurring?.[n] ?? ''));
+
   render(false);
 }
 

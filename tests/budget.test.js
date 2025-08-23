@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 
-let planningMock = { finance: { income: 0 } };
-vi.mock('../js/planning.js', () => ({ loadPlanningData: () => planningMock }));
-
 const setMock = vi.fn();
 const getMock = vi.fn();
 
@@ -41,16 +38,26 @@ import { calculateMonthlyBudget, loadBudgetData } from '../js/budget.js';
 
 async function calculateCurrentMonthlyBudgetForTest() {
   const budget = await loadBudgetData();
-  const salary = Number(planningMock?.finance?.income || 0);
   const {
     subscriptions = {},
     recurring = {},
-    netPay: _ignore,
+    incomeRecurring = {},
+    netPay,
+    salary,
+    removedBuiltIns,
+    goalSubscriptions,
+    goalRecurring,
+    goalIncomeRecurring,
+    lastUpdated,
     ...rest
   } = budget;
   const categories = { ...rest, ...recurring, ...subscriptions };
-  Object.keys(categories).forEach(k => { if (k.startsWith('goal_')) delete categories[k]; });
-  return calculateMonthlyBudget({ salary, categories });
+  Object.keys(categories).forEach(k => {
+    if (k.startsWith('goal_') || ['removedBuiltIns', 'lastUpdated'].includes(k)) {
+      delete categories[k];
+    }
+  });
+  return calculateMonthlyBudget({ salary, netPay, categories, incomeCategories: incomeRecurring });
 }
 
 beforeEach(() => {
@@ -109,16 +116,18 @@ describe('budget calculations', () => {
   });
 
   it('calculates the current monthly budget from saved data', async () => {
-    planningMock = { finance: { income: 120000 } };
     const stored = {
       subscriptions: { Netflix: 15 },
-      investmentAccounts: 300
+      investmentAccounts: 300,
+      salary: 120000,
+      incomeRecurring: { sideJob: 200 }
     };
     localStorage.setItem('budgetConfig', JSON.stringify(stored));
     const res = await calculateCurrentMonthlyBudgetForTest();
     const expectedExpenses = 300 + 15;
     expect(res.expenses).toBe(expectedExpenses);
-    expect(res.leftover).toBe(9685);
+    expect(res.income).toBe(200);
+    expect(res.leftover).toBe(9885);
   });
 });
 
@@ -227,6 +236,32 @@ describe('budget panel', () => {
 
     const saved = JSON.parse(localStorage.getItem('budgetConfig'));
     expect(saved.goalRecurring).toEqual({ 'Test Recurring': '50' });
+    expect(setMock).toHaveBeenCalled();
+  });
+
+  it('saves income categories', async () => {
+    getMock.mockResolvedValue({ exists: false });
+
+    const dom = new JSDOM('<div id="budgetContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.Event = dom.window.Event;
+
+    const { initBudgetPanel } = await import('../js/budget.js');
+    await initBudgetPanel();
+
+    global.prompt = () => 'Side Job';
+    document.getElementById('addIncomeBtn').click();
+
+    const incomeInput = document.querySelector('#incomeTbody tr:last-child .current-cost');
+    incomeInput.value = '200';
+    incomeInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    incomeInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+
+    await new Promise(res => setTimeout(res, 0));
+
+    const saved = JSON.parse(localStorage.getItem('budgetConfig'));
+    expect(saved.incomeRecurring).toEqual({ 'Side Job': '200' });
     expect(setMock).toHaveBeenCalled();
   });
 
