@@ -239,6 +239,32 @@ describe('budget panel', () => {
     expect(setMock).toHaveBeenCalled();
   });
 
+  it('saves goal subscription expenses', async () => {
+    getMock.mockResolvedValue({ exists: false });
+
+    const dom = new JSDOM('<div id="budgetContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.Event = dom.window.Event;
+
+    const { initBudgetPanel } = await import('../js/budget.js');
+    await initBudgetPanel();
+
+    global.prompt = () => 'Test Subscription';
+    document.getElementById('addSubscriptionBtn').click();
+
+    const costInput = document.querySelector('#budgetTbody tr:last-child .goal-cost');
+    costInput.value = '10';
+    costInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    costInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+
+    await new Promise(res => setTimeout(res, 0));
+
+    const saved = JSON.parse(localStorage.getItem('budgetConfig'));
+    expect(saved.goalSubscriptions).toEqual({ 'Test Subscription': '10' });
+    expect(setMock).toHaveBeenCalled();
+  });
+
   it('saves income categories', async () => {
     getMock.mockResolvedValue({ exists: false });
 

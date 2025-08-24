@@ -113,6 +113,7 @@ export async function loadBudgetData() {
     localStorage.removeItem(BUDGET_KEY);
     budgetCache = migrateSubscriptions({});
     budgetCache.recurring = {};
+    budgetCache.subscriptions = {};
     budgetCache.goalRecurring = {};
     budgetCache.goalSubscriptions = {};
     return budgetCache;
@@ -140,6 +141,7 @@ export async function loadBudgetData() {
   const newer = useCloud ? cloudData : localData;
   budgetCache = migrateSubscriptions(deepMerge(older, newer));
   budgetCache.recurring = budgetCache.recurring || {};
+  budgetCache.subscriptions = budgetCache.subscriptions || {};
   budgetCache.goalRecurring = budgetCache.goalRecurring || {};
   budgetCache.goalSubscriptions = budgetCache.goalSubscriptions || {};
   budgetCache.lastUpdated = Math.max(localTs, cloudTs);
@@ -173,6 +175,7 @@ export async function loadBudgetData() {
 export async function saveBudgetData(data) {
   budgetCache = migrateSubscriptions(data || {});
   budgetCache.recurring = budgetCache.recurring || {};
+  budgetCache.subscriptions = budgetCache.subscriptions || {};
   budgetCache.goalRecurring = budgetCache.goalRecurring || {};
   budgetCache.goalSubscriptions = budgetCache.goalSubscriptions || {};
   budgetCache.lastUpdated = Date.now();
@@ -214,6 +217,7 @@ export async function initBudgetPanel() {
       </table>
       <div id="budgetSummary" class="budget-summary"></div>
       <button type="button" id="addIncomeBtn">+ Add Income</button>
+      <button type="button" id="addSubscriptionBtn">+ Add Subscription</button>
       <button type="button" id="addCategoryBtn">+ Add Category</button>
     </div>
   `;
@@ -222,6 +226,7 @@ export async function initBudgetPanel() {
   const summary = panel.querySelector('#budgetSummary');
   const addCategoryBtn = panel.querySelector('#addCategoryBtn');
   const addIncomeBtn = panel.querySelector('#addIncomeBtn');
+  const addSubscriptionBtn = panel.querySelector('#addSubscriptionBtn');
   const removedBuiltIns = new Set(saved.removedBuiltIns || []);
 
   function addRow(name = '', current = '', goal = '', key = '', type = 'expense') {
@@ -232,7 +237,7 @@ export async function initBudgetPanel() {
     tr.dataset.type = type;
     if (key) tr.dataset.field = key;
     tr.innerHTML = `
-      <td class="type-cell">${type === 'income' ? 'Income' : 'Expense'}</td>
+      <td class="type-cell">${type === 'income' ? 'Income' : type === 'subscription' ? 'Subscription' : 'Expense'}</td>
       <td class="cat-name">${name}</td>
       <td><input type="number" class="current-cost" value="${current}"></td>
       <td><input type="number" class="goal-cost" value="${goal}"></td>
@@ -266,6 +271,12 @@ export async function initBudgetPanel() {
   });
   recurNames.forEach(n => addRow(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? '', '', 'expense'));
 
+  const subNames = new Set([
+    ...Object.keys(saved.subscriptions || {}),
+    ...Object.keys(saved.goalSubscriptions || {})
+  ]);
+  subNames.forEach(n => addRow(n, saved.subscriptions?.[n] ?? '', saved.goalSubscriptions?.[n] ?? '', '', 'subscription'));
+
   addCategoryBtn.addEventListener('click', () => {
     const name = typeof prompt === 'function' ? prompt('Category name?') : '';
     if (name) {
@@ -278,6 +289,14 @@ export async function initBudgetPanel() {
     const name = typeof prompt === 'function' ? prompt('Income name?') : '';
     if (name) {
       addRow(name, '', '', '', 'income');
+      render();
+    }
+  });
+
+  addSubscriptionBtn.addEventListener('click', () => {
+    const name = typeof prompt === 'function' ? prompt('Subscription name?') : '';
+    if (name) {
+      addRow(name, '', '', '', 'subscription');
       render();
     }
   });
@@ -308,6 +327,11 @@ export async function initBudgetPanel() {
         incomeGoal[name] = goalVal;
         if (curVal) saveData.incomeRecurring[name] = curVal;
         if (goalVal) saveData.goalIncomeRecurring[name] = goalVal;
+      } else if (type === 'subscription') {
+        categoriesCurrent[name] = curVal;
+        categoriesGoal[name] = goalVal;
+        if (curVal) saveData.subscriptions[name] = curVal;
+        if (goalVal) saveData.goalSubscriptions[name] = goalVal;
       } else {
         categoriesCurrent[name] = curVal;
         categoriesGoal[name] = goalVal;
