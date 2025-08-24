@@ -198,9 +198,84 @@ app.get('/api/spoonacular', async (req, res) => {
 
 // --- GeoLayers game endpoints ---
 const layerOrder = ['rivers','lakes','elevation','roads','outline','cities','label'];
-const locations = ['USA','CAN','MEX'];
+const countriesPath = path.join(__dirname, '../geolayers-game/public/countries.json');
+let countryData = [];
+try {
+  countryData = JSON.parse(fs.readFileSync(countriesPath, 'utf8'));
+} catch {
+  countryData = [];
+}
+const locations = countryData.map(c => c.code);
 const leaderboard = [];
-const countryNames = { USA:'United States', CAN:'Canada', MEX:'Mexico' };
+const countryNames = Object.fromEntries(countryData.map(c => [c.code, c.name]));
+
+async function fetchCitiesForCountry(iso3) {
+  const endpoint = 'https://query.wikidata.org/sparql';
+  const query = `
+SELECT ?city ?cityLabel ?population ?coord WHERE {
+  ?country wdt:P298 "${iso3}".
+  ?city (wdt:P31/wdt:P279*) wd:Q515;
+        wdt:P17 ?country;
+        wdt:P625 ?coord.
+  OPTIONAL { ?city wdt:P1082 ?population. }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+ORDER BY DESC(?population)
+LIMIT 10`;
+  const url = endpoint + '?format=json&query=' + encodeURIComponent(query);
+  const res = await fetch(url, {
+    headers: {
+      'Accept': 'application/sparql-results+json',
+      'User-Agent': 'dashboard-app/1.0'
+    }
+  });
+  if (!res.ok) throw new Error('SPARQL query failed');
+  const data = await res.json();
+  const features = data.results.bindings
+    .map(b => {
+      const m = /Point\(([-\d\.eE]+)\s+([-\d\.eE]+)\)/.exec(b.coord.value);
+      if (!m) return null;
+      const lon = Number(m[1]);
+      const lat = Number(m[2]);
+      if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
+      return {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [lon, lat] },
+        properties: {
+          name: b.cityLabel?.value || '',
+          population: b.population ? Number(b.population.value) : null
+        }
+      };
+    })
+    .filter(Boolean);
+  return { type: 'FeatureCollection', features };
+}
+
+async function ensureCitiesForCountry(code) {
+  const dir = path.join(__dirname, '../geolayers-game/public/data', code);
+  const file = path.join(dir, 'cities.geojson');
+  if (!fs.existsSync(file)) {
+    const geo = await fetchCitiesForCountry(code);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(geo));
+    console.log('Fetched cities for', code);
+  }
+  return file;
+}
+
+async function ensureAllCities() {
+  for (const code of locations) {
+    try {
+      await ensureCitiesForCountry(code);
+    } catch (err) {
+      console.error('Failed to fetch cities for', code, err);
+    }
+  }
+}
+
+if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+  ensureAllCities().catch(err => console.error('City prefetch failed', err));
+}
 
 function dailySeed() {
   const today = new Date().toISOString().slice(0,10);
@@ -229,8 +304,16 @@ app.get('/countries', (req, res) => {
   res.json(list);
 });
 
-app.get('/layer/:loc/:name', (req, res) => {
-  const file = path.join(__dirname, '../geolayers-game/data', req.params.loc, `${req.params.name}.geojson`);
+app.get('/layer/:loc/:name', async (req, res) => {
+  const { loc, name } = req.params;
+  const file = path.join(__dirname, '../geolayers-game/public/data', loc, `${name}.geojson`);
+  if (name === 'cities' && !fs.existsSync(file)) {
+    try {
+      await ensureCitiesForCountry(loc);
+    } catch (err) {
+      console.error('ensureCitiesForCountry failed', err);
+    }
+  }
   fs.readFile(file, 'utf8', (err, data) => {
     if (err) return res.status(404).send('Layer not found');
     res.type('application/json').send(data);
