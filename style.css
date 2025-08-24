@@ -1996,7 +1996,7 @@ h2 {
 .planning-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 8px;
   align-items: flex-start;
 }
 
@@ -2029,7 +2029,7 @@ h2 {
 }
 
 .planning-right {
-  flex: 1 1 0;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
