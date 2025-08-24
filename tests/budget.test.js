@@ -353,6 +353,39 @@ describe('budget panel', () => {
     expect(summary).not.toContain('Rent After Escrow');
   });
 
+  it('displays current and goal leftover in the summary', async () => {
+    getMock.mockResolvedValue({ exists: false });
+
+    const dom = new JSDOM('<div id="budgetContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.Event = dom.window.Event;
+    global.prompt = vi.fn(() => 'Job');
+
+    const { initBudgetPanel } = await import('../js/budget.js');
+    await initBudgetPanel();
+
+    document.getElementById('addIncomeBtn').click();
+
+    const incomeRow = document.querySelector('tr[data-type="income"]');
+    incomeRow.querySelector('.current-cost').value = '5000';
+    incomeRow.querySelector('.current-cost').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    incomeRow.querySelector('.goal-cost').value = '6000';
+    incomeRow.querySelector('.goal-cost').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+
+    const expenseRow = document.querySelector('tr[data-field="mortgagePrincipal"]');
+    expenseRow.querySelector('.current-cost').value = '3000';
+    expenseRow.querySelector('.current-cost').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    expenseRow.querySelector('.goal-cost').value = '2500';
+    expenseRow.querySelector('.goal-cost').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+
+    const summary = document.getElementById('budgetSummary').textContent;
+    expect(summary).toContain('Current Leftover: $2,000');
+    expect(summary).toContain('Goal Leftover: $3,500');
+
+    delete global.prompt;
+  });
+
   it('shows the summary inside the layout', async () => {
     getMock.mockResolvedValue({ exists: false });
 

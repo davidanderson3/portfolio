@@ -452,11 +452,15 @@ export async function initBudgetPanel() {
     const incomeGoalTotal = toNumber(incomeGoal);
     const incomeChange = incomeGoalTotal - incomeCurTotal;
     const incomeSign = incomeChange > 0 ? '+' : incomeChange < 0 ? '-' : '';
+    const leftoverCur = incomeCurTotal - totalCur;
+    const leftoverGoal = incomeGoalTotal - totalGoal;
     summary.innerHTML =
       `<span class="budget-stat">Current Income: $${incomeCurTotal.toLocaleString()}</span>` +
       `<span class="budget-stat">Goal Income: $${incomeGoalTotal.toLocaleString()}</span>` +
       `<span class="budget-stat">Current Expenses: $${totalCur.toLocaleString()}</span>` +
       `<span class="budget-stat">Goal Expenses: $${totalGoal.toLocaleString()}</span>` +
+      `<span class="budget-stat">Current Leftover: $${leftoverCur.toLocaleString()}</span>` +
+      `<span class="budget-stat">Goal Leftover: $${leftoverGoal.toLocaleString()}</span>` +
       `<span class="budget-stat">Change: ${signTotal}$${Math.abs(changeTotal).toLocaleString()}</span>` +
       `<span class="budget-stat">Income Change: ${incomeSign}$${Math.abs(incomeChange).toLocaleString()}</span>`;
     if (save) saveBudgetData(saveData);
