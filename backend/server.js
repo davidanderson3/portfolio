@@ -143,6 +143,15 @@ app.post('/api/saved-movies', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// --- Spotify client ID ---
+app.get('/api/spotify-client-id', (req, res) => {
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  if (!clientId) {
+    return res.status(500).json({ error: 'missing' });
+  }
+  res.json({ clientId });
+});
+
 // --- Ticketmaster proxy ---
 app.get('/api/ticketmaster', async (req, res) => {
   const { apiKey, keyword } = req.query || {};

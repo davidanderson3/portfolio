@@ -34,15 +34,25 @@ async function pkceChallenge(verifier) {
 export async function initShowsPanel() {
   const listEl = document.getElementById('ticketmasterList');
   if (!listEl) return;
-  const clientIdInput = document.getElementById('spotifyClientId');
   const tokenBtn = document.getElementById('spotifyTokenBtn');
   const tokenInput = document.getElementById('spotifyToken');
   const statusEl = document.getElementById('spotifyStatus');
   const apiKeyInput = document.getElementById('ticketmasterApiKey');
 
-  const savedClientId =
-    (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyClientId')) || '';
-  if (clientIdInput) clientIdInput.value = savedClientId;
+  let spotifyClientId = '';
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/spotify-client-id`);
+    if (res.ok) {
+      const data = await res.json();
+      spotifyClientId = data.clientId || '';
+    }
+  } catch (err) {
+    console.error('Failed to fetch Spotify client ID', err);
+  }
+  if (!spotifyClientId) {
+    listEl.textContent = 'Spotify client ID not configured.';
+    return;
+  }
 
   const redirectUri = window.location.origin + window.location.pathname;
 
@@ -69,13 +79,9 @@ export async function initShowsPanel() {
   updateSpotifyStatus();
 
   const startAuth = async () => {
-    const clientId = clientIdInput?.value.trim();
-    if (!clientId) {
-      listEl.textContent = 'Please enter Spotify client ID.';
+    if (!spotifyClientId) {
+      listEl.textContent = 'Spotify client ID not configured.';
       return;
-    }
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('spotifyClientId', clientId);
     }
     const verifier = randomString(64);
     if (typeof localStorage !== 'undefined') {
@@ -84,7 +90,7 @@ export async function initShowsPanel() {
     const challenge = await pkceChallenge(verifier);
     const authUrl =
       'https://accounts.spotify.com/authorize' +
-      `?response_type=code&client_id=${encodeURIComponent(clientId)}` +
+      `?response_type=code&client_id=${encodeURIComponent(spotifyClientId)}` +
       `&scope=${encodeURIComponent('user-top-read')}` +
       `&redirect_uri=${encodeURIComponent(redirectUri)}` +
       '&code_challenge_method=S256' +
@@ -100,7 +106,7 @@ export async function initShowsPanel() {
 
   const params = new URLSearchParams(window.location.search);
   const authCode = params.get('code');
-  if (authCode && savedClientId && tokenInput) {
+  if (authCode && tokenInput) {
     try {
       const verifier =
         (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyCodeVerifier')) || '';
@@ -108,7 +114,7 @@ export async function initShowsPanel() {
         grant_type: 'authorization_code',
         code: authCode,
         redirect_uri: redirectUri,
-        client_id: savedClientId,
+        client_id: spotifyClientId,
         code_verifier: verifier
       });
       const res = await fetch('https://accounts.spotify.com/api/token', {
