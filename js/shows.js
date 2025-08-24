@@ -155,6 +155,14 @@ export async function initShowsPanel() {
       const artistRes = await fetch('https://api.spotify.com/v1/me/top/artists?limit=10', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (artistRes.status === 401) {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('spotifyToken');
+        }
+        updateSpotifyStatus();
+        listEl.textContent = 'Please login to Spotify again.';
+        return;
+      }
       if (!artistRes.ok) throw new Error(`Spotify HTTP ${artistRes.status}`);
       const artistData = await artistRes.json();
       const artists = artistData.items || [];
