@@ -2261,3 +2261,27 @@ h2 {
   margin: 0;
 }
 
+/* GeoScore admin styles */
+.geoscore-answers {
+  margin: 8px 0;
+}
+
+.geoscore-answer-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.geoscore-answer-row input[type='text'] {
+  flex: 1;
+}
+
+.geoscore-answer-row input[type='number'] {
+  width: 80px;
+}
+
+#geoscoreForm textarea {
+  width: 100%;
+  margin-top: 8px;
+}
+
