@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { initMoviesPanel } from '../js/movies.js';
+import { initMoviesPanel, API_BASE_URL } from '../js/movies.js';
 
 // Minimal DOM setup for the movies panel
 describe('initMoviesPanel', () => {
@@ -268,7 +268,7 @@ describe('initMoviesPanel', () => {
     expect(document.querySelector('#movieList li')).toBeNull();
     expect(fetch).toHaveBeenNthCalledWith(
       4,
-      '/api/saved-movies',
+      `${API_BASE_URL}/api/saved-movies`,
       expect.objectContaining({ method: 'POST' })
     );
     expect(JSON.parse(saved)).toEqual(['777']);
@@ -337,7 +337,7 @@ describe('initMoviesPanel', () => {
       if (url.includes('genre')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve(genreData) });
       }
-      if (url === '/api/saved-movies') {
+      if (url === `${API_BASE_URL}/api/saved-movies`) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve(savedMovies) });
       }
       return Promise.reject(new Error('unknown url'));
@@ -350,7 +350,7 @@ describe('initMoviesPanel', () => {
 
     const savedListEl = document.getElementById('savedMoviesList');
     expect(savedListEl.textContent).toContain('Saved One');
-    expect(fetch).toHaveBeenCalledWith('/api/saved-movies');
+    expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/api/saved-movies`);
   });
 });
 
