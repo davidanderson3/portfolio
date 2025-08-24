@@ -201,6 +201,14 @@ export async function initBudgetPanel() {
   const saved = await loadBudgetData();
   panel.innerHTML = `
     <div id="budgetLayout">
+      <div id="budgetHeader" class="budget-header">
+        <div id="budgetSummary" class="budget-summary"></div>
+        <div class="budget-actions">
+          <button type="button" id="addIncomeBtn">+ Add Income</button>
+          <button type="button" id="addSubscriptionBtn">+ Add Subscription</button>
+          <button type="button" id="addCategoryBtn">+ Add Category</button>
+        </div>
+      </div>
       <table id="budgetTable">
         <thead>
           <tr>
@@ -215,10 +223,6 @@ export async function initBudgetPanel() {
         </thead>
         <tbody id="budgetTbody"></tbody>
       </table>
-      <div id="budgetSummary" class="budget-summary"></div>
-      <button type="button" id="addIncomeBtn">+ Add Income</button>
-      <button type="button" id="addSubscriptionBtn">+ Add Subscription</button>
-      <button type="button" id="addCategoryBtn">+ Add Category</button>
     </div>
   `;
 
@@ -449,12 +453,12 @@ export async function initBudgetPanel() {
     const incomeChange = incomeGoalTotal - incomeCurTotal;
     const incomeSign = incomeChange > 0 ? '+' : incomeChange < 0 ? '-' : '';
     summary.innerHTML =
-      `Current Income: $${incomeCurTotal.toLocaleString()}<br>` +
-      `Goal Income: $${incomeGoalTotal.toLocaleString()}<br>` +
-      `Current Expenses: $${totalCur.toLocaleString()}<br>` +
-      `Goal Expenses: $${totalGoal.toLocaleString()}<br>` +
-      `Change: ${signTotal}$${Math.abs(changeTotal).toLocaleString()}<br>` +
-      `Income Change: ${incomeSign}$${Math.abs(incomeChange).toLocaleString()}`;
+      `<span class="budget-stat">Current Income: $${incomeCurTotal.toLocaleString()}</span>` +
+      `<span class="budget-stat">Goal Income: $${incomeGoalTotal.toLocaleString()}</span>` +
+      `<span class="budget-stat">Current Expenses: $${totalCur.toLocaleString()}</span>` +
+      `<span class="budget-stat">Goal Expenses: $${totalGoal.toLocaleString()}</span>` +
+      `<span class="budget-stat">Change: ${signTotal}$${Math.abs(changeTotal).toLocaleString()}</span>` +
+      `<span class="budget-stat">Income Change: ${incomeSign}$${Math.abs(incomeChange).toLocaleString()}</span>`;
     if (save) saveBudgetData(saveData);
   }
 
