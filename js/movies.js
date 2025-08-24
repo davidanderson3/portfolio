@@ -27,7 +27,17 @@ function makeIconBtn(symbol, title, fn) {
 }
 
 function humanizeKey(str) {
-  return String(str).replace(/_/g, ' ');
+  return String(str)
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function appendMeta(metaList, label, value) {
+  const mi = document.createElement('li');
+  const strong = document.createElement('strong');
+  strong.textContent = `${label}:`;
+  mi.append(strong, ` ${value}`);
+  metaList.appendChild(mi);
 }
 
 export async function initMoviesPanel() {
@@ -116,14 +126,10 @@ export async function initMoviesPanel() {
         const metaList = document.createElement('ul');
         metaList.className = 'movie-meta';
         if (m.director) {
-          const mi = document.createElement('li');
-          mi.textContent = `director: ${m.director}`;
-          metaList.appendChild(mi);
+          appendMeta(metaList, 'Director', m.director);
         }
         if (m.actors) {
-          const mi = document.createElement('li');
-          mi.textContent = `actors: ${m.actors}`;
-          metaList.appendChild(mi);
+          appendMeta(metaList, 'Actors', m.actors);
         }
         if (m.overview) {
           const mi = document.createElement('li');
@@ -304,35 +310,31 @@ export async function initMoviesPanel() {
         metaList.className = 'movie-meta';
 
         if (m.director) {
-          const mi = document.createElement('li');
-          mi.textContent = `director: ${m.director}`;
-          metaList.appendChild(mi);
+          appendMeta(metaList, 'Director', m.director);
         }
         if (m.actors) {
-          const mi = document.createElement('li');
-          mi.textContent = `actors: ${m.actors}`;
-          metaList.appendChild(mi);
+          appendMeta(metaList, 'Actors', m.actors);
         }
 
         Object.entries(m).forEach(([key, value]) => {
           if (value === null || value === undefined) return;
           if (exclude.has(key)) return;
-          const mi = document.createElement('li');
           if (key === 'genre_ids') {
             const names = (value || [])
               .map(id => genreMap[id])
               .filter(Boolean);
             const display = names.length ? names.join(', ') : (value || []).join(', ');
-            mi.textContent = `genres: ${display}`;
+            appendMeta(metaList, 'Genres', display);
           } else if (key === 'overview') {
+            const mi = document.createElement('li');
             mi.textContent = `${value}`;
+            metaList.appendChild(mi);
           } else {
             const label = humanizeKey(key);
-            mi.textContent = `${label}: ${
-              typeof value === 'object' ? JSON.stringify(value) : value
-            }`;
+            const val =
+              typeof value === 'object' ? JSON.stringify(value) : value;
+            appendMeta(metaList, label, val);
           }
-          metaList.appendChild(mi);
         });
         if (metaList.childNodes.length) info.appendChild(metaList);
 
