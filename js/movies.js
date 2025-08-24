@@ -47,12 +47,15 @@ export async function initMoviesPanel() {
   const movieTabs = document.getElementById('movieTabs');
   const streamSection = document.getElementById('movieStreamSection');
   const savedSection = document.getElementById('savedMoviesSection');
+  const watchedListEl = document.getElementById('watchedMoviesList');
+  const watchedSection = document.getElementById('watchedMoviesSection');
   const apiKeyInput = document.getElementById('moviesApiKey');
   const apiKeyContainer = document.getElementById('moviesApiKeyContainer');
 
   const hiddenKey = 'hiddenMovieIds';
   const savedKey = 'savedMovieIds';
   const watchedKey = 'watchedMovieIds';
+  const watchedDataKey = 'watchedMovieData';
 
   const getHidden = () => {
     if (typeof localStorage === 'undefined') return new Set();
@@ -117,6 +120,25 @@ export async function initMoviesPanel() {
     }
   };
 
+  const getWatchedData = () => {
+    if (typeof localStorage === 'undefined') return [];
+    try {
+      const stored = localStorage.getItem(watchedDataKey);
+      return stored ? JSON.parse(stored) : [];
+    } catch (_) {
+      return [];
+    }
+  };
+
+  const saveWatchedData = data => {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(watchedDataKey, JSON.stringify(data));
+    } catch (_) {
+      /* ignore */
+    }
+  };
+
   const loadSavedMovies = async () => {
     if (!savedListEl) return;
     savedListEl.innerHTML = '<em>Loading...</em>';
@@ -170,6 +192,51 @@ export async function initMoviesPanel() {
       console.error('Failed to load saved movies', err);
       savedListEl.textContent = 'Failed to load saved movies.';
     }
+  };
+
+  const loadWatchedMovies = () => {
+    if (!watchedListEl) return;
+    const movies = getWatchedData();
+    if (!movies.length) {
+      watchedListEl.innerHTML = '<em>No watched movies.</em>';
+      return;
+    }
+    const ul = document.createElement('ul');
+    movies.forEach(m => {
+      const li = document.createElement('li');
+      li.className = 'movie-card';
+      const title = (m.title || m.name || '').trim();
+      const year = (m.release_date || '').split('-')[0] || 'Unknown';
+      if (m.poster_path) {
+        const img = document.createElement('img');
+        img.src = `https://image.tmdb.org/t/p/w200${m.poster_path}`;
+        img.alt = `${title} poster`;
+        li.appendChild(img);
+      }
+      const info = document.createElement('div');
+      info.className = 'movie-info';
+      const titleEl = document.createElement('h3');
+      titleEl.textContent = `${title} (${year})`;
+      info.appendChild(titleEl);
+      const metaList = document.createElement('ul');
+      metaList.className = 'movie-meta';
+      if (m.director) {
+        appendMeta(metaList, 'Director', m.director);
+      }
+      if (m.actors) {
+        appendMeta(metaList, 'Actors', m.actors);
+      }
+      if (m.overview) {
+        const mi = document.createElement('li');
+        mi.textContent = `${m.overview}`;
+        metaList.appendChild(mi);
+      }
+      if (metaList.childNodes.length) info.appendChild(metaList);
+      li.appendChild(info);
+      ul.appendChild(li);
+    });
+    watchedListEl.innerHTML = '';
+    watchedListEl.appendChild(ul);
   };
 
   const savedApiKey =
@@ -328,7 +395,15 @@ export async function initMoviesPanel() {
         const watchedBtn = makeIconBtn('👁️', 'Mark watched', () => {
           watched.add(String(m.id));
           saveWatched(watched);
+          const data = getWatchedData();
+          if (!data.some(w => String(w.id) === String(m.id))) {
+            data.push(m);
+            saveWatchedData(data);
+          }
           li.remove();
+          if (watchedSection && watchedSection.style.display !== 'none') {
+            loadWatchedMovies();
+          }
         });
 
         const hideBtn = makeIconBtn('❌', 'Hide movie', () => {
@@ -402,13 +477,20 @@ export async function initMoviesPanel() {
       btn.addEventListener('click', () => {
         buttons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        if (btn.dataset.target === 'movieStreamSection') {
-          streamSection && (streamSection.style.display = '');
-          savedSection && (savedSection.style.display = 'none');
-        } else {
-          streamSection && (streamSection.style.display = 'none');
-          savedSection && (savedSection.style.display = '');
+        const target = btn.dataset.target;
+        streamSection &&
+          (streamSection.style.display =
+            target === 'movieStreamSection' ? '' : 'none');
+        savedSection &&
+          (savedSection.style.display =
+            target === 'savedMoviesSection' ? '' : 'none');
+        watchedSection &&
+          (watchedSection.style.display =
+            target === 'watchedMoviesSection' ? '' : 'none');
+        if (target === 'savedMoviesSection') {
           loadSavedMovies();
+        } else if (target === 'watchedMoviesSection') {
+          loadWatchedMovies();
         }
       });
     });

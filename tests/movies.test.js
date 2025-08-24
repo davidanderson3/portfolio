@@ -359,9 +359,11 @@ describe('initMoviesPanel', () => {
       <div id="movieTabs">
         <button class="movie-tab active" data-target="movieStreamSection">Movie Stream</button>
         <button class="movie-tab" data-target="savedMoviesSection">Saved Movies</button>
+        <button class="movie-tab" data-target="watchedMoviesSection">Watched Movies</button>
       </div>
       <div id="movieStreamSection"><div id="movieList"></div></div>
       <div id="savedMoviesSection" style="display:none;"><div id="savedMoviesList"></div></div>
+      <div id="watchedMoviesSection" style="display:none;"><div id="watchedMoviesList"></div></div>
     `);
     global.document = dom.window.document;
     global.window = dom.window;
@@ -401,6 +403,70 @@ describe('initMoviesPanel', () => {
     const savedListEl = document.getElementById('savedMoviesList');
     expect(savedListEl.textContent).toContain('Saved One');
     expect(fetch).toHaveBeenCalledWith(`${API_BASE_URL}/api/saved-movies`);
+  });
+
+  it('loads watched movies when Watched Movies tab clicked', async () => {
+    const dom = new JSDOM(`
+      <div id="movieTabs">
+        <button class="movie-tab active" data-target="movieStreamSection">Movie Stream</button>
+        <button class="movie-tab" data-target="savedMoviesSection">Saved Movies</button>
+        <button class="movie-tab" data-target="watchedMoviesSection">Watched Movies</button>
+      </div>
+      <div id="movieStreamSection"><div id="movieList"></div></div>
+      <div id="savedMoviesSection" style="display:none;"><div id="savedMoviesList"></div></div>
+      <div id="watchedMoviesSection" style="display:none;"><div id="watchedMoviesList"></div></div>
+    `);
+    global.document = dom.window.document;
+    global.window = dom.window;
+    window.tmdbApiKey = 'TEST_KEY';
+    let watchedIds = '[]';
+    let watchedData = '[]';
+    global.localStorage = {
+      getItem: key => {
+        if (key === 'watchedMovieIds') return watchedIds;
+        if (key === 'watchedMovieData') return watchedData;
+        return '[]';
+      },
+      setItem: (key, value) => {
+        if (key === 'watchedMovieIds') watchedIds = value;
+        if (key === 'watchedMovieData') watchedData = value;
+      }
+    };
+    Object.defineProperty(window, 'localStorage', { value: global.localStorage });
+    global.sessionStorage = { getItem: () => '', setItem: () => {} };
+    Object.defineProperty(window, 'sessionStorage', { value: global.sessionStorage });
+
+    const apiData = {
+      results: [
+        { id: 9, title: 'Watch Me', release_date: '2024-01-01', poster_path: '/a.jpg', genre_ids: [] }
+      ]
+    };
+    const genreData = { genres: [] };
+    const emptyPage = { results: [] };
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(apiData) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ cast: [], crew: [] }) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) });
+
+    await initMoviesPanel();
+    const watchBtn = document.querySelector(
+      '#movieList li button[title="Mark watched"]'
+    );
+    watchBtn.click();
+    await new Promise(r => setTimeout(r, 0));
+    expect(JSON.parse(watchedIds)).toEqual(['9']);
+    const watchedTab = document.querySelector(
+      '#movieTabs button[data-target="watchedMoviesSection"]'
+    );
+    watchedTab.click();
+    await new Promise(r => setTimeout(r, 0));
+    const watchedListEl = document.getElementById('watchedMoviesList');
+    expect(watchedListEl.textContent).toContain('Watch Me');
   });
 });
 
