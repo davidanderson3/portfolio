@@ -20,13 +20,11 @@ describe('initRecipesPanel', () => {
     };
   });
 
-  it('fetches and displays recipes from API Ninjas', async () => {
-    const mockRecipes = [
-      { title: 'Chicken Soup', ingredients: 'chicken, water', instructions: 'boil chicken' }
-    ];
+  it('fetches and displays recipes from Spoonacular', async () => {
+    const mockResponse = { results: [{ title: 'Chicken Soup' }] };
     global.fetch = vi.fn(() => Promise.resolve({
       ok: true,
-      json: () => Promise.resolve(mockRecipes)
+      json: () => Promise.resolve(mockResponse)
     }));
 
     await initRecipesPanel();
@@ -38,19 +36,30 @@ describe('initRecipesPanel', () => {
     const textEl = document.querySelector('#recipesList li strong');
     expect(textEl.textContent).toBe('Chicken Soup');
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.api-ninjas.com/v1/recipe?query=chicken',
-      { headers: { 'X-Api-Key': 'testkey' } }
+      'https://api.spoonacular.com/recipes/complexSearch?query=chicken&number=50&offset=0&addRecipeInformation=true&apiKey=testkey'
     );
   });
 
   it('renders formatted metadata for multiple recipes', async () => {
-    const mockRecipes = [
-      { title: 'Soup', ingredients: 'chicken|water', instructions: 'boil', servings: 2 },
-      { title: 'Stew', ingredients: 'beef|salt', instructions: 'cook', time: '30 mins' }
-    ];
+    const mockResponse = {
+      results: [
+        {
+          title: 'Soup',
+          extendedIngredients: [{ original: 'chicken' }, { original: 'water' }],
+          analyzedInstructions: [{ steps: [{ step: 'boil' }] }],
+          servings: 2
+        },
+        {
+          title: 'Stew',
+          extendedIngredients: [{ original: 'beef' }, { original: 'salt' }],
+          analyzedInstructions: [{ steps: [{ step: 'cook' }] }],
+          readyInMinutes: 30
+        }
+      ]
+    };
     global.fetch = vi.fn(() => Promise.resolve({
       ok: true,
-      json: () => Promise.resolve(mockRecipes)
+      json: () => Promise.resolve(mockResponse)
     }));
 
     await initRecipesPanel();
@@ -75,18 +84,18 @@ describe('initRecipesPanel', () => {
     const servingsText = items[0].querySelector('p').textContent;
     expect(servingsText).toBe('Servings: 2');
 
-    expect(items[1].textContent).toContain('time: 30 mins');
+    expect(items[1].textContent).toContain('readyInMinutes: 30');
   });
 
   it('limits displayed recipes to 10', async () => {
-    const mockRecipes = Array.from({ length: 12 }, (_, i) => ({
-      title: `Recipe ${i}`,
-      ingredients: '',
-      instructions: ''
-    }));
+    const mockResponse = {
+      results: Array.from({ length: 12 }, (_, i) => ({
+        title: `Recipe ${i}`
+      }))
+    };
     global.fetch = vi.fn(() => Promise.resolve({
       ok: true,
-      json: () => Promise.resolve(mockRecipes)
+      json: () => Promise.resolve(mockResponse)
     }));
 
     await initRecipesPanel();
@@ -105,13 +114,15 @@ describe('initRecipesPanel', () => {
       getItem: (key) => store[key] || '',
       setItem: (key, val) => { store[key] = val; }
     };
-    const mockRecipes = [
-      { title: 'A', ingredients: '', instructions: '' },
-      { title: 'B', ingredients: '', instructions: '' }
-    ];
+    const mockResponse = {
+      results: [
+        { title: 'A' },
+        { title: 'B' }
+      ]
+    };
     global.fetch = vi.fn(() => Promise.resolve({
       ok: true,
-      json: () => Promise.resolve(mockRecipes)
+      json: () => Promise.resolve(mockResponse)
     }));
 
     await initRecipesPanel();
@@ -139,12 +150,14 @@ describe('initRecipesPanel', () => {
       getItem: (key) => store[key] || '',
       setItem: (key, val) => { store[key] = val; }
     };
-    const mockRecipes = [
-      { title: 'Toast', ingredients: '', instructions: '' }
-    ];
+    const mockResponse = {
+      results: [
+        { title: 'Toast' }
+      ]
+    };
     global.fetch = vi.fn(() => Promise.resolve({
       ok: true,
-      json: () => Promise.resolve(mockRecipes)
+      json: () => Promise.resolve(mockResponse)
     }));
 
     await initRecipesPanel();
@@ -155,7 +168,8 @@ describe('initRecipesPanel', () => {
 
     const saveBtn = document.querySelector('#recipesList li button');
     saveBtn.click();
-    expect(JSON.parse(store['recipesSaved'])).toEqual(mockRecipes);
+    const saved = JSON.parse(store['recipesSaved']);
+    expect(saved[0].title).toBe('Toast');
   });
 
   it('hides API key input when one is cached', async () => {
