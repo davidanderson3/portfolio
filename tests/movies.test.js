@@ -35,12 +35,17 @@ describe('initMoviesPanel', () => {
     };
     const genreData = { genres: [{ id: 28, name: 'Action' }] };
 
+    const emptyPage = { results: [] };
     global.fetch = vi
       .fn()
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(apiData)
       })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(creditsData)
@@ -74,14 +79,14 @@ describe('initMoviesPanel', () => {
     expect(buttons[1].textContent).toBe('❌');
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      'https://api.themoviedb.org/3/trending/movie/week?api_key=TEST_KEY'
+      'https://api.themoviedb.org/3/discover/movie?api_key=TEST_KEY&sort_by=vote_count.desc&page=1'
     );
     expect(fetch).toHaveBeenNthCalledWith(
-      2,
+      6,
       'https://api.themoviedb.org/3/movie/123/credits?api_key=TEST_KEY'
     );
     expect(fetch).toHaveBeenNthCalledWith(
-      3,
+      7,
       'https://api.themoviedb.org/3/genre/movie/list?api_key=TEST_KEY'
     );
   });
@@ -118,12 +123,17 @@ describe('initMoviesPanel', () => {
     };
     const creditsData = { cast: [], crew: [] };
     const genreData = { genres: [] };
+    const emptyPage = { results: [] };
     global.fetch = vi
       .fn()
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(apiData)
       })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
       .mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(creditsData)
@@ -141,14 +151,14 @@ describe('initMoviesPanel', () => {
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      'https://api.themoviedb.org/3/trending/movie/week?api_key=INPUT_KEY'
+      'https://api.themoviedb.org/3/discover/movie?api_key=INPUT_KEY&sort_by=vote_count.desc&page=1'
     );
     expect(fetch).toHaveBeenNthCalledWith(
-      2,
+      6,
       'https://api.themoviedb.org/3/movie/1/credits?api_key=INPUT_KEY'
     );
     expect(fetch).toHaveBeenNthCalledWith(
-      3,
+      7,
       'https://api.themoviedb.org/3/genre/movie/list?api_key=INPUT_KEY'
     );
     expect(stored).toBe('INPUT_KEY');
@@ -187,7 +197,9 @@ describe('initMoviesPanel', () => {
     input.dispatchEvent(new dom.window.Event('change'));
     await new Promise(r => setTimeout(r, 0));
 
-    expect(fetch).toHaveBeenCalledWith('https://api.themoviedb.org/3/trending/movie/week?api_key=FAIL_KEY');
+    expect(fetch).toHaveBeenCalledWith(
+      'https://api.themoviedb.org/3/discover/movie?api_key=FAIL_KEY&sort_by=vote_count.desc&page=1'
+    );
     expect(stored).toBe('FAIL_KEY');
   });
 
@@ -215,9 +227,15 @@ describe('initMoviesPanel', () => {
     };
     const genreData = { genres: [] };
 
+    const emptyPage = { results: [] };
     global.fetch = vi
       .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(apiData) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ cast: [], crew: [] }) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) });
 
     await initMoviesPanel();
@@ -253,9 +271,14 @@ describe('initMoviesPanel', () => {
     const creditsData = { cast: [], crew: [] };
     const genreData = { genres: [] };
 
+    const emptyPage = { results: [] };
     global.fetch = vi
       .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(apiData) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(creditsData) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) })
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ status: 'ok' }) });
@@ -267,7 +290,7 @@ describe('initMoviesPanel', () => {
 
     expect(document.querySelector('#movieList li')).toBeNull();
     expect(fetch).toHaveBeenNthCalledWith(
-      4,
+      8,
       `${API_BASE_URL}/api/saved-movies`,
       expect.objectContaining({ method: 'POST' })
     );
@@ -295,10 +318,14 @@ describe('initMoviesPanel', () => {
     };
     const genreData = { genres: [] };
 
+    const emptyPage = { results: [] };
     global.fetch = vi
       .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(apiData) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) });
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(emptyPage) });
 
     await initMoviesPanel();
     expect(document.querySelector('#movieList li')).toBeNull();
@@ -331,7 +358,7 @@ describe('initMoviesPanel', () => {
     ];
 
     global.fetch = vi.fn(url => {
-      if (url.includes('trending')) {
+      if (url.includes('discover/movie')) {
         return Promise.resolve({ ok: true, json: () => Promise.resolve(apiData) });
       }
       if (url.includes('genre')) {
