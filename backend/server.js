@@ -4,6 +4,7 @@ const fs = require('fs');
 const { execFile } = require('child_process');
 const util = require('util');
 const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
+const cors = require('cors');
 let nodemailer;
 try {
   nodemailer = require('nodemailer');
@@ -52,10 +53,12 @@ const plaidClient = (() => {
 app.use(express.static(path.resolve(__dirname, '../')));
 
 // Enable CORS (optional for Firebase, useful for local testing)
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  next();
-});
+app.use(cors({
+  origin: 'https://davidanderson3.github.io',  // or '*'
+  methods: ['GET','POST','OPTIONS'],
+  allowedHeaders: ['Content-Type']
+}));
+app.options(/.*/, cors());  // respond to preflight
 
 app.post('/contact', async (req, res) => {
   const { name, from, message } = req.body || {};
