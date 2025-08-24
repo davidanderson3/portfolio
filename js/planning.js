@@ -309,7 +309,7 @@ export async function initPlanningPanel() {
       </div>
       </form>
       <div id="workingColumn" class="planning-right" style="margin-top:1em;"></div>
-      <div id="retirementColumn" class="planning-right" style="margin-top:1em;"></div>
+      <div id="retirementColumn" class="planning-right" style="margin-top:0;border-left:4px solid #d0decf;padding-left:8px;"></div>
       <div id="assetsTotal" class="full-column" style="margin-top:1em;flex-basis:100%;"></div>
     </div>
     <div id="assetHistory" style="margin-top:1em;"></div>
@@ -420,8 +420,8 @@ export async function initPlanningPanel() {
     const workingData = finData.filter(r => r.age <= retirementAgeNum);
     const retirementData = finData.filter(r => r.age > retirementAgeNum);
 
-    workingColumnDiv.innerHTML = `<h3>Working Years</h3>${buildFinanceTable(workingData, false)}`;
-    retirementTableDiv.innerHTML = `<h3>Retirement</h3>${buildFinanceTable(retirementData)}`;
+    workingColumnDiv.innerHTML = `<h3 style="margin:0 0 4px;">Working Years</h3>${buildFinanceTable(workingData, false)}`;
+    retirementTableDiv.innerHTML = `<h3 style="margin:0 0 4px;">Retirement</h3>${buildFinanceTable(retirementData)}`;
 
     currentData.finance = {
       curAge: values.curAge,
