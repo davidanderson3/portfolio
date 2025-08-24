@@ -145,6 +145,26 @@ app.post('/api/saved-movies', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// --- Ticketmaster proxy ---
+app.get('/api/ticketmaster', async (req, res) => {
+  const { apiKey, keyword } = req.query || {};
+  if (!apiKey || !keyword) {
+    return res.status(400).json({ error: 'missing' });
+  }
+  const url =
+    `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${encodeURIComponent(
+      apiKey
+    )}&classificationName=music&keyword=${encodeURIComponent(keyword)}`;
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    res.type('application/json').send(text);
+  } catch (err) {
+    console.error('Ticketmaster fetch failed', err);
+    res.status(500).json({ error: 'failed' });
+  }
+});
+
 // --- GeoLayers game endpoints ---
 const layerOrder = ['rivers','lakes','elevation','roads','outline','cities','label'];
 const locations = ['USA','CAN','MEX'];

@@ -48,7 +48,7 @@ describe('initShowsPanel', () => {
 
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(document.querySelectorAll('#ticketmasterList li').length).toBe(1);
-    expect(fetch.mock.calls[1][0]).toContain('classificationName=music');
+    expect(fetch.mock.calls[1][0]).toContain('/api/ticketmaster');
     expect(document.querySelector('#ticketmasterList li').textContent).toContain('Concert');
   });
 
