@@ -2173,12 +2173,30 @@ h2 {
   margin-left: 4px;
 }
 
-.budget-summary {
-  margin-top: 8px;
+/* Compact summary and action layout for budget panel */
+.budget-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-#addCategoryBtn {
-  margin-top: 8px;
+.budget-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.budget-summary span {
+  white-space: nowrap;
+}
+
+.budget-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
 }
 
 /* Align budget panel content to the left instead of centering */
