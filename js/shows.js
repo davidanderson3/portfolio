@@ -36,13 +36,7 @@ export async function initShowsPanel() {
 
   const savedClientId =
     (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyClientId')) || '';
-  const savedToken =
-    (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyToken')) || '';
-  const savedApiKey =
-    (typeof localStorage !== 'undefined' && localStorage.getItem('ticketmasterApiKey')) || '';
   if (clientIdInput) clientIdInput.value = savedClientId;
-  if (tokenInput) tokenInput.value = savedToken;
-  if (apiKeyInput) apiKeyInput.value = savedApiKey;
 
   const redirectUri = window.location.origin + window.location.pathname;
 
@@ -96,9 +90,10 @@ export async function initShowsPanel() {
       });
       if (res.ok) {
         const data = await res.json();
-        tokenInput.value = data.access_token || '';
+        const accessToken = data.access_token || '';
+        if (tokenInput) tokenInput.value = '';
         if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('spotifyToken', tokenInput.value);
+          localStorage.setItem('spotifyToken', accessToken);
         }
       }
     } catch (err) {
@@ -109,14 +104,20 @@ export async function initShowsPanel() {
   }
 
   const loadShows = async () => {
-    const token = tokenInput?.value.trim();
-    const apiKey = apiKeyInput?.value.trim();
+    const token =
+      tokenInput?.value.trim() ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyToken')) || '';
+    const apiKey =
+      apiKeyInput?.value.trim() ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('ticketmasterApiKey')) || '';
     if (!token || !apiKey) {
       listEl.textContent = 'Please enter Spotify token and API key.';
       return;
     }
-    if (typeof localStorage !== 'undefined') {
+    if (tokenInput?.value && typeof localStorage !== 'undefined') {
       localStorage.setItem('spotifyToken', token);
+    }
+    if (apiKeyInput?.value && typeof localStorage !== 'undefined') {
       localStorage.setItem('ticketmasterApiKey', apiKey);
     }
     listEl.innerHTML = '<em>Loading...</em>';
@@ -132,25 +133,46 @@ export async function initShowsPanel() {
         return;
       }
 
-      const ul = document.createElement('ul');
-      for (const artist of artists) {
-        const url =
-          `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&classificationName=music&keyword=${encodeURIComponent(
-            artist.name
-          )}`;
-        const res = await fetch(url);
-        if (!res.ok) continue;
-        const data = await res.json();
-        const events = data._embedded?.events;
-        if (!Array.isArray(events)) continue;
-        for (const ev of events) {
-          const li = document.createElement('li');
-          const pre = document.createElement('pre');
-          pre.textContent = JSON.stringify(ev, null, 2);
-          li.appendChild(pre);
-          ul.appendChild(li);
-        }
-      }
+       const ul = document.createElement('ul');
+       for (const artist of artists) {
+         const url =
+           `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&classificationName=music&keyword=${encodeURIComponent(
+             artist.name
+           )}`;
+         const res = await fetch(url);
+         if (!res.ok) continue;
+         const data = await res.json();
+         const events = data._embedded?.events;
+         if (!Array.isArray(events)) continue;
+         for (const ev of events) {
+           const li = document.createElement('li');
+           const nameDiv = document.createElement('div');
+           nameDiv.textContent = ev.name || 'Unnamed event';
+           li.appendChild(nameDiv);
+           const venue = ev._embedded?.venues?.[0];
+           const locParts = [venue?.name, venue?.city?.name, venue?.state?.stateCode].filter(Boolean);
+           if (locParts.length > 0) {
+             const locDiv = document.createElement('div');
+             locDiv.textContent = locParts.join(' - ');
+             li.appendChild(locDiv);
+           }
+           const date = ev.dates?.start?.localDate;
+           if (date) {
+             const dateDiv = document.createElement('div');
+             dateDiv.textContent = date;
+             li.appendChild(dateDiv);
+           }
+           if (ev.url) {
+             const link = document.createElement('a');
+             link.href = ev.url;
+             link.target = '_blank';
+             link.rel = 'noopener noreferrer';
+             link.textContent = 'View Event';
+             li.appendChild(link);
+           }
+           ul.appendChild(li);
+         }
+       }
       listEl.innerHTML = '';
       if (ul.children.length > 0) {
         listEl.appendChild(ul);

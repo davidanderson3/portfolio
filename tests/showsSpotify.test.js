@@ -49,7 +49,7 @@ describe('initShowsPanel', () => {
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(document.querySelectorAll('#ticketmasterList li').length).toBe(1);
     expect(fetch.mock.calls[1][0]).toContain('classificationName=music');
-    expect(document.querySelector('#ticketmasterList pre').textContent).toContain('Concert');
+    expect(document.querySelector('#ticketmasterList li').textContent).toContain('Concert');
   });
 
   it('stores credentials and cached values during OAuth flow', async () => {
@@ -88,7 +88,8 @@ describe('initShowsPanel', () => {
     await flush();
 
     expect(fetch).toHaveBeenCalledTimes(1);
-    expect(document.getElementById('spotifyToken').value).toBe('newTok');
+    expect(localStorage.getItem('spotifyToken')).toBe('newTok');
+    expect(document.getElementById('spotifyToken').value).toBe('');
   });
 });
 
