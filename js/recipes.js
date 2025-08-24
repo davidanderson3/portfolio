@@ -23,7 +23,7 @@ export async function initRecipesPanel() {
     }
     listEl.innerHTML = '<em>Loading...</em>';
     try {
-      const res = await fetch(`https://api.api-ninjas.com/v1/recipe?query=${encodeURIComponent(query)}&limit=10`, {
+      const res = await fetch(`https://api.api-ninjas.com/v1/recipe?query=${encodeURIComponent(query)}`, {
         headers: { 'X-Api-Key': apiKey }
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
