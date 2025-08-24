@@ -193,11 +193,10 @@ export async function initTravelPanel() {
     placeTagsDiv.innerHTML = '';
     allTags.forEach(tag => {
       const label = document.createElement('label');
-      label.style.marginRight = '8px';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.value = tag;
-      label.append(cb, document.createTextNode(' ' + tag));
+      label.append(cb, document.createTextNode(tag));
       placeTagsDiv.append(label);
     });
     addPlaceModal.style.display = 'flex';
