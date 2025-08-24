@@ -19,17 +19,11 @@ Metrics offers flexible tracking for anything that can be measured. Users define
 ### Lists
 Lists builds custom tables with user-defined columns and types. Columns may be text, number, date, checkbox, link, or list, and each list supports sorting and pagination. It's useful for anything from simple checklists to structured reference tables.
 
-### Places
-Places logs travel destinations on an interactive map. Entries can be searched by name or coordinates, filtered by tags, and toggled to show only unvisited spots. Markers turn green once visited and red otherwise. A table lists distance from your current location, ratings, visit dates, and actions for each place, and you can double-click the map to add new locations.
-
 ### Finances
 The Finances tab models long-term finances. Enter current savings, income, annual contributions, and assumptions like investment return or inflation to project account balances through retirement and beyond. The tab records total assets with timestamps so you can track wealth over time, and an annual savings field helps plan future contributions.
 
 ### Budget
 Budget breaks down monthly income into recurring expenses and subscriptions. It estimates federal taxes, calculates net pay, and shows what remains after bills. Categories are customizable so the plan can reflect your real spending.
-
-### Live Music
-The Live Music tab lists upcoming concerts for the artists you listen to most. The Spotify Client ID is stored on the server, so you only need to log in to Spotify, add your Ticketmaster API key, then press **Load Shows** to retrieve events. The tab uses the [Spotify Web API](https://developer.spotify.com/documentation/web-api/) to retrieve your top artists and then requests `https://app.ticketmaster.com/discovery/v2/events.json?apikey={your-api-key}&keyword={artist-name}` for each artist, displaying the returned events with links. See the [Ticketmaster Discovery API documentation](https://developer.ticketmaster.com/products-and-docs/apis/discovery-api/v2/) for more details.
 
 ### Backups
 Backups scans local storage for saved snapshots of your data. Each backup can be restored with a single click, making it easy to recover from mistakes or sync between devices.
@@ -43,6 +37,3 @@ npm install
 npm test
 ```
 
-### Spoonacular proxy
-
-The backend exposes a `/api/spoonacular` route that forwards recipe searches to the Spoonacular API without revealing your key. Define a `SPOONACULAR_KEY` environment variable before running the server when deploying (e.g., on Render).

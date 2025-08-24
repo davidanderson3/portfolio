@@ -198,10 +198,6 @@ window.addEventListener('DOMContentLoaded', () => {
       window.openListsFormModal?.();
       return;
     }
-    if (active === 'travelPanel') {
-      document.getElementById('addPlaceBtn')?.click();
-      return;
-    }
     if (active === 'budgetPanel') {
       window.openBudgetItemForm?.();
       return;
@@ -356,7 +352,6 @@ window.addEventListener('DOMContentLoaded', () => {
     'calendarPanel',
     'metricsPanel',
     'listsPanel',
-    'travelPanel',
     'planningPanel',
     'budgetPanel'
   ];
@@ -444,20 +439,6 @@ window.addEventListener('DOMContentLoaded', () => {
       await loadDecisions(true);
       const tabsEl = document.getElementById('tabsContainer');
       if (tabsEl) tabsEl.style.visibility = 'visible';
-      if (window.initTravelPanel) {
-        try {
-          await window.initTravelPanel();
-        } catch (err) {
-          console.error('Failed to initialize travel panel after sign-in', err);
-      }
-    }
-    if (window.initWeatherPanel) {
-      try {
-        await window.initWeatherPanel();
-      } catch (err) {
-        console.error('Failed to initialize weather panel after sign-in', err);
-      }
-    }
       if (window.initPlanningPanel) {
         try {
           await window.initPlanningPanel();

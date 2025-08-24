@@ -7,15 +7,9 @@ export const PANELS = [
   'calendarPanel',
   'metricsPanel',
   'listsPanel',
-  'travelPanel',
-  'moviesPanel',
-  'showsPanel',
-  'recipesPanel',
   'planningPanel',
   'budgetPanel',
-  'backupsPanel',
-  'geoscorePanel',
-  'geolayersPanel'
+  'backupsPanel'
 ];
 
 export const PANEL_NAMES = {
@@ -24,15 +18,9 @@ export const PANEL_NAMES = {
   dailyPanel: 'Routine',
   metricsPanel: 'Metrics',
   listsPanel: 'Lists',
-  travelPanel: 'Places',
-  moviesPanel: 'Movies',
-  showsPanel: 'Live Music',
-  recipesPanel: 'Recipes',
   planningPanel: 'Finances',
   budgetPanel: 'Budget',
-  backupsPanel: 'Backups',
-  geoscorePanel: 'GeoScore',
-  geolayersPanel: 'GeoLayers'
+  backupsPanel: 'Backups'
 };
 
 let tabsInitialized = false;
@@ -48,7 +36,7 @@ export async function initTabs(user, db) {
   let tabButtons = Array.from(document.querySelectorAll('.tab-button'));
   let panels = user
     ? PANELS
-    : PANELS.filter(id => id !== 'backupsPanel' && id !== 'geolayersPanel');
+    : PANELS.filter(id => id !== 'backupsPanel');
 
   try {
     const saved = await loadTabOrder();
@@ -102,29 +90,14 @@ export async function initTabs(user, db) {
       else if (target === 'listsPanel') {
         await window.initListsPanel(currentUser, db);
       }
-      else if (target === 'travelPanel') {
-        await window.initTravelPanel();
+      else if (target === 'planningPanel') {
+        await window.initPlanningPanel();
       }
-      else if (target === 'moviesPanel') {
-        await window.initMoviesPanel();
-      }
-        else if (target === 'showsPanel') {
-          await window.initShowsPanel();
-        }
-        else if (target === 'recipesPanel') {
-          await window.initRecipesPanel();
-        }
-        else if (target === 'planningPanel') {
-          await window.initPlanningPanel();
-        }
       else if (target === 'budgetPanel') {
         await window.initBudgetPanel();
       }
       else if (target === 'backupsPanel') {
         await window.initBackupsPanel();
-      }
-      else if (target === 'geoscorePanel') {
-        window.initGeoScorePanel();
       }
     });
   });
@@ -162,29 +135,14 @@ export async function initTabs(user, db) {
     else if (initial === 'listsPanel') {
       window.initListsPanel(currentUser, db);
     }
-    else if (initial === 'travelPanel') {
-      window.initTravelPanel();
+    else if (initial === 'planningPanel') {
+      window.initPlanningPanel();
     }
-    else if (initial === 'moviesPanel') {
-      window.initMoviesPanel();
-    }
-      else if (initial === 'showsPanel') {
-        window.initShowsPanel();
-      }
-      else if (initial === 'recipesPanel') {
-        window.initRecipesPanel();
-      }
-      else if (initial === 'planningPanel') {
-        window.initPlanningPanel();
-      }
     else if (initial === 'budgetPanel') {
       window.initBudgetPanel();
     }
     else if (initial === 'backupsPanel') {
       window.initBackupsPanel();
-    }
-    else if (initial === 'geoscorePanel') {
-      window.initGeoScorePanel();
     }
   };
 

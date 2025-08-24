@@ -23,17 +23,6 @@ describe('sample descriptions', () => {
   });
 });
 
-describe('movies api', () => {
-  it('returns a list of movies', async () => {
-    const res = await request(server).get('/api/movies');
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body.length).toBeGreaterThan(0);
-    expect(res.body[0]).toHaveProperty('title');
-    expect(res.body[0]).toHaveProperty('score');
-  });
-});
-
 describe('contact endpoint', () => {
   it('requires sender and message', async () => {
     const res = await request(server).post('/contact').send({});
