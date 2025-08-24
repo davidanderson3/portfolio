@@ -98,19 +98,18 @@ describe('bottom add button', () => {
     expect(dom.window.document.activeElement).toBe(inp);
   });
 
-  it('adds a budget category when on budget tab', async () => {
+  it('opens budget item modal when on budget tab', async () => {
     const dom = new JSDOM(`
       <button id="signupBtn"></button>
       <button id="loginBtn"></button>
       <button id="bottomAddBtn"></button>
-      <button id="addCategoryBtn"></button>
       <button class="tab-button active" data-target="budgetPanel"></button>
     `);
     global.window = dom.window;
     global.document = dom.window.document;
     global.firebase = { auth: () => ({ currentUser: null }) };
     const spy = vi.fn();
-    dom.window.document.getElementById('addCategoryBtn').addEventListener('click', spy);
+    dom.window.openBudgetItemForm = spy;
 
     await import('../js/main.js');
     dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
@@ -228,19 +227,18 @@ describe('shift+A hotkey', () => {
     expect(dom.window.document.activeElement).toBe(inp);
   });
 
-  it('adds a budget category when on budget tab', async () => {
+  it('opens budget item modal when on budget tab', async () => {
     const dom = new JSDOM(`
       <button id="signupBtn"></button>
       <button id="loginBtn"></button>
       <button id="bottomAddBtn"></button>
-      <button id="addCategoryBtn"></button>
       <button class="tab-button active" data-target="budgetPanel"></button>
     `);
     global.window = dom.window;
     global.document = dom.window.document;
     global.firebase = { auth: () => ({ currentUser: null }) };
     const spy = vi.fn();
-    dom.window.document.getElementById('addCategoryBtn').addEventListener('click', spy);
+    dom.window.openBudgetItemForm = spy;
 
     await import('../js/main.js');
     dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));

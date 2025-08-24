@@ -204,11 +204,6 @@ export async function initBudgetPanel() {
     <div id="budgetLayout">
       <div id="budgetHeader" class="budget-header">
         <div id="budgetSummary" class="budget-summary"></div>
-        <div class="budget-actions">
-          <button type="button" id="addIncomeBtn">+ Add Income</button>
-          <button type="button" id="addSubscriptionBtn">+ Add Subscription</button>
-          <button type="button" id="addCategoryBtn">+ Add Category</button>
-        </div>
       </div>
       <table id="budgetTable">
         <thead>
@@ -229,9 +224,6 @@ export async function initBudgetPanel() {
 
   const tbody = panel.querySelector('#budgetTbody');
   const summary = panel.querySelector('#budgetSummary');
-  const addCategoryBtn = panel.querySelector('#addCategoryBtn');
-  const addIncomeBtn = panel.querySelector('#addIncomeBtn');
-  const addSubscriptionBtn = panel.querySelector('#addSubscriptionBtn');
   const removedBuiltIns = new Set(saved.removedBuiltIns || []);
 
   const sectionRows = {};
@@ -355,29 +347,76 @@ export async function initBudgetPanel() {
     addRow(n, saved.subscriptions?.[n] ?? '', saved.goalSubscriptions?.[n] ?? '', '', 'subscription', 'Subscriptions')
   );
 
-  addCategoryBtn.addEventListener('click', () => {
-    const name = typeof prompt === 'function' ? prompt('Category name?') : '';
-    if (name) {
-      addRow(name, '', '', '', 'expense', 'Other Expenses');
+  function openBudgetItemForm(prefill) {
+    if (prefill && prefill.name) {
+      const { name, current = '', goal = '', type = 'expense' } = prefill;
+      const section = type === 'income'
+        ? 'Income'
+        : type === 'subscription'
+          ? 'Subscriptions'
+          : 'Other Expenses';
+      addRow(name, current, goal, '', type, section);
       render();
+      return;
     }
-  });
+    const modal = document.getElementById('bottomAddModal');
+    if (!modal) return;
+    const title = document.getElementById('bottomAddTitle');
+    const options = document.getElementById('bottomAddOptions');
+    const sectionEl = document.getElementById('bottomAddSection');
+    const textEl = document.getElementById('bottomAddText');
+    const cancel = document.getElementById('bottomAddCancel');
+    const submit = document.getElementById('bottomAddSubmit');
 
-  addIncomeBtn.addEventListener('click', () => {
-    const name = typeof prompt === 'function' ? prompt('Income name?') : '';
-    if (name) {
-      addRow(name, '', '', '', 'income', 'Income');
-      render();
-    }
-  });
+    title.textContent = 'Add Budget Item';
+    options.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label>Type
+          <select id="budgetItemType">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+            <option value="subscription">Subscription</option>
+          </select>
+        </label>
+        <label>Name<br><input type="text" id="budgetItemName"></label>
+        <label>Current<br><input type="number" id="budgetItemCurrent"></label>
+        <label>Goal<br><input type="number" id="budgetItemGoal"></label>
+      </div>
+    `;
+    sectionEl.style.display = 'none';
+    textEl.style.display = 'none';
 
-  addSubscriptionBtn.addEventListener('click', () => {
-    const name = typeof prompt === 'function' ? prompt('Subscription name?') : '';
-    if (name) {
-      addRow(name, '', '', '', 'subscription', 'Subscriptions');
-      render();
+    function close() {
+      modal.style.display = 'none';
+      cancel.removeEventListener('click', onCancel);
+      submit.removeEventListener('click', onSubmit);
     }
-  });
+    function onCancel() { close(); }
+    function onSubmit() {
+      const type = document.getElementById('budgetItemType').value;
+      const name = document.getElementById('budgetItemName').value.trim();
+      const current = document.getElementById('budgetItemCurrent').value;
+      const goal = document.getElementById('budgetItemGoal').value;
+      if (!name) { alert('Name required'); return; }
+      const section = type === 'income'
+        ? 'Income'
+        : type === 'subscription'
+          ? 'Subscriptions'
+          : 'Other Expenses';
+      addRow(name, current, goal, '', type, section);
+      render();
+      close();
+    }
+
+    cancel.addEventListener('click', onCancel);
+    submit.addEventListener('click', onSubmit);
+    modal.style.display = 'flex';
+    document.getElementById('budgetItemName').focus();
+  }
+
+  if (typeof window !== 'undefined') {
+    window.openBudgetItemForm = openBudgetItemForm;
+  }
 
   function collectData() {
     const categoriesCurrent = {};

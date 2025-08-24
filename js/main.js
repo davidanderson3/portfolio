@@ -203,7 +203,7 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (active === 'budgetPanel') {
-      document.getElementById('addCategoryBtn')?.click();
+      window.openBudgetItemForm?.();
       return;
     }
   }
