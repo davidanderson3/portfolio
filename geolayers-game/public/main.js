@@ -21,21 +21,40 @@ fetch('countries.json').then(r=>r.json()).then(data=>{
 });
 
 function loadCountry() {
-  fetch(`data/${locationId}/outline.geojson`).then(r=>r.json()).then(outlineGeo=>{
+  Promise.all([
+    fetch(`data/${locationId}/outline.geojson`).then(r => r.json()),
+    fetch(`data/${locationId}/rivers.geojson`).then(r => r.json())
+  ]).then(([outlineGeo, riversGeo]) => {
     if (!map) {
-      map = L.map('map', { zoomControl:false, attributionControl:false });
+      map = L.map('map', { zoomControl: false, attributionControl: false });
+    } else {
+      map.eachLayer(l => map.removeLayer(l));
     }
-    const outline = L.geoJSON(outlineGeo);
-    const bounds = outline.getBounds();
-    map.fitBounds(bounds);
-    map.setView(bounds.getCenter(), map.getZoom() + 2);
-    loadRivers();
-  });
-}
 
-function loadRivers() {
-  fetch(`data/${locationId}/rivers.geojson`).then(r=>r.json()).then(geo=>{
-    L.geoJSON(geo, { style: { color: '#0ff' } }).addTo(map);
+    const outline = L.geoJSON(outlineGeo);
+    const riversLayer = L.geoJSON(riversGeo, { style: { color: '#0ff' } });
+
+    let minLat = 90, minLng = 180, maxLat = -90, maxLng = -180;
+    const features = [...outlineGeo.features, ...riversGeo.features];
+
+    function processCoords(coords) {
+      if (typeof coords[0] === 'number') {
+        const [lng, lat] = coords;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+        if (lng < minLng) minLng = lng;
+        if (lng > maxLng) maxLng = lng;
+      } else {
+        coords.forEach(processCoords);
+      }
+    }
+
+    features.forEach(f => processCoords(f.geometry.coordinates));
+    const bounds = L.latLngBounds([[minLat, minLng], [maxLat, maxLng]]);
+    map.fitBounds(bounds.pad(-0.2));
+
+    outline.addTo(map);
+    riversLayer.addTo(map);
   });
 }
 
