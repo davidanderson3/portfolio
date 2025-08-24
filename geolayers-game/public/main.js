@@ -2,6 +2,7 @@ let locationId = '';
 let finished = false;
 const guess = document.getElementById('guess');
 let map;
+let outline;
 
 function pickLocation(locations) {
   return locations[Math.floor(Math.random() * locations.length)];
@@ -31,11 +32,10 @@ function loadCountry() {
       map.eachLayer(l => map.removeLayer(l));
     }
 
-    const outline = L.geoJSON(outlineGeo);
+    outline = L.geoJSON(outlineGeo);
     const riversLayer = L.geoJSON(riversGeo, { style: { color: '#0ff' } });
 
     let minLat = 90, minLng = 180, maxLat = -90, maxLng = -180;
-    const features = [...outlineGeo.features, ...riversGeo.features];
 
     function processCoords(coords) {
       if (typeof coords[0] === 'number') {
@@ -49,11 +49,10 @@ function loadCountry() {
       }
     }
 
-    features.forEach(f => processCoords(f.geometry.coordinates));
+    riversGeo.features.forEach(f => processCoords(f.geometry.coordinates));
     const bounds = L.latLngBounds([[minLat, minLng], [maxLat, maxLng]]);
-    map.fitBounds(bounds.pad(-0.2));
+    map.fitBounds(bounds.pad(-0.35));
 
-    outline.addTo(map);
     riversLayer.addTo(map);
   });
 }
@@ -65,6 +64,8 @@ guess.addEventListener('change', () => {
   if (val === locationId) {
     document.getElementById('score').textContent = `Correct! It is ${val}.`;
     finished = true;
+    outline.addTo(map);
+    map.fitBounds(outline.getBounds().pad(0.1));
   } else {
     document.getElementById('score').textContent = 'Incorrect, try again!';
   }
