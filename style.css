@@ -2028,6 +2028,14 @@ h2 {
   gap: 4px;
 }
 
+.planning-columns {
+  display: flex;
+  flex-basis: 100%;
+  gap: 8px;
+  align-items: flex-start;
+  overflow-x: auto;
+}
+
 .planning-right {
   flex: 0 0 auto;
   min-width: 0;

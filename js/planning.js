@@ -308,8 +308,10 @@ export async function initPlanningPanel() {
         <label>Rolling Credit <input type="number" name="rollingCredit" value="${currentData.budget.rollingCredit ?? ''}" /></label>
       </div>
       </form>
-      <div id="workingColumn" class="planning-right"></div>
-      <div id="retirementColumn" class="planning-right" style="margin-top:0;border-left:4px solid #d0decf;padding-left:8px;"></div>
+      <div class="planning-columns">
+        <div id="workingColumn" class="planning-right"></div>
+        <div id="retirementColumn" class="planning-right" style="margin-top:0;border-left:4px solid #d0decf;padding-left:8px;"></div>
+      </div>
       <div id="assetsTotal" class="full-column" style="margin-top:1em;flex-basis:100%;"></div>
     </div>
     <div id="assetHistory" style="margin-top:1em;"></div>
