@@ -28,7 +28,7 @@ function loadCountry() {
     const outline = L.geoJSON(outlineGeo);
     const bounds = outline.getBounds();
     map.fitBounds(bounds);
-    map.setView(bounds.getCenter(), map.getZoom() + 1);
+    map.setView(bounds.getCenter(), map.getZoom() + 2);
     loadRivers();
   });
 }
