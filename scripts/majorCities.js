@@ -32,16 +32,18 @@ function parsePoint(wkt) {
 
 async function getCountries() {
   const query = `
-SELECT ?country ?countryLabel ?iso2 WHERE {
+SELECT ?country ?countryLabel ?iso2 ?iso3 WHERE {
   ?country wdt:P31 wd:Q6256.
   OPTIONAL { ?country wdt:P297 ?iso2. }
+  OPTIONAL { ?country wdt:P298 ?iso3. }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }`;
   const data = await sparql(query);
   return data.results.bindings.map(b => ({
     qid: b.country.value.split("/").pop(),
     label: b.countryLabel?.value || "",
-    iso2: b.iso2?.value || ""
+    iso2: b.iso2?.value || "",
+    iso3: b.iso3?.value || ""
   }));
 }
 
@@ -89,6 +91,7 @@ async function main() {
               population: city.population,
               country: c.label,
               country_iso2: c.iso2 || null,
+              country_iso3: c.iso3 || null,
               city_qid: city.qid,
               country_qid: c.qid
             }
