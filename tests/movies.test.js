@@ -74,9 +74,10 @@ describe('initMoviesPanel', () => {
     expect(img).not.toBeNull();
     expect(img.src).toContain('https://image.tmdb.org/t/p/w200/poster.jpg');
     const buttons = document.querySelectorAll('#movieList li button');
-    expect(buttons.length).toBe(2);
+    expect(buttons.length).toBe(3);
     expect(buttons[0].textContent).toBe('💾');
-    expect(buttons[1].textContent).toBe('❌');
+    expect(buttons[1].textContent).toBe('👁️');
+    expect(buttons[2].textContent).toBe('❌');
     expect(fetch).toHaveBeenNthCalledWith(
       1,
       'https://api.themoviedb.org/3/discover/movie?api_key=TEST_KEY&sort_by=vote_count.desc&page=1'
@@ -101,15 +102,18 @@ describe('initMoviesPanel', () => {
 
     let stored = '';
     let hidden = '[]';
+    let watched = '[]';
     global.localStorage = {
       getItem: key => {
         if (key === 'moviesApiKey') return stored;
         if (key === 'hiddenMovieIds') return hidden;
+        if (key === 'watchedMovieIds') return watched;
         return '';
       },
       setItem: (key, value) => {
         if (key === 'moviesApiKey') stored = value;
         if (key === 'hiddenMovieIds') hidden = value;
+        if (key === 'watchedMovieIds') watched = value;
       }
     };
     Object.defineProperty(window, 'localStorage', { value: global.localStorage });
@@ -174,15 +178,18 @@ describe('initMoviesPanel', () => {
 
     let stored = '';
     let hidden = '[]';
+    let watched = '[]';
     global.localStorage = {
       getItem: key => {
         if (key === 'moviesApiKey') return stored;
         if (key === 'hiddenMovieIds') return hidden;
+        if (key === 'watchedMovieIds') return watched;
         return '';
       },
       setItem: (key, value) => {
         if (key === 'moviesApiKey') stored = value;
         if (key === 'hiddenMovieIds') hidden = value;
+        if (key === 'watchedMovieIds') watched = value;
       }
     };
     Object.defineProperty(window, 'localStorage', { value: global.localStorage });
@@ -210,10 +217,16 @@ describe('initMoviesPanel', () => {
     window.tmdbApiKey = 'TEST_KEY';
 
     let hidden = '[]';
+    let watched = '[]';
     global.localStorage = {
-      getItem: key => (key === 'hiddenMovieIds' ? hidden : ''),
+      getItem: key => {
+        if (key === 'hiddenMovieIds') return hidden;
+        if (key === 'watchedMovieIds') return watched;
+        return '';
+      },
       setItem: (key, value) => {
         if (key === 'hiddenMovieIds') hidden = value;
+        if (key === 'watchedMovieIds') watched = value;
       }
     };
     Object.defineProperty(window, 'localStorage', { value: global.localStorage });
@@ -253,10 +266,16 @@ describe('initMoviesPanel', () => {
     window.tmdbApiKey = 'TEST_KEY';
 
     let saved = '[]';
+    let watched = '[]';
     global.localStorage = {
-      getItem: key => (key === 'savedMovieIds' ? saved : ''),
+      getItem: key => {
+        if (key === 'savedMovieIds') return saved;
+        if (key === 'watchedMovieIds') return watched;
+        return '';
+      },
       setItem: (key, value) => {
         if (key === 'savedMovieIds') saved = value;
+        if (key === 'watchedMovieIds') watched = value;
       }
     };
     Object.defineProperty(window, 'localStorage', { value: global.localStorage });
@@ -304,7 +323,11 @@ describe('initMoviesPanel', () => {
     window.tmdbApiKey = 'TEST_KEY';
 
     global.localStorage = {
-      getItem: key => (key === 'hiddenMovieIds' ? '["555"]' : ''),
+      getItem: key => {
+        if (key === 'hiddenMovieIds') return '["555"]';
+        if (key === 'watchedMovieIds') return '[]';
+        return '';
+      },
       setItem: () => {}
     };
     Object.defineProperty(window, 'localStorage', { value: global.localStorage });
