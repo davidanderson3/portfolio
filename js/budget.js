@@ -291,17 +291,32 @@ export async function initBudgetPanel() {
     mortgageInterest: 'Mortgage/Rent',
     mortgagePrincipal: 'Mortgage/Rent',
     escrow: 'Mortgage/Rent',
+    rent: 'Mortgage/Rent',
     electric: 'Utilities',
     water: 'Utilities',
     gas: 'Utilities',
     internet: 'Utilities',
     cell: 'Utilities',
+    transGas: 'Transportation',
+    carPayment: 'Transportation',
+    tolls: 'Transportation',
     insurance: 'Insurance',
     healthInsurance: 'Insurance',
-    dentalInsurance: 'Insurance'
+    dentalInsurance: 'Insurance',
+    federalDeductions: 'Taxes',
+    stateTaxes: 'Taxes'
   };
 
-  const SECTION_ORDER = ['Income', 'Mortgage/Rent', 'Utilities', 'Insurance', 'Other Expenses', 'Subscriptions'];
+  const SECTION_ORDER = [
+    'Income',
+    'Mortgage/Rent',
+    'Utilities',
+    'Transportation',
+    'Insurance',
+    'Taxes',
+    'Other Expenses',
+    'Subscriptions'
+  ];
   SECTION_ORDER.forEach(addSection);
 
   const incomeNames = new Set([
@@ -322,9 +337,10 @@ export async function initBudgetPanel() {
       addRow(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key, 'expense', section);
     }
   });
-  recurNames.forEach(n =>
-    addRow(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? '', '', 'expense', 'Other Expenses')
-  );
+  recurNames.forEach(n => {
+    const section = SECTION_LOOKUP[n] || 'Other Expenses';
+    addRow(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? '', '', 'expense', section);
+  });
 
   const subNames = new Set([
     ...Object.keys(saved.subscriptions || {}),
