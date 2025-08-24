@@ -2002,7 +2002,7 @@ h2 {
   flex-wrap: wrap;
   gap: 4px;
   max-width: 400px;
-  flex: 1 1 300px;
+  flex: 1 1 100%;
 }
 
 .planning-form label {
@@ -2026,7 +2026,8 @@ h2 {
 }
 
 .planning-right {
-  flex: 1 1 300px;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 #planningPanel .full-column {
