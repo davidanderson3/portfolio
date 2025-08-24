@@ -613,19 +613,73 @@ export async function initTravelPanel() {
     currentPage = 0;
     renderList('');
   };
+    
+    async function loadTripAdvisorPlaces() {
+      const listEl = document.getElementById('tripAdvisorList');
+      if (!listEl) return;
+      const [lat, lon] = userCoords || [0, 0];
+      const params = new URLSearchParams({
+        latitude: lat,
+        longitude: lon,
+        limit: '5',
+        currency: 'USD'
+      });
+      const apiKey = window.tripAdvisorApiKey || '';
+      try {
+        const res = await fetch(
+          `https://travel-advisor.p.rapidapi.com/attractions/list-by-latlng?${params.toString()}`,
+          apiKey
+            ? {
+                headers: {
+                  'X-RapidAPI-Key': apiKey,
+                  'X-RapidAPI-Host': 'travel-advisor.p.rapidapi.com'
+                }
+              }
+            : {}
+        );
+        const data = await res.json();
+        const places = data.data || data.results || [];
+        listEl.innerHTML = '';
+        places.forEach(pl => {
+          const name = pl.name || pl.title || pl.location_string || 'Unknown';
+          const lat = parseFloat(pl.latitude || pl.lat || pl.coordinates?.latitude || 0);
+          const lon = parseFloat(pl.longitude || pl.lon || pl.coordinates?.longitude || 0);
+          const li = document.createElement('li');
+          li.textContent = name;
+          const btn = document.createElement('button');
+          btn.textContent = 'Add';
+          btn.addEventListener('click', async () => {
+            await storePlace({
+              name,
+              description: pl.description || '',
+              lat,
+              lon,
+              tags: [],
+              Rating: '',
+              Date: '',
+              visited: false
+            });
+          });
+          li.appendChild(btn);
+          listEl.appendChild(li);
+        });
+      } catch (err) {
+        console.error('TripAdvisor fetch failed', err);
+        listEl.textContent = 'Failed to load places.';
+      }
+    }
 
+    const clearSearchResults = () => {
+      if (resultsList) resultsList.innerHTML = '';
+      resultMarkers.forEach(m => m.remove());
+      resultMarkers = [];
+    };
+    clearResultsBtn?.addEventListener('click', () => {
+      if (placeInput) placeInput.value = '';
+      clearSearchResults();
+    });
 
-  const clearSearchResults = () => {
-    if (resultsList) resultsList.innerHTML = '';
-    resultMarkers.forEach(m => m.remove());
-    resultMarkers = [];
-  };
-  clearResultsBtn?.addEventListener('click', () => {
-    if (placeInput) placeInput.value = '';
-    clearSearchResults();
-  });
-
-  async function flushPendingOperations() {
+    async function flushPendingOperations() {
     const user = getCurrentUser?.();
     if (!initialRemoteLoadComplete || !user) return;
     for (const place of pendingAdds) {
@@ -799,14 +853,17 @@ export async function initTravelPanel() {
       pos => {
         userCoords = [pos.coords.latitude, pos.coords.longitude];
         renderInitial();
+        loadTripAdvisorPlaces();
       },
       () => {
         // location retrieval failed; still render list without userCoords
         renderInitial();
+        loadTripAdvisorPlaces();
       }
     );
   } else {
     renderInitial();
+    loadTripAdvisorPlaces();
   }
 
   const dmsToDecimal = (deg, min, sec, dir) => {
