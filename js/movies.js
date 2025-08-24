@@ -290,6 +290,7 @@ export async function initMoviesPanel() {
         .slice(0, 100)
         .filter(
           m =>
+            m.vote_count >= 10 &&
             !hidden.has(String(m.id)) &&
             !saved.has(String(m.id)) &&
             !watched.has(String(m.id))
