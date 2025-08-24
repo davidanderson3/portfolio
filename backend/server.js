@@ -16,6 +16,9 @@ const execFileAsync = util.promisify(execFile);
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+// Enable CORS for all routes so the frontend can reach the API
+app.use(cors());
+
 const CONTACT_EMAIL = Buffer.from('ZHZkbmRyc25AZ21haWwuY29t', 'base64').toString('utf8');
 const mailer = (() => {
   if (!nodemailer || !process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) return null;
@@ -51,14 +54,6 @@ const plaidClient = (() => {
 
 // Serve static files (like index.html, style.css, script.js)
 app.use(express.static(path.resolve(__dirname, '../')));
-
-// Enable CORS (optional for Firebase, useful for local testing)
-app.use(cors({
-  origin: 'https://davidanderson3.github.io',  // or '*'
-  methods: ['GET','POST','OPTIONS'],
-  allowedHeaders: ['Content-Type']
-}));
-app.options(/.*/, cors());  // respond to preflight
 
 app.post('/contact', async (req, res) => {
   const { name, from, message } = req.body || {};
