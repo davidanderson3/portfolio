@@ -40,24 +40,9 @@ function loadCountry() {
     outline = L.geoJSON(outlineGeo);
     const riversLayer = L.geoJSON(riversGeo, { style: { color: '#0ff' } });
 
-    let minLat = 90, minLng = 180, maxLat = -90, maxLng = -180;
-
-    function processCoords(coords) {
-      if (typeof coords[0] === 'number') {
-        const [lng, lat] = coords;
-        if (lat < minLat) minLat = lat;
-        if (lat > maxLat) maxLat = lat;
-        if (lng < minLng) minLng = lng;
-        if (lng > maxLng) maxLng = lng;
-      } else {
-        coords.forEach(processCoords);
-      }
-    }
-
-    riversGeo.features.forEach(f => processCoords(f.geometry.coordinates));
-    const bounds = L.latLngBounds([[minLat, minLng], [maxLat, maxLng]]);
-    // Shrink bounds more aggressively to zoom closer on the selected country
-    map.fitBounds(bounds.pad(-0.6));
+    // Use the outline to determine map bounds and zoom closely to the country
+    const bounds = outline.getBounds().pad(0.1);
+    map.fitBounds(bounds);
 
     riversLayer.addTo(map);
   });
@@ -74,6 +59,7 @@ function showCities() {
         L.circleMarker(latlng, { radius: 5, color: '#f00' }).bindTooltip(feature.properties.name)
     });
     citiesLayer.addTo(map);
+    citiesShown = true;
   }).catch(() => {});
 }
 
@@ -90,7 +76,6 @@ guess.addEventListener('change', () => {
     document.getElementById('score').textContent = 'Incorrect, try again!';
     if (!citiesShown) {
       showCities();
-      citiesShown = true;
     }
   }
 });
