@@ -1,29 +1,31 @@
+const API_BASE_URL =
+  (typeof window !== 'undefined' && window.apiBaseUrl) ||
+  (typeof process !== 'undefined' && process.env.API_BASE_URL) ||
+  'https://dashboard-6aih.onrender.com';
+
 export async function initRecipesPanel() {
   const listEl = document.getElementById('recipesList');
   if (!listEl) return;
   const queryInput = document.getElementById('recipesQuery');
-  const apiKeyInput = document.getElementById('recipesApiKey');
   const apiKeyContainer = document.getElementById('recipesApiKeyContainer');
   const searchBtn = document.getElementById('recipesSearchBtn');
 
   const savedQuery = localStorage.getItem('recipesQuery') || '';
-  const savedApiKey = localStorage.getItem('recipesApiKey') || '';
   if (queryInput) queryInput.value = savedQuery;
-  if (apiKeyInput) apiKeyInput.value = savedApiKey;
-  if (savedApiKey && apiKeyContainer) apiKeyContainer.style.display = 'none';
-
-  let currentApiKey = savedApiKey;
+  // hide API key input when using proxy
+  if (apiKeyContainer) apiKeyContainer.style.display = 'none';
 
   const loadRecipes = async () => {
     const query = queryInput?.value.trim();
-    const apiKey = currentApiKey || apiKeyInput?.value.trim();
-    if (!query || !apiKey) {
-      listEl.textContent = 'Please enter search and API key.';
+    if (!query) {
+      listEl.textContent = 'Please enter search.';
       return;
     }
     listEl.innerHTML = '<em>Loading...</em>';
     try {
-      const res = await fetch(`https://api.spoonacular.com/recipes/complexSearch?query=${encodeURIComponent(query)}&number=50&offset=0&addRecipeInformation=true&apiKey=${encodeURIComponent(apiKey)}`);
+      const res = await fetch(
+        `${API_BASE_URL}/api/spoonacular?query=${encodeURIComponent(query)}`
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const recipes = Array.isArray(data?.results)
@@ -130,11 +132,6 @@ export async function initRecipesPanel() {
       listEl.innerHTML = '';
       listEl.appendChild(ul);
       localStorage.setItem('recipesQuery', query);
-      if (!currentApiKey) {
-        currentApiKey = apiKey;
-        localStorage.setItem('recipesApiKey', apiKey);
-        if (apiKeyContainer) apiKeyContainer.style.display = 'none';
-      }
     } catch (err) {
       console.error('Failed to load recipes', err);
       listEl.textContent = 'Failed to load recipes.';
@@ -143,7 +140,7 @@ export async function initRecipesPanel() {
 
   searchBtn?.addEventListener('click', loadRecipes);
 
-  if (savedQuery && savedApiKey) {
+  if (savedQuery) {
     loadRecipes();
   }
 }
