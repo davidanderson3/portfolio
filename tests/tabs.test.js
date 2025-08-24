@@ -15,21 +15,17 @@ describe('initTabs persistence', () => {
       <button class="tab-button" data-target="dailyPanel"></button>
       <button class="tab-button" data-target="metricsPanel"></button>
       <button class="tab-button" data-target="listsPanel"></button>
-      <button class="tab-button" data-target="travelPanel"></button>
       <button class="tab-button" data-target="planningPanel"></button>
       <button class="tab-button" data-target="budgetPanel"></button>
       <button class="tab-button" data-target="backupsPanel"></button>
-      <button class="tab-button" data-target="geolayersPanel"></button>
       <div id="projectsPanel"></div>
       <div id="calendarPanel"></div>
       <div id="dailyPanel"></div>
       <div id="metricsPanel"></div>
       <div id="listsPanel"></div>
-      <div id="travelPanel"></div>
       <div id="planningPanel"></div>
       <div id="budgetPanel"></div>
       <div id="backupsPanel"></div>
-      <div id="geolayersPanel"></div>
     `, { url: 'http://localhost/' });
     global.window = dom.window;
     global.document = dom.window.document;
@@ -50,7 +46,6 @@ describe('initTabs persistence', () => {
     global.window.renderDailyTasks = vi.fn();
     global.window.initMetricsUI = vi.fn();
     global.window.initListsPanel = vi.fn();
-    global.window.initTravelPanel = vi.fn();
     global.window.initPlanningPanel = vi.fn();
     global.window.initBackupsPanel = vi.fn();
 
@@ -91,30 +86,6 @@ describe('initTabs persistence', () => {
     expect(window.initBackupsPanel).not.toHaveBeenCalled();
   });
 
-  it('ignores geolayersPanel as initial when signed out', async () => {
-    const dom = new JSDOM(`
-      <button class="tab-button" data-target="projectsPanel"></button>
-      <button class="tab-button" data-target="dailyPanel"></button>
-      <button class="tab-button" data-target="geolayersPanel"></button>
-      <div id="projectsPanel"></div>
-      <div id="dailyPanel"></div>
-      <div id="geolayersPanel"></div>
-    `, { url: 'http://localhost/' });
-    global.window = dom.window;
-    global.document = dom.window.document;
-
-    global.localStorage = {
-      getItem: () => 'geolayersPanel',
-      setItem: () => {}
-    };
-
-    const mod = await import('../js/tabs.js');
-    await mod.initTabs(null, {});
-    dom.window.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
-
-    const active = document.querySelector('.tab-button.active');
-    expect(active.dataset.target).toBe('dailyPanel');
-  });
 });
 
 describe('routine tab behavior', () => {
@@ -125,11 +96,9 @@ describe('routine tab behavior', () => {
       <button class="tab-button" data-target="dailyPanel"></button>
       <button class="tab-button" data-target="metricsPanel"></button>
       <button class="tab-button" data-target="listsPanel"></button>
-      <button class="tab-button" data-target="travelPanel"></button>
       <button class="tab-button" data-target="planningPanel"></button>
       <button class="tab-button" data-target="budgetPanel"></button>
       <button class="tab-button" data-target="backupsPanel"></button>
-      <button class="tab-button" data-target="geolayersPanel"></button>
       <div id="projectsPanel"></div>
       <div id="calendarPanel"></div>
       <div id="dailyPanel" style="display:none;">
@@ -137,11 +106,9 @@ describe('routine tab behavior', () => {
       </div>
       <div id="metricsPanel"></div>
       <div id="listsPanel"></div>
-      <div id="travelPanel"></div>
       <div id="planningPanel"></div>
       <div id="budgetPanel"></div>
       <div id="backupsPanel"></div>
-      <div id="geolayersPanel"></div>
     `, { url: 'http://localhost/' });
 
     global.window = dom.window;
@@ -157,7 +124,6 @@ describe('routine tab behavior', () => {
     global.window.renderDailyTasks = renderStub;
     global.window.initMetricsUI = vi.fn();
     global.window.initListsPanel = vi.fn();
-    global.window.initTravelPanel = vi.fn();
     global.window.initPlanningPanel = vi.fn();
     global.window.initBudgetPanel = vi.fn();
     global.window.initBackupsPanel = vi.fn();
