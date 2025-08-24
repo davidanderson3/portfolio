@@ -454,15 +454,27 @@ export async function initBudgetPanel() {
     const incomeSign = incomeChange > 0 ? '+' : incomeChange < 0 ? '-' : '';
     const leftoverCur = incomeCurTotal - totalCur;
     const leftoverGoal = incomeGoalTotal - totalGoal;
-    summary.innerHTML =
-      `<span class="budget-stat">Current Income: $${incomeCurTotal.toLocaleString()}</span>` +
-      `<span class="budget-stat">Goal Income: $${incomeGoalTotal.toLocaleString()}</span>` +
-      `<span class="budget-stat">Current Expenses: $${totalCur.toLocaleString()}</span>` +
-      `<span class="budget-stat">Goal Expenses: $${totalGoal.toLocaleString()}</span>` +
-      `<span class="budget-stat">Current Leftover: $${leftoverCur.toLocaleString()}</span>` +
-      `<span class="budget-stat">Goal Leftover: $${leftoverGoal.toLocaleString()}</span>` +
-      `<span class="budget-stat">Change: ${signTotal}$${Math.abs(changeTotal).toLocaleString()}</span>` +
-      `<span class="budget-stat">Income Change: ${incomeSign}$${Math.abs(incomeChange).toLocaleString()}</span>`;
+    summary.innerHTML = `
+      <table class="budget-summary-table">
+        <tr><th>Current</th><th>Goal</th></tr>
+        <tr>
+          <td>Income: $${incomeCurTotal.toLocaleString()}</td>
+          <td>Income: $${incomeGoalTotal.toLocaleString()}</td>
+        </tr>
+        <tr>
+          <td>Expenses: $${totalCur.toLocaleString()}</td>
+          <td>Expenses: $${totalGoal.toLocaleString()}</td>
+        </tr>
+        <tr>
+          <td>Leftover: $${leftoverCur.toLocaleString()}</td>
+          <td>Leftover: $${leftoverGoal.toLocaleString()}</td>
+        </tr>
+        <tr>
+          <td>Change: ${signTotal}$${Math.abs(changeTotal).toLocaleString()}</td>
+          <td>Income Change: ${incomeSign}$${Math.abs(incomeChange).toLocaleString()}</td>
+        </tr>
+      </table>
+    `;
     if (save) saveBudgetData(saveData);
   }
 

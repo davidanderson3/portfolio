@@ -379,9 +379,12 @@ describe('budget panel', () => {
     expenseRow.querySelector('.goal-cost').value = '2500';
     expenseRow.querySelector('.goal-cost').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 
-    const summary = document.getElementById('budgetSummary').textContent;
-    expect(summary).toContain('Current Leftover: $2,000');
-    expect(summary).toContain('Goal Leftover: $3,500');
+    const leftoverRow = document.querySelector(
+      '#budgetSummary .budget-summary-table tr:nth-child(4)'
+    );
+    const cells = leftoverRow.querySelectorAll('td');
+    expect(cells[0].textContent).toBe('Leftover: $2,000');
+    expect(cells[1].textContent).toBe('Leftover: $3,500');
 
     delete global.prompt;
   });
