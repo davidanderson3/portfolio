@@ -469,6 +469,11 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
       });
     });
   });
+  config.sort((a, b) => {
+    const tsA = lastEntryByMetric[a.id] || 0;
+    const tsB = lastEntryByMetric[b.id] || 0;
+    return tsA - tsB;
+  });
   const container = document.getElementById('genericStatsSummary');
   Object.assign(container.style, { width: '100%', maxWidth: '100%', padding: '0', margin: '0' });
   container.innerHTML = '';
