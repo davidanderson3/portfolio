@@ -58,11 +58,15 @@ let currentPage = 0;
 
 function resizeTravelMap() {
   const mapEl = document.getElementById('travelMap');
+  const tagFiltersEl = document.getElementById('travelTagFilters');
   if (!mapEl) return;
   const rect = mapEl.getBoundingClientRect();
   const availableHeight = window.innerHeight - rect.top - 16;
   const height = Math.min(rect.width, availableHeight);
   mapEl.style.height = `${height}px`;
+  if (tagFiltersEl) {
+    tagFiltersEl.style.height = `${height}px`;
+  }
   if (map) {
     map.invalidateSize();
   }
