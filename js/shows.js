@@ -37,6 +37,7 @@ export async function initShowsPanel() {
   const clientIdInput = document.getElementById('spotifyClientId');
   const tokenBtn = document.getElementById('spotifyTokenBtn');
   const tokenInput = document.getElementById('spotifyToken');
+  const statusEl = document.getElementById('spotifyStatus');
   const apiKeyInput = document.getElementById('ticketmasterApiKey');
 
   const savedClientId =
@@ -44,6 +45,28 @@ export async function initShowsPanel() {
   if (clientIdInput) clientIdInput.value = savedClientId;
 
   const redirectUri = window.location.origin + window.location.pathname;
+
+  const updateSpotifyStatus = () => {
+    const storedToken =
+      (typeof localStorage !== 'undefined' && localStorage.getItem('spotifyToken')) || '';
+    if (storedToken) {
+      if (tokenBtn) tokenBtn.textContent = 'Logged in';
+      if (statusEl) statusEl.textContent = 'Logged in';
+      if (tokenInput) {
+        tokenInput.disabled = true;
+        tokenInput.style.display = 'none';
+      }
+    } else {
+      if (tokenBtn) tokenBtn.textContent = 'Login to Spotify';
+      if (statusEl) statusEl.textContent = '';
+      if (tokenInput) {
+        tokenInput.disabled = false;
+        tokenInput.style.display = '';
+      }
+    }
+  };
+
+  updateSpotifyStatus();
 
   const startAuth = async () => {
     const clientId = clientIdInput?.value.trim();
@@ -100,6 +123,7 @@ export async function initShowsPanel() {
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem('spotifyToken', accessToken);
         }
+        updateSpotifyStatus();
       }
     } catch (err) {
       console.error('Failed to exchange code', err);
@@ -121,6 +145,7 @@ export async function initShowsPanel() {
     }
     if (tokenInput?.value && typeof localStorage !== 'undefined') {
       localStorage.setItem('spotifyToken', token);
+      updateSpotifyStatus();
     }
     if (apiKeyInput?.value && typeof localStorage !== 'undefined') {
       localStorage.setItem('ticketmasterApiKey', apiKey);
