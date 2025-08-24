@@ -21,6 +21,7 @@ export async function initRecipesPanel() {
       listEl.textContent = 'Please enter search.';
       return;
     }
+    if (searchBtn) searchBtn.disabled = true;
     listEl.innerHTML = '<em>Loading...</em>';
     try {
       const res = await fetch(
@@ -135,10 +136,18 @@ export async function initRecipesPanel() {
     } catch (err) {
       console.error('Failed to load recipes', err);
       listEl.textContent = 'Failed to load recipes.';
+    } finally {
+      if (searchBtn) searchBtn.disabled = false;
     }
   };
 
   searchBtn?.addEventListener('click', loadRecipes);
+  queryInput?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      loadRecipes();
+    }
+  });
 
   if (savedQuery) {
     loadRecipes();
