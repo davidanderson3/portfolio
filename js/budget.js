@@ -447,12 +447,8 @@ export async function initBudgetPanel() {
     const toNumber = obj => Object.values(obj).reduce((s, v) => s + (parseFloat(v) || 0), 0);
     const totalCur = toNumber(categoriesCurrent);
     const totalGoal = toNumber(categoriesGoal);
-    const changeTotal = totalGoal - totalCur;
-    const signTotal = changeTotal > 0 ? '+' : changeTotal < 0 ? '-' : '';
     const incomeCurTotal = toNumber(incomeCurrent);
     const incomeGoalTotal = toNumber(incomeGoal);
-    const incomeChange = incomeGoalTotal - incomeCurTotal;
-    const incomeSign = incomeChange > 0 ? '+' : incomeChange < 0 ? '-' : '';
     const leftoverCur = incomeCurTotal - totalCur;
     const leftoverGoal = incomeGoalTotal - totalGoal;
     summary.innerHTML = `
@@ -469,10 +465,6 @@ export async function initBudgetPanel() {
         <tr>
           <td>Leftover: $${leftoverCur.toLocaleString()}</td>
           <td>Leftover: $${leftoverGoal.toLocaleString()}</td>
-        </tr>
-        <tr>
-          <td>Change: ${signTotal}$${Math.abs(changeTotal).toLocaleString()}</td>
-          <td>Income Change: ${incomeSign}$${Math.abs(incomeChange).toLocaleString()}</td>
         </tr>
       </table>
     `;
