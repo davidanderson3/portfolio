@@ -227,7 +227,8 @@ describe('budget panel', () => {
     global.prompt = () => 'Test Recurring';
     document.getElementById('addCategoryBtn').click();
 
-    const costInput = document.querySelector('#budgetTbody tr:last-child .goal-cost');
+    const expenseInputs = document.querySelectorAll('#budgetTbody tr[data-type="expense"] .goal-cost');
+    const costInput = expenseInputs[expenseInputs.length - 1];
     costInput.value = '50';
     costInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     costInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
@@ -253,7 +254,8 @@ describe('budget panel', () => {
     global.prompt = () => 'Test Subscription';
     document.getElementById('addSubscriptionBtn').click();
 
-    const costInput = document.querySelector('#budgetTbody tr:last-child .goal-cost');
+    const subInputs = document.querySelectorAll('#budgetTbody tr[data-type="subscription"] .goal-cost');
+    const costInput = subInputs[subInputs.length - 1];
     costInput.value = '10';
     costInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
     costInput.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
@@ -313,7 +315,7 @@ describe('budget panel', () => {
     document.getElementById('addCategoryBtn').click();
     document.getElementById('addCategoryBtn').click();
 
-    const rows = document.querySelectorAll('#budgetTbody tr');
+    const rows = document.querySelectorAll('#budgetTbody tr[data-type="expense"]');
     rows[rows.length - 1].querySelector('button[title="Move up"]').click();
 
     const order = Array.from(document.querySelectorAll('#budgetTbody .cat-name'))
