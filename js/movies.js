@@ -52,6 +52,7 @@ export async function initMoviesPanel() {
 
   const hiddenKey = 'hiddenMovieIds';
   const savedKey = 'savedMovieIds';
+  const watchedKey = 'watchedMovieIds';
 
   const getHidden = () => {
     if (typeof localStorage === 'undefined') return new Set();
@@ -95,13 +96,36 @@ export async function initMoviesPanel() {
     }
   };
 
+  const getWatched = () => {
+    if (typeof localStorage === 'undefined') return new Set();
+    try {
+      const stored = localStorage.getItem(watchedKey);
+      return new Set(
+        (stored ? JSON.parse(stored) : []).map(id => String(id))
+      );
+    } catch (_) {
+      return new Set();
+    }
+  };
+
+  const saveWatched = ids => {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(watchedKey, JSON.stringify(Array.from(ids)));
+    } catch (_) {
+      /* ignore */
+    }
+  };
+
   const loadSavedMovies = async () => {
     if (!savedListEl) return;
     savedListEl.innerHTML = '<em>Loading...</em>';
     try {
+      const watched = getWatched();
       const res = await fetch(`${API_BASE_URL}/api/saved-movies`);
       if (!res.ok) throw new Error('Network response was not ok');
-      const movies = await res.json();
+      let movies = await res.json();
+      movies = movies.filter(m => !watched.has(String(m.id)));
       if (!movies.length) {
         savedListEl.innerHTML = '<em>No saved movies.</em>';
         return;
@@ -179,6 +203,7 @@ export async function initMoviesPanel() {
     try {
       const hidden = getHidden();
       const saved = getSaved();
+      const watched = getWatched();
 
       // Fetch 100 movies sorted by vote count descending
       const moviesData = [];
@@ -197,7 +222,10 @@ export async function initMoviesPanel() {
       const movies = moviesData
         .slice(0, 100)
         .filter(
-          m => !hidden.has(String(m.id)) && !saved.has(String(m.id))
+          m =>
+            !hidden.has(String(m.id)) &&
+            !saved.has(String(m.id)) &&
+            !watched.has(String(m.id))
         )
         .sort((a, b) =>
           b.vote_average - a.vote_average ||
@@ -297,13 +325,19 @@ export async function initMoviesPanel() {
         }
       });
 
+        const watchedBtn = makeIconBtn('👁️', 'Mark watched', () => {
+          watched.add(String(m.id));
+          saveWatched(watched);
+          li.remove();
+        });
+
         const hideBtn = makeIconBtn('❌', 'Hide movie', () => {
           hidden.add(String(m.id));
           saveHidden(hidden);
           li.remove();
         });
 
-        btnRow.append(saveBtn, hideBtn);
+        btnRow.append(saveBtn, watchedBtn, hideBtn);
         info.appendChild(btnRow);
 
         const metaList = document.createElement('ul');
