@@ -9,13 +9,14 @@ describe('geoscore persistence', () => {
       setItem: (key, val) => { store[key] = String(val); },
       removeItem: key => { delete store[key]; }
     };
+    global.fetch = async () => ({ ok: false });
   });
 
-  it('provides default questions when storage is empty', () => {
-    expect(loadQuestions()).toEqual(DEFAULT_QUESTIONS);
+  it('provides default questions when storage is empty', async () => {
+    expect(await loadQuestions()).toEqual(DEFAULT_QUESTIONS);
   });
 
-  it('saves and loads answer counts', () => {
+  it('saves and loads answer counts', async () => {
     const qs = [{
       question: 'Capital of France?',
       answers: [
@@ -24,6 +25,6 @@ describe('geoscore persistence', () => {
       ]
     }];
     saveQuestions(qs);
-    expect(loadQuestions()).toEqual(qs);
+    expect(await loadQuestions()).toEqual(qs);
   });
 });

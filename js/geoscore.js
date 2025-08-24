@@ -33,12 +33,20 @@ export const DEFAULT_QUESTIONS = [
   }
 ];
 
-export function loadQuestions() {
+export async function loadQuestions() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length) {
       return parsed;
+    }
+  } catch {}
+  try {
+    const res = await fetch('geoscore_questions.json');
+    if (res.ok) {
+      const data = await res.json();
+      saveQuestions(data);
+      return data;
     }
   } catch {}
   // If nothing stored, seed with defaults
@@ -52,12 +60,12 @@ export function saveQuestions(qs) {
   } catch {}
 }
 
-export function initGeoScorePanel() {
+export async function initGeoScorePanel() {
   const container = document.getElementById('geoscoreAdmin');
   if (!container) return;
   container.innerHTML = '';
 
-  const questions = loadQuestions();
+  const questions = await loadQuestions();
   let editingIndex = null;
 
   const form = document.createElement('div');
