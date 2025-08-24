@@ -1462,6 +1462,21 @@ h2 {
   overflow-y: auto;
 }
 
+#placeTags {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+#placeTags label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
 .rain-percent {
   color: blue;
 }
