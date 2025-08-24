@@ -1641,6 +1641,21 @@ h2 {
   }
 }
 
+/* Budget table borders */
+#budgetTable,
+#budgetTable th,
+#budgetTable td,
+.budget-summary-table,
+.budget-summary-table th,
+.budget-summary-table td {
+  border: 1px solid #cccccc;
+}
+
+#budgetTable,
+.budget-summary-table {
+  border-collapse: collapse;
+}
+
 /* Decision tree styles */
 .tree,
 .tree ul {
