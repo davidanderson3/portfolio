@@ -308,18 +308,16 @@ export async function initPlanningPanel() {
         <label>Rolling Credit <input type="number" name="rollingCredit" value="${currentData.budget.rollingCredit ?? ''}" /></label>
       </div>
       </form>
-      <div id="workingColumn" class="planning-right">
-        <div id="assetsTotal" style="margin-top:1em;"></div>
-        <div id="workingTable" style="margin-top:1em;"></div>
-      </div>
-      <div id="retirementColumn" class="planning-right"></div>
+      <div id="assetsTotal" class="full-column" style="margin-top:1em;flex-basis:100%;"></div>
+      <div id="workingColumn" class="planning-right" style="margin-top:1em;"></div>
+      <div id="retirementColumn" class="planning-right" style="margin-top:1em;"></div>
     </div>
     <div id="assetHistory" style="margin-top:1em;"></div>
   `;
 
   const form = container.querySelector('#planningForm');
   const assetsTotalDiv = container.querySelector('#assetsTotal');
-  const workingTableDiv = container.querySelector('#workingTable');
+  const workingColumnDiv = container.querySelector('#workingColumn');
   const retirementTableDiv = container.querySelector('#retirementColumn');
   const ssEstimateDiv = container.querySelector('#ssEstimate');
   const assetHistoryDiv = container.querySelector('#assetHistory');
@@ -422,7 +420,7 @@ export async function initPlanningPanel() {
     const workingData = finData.filter(r => r.age <= retirementAgeNum);
     const retirementData = finData.filter(r => r.age > retirementAgeNum);
 
-    workingTableDiv.innerHTML = `<h3>Working Years</h3>${buildFinanceTable(workingData, false)}`;
+    workingColumnDiv.innerHTML = `<h3>Working Years</h3>${buildFinanceTable(workingData, false)}`;
     retirementTableDiv.innerHTML = `<h3>Retirement</h3>${buildFinanceTable(retirementData)}`;
 
     currentData.finance = {

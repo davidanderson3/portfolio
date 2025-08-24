@@ -361,10 +361,10 @@ describe('planning finance tables', () => {
     form.rollingCredit.value = '0';
     form.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 
-    const workingHeading = document.querySelector('#workingTable h3').textContent;
+    const workingHeading = document.querySelector('#workingColumn h3').textContent;
     const retirementHeading = document.querySelector('#retirementColumn h3').textContent;
     expect([workingHeading, retirementHeading]).toEqual(['Working Years', 'Retirement']);
-    expect(document.querySelectorAll('#workingTable table tbody tr').length).toBe(2);
+    expect(document.querySelectorAll('#workingColumn table tbody tr').length).toBe(2);
     expect(document.querySelectorAll('#retirementColumn table tbody tr').length).toBe(1);
 
     const resetDom = prevWin ? { window: prevWin, document: prevDoc } : new JSDOM('', { url: 'http://localhost' });
