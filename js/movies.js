@@ -26,6 +26,10 @@ function makeIconBtn(symbol, title, fn) {
   return b;
 }
 
+function humanizeKey(str) {
+  return String(str).replace(/_/g, ' ');
+}
+
 export async function initMoviesPanel() {
   const listEl = document.getElementById('movieList');
   if (!listEl) return;
@@ -307,7 +311,8 @@ export async function initMoviesPanel() {
           } else if (key === 'overview') {
             mi.textContent = `${value}`;
           } else {
-            mi.textContent = `${key}: ${
+            const label = humanizeKey(key);
+            mi.textContent = `${label}: ${
               typeof value === 'object' ? JSON.stringify(value) : value
             }`;
           }

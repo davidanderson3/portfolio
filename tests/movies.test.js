@@ -54,8 +54,8 @@ describe('initMoviesPanel', () => {
 
     const item = document.querySelector('#movieList li');
     expect(item.textContent).toContain('Sample Movie');
-    expect(item.textContent).toContain('vote_average: 7.5');
-    expect(item.textContent).toContain('vote_count: 5');
+    expect(item.textContent).toContain('vote average: 7.5');
+    expect(item.textContent).toContain('vote count: 5');
     expect(item.textContent).toContain('director: Dir One');
     expect(item.textContent).toContain('actors: Actor A, Actor B');
     expect(item.textContent).toContain('genres: Action');
