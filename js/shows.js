@@ -1,3 +1,8 @@
+const API_BASE_URL =
+  (typeof window !== 'undefined' && window.apiBaseUrl) ||
+  (typeof process !== 'undefined' && process.env.API_BASE_URL) ||
+  'https://dashboard-6aih.onrender.com';
+
 function randomString(length) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let str = '';
@@ -136,7 +141,7 @@ export async function initShowsPanel() {
        const ul = document.createElement('ul');
        for (const artist of artists) {
          const url =
-           `https://app.ticketmaster.com/discovery/v2/events.json?apikey=${apiKey}&classificationName=music&keyword=${encodeURIComponent(
+           `${API_BASE_URL}/api/ticketmaster?apikey=${apiKey}&keyword=${encodeURIComponent(
              artist.name
            )}`;
          const res = await fetch(url);
