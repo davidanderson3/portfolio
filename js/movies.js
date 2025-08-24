@@ -24,6 +24,10 @@ function makeIconBtn(symbol, title, fn) {
 export async function initMoviesPanel() {
   const listEl = document.getElementById('movieList');
   if (!listEl) return;
+  const savedListEl = document.getElementById('savedMoviesList');
+  const movieTabs = document.getElementById('movieTabs');
+  const streamSection = document.getElementById('movieStreamSection');
+  const savedSection = document.getElementById('savedMoviesSection');
   const apiKeyInput = document.getElementById('moviesApiKey');
   const apiKeyContainer = document.getElementById('moviesApiKeyContainer');
 
@@ -69,6 +73,63 @@ export async function initMoviesPanel() {
       localStorage.setItem(savedKey, JSON.stringify(Array.from(ids)));
     } catch (_) {
       /* ignore */
+    }
+  };
+
+  const loadSavedMovies = async () => {
+    if (!savedListEl) return;
+    savedListEl.innerHTML = '<em>Loading...</em>';
+    try {
+      const res = await fetch('/api/saved-movies');
+      if (!res.ok) throw new Error('Network response was not ok');
+      const movies = await res.json();
+      if (!movies.length) {
+        savedListEl.innerHTML = '<em>No saved movies.</em>';
+        return;
+      }
+      const ul = document.createElement('ul');
+      movies.forEach(m => {
+        const li = document.createElement('li');
+        li.className = 'movie-card';
+        const title = (m.title || m.name || '').trim();
+        const year = (m.release_date || '').split('-')[0] || 'Unknown';
+        if (m.poster_path) {
+          const img = document.createElement('img');
+          img.src = `https://image.tmdb.org/t/p/w200${m.poster_path}`;
+          img.alt = `${title} poster`;
+          li.appendChild(img);
+        }
+        const info = document.createElement('div');
+        info.className = 'movie-info';
+        const titleEl = document.createElement('h3');
+        titleEl.textContent = `${title} (${year})`;
+        info.appendChild(titleEl);
+        const metaList = document.createElement('ul');
+        metaList.className = 'movie-meta';
+        if (m.director) {
+          const mi = document.createElement('li');
+          mi.textContent = `director: ${m.director}`;
+          metaList.appendChild(mi);
+        }
+        if (m.actors) {
+          const mi = document.createElement('li');
+          mi.textContent = `actors: ${m.actors}`;
+          metaList.appendChild(mi);
+        }
+        if (m.overview) {
+          const mi = document.createElement('li');
+          mi.textContent = `${m.overview}`;
+          metaList.appendChild(mi);
+        }
+        if (metaList.childNodes.length) info.appendChild(metaList);
+        li.appendChild(info);
+        ul.appendChild(li);
+      });
+      savedListEl.innerHTML = '';
+      savedListEl.appendChild(ul);
+    } catch (err) {
+      console.error('Failed to load saved movies', err);
+      savedListEl.textContent = 'Failed to load saved movies.';
     }
   };
 
@@ -187,11 +248,23 @@ export async function initMoviesPanel() {
         const btnRow = document.createElement('div');
         btnRow.className = 'button-row';
 
-        const saveBtn = makeIconBtn('💾', 'Save movie', () => {
-          saved.add(String(m.id));
-          saveSaved(saved);
-          li.remove();
-        });
+      const saveBtn = makeIconBtn('💾', 'Save movie', async () => {
+        saved.add(String(m.id));
+        saveSaved(saved);
+        try {
+          await fetch('/api/saved-movies', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(m)
+          });
+        } catch (_) {
+          /* ignore */
+        }
+        li.remove();
+        if (savedSection && savedSection.style.display !== 'none') {
+          loadSavedMovies();
+        }
+      });
 
         const hideBtn = makeIconBtn('❌', 'Hide movie', () => {
           hidden.add(String(m.id));
@@ -260,6 +333,24 @@ export async function initMoviesPanel() {
   });
   apiKeyInput?.addEventListener('change', loadMovies);
   await loadMovies();
+
+  if (movieTabs) {
+    const buttons = movieTabs.querySelectorAll('.movie-tab');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (btn.dataset.target === 'movieStreamSection') {
+          streamSection && (streamSection.style.display = '');
+          savedSection && (savedSection.style.display = 'none');
+        } else {
+          streamSection && (streamSection.style.display = 'none');
+          savedSection && (savedSection.style.display = '');
+          loadSavedMovies();
+        }
+      });
+    });
+  }
 }
 
 if (typeof window !== 'undefined') {

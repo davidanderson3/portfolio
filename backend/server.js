@@ -112,6 +112,39 @@ app.post('/api/description', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// --- Saved movies persistence ---
+const savedFile = path.join(__dirname, 'saved-movies.json');
+
+function readSavedMovies() {
+  try {
+    const txt = fs.readFileSync(savedFile, 'utf8');
+    return JSON.parse(txt);
+  } catch {
+    return [];
+  }
+}
+
+function writeSavedMovies(data) {
+  fs.writeFileSync(savedFile, JSON.stringify(data, null, 2));
+}
+
+app.get('/api/saved-movies', (req, res) => {
+  res.json(readSavedMovies());
+});
+
+app.post('/api/saved-movies', (req, res) => {
+  const movie = req.body || {};
+  if (!movie || !movie.id) {
+    return res.status(400).json({ error: 'invalid' });
+  }
+  const data = readSavedMovies();
+  if (!data.some(m => String(m.id) === String(movie.id))) {
+    data.push(movie);
+    writeSavedMovies(data);
+  }
+  res.json({ status: 'ok' });
+});
+
 // --- GeoLayers game endpoints ---
 const layerOrder = ['rivers','lakes','elevation','roads','outline','cities','label'];
 const locations = ['USA','CAN','MEX'];

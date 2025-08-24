@@ -228,7 +228,7 @@ describe('initMoviesPanel', () => {
     expect(JSON.parse(hidden)).toEqual(['321']);
   });
 
-  it('saves movie on save and persists id', async () => {
+  it('saves movie on save and posts to server', async () => {
     const dom = new JSDOM('<div id="movieList"></div>');
     global.document = dom.window.document;
     global.window = dom.window;
@@ -250,18 +250,27 @@ describe('initMoviesPanel', () => {
         { id: 777, title: 'Save Me', release_date: '2024-01-01', poster_path: '/a.jpg', genre_ids: [] }
       ]
     };
+    const creditsData = { cast: [], crew: [] };
     const genreData = { genres: [] };
 
     global.fetch = vi
       .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(apiData) })
-      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) });
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(creditsData) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(genreData) })
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve({ status: 'ok' }) });
 
     await initMoviesPanel();
     const saveButton = document.querySelector('#movieList li button[title="Save movie"]');
     saveButton.click();
+    await new Promise(r => setTimeout(r, 0));
 
     expect(document.querySelector('#movieList li')).toBeNull();
+    expect(fetch).toHaveBeenNthCalledWith(
+      4,
+      '/api/saved-movies',
+      expect.objectContaining({ method: 'POST' })
+    );
     expect(JSON.parse(saved)).toEqual(['777']);
   });
 
@@ -293,6 +302,55 @@ describe('initMoviesPanel', () => {
 
     await initMoviesPanel();
     expect(document.querySelector('#movieList li')).toBeNull();
+  });
+
+  it('loads saved movies when Saved Movies tab clicked', async () => {
+    const dom = new JSDOM(`
+      <div id="movieTabs">
+        <button class="movie-tab active" data-target="movieStreamSection">Movie Stream</button>
+        <button class="movie-tab" data-target="savedMoviesSection">Saved Movies</button>
+      </div>
+      <div id="movieStreamSection"><div id="movieList"></div></div>
+      <div id="savedMoviesSection" style="display:none;"><div id="savedMoviesList"></div></div>
+    `);
+    global.document = dom.window.document;
+    global.window = dom.window;
+    window.tmdbApiKey = 'TEST_KEY';
+    global.localStorage = {
+      getItem: () => '[]',
+      setItem: () => {}
+    };
+    Object.defineProperty(window, 'localStorage', { value: global.localStorage });
+    global.sessionStorage = { getItem: () => '', setItem: () => {} };
+    Object.defineProperty(window, 'sessionStorage', { value: global.sessionStorage });
+
+    const apiData = { results: [] };
+    const genreData = { genres: [] };
+    const savedMovies = [
+      { id: 1, title: 'Saved One', release_date: '2023-01-01', poster_path: '/a.jpg' }
+    ];
+
+    global.fetch = vi.fn(url => {
+      if (url.includes('trending')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(apiData) });
+      }
+      if (url.includes('genre')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(genreData) });
+      }
+      if (url === '/api/saved-movies') {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(savedMovies) });
+      }
+      return Promise.reject(new Error('unknown url'));
+    });
+
+    await initMoviesPanel();
+    const savedTab = document.querySelector('#movieTabs button[data-target="savedMoviesSection"]');
+    savedTab.click();
+    await new Promise(r => setTimeout(r, 10));
+
+    const savedListEl = document.getElementById('savedMoviesList');
+    expect(savedListEl.textContent).toContain('Saved One');
+    expect(fetch).toHaveBeenCalledWith('/api/saved-movies');
   });
 });
 
