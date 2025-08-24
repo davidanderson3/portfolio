@@ -23,12 +23,21 @@ export async function initRecipesPanel() {
     }
     listEl.innerHTML = '<em>Loading...</em>';
     try {
-      const res = await fetch(`https://api.api-ninjas.com/v1/recipe?query=${encodeURIComponent(query)}`, {
-        headers: { 'X-Api-Key': apiKey }
-      });
+      const res = await fetch(`https://api.spoonacular.com/recipes/complexSearch?query=${encodeURIComponent(query)}&number=50&offset=0&addRecipeInformation=true&apiKey=${encodeURIComponent(apiKey)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const recipes = await res.json();
-      if (!Array.isArray(recipes) || recipes.length === 0) {
+      const data = await res.json();
+      const recipes = Array.isArray(data?.results)
+        ? data.results.map(r => ({
+            title: r.title,
+            ingredients: r.extendedIngredients?.map(i => i.original).join('|') || '',
+            servings: r.servings,
+            instructions: r.analyzedInstructions?.[0]?.steps.map(s => s.step).join('. ') || '',
+            spoonacularScore: r.spoonacularScore,
+            aggregateLikes: r.aggregateLikes,
+            readyInMinutes: r.readyInMinutes
+          }))
+        : [];
+      if (recipes.length === 0) {
         listEl.textContent = 'No recipes found.';
         return;
       }
