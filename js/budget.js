@@ -229,7 +229,34 @@ export async function initBudgetPanel() {
   const addSubscriptionBtn = panel.querySelector('#addSubscriptionBtn');
   const removedBuiltIns = new Set(saved.removedBuiltIns || []);
 
-  function addRow(name = '', current = '', goal = '', key = '', type = 'expense') {
+  const sectionRows = {};
+
+  function addSection(title) {
+    const tr = document.createElement('tr');
+    tr.className = 'section-row';
+    tr.dataset.section = title;
+    const th = document.createElement('th');
+    th.colSpan = 7;
+    th.textContent = title;
+    tr.append(th);
+    tbody.append(tr);
+    sectionRows[title] = tr;
+  }
+
+  function insertRowInSection(section, tr) {
+    const header = sectionRows[section];
+    if (!header) {
+      tbody.append(tr);
+      return;
+    }
+    let ref = header;
+    while (ref.nextSibling && !ref.nextSibling.classList.contains('section-row')) {
+      ref = ref.nextSibling;
+    }
+    tbody.insertBefore(tr, ref.nextSibling);
+  }
+
+  function addRow(name = '', current = '', goal = '', key = '', type = 'expense', section = 'Other Expenses') {
     const id = key || Math.random().toString(36).slice(2);
     const tr = document.createElement('tr');
     tr.className = 'budget-row';
@@ -257,8 +284,33 @@ export async function initBudgetPanel() {
       render();
     });
     actions.append(up, rem);
-    tbody.append(tr);
+    insertRowInSection(section, tr);
   }
+
+  const SECTION_LOOKUP = {
+    mortgageInterest: 'Mortgage/Rent',
+    mortgagePrincipal: 'Mortgage/Rent',
+    escrow: 'Mortgage/Rent',
+    electric: 'Utilities',
+    water: 'Utilities',
+    gas: 'Utilities',
+    internet: 'Utilities',
+    cell: 'Utilities',
+    insurance: 'Insurance',
+    healthInsurance: 'Insurance',
+    dentalInsurance: 'Insurance'
+  };
+
+  const SECTION_ORDER = ['Income', 'Mortgage/Rent', 'Utilities', 'Insurance', 'Other Expenses', 'Subscriptions'];
+  SECTION_ORDER.forEach(addSection);
+
+  const incomeNames = new Set([
+    ...Object.keys(saved.incomeRecurring || {}),
+    ...Object.keys(saved.goalIncomeRecurring || {})
+  ]);
+  incomeNames.forEach(n =>
+    addRow(n, saved.incomeRecurring?.[n] ?? '', saved.goalIncomeRecurring?.[n] ?? '', '', 'income', 'Income')
+  );
 
   const recurNames = new Set([
     ...Object.keys(saved.recurring || {}),
@@ -266,21 +318,26 @@ export async function initBudgetPanel() {
   ]);
   DEFAULT_RECURRING.forEach(([key, label]) => {
     if (!removedBuiltIns.has(key)) {
-      addRow(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key, 'expense');
+      const section = SECTION_LOOKUP[key] || 'Other Expenses';
+      addRow(label, saved[key] ?? '', saved[`goal_${key}`] ?? '', key, 'expense', section);
     }
   });
-  recurNames.forEach(n => addRow(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? '', '', 'expense'));
+  recurNames.forEach(n =>
+    addRow(n, saved.recurring?.[n] ?? '', saved.goalRecurring?.[n] ?? '', '', 'expense', 'Other Expenses')
+  );
 
   const subNames = new Set([
     ...Object.keys(saved.subscriptions || {}),
     ...Object.keys(saved.goalSubscriptions || {})
   ]);
-  subNames.forEach(n => addRow(n, saved.subscriptions?.[n] ?? '', saved.goalSubscriptions?.[n] ?? '', '', 'subscription'));
+  subNames.forEach(n =>
+    addRow(n, saved.subscriptions?.[n] ?? '', saved.goalSubscriptions?.[n] ?? '', '', 'subscription', 'Subscriptions')
+  );
 
   addCategoryBtn.addEventListener('click', () => {
     const name = typeof prompt === 'function' ? prompt('Category name?') : '';
     if (name) {
-      addRow(name);
+      addRow(name, '', '', '', 'expense', 'Other Expenses');
       render();
     }
   });
@@ -288,7 +345,7 @@ export async function initBudgetPanel() {
   addIncomeBtn.addEventListener('click', () => {
     const name = typeof prompt === 'function' ? prompt('Income name?') : '';
     if (name) {
-      addRow(name, '', '', '', 'income');
+      addRow(name, '', '', '', 'income', 'Income');
       render();
     }
   });
@@ -296,7 +353,7 @@ export async function initBudgetPanel() {
   addSubscriptionBtn.addEventListener('click', () => {
     const name = typeof prompt === 'function' ? prompt('Subscription name?') : '';
     if (name) {
-      addRow(name, '', '', '', 'subscription');
+      addRow(name, '', '', '', 'subscription', 'Subscriptions');
       render();
     }
   });
@@ -316,6 +373,7 @@ export async function initBudgetPanel() {
       goalIncomeRecurring: {}
     };
     tbody.querySelectorAll('tr').forEach(row => {
+      if (row.classList.contains('section-row')) return;
       const name = row.querySelector('.cat-name').textContent.trim();
       const curVal = row.querySelector('.current-cost').value;
       const goalVal = row.querySelector('.goal-cost').value;
@@ -350,6 +408,7 @@ export async function initBudgetPanel() {
   function render(save = true) {
     const { categoriesCurrent, categoriesGoal, incomeCurrent, incomeGoal, saveData } = collectData();
     tbody.querySelectorAll('tr').forEach(row => {
+      if (row.classList.contains('section-row')) return;
       const cur = parseFloat(row.querySelector('.current-cost').value) || 0;
       const goal = parseFloat(row.querySelector('.goal-cost').value) || 0;
       const diff = goal - cur;
@@ -385,12 +444,6 @@ export async function initBudgetPanel() {
 
   tbody.addEventListener('input', () => render(false));
   tbody.addEventListener('change', () => render(true));
-
-  const incomeNames = new Set([
-    ...Object.keys(saved.incomeRecurring || {}),
-    ...Object.keys(saved.goalIncomeRecurring || {})
-  ]);
-  incomeNames.forEach(n => addRow(n, saved.incomeRecurring?.[n] ?? '', saved.goalIncomeRecurring?.[n] ?? '', '', 'income'));
 
   render(false);
 }
