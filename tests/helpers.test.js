@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { JSDOM } from 'jsdom';
 
 // Mock auth.js to avoid loading Firebase scripts during tests
@@ -65,17 +65,34 @@ describe('parseNaturalDate', () => {
 });
 
 describe('formatDaysUntil', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('returns "today" for current date', () => {
-    const today = new Date().toISOString().split('T')[0];
+    vi.useFakeTimers();
+    const now = new Date('2025-02-10T00:00:00');
+    vi.setSystemTime(now);
+    const today = now.toISOString().split('T')[0];
     expect(formatDaysUntil(today)).toBe('today');
   });
 
   it('handles future and past dates', () => {
-    const now = new Date();
+    vi.useFakeTimers();
+    const now = new Date('2025-02-10T00:00:00'); // Monday
+    vi.setSystemTime(now);
     const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
     const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
     expect(formatDaysUntil(tomorrow.toISOString().split('T')[0])).toBe('in 1 day');
     expect(formatDaysUntil(yesterday.toISOString().split('T')[0])).toBe('overdue by 1 day');
+  });
+
+  it('shows yesterday instead of overdue when today is Sunday', () => {
+    vi.useFakeTimers();
+    const now = new Date('2025-02-09T00:00:00'); // Sunday
+    vi.setSystemTime(now);
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    expect(formatDaysUntil(yesterday.toISOString().split('T')[0])).toBe('yesterday');
   });
 });
 

@@ -506,6 +506,7 @@ export function formatDaysUntil(dateStr) {
   target.setHours(0, 0, 0, 0);
   const diffDays = Math.round((target - now) / (1000 * 60 * 60 * 24));
   if (diffDays === 0) return 'today';
+  if (diffDays === -1 && now.getDay() === 0) return 'yesterday';
   if (diffDays > 0) return `in ${diffDays} day${diffDays === 1 ? '' : 's'}`;
   return `overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? '' : 's'}`;
 }
