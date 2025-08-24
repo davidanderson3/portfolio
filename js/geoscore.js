@@ -1,6 +1,6 @@
 const STORAGE_KEY = 'geoscoreQuestions';
 
-function loadQuestions() {
+export function loadQuestions() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
@@ -9,7 +9,7 @@ function loadQuestions() {
   }
 }
 
-function saveQuestions(qs) {
+export function saveQuestions(qs) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(qs));
   } catch {}
@@ -34,7 +34,7 @@ export function initGeoScorePanel() {
   answersDiv.className = 'geoscore-answers';
   form.appendChild(answersDiv);
 
-  function addAnswerField(ans = '', score = '') {
+  function addAnswerField(ans = '', score = '', count = 0) {
     const row = document.createElement('div');
     row.className = 'geoscore-answer-row';
 
@@ -48,12 +48,17 @@ export function initGeoScorePanel() {
     s.placeholder = 'Score';
     s.value = score;
 
+    const c = document.createElement('input');
+    c.type = 'number';
+    c.placeholder = 'Count';
+    c.value = count;
+
     const rm = document.createElement('button');
     rm.type = 'button';
     rm.textContent = '✖';
     rm.addEventListener('click', () => row.remove());
 
-    row.append(a, s, rm);
+    row.append(a, s, c, rm);
     answersDiv.appendChild(row);
   }
 
@@ -72,8 +77,12 @@ export function initGeoScorePanel() {
     const question = qInput.value.trim();
     if (!question) return;
     const answers = Array.from(answersDiv.querySelectorAll('.geoscore-answer-row')).map(row => {
-      const [a, s] = row.querySelectorAll('input');
-      return { answer: a.value.trim(), score: Number(s.value) || 0 };
+      const [a, s, c] = row.querySelectorAll('input');
+      return {
+        answer: a.value.trim(),
+        score: Number(s.value) || 0,
+        count: Number(c.value) || 0
+      };
     }).filter(a => a.answer);
     questions.push({ question, answers });
     saveQuestions(questions);
@@ -94,7 +103,11 @@ export function initGeoScorePanel() {
     list.innerHTML = '';
     questions.forEach((q, idx) => {
       const li = document.createElement('li');
-      li.textContent = `${q.question} (${q.answers.length} answers)`;
+
+      const header = document.createElement('div');
+      header.textContent = q.question;
+      li.appendChild(header);
+
       const del = document.createElement('button');
       del.type = 'button';
       del.textContent = 'Delete';
@@ -104,6 +117,15 @@ export function initGeoScorePanel() {
         renderList();
       });
       li.appendChild(del);
+
+      const ansList = document.createElement('ul');
+      q.answers.forEach(a => {
+        const ai = document.createElement('li');
+        ai.textContent = `${a.answer} (${a.count || 0})`;
+        ansList.appendChild(ai);
+      });
+      li.appendChild(ansList);
+
       list.appendChild(li);
     });
   }
