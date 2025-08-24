@@ -80,7 +80,7 @@ describe('initMoviesPanel', () => {
     expect(buttons[2].textContent).toBe('❌');
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      'https://api.themoviedb.org/3/discover/movie?api_key=TEST_KEY&sort_by=vote_count.desc&page=1'
+      'https://api.themoviedb.org/3/discover/movie?api_key=TEST_KEY&sort_by=release_date.desc&page=1'
     );
     expect(fetch).toHaveBeenNthCalledWith(
       6,
@@ -155,7 +155,7 @@ describe('initMoviesPanel', () => {
 
     expect(fetch).toHaveBeenNthCalledWith(
       1,
-      'https://api.themoviedb.org/3/discover/movie?api_key=INPUT_KEY&sort_by=vote_count.desc&page=1'
+      'https://api.themoviedb.org/3/discover/movie?api_key=INPUT_KEY&sort_by=release_date.desc&page=1'
     );
     expect(fetch).toHaveBeenNthCalledWith(
       6,
@@ -205,7 +205,7 @@ describe('initMoviesPanel', () => {
     await new Promise(r => setTimeout(r, 0));
 
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.themoviedb.org/3/discover/movie?api_key=FAIL_KEY&sort_by=vote_count.desc&page=1'
+      'https://api.themoviedb.org/3/discover/movie?api_key=FAIL_KEY&sort_by=release_date.desc&page=1'
     );
     expect(stored).toBe('FAIL_KEY');
   });

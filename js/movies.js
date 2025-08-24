@@ -208,7 +208,7 @@ export async function initMoviesPanel() {
       // Fetch 100 movies sorted by vote count descending
       const moviesData = [];
       for (let page = 1; page <= 5 && moviesData.length < 100; page++) {
-        const url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&sort_by=vote_count.desc&page=${page}`;
+        const url = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&sort_by=release_date.desc&page=${page}`;
         try {
           const res = await fetch(url);
           if (!res.ok) throw new Error('Network response was not ok');
@@ -227,10 +227,11 @@ export async function initMoviesPanel() {
             !saved.has(String(m.id)) &&
             !watched.has(String(m.id))
         )
-        .sort((a, b) =>
-          b.vote_average - a.vote_average ||
-          new Date(b.release_date || 0) - new Date(a.release_date || 0) ||
-          b.popularity - a.popularity
+        .sort(
+          (a, b) =>
+            new Date(b.release_date || 0) - new Date(a.release_date || 0) ||
+            b.vote_average - a.vote_average ||
+            b.popularity - a.popularity
         );
       if (movies.length === 0) {
         listEl.textContent = 'No movies found.';
