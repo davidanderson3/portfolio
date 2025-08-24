@@ -52,10 +52,7 @@ async function ensureDefaultMetrics() {
   const user = getCurrentUser();
   if (!user) {
     const stored = JSON.parse(localStorage.getItem(METRICS_KEY) || 'null');
-    let updated = Array.isArray(stored) && stored.length ? stored : SAMPLE_METRICS.slice();
-    if (!updated.find(m => m.id === 'count')) {
-      updated = [...updated, { id: 'count', label: 'Count', unit: 'count', direction: 'higher' }];
-    }
+    const updated = Array.isArray(stored) && stored.length ? stored : SAMPLE_METRICS.slice();
     updated.forEach(m => { if (!('direction' in m)) m.direction = 'higher'; applyUnitLabels(m); });
     localStorage.setItem(METRICS_KEY, JSON.stringify(updated));
     return updated;
@@ -64,10 +61,7 @@ async function ensureDefaultMetrics() {
   const docRef = db.collection('users').doc(user.uid).collection('settings').doc('metricsConfig');
   const snap = await docRef.get();
   const current = snap.exists ? snap.data().metrics || [] : [];
-  let updated = current;
-  if (!updated.find(m => m.id === 'count')) {
-    updated = [...updated, { id: 'count', label: 'Count', unit: 'count', direction: 'higher' }];
-  }
+  const updated = current;
   if (!snap.exists) {
     await docRef.set({ metrics: updated }, { merge: true });
   }
