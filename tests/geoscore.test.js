@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { loadQuestions, saveQuestions } from '../js/geoscore.js';
+import { loadQuestions, saveQuestions, DEFAULT_QUESTIONS } from '../js/geoscore.js';
 
 describe('geoscore persistence', () => {
   beforeEach(() => {
@@ -9,6 +9,10 @@ describe('geoscore persistence', () => {
       setItem: (key, val) => { store[key] = String(val); },
       removeItem: key => { delete store[key]; }
     };
+  });
+
+  it('provides default questions when storage is empty', () => {
+    expect(loadQuestions()).toEqual(DEFAULT_QUESTIONS);
   });
 
   it('saves and loads answer counts', () => {

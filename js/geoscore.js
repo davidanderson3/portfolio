@@ -1,12 +1,49 @@
 const STORAGE_KEY = 'geoscoreQuestions';
 
+export const DEFAULT_QUESTIONS = [
+  {
+    question: 'Name a country in South America',
+    answers: [
+      { answer: 'Brazil', score: 10, count: 35 },
+      { answer: 'Argentina', score: 9, count: 20 },
+      { answer: 'Chile', score: 8, count: 15 },
+      { answer: 'Peru', score: 7, count: 10 },
+      { answer: 'Colombia', score: 6, count: 8 }
+    ]
+  },
+  {
+    question: 'Name a U.S. state that starts with M',
+    answers: [
+      { answer: 'Michigan', score: 10, count: 25 },
+      { answer: 'Mississippi', score: 9, count: 15 },
+      { answer: 'Montana', score: 8, count: 12 },
+      { answer: 'Missouri', score: 7, count: 10 },
+      { answer: 'Maryland', score: 6, count: 8 }
+    ]
+  },
+  {
+    question: 'Name a European capital city',
+    answers: [
+      { answer: 'Paris', score: 10, count: 28 },
+      { answer: 'London', score: 9, count: 26 },
+      { answer: 'Berlin', score: 8, count: 20 },
+      { answer: 'Rome', score: 7, count: 18 },
+      { answer: 'Madrid', score: 6, count: 12 }
+    ]
+  }
+];
+
 export function loadQuestions() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return Array.isArray(JSON.parse(raw)) ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length) {
+      return parsed;
+    }
+  } catch {}
+  // If nothing stored, seed with defaults
+  saveQuestions(DEFAULT_QUESTIONS);
+  return JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
 }
 
 export function saveQuestions(qs) {
@@ -21,6 +58,7 @@ export function initGeoScorePanel() {
   container.innerHTML = '';
 
   const questions = loadQuestions();
+  let editingIndex = null;
 
   const form = document.createElement('div');
   form.id = 'geoscoreForm';
@@ -33,6 +71,23 @@ export function initGeoScorePanel() {
   const answersDiv = document.createElement('div');
   answersDiv.className = 'geoscore-answers';
   form.appendChild(answersDiv);
+
+  const bulkInput = document.createElement('textarea');
+  bulkInput.placeholder = 'Bulk answers (Answer|Score|Count per line)';
+  form.appendChild(bulkInput);
+
+  const bulkBtn = document.createElement('button');
+  bulkBtn.type = 'button';
+  bulkBtn.textContent = 'Add Bulk Answers';
+  bulkBtn.addEventListener('click', () => {
+    const lines = bulkInput.value.split('\n').map(l => l.trim()).filter(l => l);
+    lines.forEach(line => {
+      const [ans, sc = '', ct = ''] = line.split('|').map(p => p.trim());
+      addAnswerField(ans, sc, ct);
+    });
+    bulkInput.value = '';
+  });
+  form.appendChild(bulkBtn);
 
   function addAnswerField(ans = '', score = '', count = 0) {
     const row = document.createElement('div');
@@ -84,14 +139,35 @@ export function initGeoScorePanel() {
         count: Number(c.value) || 0
       };
     }).filter(a => a.answer);
-    questions.push({ question, answers });
+    if (editingIndex !== null) {
+      questions[editingIndex] = { question, answers };
+    } else {
+      questions.push({ question, answers });
+    }
     saveQuestions(questions);
     renderList();
     qInput.value = '';
     answersDiv.innerHTML = '';
     addAnswerField();
+    editingIndex = null;
+    saveBtn.textContent = 'Save Question';
+    cancelEditBtn.style.display = 'none';
   });
   form.appendChild(saveBtn);
+
+  const cancelEditBtn = document.createElement('button');
+  cancelEditBtn.type = 'button';
+  cancelEditBtn.textContent = 'Cancel';
+  cancelEditBtn.style.display = 'none';
+  cancelEditBtn.addEventListener('click', () => {
+    editingIndex = null;
+    qInput.value = '';
+    answersDiv.innerHTML = '';
+    addAnswerField();
+    saveBtn.textContent = 'Save Question';
+    cancelEditBtn.style.display = 'none';
+  });
+  form.appendChild(cancelEditBtn);
 
   container.appendChild(form);
 
@@ -107,6 +183,19 @@ export function initGeoScorePanel() {
       const header = document.createElement('div');
       header.textContent = q.question;
       li.appendChild(header);
+
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.textContent = 'Edit';
+      edit.addEventListener('click', () => {
+        editingIndex = idx;
+        qInput.value = q.question;
+        answersDiv.innerHTML = '';
+        q.answers.forEach(a => addAnswerField(a.answer, a.score, a.count));
+        saveBtn.textContent = 'Update Question';
+        cancelEditBtn.style.display = 'inline-block';
+      });
+      li.appendChild(edit);
 
       const del = document.createElement('button');
       del.type = 'button';
