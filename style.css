@@ -1714,6 +1714,14 @@ h2 {
   background: #eee;
 }
 
+#placeResults li.existing-place {
+  color: #333;
+}
+
+#placeResults li.search-result {
+  color: #4285F4;
+}
+
 /* Style the plus icon on the add-item button */
 .add-item-btn .plus-icon {
   color: #fff;

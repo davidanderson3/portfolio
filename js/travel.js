@@ -90,6 +90,14 @@ const visitedIcon = L.icon({
   popupAnchor: [0, -12],
 });
 
+// Search results use a distinct blue marker
+const resultIcon = L.icon({
+  iconUrl: createSvgUrl('#4285F4'),
+  iconSize: [24, 24],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, -12],
+});
+
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 3958.8; // miles
   const toRad = deg => (deg * Math.PI) / 180;
@@ -362,6 +370,12 @@ export async function initTravelPanel() {
           : defaultIcon;
       const m = L.marker([p.lat, p.lon], { icon }).addTo(map).bindPopup(p.name);
       markers.push(m);
+      Object.defineProperty(p, 'marker', {
+        value: m,
+        enumerable: false,
+        configurable: true,
+        writable: true,
+      });
       m.on('click', () => {
         const row = markerRowMap.get(m);
         if (row) {
@@ -829,10 +843,23 @@ export async function initTravelPanel() {
     const term = placeInput.value.trim();
     if (!term) return;
     clearSearchResults();
+    const existingMatches = travelData.filter(p =>
+      p.name.toLowerCase().includes(term.toLowerCase())
+    );
+    existingMatches.forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = p.name;
+      li.classList.add('existing-place');
+      li.addEventListener('click', () => {
+        map.setView([p.lat, p.lon], 8);
+        p.marker?.openPopup();
+      });
+      resultsList?.append(li);
+    });
     const coords = parseCoordinates(term);
     if (coords) {
       const { lat, lon } = coords;
-      const m = L.marker([lat, lon], { icon: defaultIcon }).addTo(map);
+      const m = L.marker([lat, lon], { icon: resultIcon }).addTo(map);
       resultMarkers.push(m);
       const popupDiv = document.createElement('div');
       const title = document.createElement('div');
@@ -850,6 +877,7 @@ export async function initTravelPanel() {
       });
       const li = document.createElement('li');
       li.textContent = title.textContent;
+      li.classList.add('search-result');
       li.addEventListener('click', () => {
         map.setView([lat, lon], 8);
         m.openPopup();
@@ -868,7 +896,7 @@ export async function initTravelPanel() {
           const latitude = parseFloat(lat);
           const longitude = parseFloat(lon);
           latLngs.push([latitude, longitude]);
-          const m = L.marker([latitude, longitude], { icon: defaultIcon }).addTo(map);
+          const m = L.marker([latitude, longitude], { icon: resultIcon }).addTo(map);
           resultMarkers.push(m);
           const popupDiv = document.createElement('div');
           const title = document.createElement('div');
@@ -887,6 +915,7 @@ export async function initTravelPanel() {
 
           const li = document.createElement('li');
           li.textContent = display_name;
+          li.classList.add('search-result');
           li.addEventListener('click', () => {
             map.setView([latitude, longitude], 8);
             m.openPopup();
