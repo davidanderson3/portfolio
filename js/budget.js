@@ -46,6 +46,7 @@ const DEFAULT_RECURRING = [
   ['mortgageInterest', 'Mortgage Interest'],
   ['mortgagePrincipal', 'Mortgage Principal'],
   ['escrow', 'Escrow'],
+  ['rent', 'Rent'],
   ['electric', 'Electric'],
   ['water', 'Water'],
   ['gas', 'Gas'],

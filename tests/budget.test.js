@@ -353,6 +353,28 @@ describe('budget panel', () => {
     expect(summary).not.toContain('Rent After Escrow');
   });
 
+  it('places Rent in the Mortgage/Rent section by default', async () => {
+    getMock.mockResolvedValue({ exists: false });
+
+    const dom = new JSDOM('<div id="budgetContainer"></div>');
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.Event = dom.window.Event;
+
+    const { initBudgetPanel } = await import('../js/budget.js');
+    await initBudgetPanel();
+
+    const rentRow = document.querySelector('tr[data-field="rent"]');
+    expect(rentRow).not.toBeNull();
+
+    let sectionHeader = rentRow.previousElementSibling;
+    while (sectionHeader && !sectionHeader.classList.contains('section-row')) {
+      sectionHeader = sectionHeader.previousElementSibling;
+    }
+    expect(sectionHeader).not.toBeNull();
+    expect(sectionHeader.dataset.section).toBe('Mortgage/Rent');
+  });
+
   it('displays current and goal leftover in the summary', async () => {
     getMock.mockResolvedValue({ exists: false });
 
