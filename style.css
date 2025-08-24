@@ -1429,6 +1429,11 @@ h2 {
   max-width: 260px;
 }
 
+#placeSearchRow button {
+  /* Override global button margin so the buttons align with the input */
+  margin-top: 0;
+}
+
 /* Prevent horizontal overflow of travel table on small screens */
 #travelPanel .full-column {
   overflow-x: auto;
