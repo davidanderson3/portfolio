@@ -453,7 +453,7 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
   });
   const allStats = await loadAllStats();
   const unitByMetric = config.reduce((a, m) => (a[m.id] = m.unit, a), {});
-  const valuesByMetric = {};
+  const valuesByMetric = {}, lastEntryByMetric = {};
   Object.values(allStats).forEach(day => {
     Object.entries(day).forEach(([id, entries]) => {
       entries.filter(e => !(e.extra && e.extra.postponed)).forEach(entry => {
@@ -462,6 +462,10 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
           v = summarizeListValue(v);
         }
         (valuesByMetric[id] = valuesByMetric[id] || []).push(v);
+        const ts = entry.timestamp || 0;
+        if (!lastEntryByMetric[id] || ts > lastEntryByMetric[id]) {
+          lastEntryByMetric[id] = ts;
+        }
       });
     });
   });
@@ -542,6 +546,10 @@ async function renderStatsSummary(dayKey = activeMetricsDate) {
     }
     const row = document.createElement('tr');
     row.dataset.metricId = cfg.id;
+    const lastTs = lastEntryByMetric[cfg.id];
+    const daysSince = lastTs ? (Date.now() - lastTs) / 86400000 : Infinity;
+    const intensity = Math.min(daysSince / 7, 1);
+    row.style.backgroundColor = `rgba(255,165,0,${intensity})`;
     const td1 = document.createElement('td');
     td1.textContent = cfg.label;
     td1.dataset.label = 'Metric';
