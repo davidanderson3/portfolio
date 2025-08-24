@@ -29,14 +29,13 @@ describe('initRecipesPanel', () => {
 
     await initRecipesPanel();
     document.getElementById('recipesQuery').value = 'chicken';
-    document.getElementById('recipesApiKey').value = 'testkey';
     document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
     const textEl = document.querySelector('#recipesList li strong');
     expect(textEl.textContent).toBe('Chicken Soup');
     expect(fetch).toHaveBeenCalledWith(
-      'https://api.spoonacular.com/recipes/complexSearch?query=chicken&number=50&offset=0&addRecipeInformation=true&apiKey=testkey'
+      'https://dashboard-6aih.onrender.com/api/spoonacular?query=chicken'
     );
   });
 
@@ -64,7 +63,6 @@ describe('initRecipesPanel', () => {
 
     await initRecipesPanel();
     document.getElementById('recipesQuery').value = 'meat';
-    document.getElementById('recipesApiKey').value = 'testkey';
     document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
@@ -100,7 +98,6 @@ describe('initRecipesPanel', () => {
 
     await initRecipesPanel();
     document.getElementById('recipesQuery').value = 'anything';
-    document.getElementById('recipesApiKey').value = 'key';
     document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
@@ -127,7 +124,6 @@ describe('initRecipesPanel', () => {
 
     await initRecipesPanel();
     document.getElementById('recipesQuery').value = 'test';
-    document.getElementById('recipesApiKey').value = 'key';
     document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
@@ -162,7 +158,6 @@ describe('initRecipesPanel', () => {
 
     await initRecipesPanel();
     document.getElementById('recipesQuery').value = 'bread';
-    document.getElementById('recipesApiKey').value = 'key';
     document.getElementById('recipesSearchBtn').click();
     await new Promise(r => setTimeout(r, 0));
 
@@ -172,21 +167,7 @@ describe('initRecipesPanel', () => {
     expect(saved[0].title).toBe('Toast');
   });
 
-  it('hides API key input when one is cached', async () => {
-    global.localStorage = {
-      getItem: (key) => (key === 'recipesApiKey' ? 'cached' : ''),
-      setItem: () => {}
-    };
-    const dom = new JSDOM(`
-      <div id="recipesList"></div>
-      <input id="recipesQuery" />
-      <div id="recipesApiKeyContainer">
-        <input id="recipesApiKey" />
-      </div>
-      <button id="recipesSearchBtn"></button>
-    `);
-    global.document = dom.window.document;
-    global.window = dom.window;
+  it('hides API key input by default', async () => {
     await initRecipesPanel();
     const container = document.getElementById('recipesApiKeyContainer');
     expect(container.style.display).toBe('none');
