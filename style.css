@@ -2192,6 +2192,16 @@ h2 {
   white-space: nowrap;
 }
 
+.budget-summary-table {
+  border-collapse: collapse;
+}
+
+.budget-summary-table th,
+.budget-summary-table td {
+  padding-right: 8px;
+  white-space: nowrap;
+}
+
 .budget-actions {
   display: flex;
   flex-wrap: wrap;
