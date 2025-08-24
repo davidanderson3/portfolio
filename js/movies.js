@@ -1,3 +1,8 @@
+export const API_BASE_URL =
+  (typeof window !== 'undefined' && window.apiBaseUrl) ||
+  (typeof process !== 'undefined' && process.env.API_BASE_URL) ||
+  'https://dashboard-6aih.onrender.com';
+
 function makeIconBtn(symbol, title, fn) {
   const b = document.createElement('button');
   b.type = 'button';
@@ -80,7 +85,7 @@ export async function initMoviesPanel() {
     if (!savedListEl) return;
     savedListEl.innerHTML = '<em>Loading...</em>';
     try {
-      const res = await fetch('/api/saved-movies');
+      const res = await fetch(`${API_BASE_URL}/api/saved-movies`);
       if (!res.ok) throw new Error('Network response was not ok');
       const movies = await res.json();
       if (!movies.length) {
@@ -252,7 +257,7 @@ export async function initMoviesPanel() {
         saved.add(String(m.id));
         saveSaved(saved);
         try {
-          await fetch('/api/saved-movies', {
+          await fetch(`${API_BASE_URL}/api/saved-movies`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(m)
