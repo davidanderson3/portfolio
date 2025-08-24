@@ -224,8 +224,7 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
-    global.prompt = () => 'Test Recurring';
-    document.getElementById('addCategoryBtn').click();
+    dom.window.openBudgetItemForm({ name: 'Test Recurring', type: 'expense' });
 
     const expenseInputs = document.querySelectorAll('#budgetTbody tr[data-type="expense"] .goal-cost');
     const costInput = expenseInputs[expenseInputs.length - 1];
@@ -251,8 +250,7 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
-    global.prompt = () => 'Test Subscription';
-    document.getElementById('addSubscriptionBtn').click();
+    dom.window.openBudgetItemForm({ name: 'Test Subscription', type: 'subscription' });
 
     const subInputs = document.querySelectorAll('#budgetTbody tr[data-type="subscription"] .goal-cost');
     const costInput = subInputs[subInputs.length - 1];
@@ -278,8 +276,7 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
-    global.prompt = () => 'Side Job';
-    document.getElementById('addIncomeBtn').click();
+    dom.window.openBudgetItemForm({ name: 'Side Job', type: 'income' });
 
     const incomeRows = document.querySelectorAll('#budgetTbody tr[data-type="income"]');
     const incomeRow = incomeRows[incomeRows.length - 1];
@@ -308,12 +305,8 @@ describe('budget panel', () => {
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
-    global.prompt = vi.fn()
-      .mockReturnValueOnce('First')
-      .mockReturnValueOnce('Second');
-
-    document.getElementById('addCategoryBtn').click();
-    document.getElementById('addCategoryBtn').click();
+    dom.window.openBudgetItemForm({ name: 'First', type: 'expense' });
+    dom.window.openBudgetItemForm({ name: 'Second', type: 'expense' });
 
     const rows = document.querySelectorAll('#budgetTbody tr[data-type="expense"]');
     rows[rows.length - 1].querySelector('button[title="Move up"]').click();
@@ -382,13 +375,11 @@ describe('budget panel', () => {
     global.window = dom.window;
     global.document = dom.window.document;
     global.Event = dom.window.Event;
-    global.prompt = vi.fn(() => 'Job');
 
     const { initBudgetPanel } = await import('../js/budget.js');
     await initBudgetPanel();
 
-    document.getElementById('addIncomeBtn').click();
-
+    dom.window.openBudgetItemForm({ name: 'Job', type: 'income' });
     const incomeRow = document.querySelector('tr[data-type="income"]');
     incomeRow.querySelector('.current-cost').value = '5000';
     incomeRow.querySelector('.current-cost').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
@@ -408,7 +399,6 @@ describe('budget panel', () => {
     expect(cells[0].textContent).toBe('Leftover: $2,000');
     expect(cells[1].textContent).toBe('Leftover: $3,500');
 
-    delete global.prompt;
   });
 
   it('shows the summary inside the layout', async () => {
