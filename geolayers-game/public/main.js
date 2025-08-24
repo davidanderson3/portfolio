@@ -51,7 +51,8 @@ function loadCountry() {
 
     riversGeo.features.forEach(f => processCoords(f.geometry.coordinates));
     const bounds = L.latLngBounds([[minLat, minLng], [maxLat, maxLng]]);
-    map.fitBounds(bounds.pad(-0.35));
+    // Shrink bounds more aggressively to zoom closer on the selected country
+    map.fitBounds(bounds.pad(-0.6));
 
     riversLayer.addTo(map);
   });
