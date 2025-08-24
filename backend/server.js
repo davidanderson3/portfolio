@@ -168,6 +168,30 @@ app.get('/api/ticketmaster', async (req, res) => {
   }
 });
 
+// --- Spoonacular proxy ---
+app.get('/api/spoonacular', async (req, res) => {
+  const { query } = req.query || {};
+  const apiKey = process.env.SPOONACULAR_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'missing api key' });
+  }
+  if (!query) {
+    return res.status(400).json({ error: 'missing query' });
+  }
+  const apiUrl =
+    `https://api.spoonacular.com/recipes/complexSearch?query=${encodeURIComponent(
+      query
+    )}&number=50&offset=0&addRecipeInformation=true&apiKey=${apiKey}`;
+  try {
+    const apiRes = await fetch(apiUrl);
+    const data = await apiRes.json();
+    res.status(apiRes.status).json(data);
+  } catch (err) {
+    console.error('Spoonacular fetch failed', err);
+    res.status(500).json({ error: 'failed' });
+  }
+});
+
 // --- GeoLayers game endpoints ---
 const layerOrder = ['rivers','lakes','elevation','roads','outline','cities','label'];
 const locations = ['USA','CAN','MEX'];

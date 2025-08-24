@@ -42,3 +42,7 @@ Install dependencies and run the test suite with:
 npm install
 npm test
 ```
+
+### Spoonacular proxy
+
+The backend exposes a `/api/spoonacular` route that forwards recipe searches to the Spoonacular API without revealing your key. Define a `SPOONACULAR_KEY` environment variable before running the server when deploying (e.g., on Render).
