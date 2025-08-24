@@ -13,7 +13,7 @@ try {
 
 const execFileAsync = util.promisify(execFile);
 const app = express();
-const PORT = 3002;
+const PORT = process.env.PORT || 3002;
 
 const CONTACT_EMAIL = Buffer.from('ZHZkbmRyc25AZ21haWwuY29t', 'base64').toString('utf8');
 const mailer = (() => {
