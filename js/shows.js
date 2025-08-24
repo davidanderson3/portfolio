@@ -173,10 +173,10 @@ export async function initShowsPanel() {
 
        const ul = document.createElement('ul');
        for (const artist of artists) {
-         const url =
-           `${API_BASE_URL}/api/ticketmaster?apikey=${apiKey}&keyword=${encodeURIComponent(
-             artist.name
-           )}`;
+        const url =
+          `${API_BASE_URL}/api/ticketmaster?apiKey=${apiKey}&keyword=${encodeURIComponent(
+            artist.name
+          )}`;
          const res = await fetch(url);
          if (!res.ok) continue;
          const data = await res.json();
