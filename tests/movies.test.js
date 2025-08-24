@@ -18,7 +18,7 @@ describe('initMoviesPanel', () => {
           title: 'Sample Movie',
           release_date: '2024-01-01',
           vote_average: 7.5,
-          vote_count: 5,
+          vote_count: 12,
           genre_ids: [28],
           overview: 'An exciting film',
           adult: false,
@@ -60,7 +60,7 @@ describe('initMoviesPanel', () => {
     const item = document.querySelector('#movieList li');
     expect(item.textContent).toContain('Sample Movie');
     expect(item.textContent).toContain('Vote Average: 7.5');
-    expect(item.textContent).toContain('Vote Count: 5');
+    expect(item.textContent).toContain('Vote Count: 12');
     expect(item.textContent).toContain('Director: Dir One');
     expect(item.textContent).toContain('Actors: Actor A, Actor B');
     expect(item.textContent).toContain('Genres: Action');
@@ -122,7 +122,13 @@ describe('initMoviesPanel', () => {
 
     const apiData = {
       results: [
-        { id: 1, title: 'Any Movie', release_date: '2024-01-01', genre_ids: [] }
+        {
+          id: 1,
+          title: 'Any Movie',
+          release_date: '2024-01-01',
+          genre_ids: [],
+          vote_count: 10
+        }
       ]
     };
     const creditsData = { cast: [], crew: [] };
@@ -235,7 +241,14 @@ describe('initMoviesPanel', () => {
 
     const apiData = {
       results: [
-        { id: 321, title: 'Hide Me', release_date: '2024-01-01', poster_path: '/a.jpg', genre_ids: [] }
+        {
+          id: 321,
+          title: 'Hide Me',
+          release_date: '2024-01-01',
+          poster_path: '/a.jpg',
+          genre_ids: [],
+          vote_count: 10
+        }
       ]
     };
     const genreData = { genres: [] };
@@ -284,7 +297,14 @@ describe('initMoviesPanel', () => {
 
     const apiData = {
       results: [
-        { id: 777, title: 'Save Me', release_date: '2024-01-01', poster_path: '/a.jpg', genre_ids: [] }
+        {
+          id: 777,
+          title: 'Save Me',
+          release_date: '2024-01-01',
+          poster_path: '/a.jpg',
+          genre_ids: [],
+          vote_count: 10
+        }
       ]
     };
     const creditsData = { cast: [], crew: [] };
@@ -336,7 +356,14 @@ describe('initMoviesPanel', () => {
 
     const apiData = {
       results: [
-        { id: 555, title: 'Skip Me', release_date: '2024-01-01', genre_ids: [], poster_path: '/a.jpg' }
+        {
+          id: 555,
+          title: 'Skip Me',
+          release_date: '2024-01-01',
+          genre_ids: [],
+          poster_path: '/a.jpg',
+          vote_count: 10
+        }
       ]
     };
     const genreData = { genres: [] };
@@ -438,7 +465,14 @@ describe('initMoviesPanel', () => {
 
     const apiData = {
       results: [
-        { id: 9, title: 'Watch Me', release_date: '2024-01-01', poster_path: '/a.jpg', genre_ids: [] }
+        {
+          id: 9,
+          title: 'Watch Me',
+          release_date: '2024-01-01',
+          poster_path: '/a.jpg',
+          genre_ids: [],
+          vote_count: 10
+        }
       ]
     };
     const genreData = { genres: [] };
