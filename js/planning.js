@@ -323,6 +323,7 @@ export async function initPlanningPanel() {
   const retirementTableDiv = container.querySelector('#retirementColumn');
   const ssEstimateDiv = container.querySelector('#ssEstimate');
   const assetHistoryDiv = container.querySelector('#assetHistory');
+  let assetHistoryChart = null;
 
   async function renderAssetHistory() {
     const dbHistory = await loadAssetHistoryFromDB();
@@ -336,9 +337,30 @@ export async function initPlanningPanel() {
         }
         return acc;
       }, []);
-    assetHistoryDiv.innerHTML = '<h3>Asset History</h3><table><thead><tr><th>Date</th><th>Age</th><th>Balance</th></tr></thead><tbody>' +
+    const tableHtml = '<table><thead><tr><th>Date</th><th>Age</th><th>Balance</th></tr></thead><tbody>' +
       combined.map(r => `<tr><td>${new Date(r.timestamp).toLocaleDateString()}</td><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
       '</tbody></table>';
+    assetHistoryDiv.innerHTML = '<h3>Asset History</h3><div style="display:flex;align-items:flex-start;gap:1em;">' +
+      tableHtml + '<canvas id="assetHistoryChart" width="300" height="150"></canvas></div>';
+    const canvas = assetHistoryDiv.querySelector('#assetHistoryChart');
+    if (canvas && typeof Chart !== 'undefined') {
+      const labels = combined.map(r => new Date(r.timestamp).toLocaleDateString()).reverse();
+      const data = combined.map(r => r.balance).reverse();
+      if (assetHistoryChart) assetHistoryChart.destroy();
+      assetHistoryChart = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Balance',
+            data,
+            fill: false,
+            borderColor: '#3e95cd'
+          }]
+        },
+        options: { responsive: false }
+      });
+    }
   }
 
   function renderAll() {
