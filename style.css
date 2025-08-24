@@ -1461,10 +1461,12 @@ h2 {
 
 #travelTagFilters {
   flex: 1 1 33%;
-  column-count: 3;
-  column-gap: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   max-height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 #placeTags {
@@ -1489,8 +1491,8 @@ h2 {
 #travelTagFilters button {
   width: 100%;
   margin-bottom: 4px;
-  white-space: nowrap;
   box-sizing: border-box;
+  white-space: normal;
 }
 
 #showVisitedLabel {
