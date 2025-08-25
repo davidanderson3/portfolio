@@ -1,4 +1,7 @@
-const CACHE_NAME = 'dashboard-cache-v2';
+// Increment the cache version any time a deploy includes breaking changes.
+// In production this value could be derived from a build hash to ensure
+// clients always fetch the latest assets.
+const CACHE_NAME = 'dashboard-cache-v3';
 const OFFLINE_URLS = [
   './',
   './index.html',
@@ -23,7 +26,36 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const { request } = event;
+
+  // Use a network-first strategy for navigational requests so that
+  // index.html and other HTML pages are always up to date while still
+  // falling back to the cached version when offline.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          const networkResponse = await fetch(request);
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(request, networkResponse.clone());
+          return networkResponse;
+        } catch (err) {
+          return (await caches.match(request)) || (await caches.match('./index.html'));
+        }
+      })()
+    );
+    return;
+  }
+
+  // Cache-first for all other requests
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(request).then(response => response || fetch(request))
   );
+});
+
+// Allow the page to trigger an update of the service worker immediately.
+self.addEventListener('message', event => {
+  if (event.data === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
