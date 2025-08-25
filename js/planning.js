@@ -340,8 +340,8 @@ export async function initPlanningPanel() {
     const tableHtml = '<table><thead><tr><th>Date</th><th>Age</th><th>Balance</th></tr></thead><tbody>' +
       combined.map(r => `<tr><td>${new Date(r.timestamp).toLocaleDateString()}</td><td>${r.age}</td><td>$${r.balance.toLocaleString()}</td></tr>`).join('') +
       '</tbody></table>';
-    assetHistoryDiv.innerHTML = '<h3>Asset History</h3><div style="display:flex;align-items:flex-start;gap:1em;">' +
-      tableHtml + '<canvas id="assetHistoryChart" width="300" height="150"></canvas></div>';
+    assetHistoryDiv.innerHTML = '<h3>Asset History</h3><div style="display:flex;align-items:stretch;gap:1em;">' +
+      tableHtml + '<canvas id="assetHistoryChart" style="flex:1;width:100%;height:100%;"></canvas></div>';
     const canvas = assetHistoryDiv.querySelector('#assetHistoryChart');
     if (canvas && typeof Chart !== 'undefined') {
       const labels = combined.map(r => new Date(r.timestamp).toLocaleDateString()).reverse();
@@ -358,7 +358,7 @@ export async function initPlanningPanel() {
             borderColor: '#3e95cd'
           }]
         },
-        options: { responsive: false }
+        options: { responsive: true, maintainAspectRatio: false }
       });
     }
   }
