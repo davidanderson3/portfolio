@@ -1621,7 +1621,7 @@ h2 {
 
   /* Add breathing room for the budget tab */
   #budgetPanel.main-layout {
-    padding: 0 10px;
+    padding: 10px;
   }
 
   /* Ensure list items span the full width on small screens */
@@ -1654,6 +1654,18 @@ h2 {
 #budgetTable,
 .budget-summary-table {
   border-collapse: collapse;
+}
+
+#budgetTable th,
+#budgetTable td,
+.budget-summary-table th,
+.budget-summary-table td {
+  padding: 6px 10px;
+}
+
+#budgetTable tr.section-row th {
+  background-color: #f0f0f0;
+  text-align: left;
 }
 
 /* Decision tree styles */
