@@ -821,7 +821,7 @@ function setupToggle(wrapper, row, childrenContainer, id) {
 
 
 function addHiddenControls(wrapper, row, goal, hiddenContent) {
-    const hideUntil = Date.parse(goal.hiddenUntil);
+    const hideUntil = Date.parse(goal.hiddenUntil) || 0;
 
     const middle = row.querySelector('.middle-group');
     const buttonRow = row.querySelector('.button-row');
@@ -856,7 +856,15 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
     middle.appendChild(unhideBtn);
 
     wrapper.classList.add('hidden-goal');
-    hiddenContent.appendChild(wrapper);
+    wrapper.dataset.hideUntil = hideUntil;
+
+    const children = Array.from(hiddenContent.children);
+    const insertBefore = children.find(child => (Number(child.dataset.hideUntil) || 0) > hideUntil);
+    if (insertBefore) {
+        hiddenContent.insertBefore(wrapper, insertBefore);
+    } else {
+        hiddenContent.appendChild(wrapper);
+    }
 }
 
 function updateGoalCounts(items) {
