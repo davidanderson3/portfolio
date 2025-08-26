@@ -66,6 +66,43 @@ describe('completed goals ordering', () => {
   });
 });
 
+describe('hidden goals ordering', () => {
+  it('orders hidden goals by hiddenUntil ascending', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+
+    helpers.loadDecisions.mockResolvedValue([
+      {
+        id: 'g1',
+        type: 'goal',
+        text: 'A',
+        notes: '',
+        completed: false,
+        dateCompleted: '',
+        parentGoalId: null,
+        hiddenUntil: '2023-01-03T00:00:00.000Z'
+      },
+      {
+        id: 'g2',
+        type: 'goal',
+        text: 'B',
+        notes: '',
+        completed: false,
+        dateCompleted: '',
+        parentGoalId: null,
+        hiddenUntil: '2023-01-02T00:00:00.000Z'
+      }
+    ]);
+
+    await renderGoalsAndSubitems();
+
+    const ids = [...document.querySelectorAll('#hiddenContent .goal-card')].map(el => el.dataset.goalId);
+    expect(ids).toEqual(['g2', 'g1']);
+
+    vi.useRealTimers();
+  });
+});
+
 describe('goal postponing', () => {
   it('sets hiddenUntil based on selected postpone option', async () => {
     vi.useFakeTimers();
