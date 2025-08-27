@@ -416,3 +416,33 @@ describe('routine section headers', () => {
     expect(hdr.style.display).toBe('none');
   });
 });
+
+describe('routine tasks completed today count', () => {
+  it('shows count of routine tasks completed today', async () => {
+    vi.resetModules();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-02T00:00:00Z'));
+
+    const todayKey = new Date().toLocaleDateString('en-CA');
+    const dom = new JSDOM('<div id="dailyPanel"><div id="routineCompletedToday"></div></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+
+    localStorage.setItem('taskCompletions', JSON.stringify({ [todayKey]: ['a'] }));
+
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'a', type: 'task', text: 'A', recurs: 'daily', timeOfDay: 'morning' },
+      { id: 'b', type: 'task', text: 'B', recurs: 'daily', timeOfDay: 'morning' }
+    ]);
+
+    const { renderDailyTasks } = await import('../js/daily.js');
+    await renderDailyTasks(null, {});
+
+    const countEl = document.getElementById('routineCompletedToday');
+    expect(countEl.textContent).toBe('Completed Today: 1');
+
+    vi.useRealTimers();
+  });
+});
