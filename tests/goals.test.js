@@ -39,7 +39,7 @@ let helpers;
 
 beforeEach(async () => {
   vi.resetModules();
-  const dom = new JSDOM('<div id="goalList"></div><div id="completedList"></div><div id="calendarContent"></div>');
+  const dom = new JSDOM('<div id="goalList"></div><div id="completedList"></div><div id="projectsCompletedToday"></div><div id="calendarContent"></div>');
   global.window = dom.window;
   global.document = dom.window.document;
   global.firebase = { auth: () => ({ currentUser: null }) };
@@ -389,6 +389,28 @@ describe('do later button', () => {
     const saved = helpers.saveDecisions.mock.calls[0][0][0];
     expect(saved.doLater).toBe(true);
     expect(wrapper.classList.contains('do-later')).toBe(true);
+  });
+});
+
+describe('projects completed today count', () => {
+  it('shows count of goals completed today', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-02T00:00:00Z'));
+
+    const todayISO = new Date().toISOString();
+    const yesterdayISO = new Date(Date.now() - 86400000).toISOString();
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'g1', type: 'goal', completed: true, dateCompleted: todayISO, parentGoalId: null },
+      { id: 'g2', type: 'goal', completed: false, dateCompleted: '', parentGoalId: null },
+      { id: 'g3', type: 'goal', completed: true, dateCompleted: yesterdayISO, parentGoalId: null }
+    ]);
+
+    await renderGoalsAndSubitems();
+
+    const countEl = document.getElementById('projectsCompletedToday');
+    expect(countEl.textContent).toBe('Completed Today: 1');
+
+    vi.useRealTimers();
   });
 });
 
