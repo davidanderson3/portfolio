@@ -867,17 +867,37 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
     }
 }
 
-function updateGoalCounts(items) {
+export function updateGoalCounts(items) {
     const now = Date.now();
     const goals = items.filter(i => i.type === 'goal');
-    const active = goals.filter(g => {
-        const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
-        return !g.completed && (!hideUntil || now >= hideUntil);
-    }).length;
-    const hidden = goals.filter(g => {
+    const goalMap = new Map(goals.map(g => [g.id, g]));
+
+    const isHidden = g => {
         const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
         return hideUntil && now < hideUntil;
-    }).length;
+    };
+
+    const hasAncestor = (goal, predicate) => {
+        let current = goal;
+        while (current && current.parentGoalId) {
+            const parent = goalMap.get(current.parentGoalId);
+            if (!parent) break;
+            if (predicate(parent)) return true;
+            current = parent;
+        }
+        return false;
+    };
+
+    const active = goals.filter(g =>
+        !g.completed &&
+        !isHidden(g) &&
+        !hasAncestor(g, anc => anc.completed || isHidden(anc))
+    ).length;
+
+    const hidden = goals.filter(g =>
+        isHidden(g) || hasAncestor(g, anc => isHidden(anc))
+    ).length;
+
     const completed = goals.filter(g => g.completed).length;
     const today = new Date().toISOString().slice(0, 10);
     const completedToday = goals.filter(g =>
