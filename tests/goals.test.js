@@ -39,7 +39,7 @@ let helpers;
 
 beforeEach(async () => {
   vi.resetModules();
-  const dom = new JSDOM('<div id="goalList"></div><div id="completedList"></div><div id="projectsCompletedToday"></div><div id="calendarContent"></div>');
+  const dom = new JSDOM('<div id="goalList"></div><div id="completedList"></div><div id="projectsCompletedToday"></div><div id="completedLabel"></div><div id="projectsHeader"></div><div id="hiddenLabel"></div><div id="calendarContent"></div>');
   global.window = dom.window;
   global.document = dom.window.document;
   global.firebase = { auth: () => ({ currentUser: null }) };
@@ -409,6 +409,28 @@ describe('projects completed today count', () => {
 
     const countEl = document.getElementById('projectsCompletedToday');
     expect(countEl.textContent).toBe('Completed Today: 1');
+
+    vi.useRealTimers();
+  });
+});
+
+describe('goal counts include sub-goals', () => {
+  it('counts completed sub-goals and their completion today', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-02T00:00:00Z'));
+
+    const todayISO = new Date().toISOString();
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'g1', type: 'goal', completed: true, dateCompleted: todayISO, parentGoalId: null },
+      { id: 'g2', type: 'goal', completed: true, dateCompleted: todayISO, parentGoalId: 'g1' }
+    ]);
+
+    await renderGoalsAndSubitems();
+
+    const completedLabel = document.getElementById('completedLabel');
+    expect(completedLabel.textContent).toBe(' Completed (2)');
+    const todayLabel = document.getElementById('projectsCompletedToday');
+    expect(todayLabel.textContent).toBe('Completed Today: 2');
 
     vi.useRealTimers();
   });
