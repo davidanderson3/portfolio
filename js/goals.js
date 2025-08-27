@@ -869,18 +869,18 @@ function addHiddenControls(wrapper, row, goal, hiddenContent) {
 
 function updateGoalCounts(items) {
     const now = Date.now();
-    const rootGoals = items.filter(i => i.type === 'goal' && !i.parentGoalId);
-    const active = rootGoals.filter(g => {
+    const goals = items.filter(i => i.type === 'goal');
+    const active = goals.filter(g => {
         const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
         return !g.completed && (!hideUntil || now >= hideUntil);
     }).length;
-    const hidden = rootGoals.filter(g => {
+    const hidden = goals.filter(g => {
         const hideUntil = g.hiddenUntil ? Date.parse(g.hiddenUntil) || 0 : 0;
         return hideUntil && now < hideUntil;
     }).length;
-    const completed = rootGoals.filter(g => g.completed).length;
+    const completed = goals.filter(g => g.completed).length;
     const today = new Date().toISOString().slice(0, 10);
-    const completedToday = rootGoals.filter(g =>
+    const completedToday = goals.filter(g =>
         g.completed && g.dateCompleted && g.dateCompleted.slice(0, 10) === today
     ).length;
 
