@@ -879,6 +879,10 @@ function updateGoalCounts(items) {
         return hideUntil && now < hideUntil;
     }).length;
     const completed = rootGoals.filter(g => g.completed).length;
+    const today = new Date().toISOString().slice(0, 10);
+    const completedToday = rootGoals.filter(g =>
+        g.completed && g.dateCompleted && g.dateCompleted.slice(0, 10) === today
+    ).length;
 
     const projectsHeader = document.getElementById('projectsHeader');
     if (projectsHeader) projectsHeader.textContent = `Projects (${active})`;
@@ -886,6 +890,8 @@ function updateGoalCounts(items) {
     if (hiddenLabel) hiddenLabel.textContent = `Hidden Projects (${hidden})`;
     const completedLabel = document.getElementById('completedLabel');
     if (completedLabel) completedLabel.textContent = ` Completed (${completed})`;
+    const todayLabel = document.getElementById('projectsCompletedToday');
+    if (todayLabel) todayLabel.textContent = `Completed Today: ${completedToday}`;
 }
 
 export function appendGoalToDOM(goal, allItems) {
