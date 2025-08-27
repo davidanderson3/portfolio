@@ -298,6 +298,13 @@ async function renderDailyTasksImpl(currentUser, db) {
   const doneWeekly = new Set(completionMap[weekKey] || []);
   const doneMonthly = new Set(completionMap[monthKey] || []);
 
+  function updateRoutineCompletedCount() {
+    const el = document.getElementById('routineCompletedToday');
+    if (el) el.textContent = `Completed Today: ${doneDaily.size}`;
+  }
+
+  updateRoutineCompletedCount();
+
   // — Prepare and split lists
   const nowMs = Date.now();
   const dailyAll = all.filter(t => t.type === 'task' && t.recurs === 'daily');
@@ -473,6 +480,7 @@ async function renderDailyTasksImpl(currentUser, db) {
         toggleSection(container);
       }
       toggleDetails(completedContainer.parentElement, completedContainer);
+      if (key === todayKey) updateRoutineCompletedCount();
     } catch (err) {
       console.error(err);
       alert('⚠️ Could not update completion. Reverting.');
