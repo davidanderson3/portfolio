@@ -35,6 +35,7 @@ vi.mock('../js/auth.js', () => ({ db: {}, auth: { onAuthStateChanged: vi.fn() },
 
 let renderGoalsAndSubitems;
 let createGoalRow;
+let updateGoalCounts;
 let helpers;
 
 beforeEach(async () => {
@@ -49,6 +50,7 @@ beforeEach(async () => {
   const mod = await import('../js/goals.js');
   renderGoalsAndSubitems = mod.renderGoalsAndSubitems;
   createGoalRow = mod.createGoalRow;
+  updateGoalCounts = mod.updateGoalCounts;
 });
 
 describe('completed goals ordering', () => {
@@ -98,6 +100,30 @@ describe('hidden goals ordering', () => {
 
     const ids = [...document.querySelectorAll('#hiddenContent .goal-card')].map(el => el.dataset.goalId);
     expect(ids).toEqual(['g2', 'g1']);
+
+    vi.useRealTimers();
+  });
+});
+
+describe('goal counts with ancestor rules', () => {
+  it('counts projects and hidden goals considering ancestors', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+
+    const items = [
+      { id: 'r1', type: 'goal', text: 'r1', notes: '', completed: false, dateCompleted: '', parentGoalId: null },
+      { id: 'c1', type: 'goal', text: 'c1', notes: '', completed: false, dateCompleted: '', parentGoalId: 'r1' },
+      { id: 'r2', type: 'goal', text: 'r2', notes: '', completed: true, dateCompleted: '2023-01-01T00:00:00.000Z', parentGoalId: null },
+      { id: 'c2', type: 'goal', text: 'c2', notes: '', completed: false, dateCompleted: '', parentGoalId: 'r2' },
+      { id: 'r3', type: 'goal', text: 'r3', notes: '', completed: false, dateCompleted: '', hiddenUntil: '2023-01-02T00:00:00.000Z', parentGoalId: null },
+      { id: 'c3', type: 'goal', text: 'c3', notes: '', completed: false, dateCompleted: '', parentGoalId: 'r3' }
+    ];
+
+    updateGoalCounts(items);
+
+    expect(document.getElementById('projectsHeader').textContent).toBe('Projects (2)');
+    expect(document.getElementById('hiddenLabel').textContent).toBe('Hidden Projects (2)');
+    expect(document.getElementById('projectsCompletedToday').textContent).toBe('Completed Today: 1');
 
     vi.useRealTimers();
   });
