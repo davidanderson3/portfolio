@@ -47,9 +47,19 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Cache-first for all other requests
+  // Bypass cache for Firestore requests and provide a fallback response on errors
+  if (request.url.includes('firestore.googleapis.com')) {
+    event.respondWith(
+      fetch(request).catch(() => new Response(null, { status: 503 }))
+    );
+    return;
+  }
+
+  // Cache-first for all other requests with network fallback
   event.respondWith(
-    caches.match(request).then(response => response || fetch(request))
+    caches.match(request)
+      .then(res => res || fetch(request))
+      .catch(() => fetch(request))
   );
 });
 
