@@ -177,7 +177,7 @@ export function attachTaskButtons(item, row, listContainer, allDecisions) {
                 hideUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
             }
             allDecisions[idx].hiddenUntil = hideUntil;
-            await saveDecisions(allDecisions);
+            await saveDecisions(allDecisions, { skipNotify: true });
             menu.style.display = 'none';
 
             // Hide only the postponed task wrapper, not the entire goal

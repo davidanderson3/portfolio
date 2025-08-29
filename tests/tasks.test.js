@@ -141,3 +141,27 @@ describe('do later styling', () => {
     expect(wrap.classList.contains('do-later')).toBe(true);
   });
 });
+
+describe('task postponing', () => {
+  it('hides task and saves without notifying', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+
+    const goal = { id: 'g1', type: 'goal', parentGoalId: null, completed: false };
+    const task = { id: 't1', type: 'task', text: 't', notes: '', parentGoalId: 'g1', completed: false, hiddenUntil: null };
+    const all = [goal, task];
+    currentItems = all;
+
+    await renderChildren(goal, all, container);
+    const option = [...document.querySelectorAll('button')].find(b => b.textContent === '2 days');
+    option.click();
+    await Promise.resolve();
+
+    const calls = helpers.saveDecisions.mock.calls;
+    expect(calls[calls.length - 1][1]).toEqual({ skipNotify: true });
+    const wrapper = container.querySelector('[data-task-id="t1"]');
+    expect(wrapper.style.display).toBe('none');
+
+    vi.useRealTimers();
+  });
+});
