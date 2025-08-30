@@ -114,6 +114,47 @@ describe('routine task reordering', () => {
   });
 });
 
+describe('task postponing', () => {
+  let renderDailyTasks;
+  let helpers;
+  beforeEach(async () => {
+    vi.resetModules();
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+    helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 't1', type: 'task', text: 'T', recurs: 'daily' }
+    ]);
+    helpers.saveDecisions.mockImplementation((items, opts) => {
+      if (!opts?.skipNotify) {
+        window.dispatchEvent(new window.Event('decisionsUpdated'));
+      }
+      return Promise.resolve();
+    });
+    ({ renderDailyTasks } = await import('../js/daily.js'));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('saves without notifying and removes task', async () => {
+    const reloadSpy = vi.fn();
+    window.addEventListener('decisionsUpdated', reloadSpy);
+    await renderDailyTasks(null, {});
+    reloadSpy.mockClear();
+    const startCalls = helpers.saveDecisions.mock.calls.length;
+    const option = [...document.querySelectorAll('button')].find(b => b.textContent === '2 days');
+    option.click();
+    await new Promise(r => setTimeout(r, 0));
+    expect(helpers.saveDecisions.mock.calls.length).toBeGreaterThan(startCalls);
+    expect(reloadSpy).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-task-id="t1"]')).toBeNull();
+  });
+});
+
 describe('missed task shading', () => {
   let renderDailyTasks;
   beforeEach(async () => {
@@ -295,7 +336,7 @@ describe('time of day sections', () => {
 
       expect(helpers.saveDecisions).toHaveBeenCalledWith([
         { id: 't1', type: 'task', text: 'New', recurs: 'daily', timeOfDay: 'evening', notes: 'N' }
-      ]);
+      ], { skipNotify: true });
       expect(document.querySelector('#eveningTasksList [data-task-id="t1"]')).toBeTruthy();
     });
 
@@ -325,7 +366,7 @@ describe('time of day sections', () => {
 
       expect(helpers.saveDecisions).toHaveBeenCalledWith([
         { id: 't1', type: 'task', text: 'New', recurs: 'daily', timeOfDay: 'endOfDay', notes: 'N' }
-      ]);
+      ], { skipNotify: true });
       expect(document.querySelector('#endOfDayTasksList [data-task-id="t1"]')).toBeTruthy();
     });
   });
