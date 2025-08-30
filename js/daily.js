@@ -693,7 +693,7 @@ async function renderDailyTasksImpl(currentUser, db) {
           allDecs[idx].text = newText;
           allDecs[idx].notes = newNotes;
           allDecs[idx].timeOfDay = newTime;
-          await saveDecisions(allDecs);
+          await saveDecisions(allDecs, { skipNotify: true });
 
           // update local task and label without re-rendering everything
           task.text = newText;
@@ -748,7 +748,7 @@ async function renderDailyTasksImpl(currentUser, db) {
           const hideUntil = new Date(Date.now() + opt.value * 3600000).toISOString();
           allDecs[idx].hiddenUntil = hideUntil;
           allDecs[idx].skipUntil = hideUntil;
-          await saveDecisions(allDecs);
+          await saveDecisions(allDecs, { skipNotify: true });
         menu.style.display = 'none'; wrapper.remove();
       });
       menu.appendChild(optBtn);
