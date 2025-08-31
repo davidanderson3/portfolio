@@ -45,16 +45,20 @@ beforeEach(async () => {
   await Promise.resolve();
 });
 
-describe.skip('list postponing', () => {
-  it('sets hiddenUntil based on selected option', () => {
+describe('list postponing', () => {
+  it('sets hiddenUntil based on selected option and removes row without reloading', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
 
+    const table = document.querySelector('table');
     const buttons = [...document.querySelectorAll('.postpone-option')];
     expect(buttons.some(btn => btn.textContent === '20 hours')).toBe(true);
     expect(buttons.some(btn => btn.textContent === 'Pick date…')).toBe(true);
     const option = buttons.find(btn => btn.textContent === '2 days');
     option.click();
+    await Promise.resolve();
+    expect(document.querySelector('table')).toBe(table);
+    expect(document.querySelector('tbody tr')).toBeNull();
     vi.advanceTimersByTime(300);
 
     expect(helpers.saveLists).toHaveBeenCalled();
@@ -72,6 +76,7 @@ describe.skip('list postponing', () => {
     const pickBtn = [...document.querySelectorAll('.postpone-option')].find(btn => btn.textContent === 'Pick date…');
     pickBtn.click();
     await Promise.resolve();
+    expect(document.querySelector('tbody tr')).toBeNull();
     vi.advanceTimersByTime(300);
     await Promise.resolve();
 
