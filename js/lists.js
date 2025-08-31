@@ -663,9 +663,11 @@ async function initListsPanel() {
             hideUntil = new Date(Date.now() + opt.value * 3600 * 1000).toISOString();
           }
           listsArray[selectedListIndex].items[rowIdx].hiddenUntil = hideUntil;
-          await persist();
+          // Remove the row immediately instead of re-rendering the entire list
+          const row = tr;
+          if (row && row.parentElement) row.remove();
           menu.style.display = 'none';
-          renderSelectedList();
+          await persist();
         });
         menu.appendChild(optBtn);
       });
