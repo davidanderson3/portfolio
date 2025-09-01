@@ -462,3 +462,26 @@ describe('goal counts include sub-goals', () => {
   });
 });
 
+describe('completed today counts hidden goals', () => {
+  it('includes hidden and hidden sub-goals completed today', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-02T00:00:00Z'));
+
+    const todayISO = new Date().toISOString();
+    const futureISO = new Date(Date.now() + 86400000).toISOString();
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'g1', type: 'goal', completed: true, dateCompleted: todayISO, hiddenUntil: futureISO, parentGoalId: null },
+      { id: 'g2', type: 'goal', completed: true, dateCompleted: todayISO, parentGoalId: 'g1' }
+    ]);
+
+    await renderGoalsAndSubitems();
+
+    const todayLabel = document.getElementById('projectsCompletedToday');
+    expect(todayLabel.textContent).toBe('Completed Today: 2');
+    const completedLabel = document.getElementById('completedLabel');
+    expect(completedLabel.textContent).toBe(' Completed (2)');
+
+    vi.useRealTimers();
+  });
+});
+
