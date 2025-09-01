@@ -900,8 +900,12 @@ export function updateGoalCounts(items) {
 
     const completed = goals.filter(g => g.completed).length;
     const today = new Date().toISOString().slice(0, 10);
-    const completedToday = goals.filter(g =>
-        g.completed && g.dateCompleted && g.dateCompleted.slice(0, 10) === today
+    // Count all goals completed today, including sub-goals and hidden ones
+    const completedToday = items.filter(it =>
+        it.type === 'goal' &&
+        it.completed &&
+        it.dateCompleted &&
+        it.dateCompleted.slice(0, 10) === today
     ).length;
 
     const projectsHeader = document.getElementById('projectsHeader');
