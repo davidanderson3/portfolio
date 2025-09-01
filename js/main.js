@@ -35,7 +35,6 @@ window.addEventListener('DOMContentLoaded', () => {
     settingsBtn: document.getElementById('settingsBtn'),
     settingsModal: document.getElementById('settingsModal'),
     signupBtn: document.getElementById('signupBtn'),
-    calendarAddProjectBtn: document.getElementById('calendarAddProjectBtn'),
     addProjectBtn: document.getElementById('addProjectBtn'),
     bottomAddBtn: document.getElementById('bottomAddBtn'),
     bottomLogoutBtn: document.getElementById('bottomLogoutBtn'),
@@ -56,7 +55,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const goalsView = document.getElementById('goalsView');
 
   uiRefs.signupBtn?.addEventListener('click', () => uiRefs.loginBtn?.click());
-  uiRefs.calendarAddProjectBtn?.addEventListener('click', () => addCalendarGoal());
   uiRefs.bottomAddBtn?.addEventListener('click', handleBottomAdd);
   document.querySelectorAll('.tab-hide-btn').forEach(btn => {
     setupHideTabButton(btn);
