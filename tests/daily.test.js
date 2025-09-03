@@ -8,6 +8,7 @@ vi.mock('../js/helpers.js', () => ({
   makeIconBtn: (sym, title, fn) => {
     const b = document.createElement('button');
     b.textContent = sym;
+    b.title = title;
     b.onclick = fn;
     return b;
   },
@@ -475,6 +476,36 @@ describe('do later styling', () => {
     await renderDailyTasks(null, {});
 
     const wrap = document.querySelector('[data-task-id="a"]');
+    const row = wrap.querySelector('.daily-task');
+    expect(wrap.classList.contains('do-later')).toBe(true);
+    expect(row.style.background).toBe('transparent');
+  });
+
+  it('toggles background when marking task do later', async () => {
+    vi.resetModules();
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+
+    const helpers = await import('../js/helpers.js');
+    const task = { id: 'a', type: 'task', text: 'A', recurs: 'daily', timeOfDay: 'morning' };
+    helpers.loadDecisions.mockResolvedValue([task]);
+    helpers.saveDecisions.mockResolvedValue();
+
+    const { renderDailyTasks } = await import('../js/daily.js');
+    await renderDailyTasks(null, {});
+
+    const wrap = document.querySelector('[data-task-id="a"]');
+    const row = wrap.querySelector('.daily-task');
+    const btn = wrap.querySelector('button[title="Mark as do later"]');
+    const initialBg = row.style.background;
+
+    await btn.onclick(new dom.window.Event('click'));
+    expect(row.style.background).toBe('transparent');
+
+    await btn.onclick(new dom.window.Event('click'));
+    expect(row.style.background).toBe(initialBg);
     expect(wrap.classList.contains('do-later')).toBe(true);
   });
 });

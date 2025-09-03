@@ -593,6 +593,7 @@ async function renderDailyTasksImpl(currentUser, db) {
         borderColor = `rgba(255,165,0,${Math.min(alpha + 0.2, 1)})`;
       }
     }
+    wrapper.dataset.bgColor = bgColor;
     Object.assign(row.style, {
       display: 'grid',
       gridTemplateColumns: '24px 1fr auto',
@@ -600,7 +601,7 @@ async function renderDailyTasksImpl(currentUser, db) {
       columnGap: '10px',
       padding: '1.5px 12px',
       borderRadius: '8px',
-      background: bgColor,
+      background: task.doLater ? 'transparent' : bgColor,
       borderLeft: `4px solid ${borderColor}`,
       marginBottom: '0',
       opacity: isDone ? '0.6' : '1'
@@ -777,6 +778,7 @@ async function renderDailyTasksImpl(currentUser, db) {
         await saveDecisions(allDecs, { skipNotify: true });
         task.doLater = newState;
         wrapper.classList.toggle('do-later', newState);
+        row.style.background = newState ? 'transparent' : wrapper.dataset.bgColor;
         laterBtn.title = newState ? 'Remove do later' : 'Mark as do later';
       }
     );
