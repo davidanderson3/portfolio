@@ -458,6 +458,27 @@ describe('routine section headers', () => {
   });
 });
 
+describe('do later styling', () => {
+  it('adds do-later class for daily tasks marked doLater', async () => {
+    vi.resetModules();
+    const dom = new JSDOM('<div id="dailyPanel"></div>', { url: 'https://example.com' });
+    global.window = dom.window;
+    global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
+
+    const helpers = await import('../js/helpers.js');
+    helpers.loadDecisions.mockResolvedValue([
+      { id: 'a', type: 'task', text: 'A', recurs: 'daily', timeOfDay: 'morning', doLater: true }
+    ]);
+
+    const { renderDailyTasks } = await import('../js/daily.js');
+    await renderDailyTasks(null, {});
+
+    const wrap = document.querySelector('[data-task-id="a"]');
+    expect(wrap.classList.contains('do-later')).toBe(true);
+  });
+});
+
 describe('routine tasks completed today count', () => {
   it('shows count of routine tasks completed today', async () => {
     vi.resetModules();

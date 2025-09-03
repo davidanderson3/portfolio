@@ -553,6 +553,7 @@ async function renderDailyTasksImpl(currentUser, db) {
     const isDone = set.has(task.id);
     const wrapper = document.createElement('div');
     wrapper.className = 'daily-task-wrapper';
+    if (task.doLater) wrapper.classList.add('do-later');
     wrapper.draggable = true;
     wrapper.dataset.taskId = task.id;
     Object.assign(wrapper.style, {
@@ -763,6 +764,23 @@ async function renderDailyTasksImpl(currentUser, db) {
       if (!menu.contains(e.target) && e.target !== clockBtn) menu.style.display = 'none';
     });
     btns.append(clockBtn);
+
+    const laterBtn = makeIconBtn(
+      '⏳',
+      task.doLater ? 'Remove do later' : 'Mark as do later',
+      async () => {
+        const allDecs = await loadDecisions();
+        const idx = allDecs.findIndex(d => d.id === task.id);
+        if (idx === -1) return;
+        const newState = !allDecs[idx].doLater;
+        allDecs[idx].doLater = newState;
+        await saveDecisions(allDecs, { skipNotify: true });
+        task.doLater = newState;
+        wrapper.classList.toggle('do-later', newState);
+        laterBtn.title = newState ? 'Remove do later' : 'Mark as do later';
+      }
+    );
+    btns.append(laterBtn);
 
 
     // Add to calendar for weekly tasks
