@@ -202,6 +202,28 @@ export function createGoalRow(goal, options = {}) {
     let dueContent = goal.completed ? goal.dateCompleted : rangeText;
     due.innerHTML = dueContent;
     row.appendChild(due);
+
+    if (options.itemsRef) {
+        let startX = null;
+        row.addEventListener('touchstart', e => {
+            startX = e.touches?.[0]?.clientX ?? null;
+        }, { passive: true });
+        row.addEventListener('touchend', async e => {
+            if (startX === null) return;
+            const endX = e.changedTouches?.[0]?.clientX ?? 0;
+            const dx = endX - startX;
+            startX = null;
+            if (dx > 50) {
+                const idx = options.itemsRef.findIndex(d => d.id === goal.id);
+                if (idx !== -1) {
+                    options.itemsRef[idx].hiddenUntil = new Date(Date.now() + 3600 * 1000).toISOString();
+                    await saveDecisions(options.itemsRef, { skipNotify: true });
+                    const wrap = row.closest('.goal-card') || row.closest('[data-task-id]') || row;
+                    wrap.style.display = 'none';
+                }
+            }
+        });
+    }
     return row;
 }
 

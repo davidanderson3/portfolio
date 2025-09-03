@@ -205,6 +205,44 @@ describe('goal postponing', () => {
 
     vi.useRealTimers();
   });
+
+  it('postpones goal one hour on swipe right', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2023-01-01T00:00:00Z'));
+
+    const goal = {
+      id: 'g1',
+      type: 'goal',
+      text: 'Test',
+      notes: '',
+      completed: false,
+      dateCompleted: '',
+      parentGoalId: null,
+      hiddenUntil: null
+    };
+
+    const all = [goal];
+    const wrapper = document.createElement('div');
+    wrapper.className = 'decision goal-card';
+    wrapper.dataset.goalId = goal.id;
+    const row = createGoalRow(goal, { itemsRef: all });
+    wrapper.appendChild(row);
+    document.getElementById('goalList').appendChild(wrapper);
+
+    const start = new window.Event('touchstart');
+    start.touches = [{ clientX: 0 }];
+    row.dispatchEvent(start);
+    const end = new window.Event('touchend');
+    end.changedTouches = [{ clientX: 80 }];
+    row.dispatchEvent(end);
+    await Promise.resolve();
+
+    const saved = helpers.saveDecisions.mock.calls.at(-1)[0][0];
+    expect(saved.hiddenUntil).toBe(new Date('2023-01-01T01:00:00.000Z').toISOString());
+    expect(wrapper.style.display).toBe('none');
+
+    vi.useRealTimers();
+  });
 });
 
 describe('addCalendarGoal', () => {

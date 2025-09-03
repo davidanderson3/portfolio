@@ -23,6 +23,27 @@ try {
 // Access the global openGoalIds set defined in goals.js
 const openGoalIds = window.openGoalIds || new Set();
 
+function enableSwipeToPostpone(el, item, allDecisions) {
+    let startX = null;
+    el.addEventListener('touchstart', e => {
+        startX = e.touches?.[0]?.clientX ?? null;
+    }, { passive: true });
+    el.addEventListener('touchend', async e => {
+        if (startX === null) return;
+        const endX = e.changedTouches?.[0]?.clientX ?? 0;
+        const dx = endX - startX;
+        startX = null;
+        if (dx > 50) {
+            const idx = allDecisions.findIndex(d => d.id === item.id);
+            if (idx !== -1) {
+                allDecisions[idx].hiddenUntil = new Date(Date.now() + 3600 * 1000).toISOString();
+                await saveDecisions(allDecisions, { skipNotify: true });
+                el.style.display = 'none';
+            }
+        }
+    });
+}
+
 function setupToggle(wrapper, row, childrenContainer, id) {
     const toggle = row.querySelector('.toggle-triangle');
     if (!toggle) return;
@@ -289,6 +310,8 @@ export async function renderChildren(goal, all, container) {
 
         // Attach task buttons
         attachTaskButtons(task, row, taskList, all);
+
+        enableSwipeToPostpone(wrapper, task, all);
 
         const cb = row.querySelector('input[type="checkbox"]');
         cb.addEventListener('change', async () => {

@@ -506,6 +506,7 @@ describe('do later styling', () => {
 
     await btn.onclick(new dom.window.Event('click'));
     expect(row.style.background).toBe(initialBg);
+    expect(wrap.classList.contains('do-later')).toBe(true);
   });
 });
 
