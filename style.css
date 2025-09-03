@@ -574,6 +574,20 @@ button:hover {
   background: transparent;
 }
 
+.daily-task-wrapper.do-later {
+  background: repeating-linear-gradient(
+    45deg,
+    #fefbea,
+    #fefbea 10px,
+    #f9f5d7 10px,
+    #f9f5d7 20px
+  );
+}
+
+.daily-task-wrapper.do-later .daily-task {
+  background: transparent;
+}
+
 .main-layout,
 .decision-container {
   overflow: visible !important;
