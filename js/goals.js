@@ -150,8 +150,8 @@ export function createGoalRow(goal, options = {}) {
                 }
             }
 
-            // 3) Persist changes after updating UI
-            await saveDecisions(items);
+            // 3) Persist changes after updating UI without reloading
+            await saveDecisions(items, { skipNotify: true });
             updateGoalCounts(items);
         };
     }
