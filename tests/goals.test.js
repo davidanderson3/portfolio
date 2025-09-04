@@ -456,6 +456,41 @@ describe('do later button', () => {
   });
 });
 
+describe('goal completion', () => {
+  it('moves goal without triggering reload', async () => {
+    const goal = {
+      id: 'g1',
+      type: 'goal',
+      text: 'G',
+      notes: '',
+      completed: false,
+      parentGoalId: null
+    };
+    helpers.loadDecisions.mockResolvedValue([goal]);
+    helpers.saveDecisions.mockImplementation((items, opts) => {
+      if (!opts?.skipNotify) {
+        window.dispatchEvent(new window.Event('decisionsUpdated'));
+      }
+      return Promise.resolve();
+    });
+
+    const row = createGoalRow(goal, { itemsRef: [goal] });
+    document.getElementById('goalList').appendChild(row);
+
+    const cb = row.querySelector('input[type="checkbox"]');
+    const reloadSpy = vi.fn();
+    window.addEventListener('decisionsUpdated', reloadSpy);
+    cb.checked = true;
+    await cb.onchange();
+
+    expect(reloadSpy).not.toHaveBeenCalled();
+    const opts = helpers.saveDecisions.mock.calls.at(-1)[1];
+    expect(opts).toEqual({ skipNotify: true });
+    expect(document.getElementById('goalList').children).toHaveLength(0);
+    expect(document.getElementById('completedList').children).toHaveLength(1);
+  });
+});
+
 describe('projects completed today count', () => {
   it('shows count of goals completed today', async () => {
     vi.useFakeTimers();
