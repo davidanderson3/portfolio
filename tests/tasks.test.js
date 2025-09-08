@@ -8,7 +8,13 @@ vi.mock('../js/dragAndDrop.js', () => ({
 vi.mock('../js/helpers.js', () => ({
   saveDecisions: vi.fn(async () => {}),
   generateId: vi.fn(),
-  makeIconBtn: () => document.createElement('button'),
+  makeIconBtn: (sym, title, fn) => {
+    const b = document.createElement('button');
+    b.textContent = sym;
+    b.title = title;
+    b.onclick = fn;
+    return b;
+  },
   linkify: (t) => t,
   dedupeDecisions: (list) => {
     const seenId = new Set();
@@ -190,5 +196,53 @@ describe('task postponing', () => {
     expect(wrapper.style.display).toBe('none');
 
     vi.useRealTimers();
+  });
+});
+
+describe('task reordering', () => {
+  it('moves task up and persists order', async () => {
+    const goal = { id: 'g1', type: 'goal', parentGoalId: null, completed: false };
+    const t1 = { id: 't1', type: 'task', text: 'A', notes: '', parentGoalId: 'g1', completed: false };
+    const t2 = { id: 't2', type: 'task', text: 'B', notes: '', parentGoalId: 'g1', completed: false };
+    const all = [goal, t1, t2];
+    currentItems = all;
+
+    await renderChildren(goal, all, container);
+    const upBtn = [...container.querySelector('[data-task-id="t2"]').querySelectorAll('button')]
+      .find(b => b.textContent === '⬆️');
+    upBtn.click();
+    await Promise.resolve();
+
+    const ids = [...container.querySelectorAll('.task-list [data-task-id]')].map(el => el.dataset.taskId);
+    expect(ids).toEqual(['t2', 't1']);
+    const lastCall = helpers.saveDecisions.mock.calls.at(-1);
+    expect(lastCall[0].map(i => i.id)).toEqual(['g1', 't2', 't1']);
+  });
+
+  it('moves task up without triggering reload', async () => {
+    helpers.saveDecisions.mockImplementation((items, opts) => {
+      if (!opts?.skipNotify) {
+        window.dispatchEvent(new window.Event('decisionsUpdated'));
+      }
+      return Promise.resolve();
+    });
+    const reloadSpy = vi.fn();
+    window.addEventListener('decisionsUpdated', reloadSpy);
+
+    const goal = { id: 'g1', type: 'goal', parentGoalId: null, completed: false };
+    const t1 = { id: 't1', type: 'task', text: 'A', notes: '', parentGoalId: 'g1', completed: false };
+    const t2 = { id: 't2', type: 'task', text: 'B', notes: '', parentGoalId: 'g1', completed: false };
+    const all = [goal, t1, t2];
+    currentItems = all;
+
+    await renderChildren(goal, all, container);
+    reloadSpy.mockClear();
+    const upBtn = [...container.querySelector('[data-task-id="t2"]').querySelectorAll('button')]
+      .find(b => b.textContent === '⬆️');
+    upBtn.click();
+    await Promise.resolve();
+    expect(reloadSpy).not.toHaveBeenCalled();
+    const opts = helpers.saveDecisions.mock.calls.at(-1)[1];
+    expect(opts).toEqual({ skipNotify: true });
   });
 });
