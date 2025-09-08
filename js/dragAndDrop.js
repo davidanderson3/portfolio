@@ -131,16 +131,7 @@ export function enableTaskDragAndDrop(wrapper, taskList, goalId) {
         const others = updated.filter(i => i.parentGoalId !== goalId || i.completed);
         const newOrder = [...taskList.children].map(el => el.dataset.taskId);
         const reordered = newOrder.map(id => underGoal.find(t => t.id === id)).filter(Boolean);
-        await saveDecisions([...others, ...reordered]);
-
-        // re-render only this goal’s tasks
-        const items = await loadDecisions();
-        const parentGoal = items.find(i => i.id === goalId);
-        const container = wrapper.closest('.goal-children');
-        if (parentGoal && container) {
-            // assume renderChildren is globally available
-            renderChildren(parentGoal, items, container);
-        }
+        await saveDecisions([...others, ...reordered], { skipNotify: true });
     });
 
     wrapper.addEventListener('dragend', () => {

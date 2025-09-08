@@ -777,7 +777,7 @@ async function renderDailyTasksImpl(currentUser, db) {
         allDecs[idx].doLater = newState;
         await saveDecisions(allDecs, { skipNotify: true });
         task.doLater = newState;
-        wrapper.classList.toggle('do-later', newState);
+        wrapper.classList.add('do-later');
         row.style.background = newState ? 'transparent' : wrapper.dataset.bgColor;
         laterBtn.title = newState ? 'Remove do later' : 'Mark as do later';
       }

@@ -73,7 +73,7 @@ export function attachTaskButtons(item, row, listContainer, allDecisions) {
             const other = allDecisions.filter(d => d.parentGoalId !== item.parentGoalId || d.completed);
             const reordered = ids.map(id => under.find(t => t.id === id)).filter(Boolean);
             const updated = [...other, ...reordered];
-            await saveDecisions(updated);
+            await saveDecisions(updated, { skipNotify: true });
             allDecisions.splice(0, allDecisions.length, ...updated);
         }
     });
