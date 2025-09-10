@@ -1,5 +1,5 @@
 import { parseNaturalDate, generateId, loadDecisions, saveDecisions, saveGoalOrder, loadGoalOrder } from './helpers.js';
-import { appendGoalToDOM, refreshGoalInDOM } from './goals.js';
+import { refreshGoalInDOM } from './goals.js';
 
 
 export const wizardState = {
@@ -188,12 +188,10 @@ async function saveGoalWizard() {
   await saveGoalOrder(newGoalOrder);
 
   wizardState.editingGoalId = null;
-    wizardContainer.style.display = 'none';
-    addProjectBtn.style.display = 'none';
+  wizardContainer.style.display = 'none';
+  addProjectBtn.style.display = 'none';
   if (isEdit) {
     refreshGoalInDOM(newGoal, [...updatedItems, ...newItems]);
-  } else {
-    appendGoalToDOM(newGoal, [...updatedItems, ...newItems]);
   }
 }
 

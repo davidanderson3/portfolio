@@ -7,7 +7,6 @@ import {
   pickDate,
   makeIconBtn
 } from './helpers.js';
-import { appendGoalToDOM } from './goals.js';
 import { auth } from './auth.js';
 
 let listsArray = [];
@@ -981,7 +980,6 @@ function openRowEditor(rowIdx) {
 
     const updated = [...all, newGoal];
     await saveDecisions(updated);
-    appendGoalToDOM(newGoal, updated);
   }
 
   async function unhideListItem(listIdx, rowIdx) {
