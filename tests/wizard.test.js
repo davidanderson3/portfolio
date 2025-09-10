@@ -12,7 +12,7 @@ vi.mock('../js/helpers.js', () => ({
 
 vi.mock('../js/goals.js', () => ({
   renderGoalsAndSubitems: vi.fn(),
-  appendGoalToDOM: vi.fn()
+  refreshGoalInDOM: vi.fn()
 }));
 
 beforeEach(() => {

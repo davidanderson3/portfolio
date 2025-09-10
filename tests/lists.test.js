@@ -17,9 +17,7 @@ vi.mock('../js/helpers.js', () => ({
   }
 }));
 
-vi.mock('../js/goals.js', () => ({
-  appendGoalToDOM: vi.fn()
-}));
+vi.mock('../js/goals.js', () => ({}));
 
 vi.mock('../js/auth.js', () => ({
   auth: { onAuthStateChanged: (cb) => cb() },
@@ -27,7 +25,6 @@ vi.mock('../js/auth.js', () => ({
 }));
 
 let helpers;
-let goals;
 
 beforeEach(async () => {
   vi.resetModules();
@@ -36,7 +33,6 @@ beforeEach(async () => {
   global.document = dom.window.document;
   global.localStorage = dom.window.localStorage;
   helpers = await import('../js/helpers.js');
-  goals = await import('../js/goals.js');
   helpers.loadLists.mockResolvedValue([{ name: 'Test', columns: [], items: [], hiddenUntil: null }]);
   helpers.loadDecisions.mockResolvedValue([]);
   helpers.generateId.mockReturnValue('g1');
@@ -102,7 +98,6 @@ describe('addListItemGoal', () => {
     document.getElementById('listsPanel').innerHTML = '<div class="full-column"><div class="panel-header"></div></div>';
     vi.resetModules();
     helpers = await import('../js/helpers.js');
-    goals = await import('../js/goals.js');
     helpers.loadLists.mockResolvedValue([list]);
     helpers.loadDecisions.mockResolvedValue([]);
     helpers.generateId.mockReturnValue('g1');
@@ -115,7 +110,6 @@ describe('addListItemGoal', () => {
     expect(helpers.saveDecisions).toHaveBeenCalled();
     const newGoal = helpers.saveDecisions.mock.calls[0][0].pop();
     expect(newGoal.text).toBe('Do it');
-    expect(goals.appendGoalToDOM).toHaveBeenCalled();
   });
 });
 
@@ -125,7 +119,6 @@ describe.skip('unhideListItem button', () => {
     document.getElementById('listsPanel').innerHTML = '<div class="full-column"><div class="panel-header"></div></div>';
     vi.resetModules();
     helpers = await import('../js/helpers.js');
-    goals = await import('../js/goals.js');
     helpers.loadLists.mockResolvedValue([{ name: 'Test', columns: [{ name: 'Item', type: 'text' }], items: [{ Item: 'One', hiddenUntil: hideTime }], hiddenUntil: null }]);
     await import('../js/lists.js');
     vi.useFakeTimers();
@@ -147,7 +140,6 @@ describe.skip('unhide list button', () => {
     document.getElementById('listsPanel').innerHTML = '<div class="full-column"><div class="panel-header"></div></div>';
     vi.resetModules();
     helpers = await import('../js/helpers.js');
-    goals = await import('../js/goals.js');
     helpers.loadLists.mockResolvedValue([{ name: 'Hidden', columns: [], items: [], hiddenUntil: hideTime }]);
     helpers.loadDecisions.mockResolvedValue([]);
     await import('../js/lists.js');
