@@ -28,12 +28,12 @@ function shiftSampleCalendarItems(items) {
     const start = new Date(it.scheduled);
     if (isNaN(start)) return it;
     start.setDate(start.getDate() + shiftDays);
-    const updated = { ...it, scheduled: start.toISOString().split('T')[0] };
+    const updated = { ...it, scheduled: start.toLocaleDateString('en-CA') };
     if (it.scheduledEnd) {
       const end = new Date(it.scheduledEnd);
       if (!isNaN(end)) {
         end.setDate(end.getDate() + shiftDays);
-        updated.scheduledEnd = end.toISOString().split('T')[0];
+        updated.scheduledEnd = end.toLocaleDateString('en-CA');
       }
     }
     return updated;
@@ -483,7 +483,7 @@ export function parseNaturalDate(input) {
   const weekdays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   const norm = input.trim().toLowerCase();
   if (norm === 'today') {
-    return today.toISOString().split('T')[0];
+    return today.toLocaleDateString('en-CA');
   }
   const dow = weekdays.find(d => norm.startsWith(d));
   if (dow) {
@@ -492,7 +492,7 @@ export function parseNaturalDate(input) {
     if (delta <= 0) delta += 7;
     const next = new Date(today);
     next.setDate(today.getDate() + delta);
-    return next.toISOString().split('T')[0];
+    return next.toLocaleDateString('en-CA');
   }
   return null;
 }

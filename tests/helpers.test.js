@@ -48,7 +48,7 @@ import { parseNaturalDate, formatDaysUntil, generateId, linkify } from '../js/he
 describe('parseNaturalDate', () => {
   it('returns today\'s date string for "today" input', () => {
     const result = parseNaturalDate('today');
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
     expect(result).toBe(today);
   });
 
@@ -59,7 +59,7 @@ describe('parseNaturalDate', () => {
     let delta = 1 - today.getDay();
     if (delta <= 0) delta += 7;
     next.setDate(today.getDate() + delta);
-    const monday = next.toISOString().split('T')[0];
+    const monday = next.toLocaleDateString('en-CA');
     expect(result).toBe(monday);
   });
 });
@@ -73,7 +73,7 @@ describe('formatDaysUntil', () => {
     vi.useFakeTimers();
     const now = new Date('2025-02-10T00:00:00');
     vi.setSystemTime(now);
-    const today = now.toISOString().split('T')[0];
+    const today = now.toLocaleDateString('en-CA');
     expect(formatDaysUntil(today)).toBe('today');
   });
 
@@ -83,8 +83,8 @@ describe('formatDaysUntil', () => {
     vi.setSystemTime(now);
     const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
     const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-    expect(formatDaysUntil(tomorrow.toISOString().split('T')[0])).toBe('in 1 day');
-    expect(formatDaysUntil(yesterday.toISOString().split('T')[0])).toBe('overdue by 1 day');
+    expect(formatDaysUntil(tomorrow.toLocaleDateString('en-CA'))).toBe('in 1 day');
+    expect(formatDaysUntil(yesterday.toLocaleDateString('en-CA'))).toBe('overdue by 1 day');
   });
 
   it('shows yesterday instead of overdue when today is Sunday', () => {
@@ -92,7 +92,7 @@ describe('formatDaysUntil', () => {
     const now = new Date('2025-02-09T00:00:00'); // Sunday
     vi.setSystemTime(now);
     const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-    expect(formatDaysUntil(yesterday.toISOString().split('T')[0])).toBe('yesterday');
+    expect(formatDaysUntil(yesterday.toLocaleDateString('en-CA'))).toBe('yesterday');
   });
 });
 
