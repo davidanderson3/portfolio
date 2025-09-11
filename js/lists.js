@@ -655,7 +655,7 @@ async function initListsPanel() {
           if (opt.value === 'date') {
             const input = await pickDate('');
             if (!input) return;
-            const dt = new Date(input);
+            const dt = new Date(`${input}T00:00`);
             if (isNaN(dt)) return;
             hideUntil = dt.toISOString();
           } else {
@@ -1138,7 +1138,7 @@ function openRowEditor(rowIdx) {
         if (opt.value === 'date') {
           const input = await pickDate('');
           if (!input) return;
-          const dt = new Date(input);
+          const dt = new Date(`${input}T00:00`);
           if (isNaN(dt)) return;
           hideUntil = dt.toISOString();
         } else {

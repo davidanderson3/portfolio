@@ -921,13 +921,13 @@ export function updateGoalCounts(items) {
     ).length;
 
     const completed = goals.filter(g => g.completed).length;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toLocaleDateString('en-CA');
     // Count all goals completed today, including sub-goals and hidden ones
     const completedToday = items.filter(it =>
         it.type === 'goal' &&
         it.completed &&
         it.dateCompleted &&
-        it.dateCompleted.slice(0, 10) === today
+        new Date(it.dateCompleted).toLocaleDateString('en-CA') === today
     ).length;
 
     const projectsHeader = document.getElementById('projectsHeader');
@@ -1144,7 +1144,7 @@ function attachEditButtons(item, buttonWrap, row, itemsRef) {
                 if (opt.value === 'date') {
                     const input = await pickDate('');
                     if (!input) return;
-                    const dt = new Date(input);
+                    const dt = new Date(`${input}T00:00`);
                     if (isNaN(dt)) return;
                     hideUntil = dt.toISOString();
                 } else {
