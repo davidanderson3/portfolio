@@ -90,7 +90,7 @@ export async function addCalendarGoal(date = '') {
 
     const order = await loadGoalOrder();
     if (!order.includes(newGoal.id)) {
-        await saveGoalOrder([...order, newGoal.id]);
+        await saveGoalOrder([newGoal.id, ...order]);
     }
 
     await saveDecisions(deduped);
