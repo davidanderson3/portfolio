@@ -184,7 +184,7 @@ async function saveGoalWizard() {
   // calendarStartDate/End already persisted on the goal above
 
   const currentGoalOrder = await loadGoalOrder();
-  const newGoalOrder = isEdit ? currentGoalOrder : [...currentGoalOrder, goalId];
+  const newGoalOrder = isEdit ? currentGoalOrder : [goalId, ...currentGoalOrder];
   await saveGoalOrder(newGoalOrder);
 
   wizardState.editingGoalId = null;

@@ -320,7 +320,7 @@ describe('addCalendarGoal', () => {
     await addCalendarGoal('2024-01-02');
 
     const calls = helpers.saveGoalOrder.mock.calls.map(c => c[0]);
-    expect(calls).toContainEqual(['a', 'g1']);
+    expect(calls).toContainEqual(['g1', 'a']);
   });
 
   it('updates goal order before saving decisions for signed-in users', async () => {

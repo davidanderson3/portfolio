@@ -56,6 +56,32 @@ describe('saveGoalWizard', () => {
       })
     ]);
   });
+
+  it('adds new goal to the start of goal order', async () => {
+    const helpers = await import('../js/helpers.js');
+    helpers.loadGoalOrder.mockResolvedValue(['a']);
+    const mod = await import('../js/wizard.js');
+    const { wizardState, initWizard, saveGoalWizard } = mod;
+    initWizard({
+      wizardContainer: { style: {} },
+      addProjectBtn: { style: {} },
+      cancelBtn: {},
+      backBtn: { style: {} },
+      nextBtn: {},
+      wizardStep: {}
+    });
+
+    Object.assign(wizardState, {
+      goalText: 'Another goal',
+      calendarStartDate: '',
+      calendarEndDate: '',
+      subgoals: [],
+      editingGoalId: null
+    });
+
+    await saveGoalWizard();
+    expect(helpers.saveGoalOrder).toHaveBeenCalledWith(['id1', 'a']);
+  });
 });
 
 describe('initWizard', () => {
