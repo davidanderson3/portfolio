@@ -1,5 +1,9 @@
 {
+  "scripts": {
+    "dev": "node server.js"
+  },
   "dependencies": {
+    "express": "^4.21.2",
     "firebase-tools": "^14.17.0"
   }
 }

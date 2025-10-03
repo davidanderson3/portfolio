@@ -21,11 +21,12 @@
       <nav class="nav-pills" aria-label="Project categories">
         <button type="button" class="nav-pill is-active" data-filter="all">All Projects</button>
       </nav>
+      <a class="admin-link" href="/admin.html">Admin</a>
     </header>
 
     <main class="main-content">
       <section class="projects" aria-labelledby="projects-heading">
-        <div class="projects-toolbar">
+        <div class="projects-toolbar" hidden>
           <div>
             <h1 id="projects-heading">Your Projects</h1>
             <p class="projects-subtitle">Cards below reflect the projects you add to your library.</p>
@@ -35,62 +36,6 @@
             <input id="projectSearch" name="projectSearch" type="search" placeholder="Search by title, tech, or tags" autocomplete="off" />
           </label>
         </div>
-
-        <section class="project-create" aria-labelledby="addProjectHeading">
-            <div class="project-create__header">
-              <div>
-                <h3 id="addProjectHeading">Add a project</h3>
-                <p class="project-create__subtitle">Capture a new build with a title, caption, rich description, and a featured image.</p>
-              </div>
-              <p class="project-create__note">Entries sync to Firebase so your projects stay available anywhere.</p>
-            </div>
-
-          <form id="addProjectForm" class="project-form" novalidate>
-            <div class="project-form__row">
-              <label class="project-form__field" for="projectTitle">
-                <span class="project-form__label">Title</span>
-                <input id="projectTitle" name="title" type="text" required maxlength="120" placeholder="e.g. Adaptive Onboarding Flow" />
-              </label>
-              <label class="project-form__field" for="projectCaption">
-                <span class="project-form__label">Caption</span>
-                <input id="projectCaption" name="caption" type="text" required maxlength="160" placeholder="Short punchline for the card" />
-              </label>
-            </div>
-
-            <label class="project-form__field" for="projectDescription">
-              <span class="project-form__label">Description</span>
-              <textarea id="projectDescription" name="description" rows="4" required placeholder="Share the story, approach, and customer value." maxlength="1000"></textarea>
-            </label>
-
-            <div class="project-form__row">
-              <label class="project-form__field" for="projectImageUpload">
-                <span class="project-form__label">Upload picture</span>
-                <input id="projectImageUpload" name="imageFile" type="file" accept="image/*" />
-                <span class="project-form__hint">Select an image from your device.</span>
-              </label>
-              <label class="project-form__field" for="projectImage">
-                <span class="project-form__label">Picture URL</span>
-                <input id="projectImage" name="image" type="url" placeholder="Or paste a link like https://example.com/preview.jpg" />
-              </label>
-              <label class="project-form__field" for="projectAltText">
-                <span class="project-form__label">Image alt text</span>
-                <input id="projectAltText" name="alt" type="text" maxlength="160" placeholder="Describe the image for accessibility" />
-              </label>
-            </div>
-
-            <fieldset class="project-form__links" aria-describedby="projectLinksHelp">
-              <legend class="project-form__label">Project links</legend>
-              <p id="projectLinksHelp" class="project-form__hint">Optional: add label and URL pairs for demos, docs, or repos.</p>
-              <div class="project-form__links-list" data-links-container></div>
-              <button type="button" class="project-form__link-add" data-add-link>Add another link</button>
-            </fieldset>
-
-            <div class="project-form__actions">
-              <button type="submit" class="project-form__submit">Add project</button>
-              <p class="project-form__feedback" id="projectFormFeedback" role="status" aria-live="polite"></p>
-            </div>
-          </form>
-        </section>
 
         <div class="projects-grid" id="projectsGrid" role="list" aria-live="polite"></div>
       </section>

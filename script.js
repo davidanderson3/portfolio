@@ -6,15 +6,30 @@ import {
   onSnapshot,
   orderBy,
   query,
+  where,
   serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js';
+import {
+  browserLocalPersistence,
+  getAuth,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  setPersistence,
+  signInWithPopup,
+  signOut
+} from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js';
 
 const CONFIG_ENDPOINT =
-  'https://us-central1-decision-maker-4e1d3.cloudfunctions.net/getFirebaseConfig';
+  'https://us-central1-portfolio-1023-1fa72.cloudfunctions.net/getFirebaseConfig';
+
+const IS_ADMIN = document.body.dataset.admin === 'true';
 
 let db = null;
 let projectsCollection = null;
+let auth = null;
+let unsubscribeProjects = null;
 let isLoadingProjects = true;
+let isAuthenticated = !IS_ADMIN;
 
 const CATEGORY_LABELS = {
   custom: 'Project'
@@ -52,6 +67,100 @@ const projectForm = document.querySelector('#addProjectForm');
 const projectFormFeedback = document.querySelector('#projectFormFeedback');
 const linksContainer = projectForm ? projectForm.querySelector('[data-links-container]') : null;
 const addLinkButton = projectForm ? projectForm.querySelector('[data-add-link]') : null;
+const authToggleButton = document.querySelector('#authToggleButton');
+const authStatus = document.querySelector('#authStatus');
+const projectCreateSection = document.querySelector('.project-create');
+
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+function setFormDisabled(disabled = false) {
+  if (!projectForm) return;
+  const controls = projectForm.querySelectorAll('input, textarea, button');
+  controls.forEach((control) => {
+    control.disabled = disabled;
+  });
+}
+
+function unsubscribeFromProjects() {
+  if (typeof unsubscribeProjects === 'function') {
+    unsubscribeProjects();
+    unsubscribeProjects = null;
+  }
+}
+
+function updateAuthUI(user) {
+  if (!IS_ADMIN) {
+    return;
+  }
+
+  if (!authToggleButton) return;
+
+  if (authStatus) {
+    if (user && (user.displayName || user.email)) {
+      const name = user.displayName || user.email;
+      authStatus.textContent = `Signed in as ${name}`;
+      authStatus.hidden = false;
+    } else if (!user) {
+      authStatus.textContent = 'Sign in with Google to view and manage your projects.';
+      authStatus.hidden = false;
+    } else {
+      authStatus.textContent = '';
+      authStatus.hidden = true;
+    }
+  }
+
+  if (user) {
+    authToggleButton.textContent = 'Sign out';
+    authToggleButton.disabled = false;
+    setFormDisabled(false);
+    if (projectCreateSection) {
+      projectCreateSection.hidden = false;
+    }
+  } else {
+    authToggleButton.textContent = 'Sign in with Google';
+    authToggleButton.disabled = false;
+    setFormDisabled(true);
+    if (projectCreateSection) {
+      projectCreateSection.hidden = true;
+    }
+  }
+}
+
+async function handleAuthToggle() {
+  if (!auth || !IS_ADMIN) return;
+  authToggleButton.disabled = true;
+
+  try {
+    if (auth.currentUser) {
+      await signOut(auth);
+    } else {
+      await signInWithPopup(auth, googleProvider);
+    }
+  } catch (error) {
+    console.error('Authentication flow failed', error);
+    authToggleButton.disabled = false;
+  }
+}
+
+function handleAuthStateChanged(user) {
+  if (!IS_ADMIN) return;
+
+  isAuthenticated = Boolean(user);
+  updateAuthUI(user);
+
+  unsubscribeFromProjects();
+
+  if (user) {
+    isLoadingProjects = true;
+    renderProjects();
+    subscribeToProjects(user.uid);
+  } else {
+    projects.length = 0;
+    isLoadingProjects = false;
+    renderProjects();
+  }
+}
 
 async function bootstrapFirebase() {
   try {
@@ -63,10 +172,17 @@ async function bootstrapFirebase() {
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     projectsCollection = collection(db, 'projects');
-    subscribeToProjects();
+    if (IS_ADMIN) {
+      auth = getAuth(app);
+      await setPersistence(auth, browserLocalPersistence);
+      onAuthStateChanged(auth, handleAuthStateChanged);
+    } else {
+      subscribeToProjects();
+    }
   } catch (error) {
     console.error('Failed to bootstrap Firebase', error);
     isLoadingProjects = false;
+    updateAuthUI(null);
     showFormFeedback('We could not connect to Firebase. Please try again later.', true);
     renderProjects();
   }
@@ -145,6 +261,14 @@ function matchesSearch(project) {
 
 function renderProjects() {
   grid.innerHTML = '';
+  if (IS_ADMIN && !isAuthenticated) {
+    const signedOutMessage = document.createElement('p');
+    signedOutMessage.className = 'empty-state';
+    signedOutMessage.textContent = 'Sign in with Google to view your project library.';
+    grid.appendChild(signedOutMessage);
+    return;
+  }
+
   const filteredProjects = projects.filter((project) => matchesFilter(project) && matchesSearch(project));
 
   if (isLoadingProjects) {
@@ -354,26 +478,47 @@ async function saveProjectToFirebase(project) {
     throw new Error('Firebase is not configured.');
   }
 
+  if (!IS_ADMIN || !auth || !auth.currentUser) {
+    throw new Error('User is not authenticated.');
+  }
+
   const { id, ...payload } = project;
   payload.createdAt = serverTimestamp();
+  payload.ownerUid = auth.currentUser.uid;
   const docRef = await addDoc(projectsCollection, payload);
   return docRef.id;
 }
 
-function subscribeToProjects() {
+function subscribeToProjects(ownerUid) {
   if (!projectsCollection) {
-    console.warn('Firebase not configured; skipping project subscription.');
-    showFormFeedback('Firebase is not configured. Check your Cloud Function endpoint.', true);
+    console.warn('Firebase not ready; skipping project subscription.');
     isLoadingProjects = false;
     renderProjects();
     return;
   }
 
-  const projectsQuery = query(projectsCollection, orderBy('createdAt', 'desc'));
+  if (IS_ADMIN && !ownerUid) {
+    console.warn('User not authenticated; skipping admin project subscription.');
+    isLoadingProjects = false;
+    renderProjects();
+    return;
+  }
+
+  unsubscribeFromProjects();
+
+  const baseOrder = orderBy('createdAt', 'desc');
+  const projectsQuery =
+    IS_ADMIN && ownerUid
+      ? query(projectsCollection, where('ownerUid', '==', ownerUid), baseOrder)
+      : query(projectsCollection, baseOrder);
+
   isLoadingProjects = true;
-  onSnapshot(
+  unsubscribeProjects = onSnapshot(
     projectsQuery,
     (snapshot) => {
+      if (IS_ADMIN && !isAuthenticated) {
+        return;
+      }
       projects.length = 0;
       snapshot.forEach((docSnapshot) => {
         const project = normalizeCustomProject({ ...docSnapshot.data(), id: docSnapshot.id });
@@ -554,6 +699,10 @@ if (projectForm) {
   }
 }
 
+if (authToggleButton) {
+  authToggleButton.addEventListener('click', handleAuthToggle);
+}
+
 navPills.forEach((pill) => {
   pill.addEventListener('click', () => applyFilter(pill.dataset.filter));
 });
@@ -586,5 +735,6 @@ window.addEventListener('keydown', (event) => {
 });
 
 showFormFeedback('');
+updateAuthUI(null);
 renderProjects();
 bootstrapFirebase();

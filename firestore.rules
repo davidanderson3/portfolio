@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /projects/{projectId} {
+      allow read: if true;
+      allow create: if isSignedIn() && ownsNewDocument();
+      allow update, delete: if isSignedIn() && ownsDocument();
+    }
+  }
+}
+
+function isSignedIn() {
+  return request.auth != null;
+}
+
+function ownsDocument() {
+  return request.auth.uid == resource.data.ownerUid;
+}
+
+function ownsNewDocument() {
+  return request.auth.uid == request.resource.data.ownerUid;
+}
