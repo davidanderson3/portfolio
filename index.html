@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>David Anderson | Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="site-header" data-sticky>
+      <div class="branding">
+        <div class="identity">
+          <p class="name">David Anderson</p>
+        </div>
+      </div>
+      <nav class="nav-pills" aria-label="Project categories">
+        <button type="button" class="nav-pill is-active" data-filter="all">All Projects</button>
+      </nav>
+    </header>
+
+    <main class="main-content">
+      <section class="projects" aria-labelledby="projects-heading">
+        <div class="projects-toolbar">
+          <div>
+            <h1 id="projects-heading">Your Projects</h1>
+            <p class="projects-subtitle">Cards below reflect the projects you add to your library.</p>
+          </div>
+          <label class="search" for="projectSearch">
+            <span class="search-label">Quick find</span>
+            <input id="projectSearch" name="projectSearch" type="search" placeholder="Search by title, tech, or tags" autocomplete="off" />
+          </label>
+        </div>
+
+        <section class="project-create" aria-labelledby="addProjectHeading">
+            <div class="project-create__header">
+              <div>
+                <h3 id="addProjectHeading">Add a project</h3>
+                <p class="project-create__subtitle">Capture a new build with a title, caption, rich description, and a featured image.</p>
+              </div>
+              <p class="project-create__note">Entries sync to Firebase so your projects stay available anywhere.</p>
+            </div>
+
+          <form id="addProjectForm" class="project-form" novalidate>
+            <div class="project-form__row">
+              <label class="project-form__field" for="projectTitle">
+                <span class="project-form__label">Title</span>
+                <input id="projectTitle" name="title" type="text" required maxlength="120" placeholder="e.g. Adaptive Onboarding Flow" />
+              </label>
+              <label class="project-form__field" for="projectCaption">
+                <span class="project-form__label">Caption</span>
+                <input id="projectCaption" name="caption" type="text" required maxlength="160" placeholder="Short punchline for the card" />
+              </label>
+            </div>
+
+            <label class="project-form__field" for="projectDescription">
+              <span class="project-form__label">Description</span>
+              <textarea id="projectDescription" name="description" rows="4" required placeholder="Share the story, approach, and customer value." maxlength="1000"></textarea>
+            </label>
+
+            <div class="project-form__row">
+              <label class="project-form__field" for="projectImageUpload">
+                <span class="project-form__label">Upload picture</span>
+                <input id="projectImageUpload" name="imageFile" type="file" accept="image/*" />
+                <span class="project-form__hint">Select an image from your device.</span>
+              </label>
+              <label class="project-form__field" for="projectImage">
+                <span class="project-form__label">Picture URL</span>
+                <input id="projectImage" name="image" type="url" placeholder="Or paste a link like https://example.com/preview.jpg" />
+              </label>
+              <label class="project-form__field" for="projectAltText">
+                <span class="project-form__label">Image alt text</span>
+                <input id="projectAltText" name="alt" type="text" maxlength="160" placeholder="Describe the image for accessibility" />
+              </label>
+            </div>
+
+            <fieldset class="project-form__links" aria-describedby="projectLinksHelp">
+              <legend class="project-form__label">Project links</legend>
+              <p id="projectLinksHelp" class="project-form__hint">Optional: add label and URL pairs for demos, docs, or repos.</p>
+              <div class="project-form__links-list" data-links-container></div>
+              <button type="button" class="project-form__link-add" data-add-link>Add another link</button>
+            </fieldset>
+
+            <div class="project-form__actions">
+              <button type="submit" class="project-form__submit">Add project</button>
+              <p class="project-form__feedback" id="projectFormFeedback" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+        </section>
+
+        <div class="projects-grid" id="projectsGrid" role="list" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="detail-overlay" id="detailOverlay" hidden>
+    <div class="detail-backdrop" data-dismiss></div>
+    <article class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <header class="detail-header">
+        <div>
+          <p class="detail-badge" id="detailCategory"></p>
+          <h3 id="detailTitle"></h3>
+        </div>
+        <button type="button" class="detail-close" aria-label="Close project details" data-dismiss>&times;</button>
+      </header>
+      <div class="detail-body">
+        <figure class="detail-media" id="detailMedia" hidden>
+          <img id="detailImage" alt="" />
+        </figure>
+        <p class="detail-summary" id="detailSummary"></p>
+        <section class="detail-description" id="detailDescriptionSection" hidden>
+          <h4>Description</h4>
+          <p id="detailDescription"></p>
+        </section>
+        <div class="detail-meta">
+          <dl>
+            <div>
+              <dt>Outcome</dt>
+              <dd id="detailOutcome"></dd>
+            </div>
+            <div>
+              <dt>Stack</dt>
+              <dd id="detailStack"></dd>
+            </div>
+            <div>
+              <dt>Timeline</dt>
+              <dd id="detailTimeline"></dd>
+            </div>
+          </dl>
+        </div>
+        <section class="detail-highlights">
+          <h4>Highlights</h4>
+          <ul id="detailHighlights"></ul>
+        </section>
+        <section class="detail-links" id="detailLinks" hidden>
+          <h4>Explore further</h4>
+          <ul></ul>
+        </section>
+      </div>
+    </article>
+  </div>
+
+  <template id="projectCardTemplate">
+    <article class="project-card" role="listitem">
+      <figure class="card-media" hidden>
+        <img alt="" />
+      </figure>
+      <div class="card-content">
+        <div class="card-top">
+          <p class="card-category"></p>
+          <button type="button" class="card-focus" aria-label="View project details">View</button>
+        </div>
+        <h3 class="card-title"></h3>
+        <p class="card-summary"></p>
+        <ul class="card-tags"></ul>
+      </div>
+    </article>
+  </template>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
