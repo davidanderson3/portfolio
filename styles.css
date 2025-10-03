@@ -781,3 +781,6 @@ a:focus {
     scroll-behavior: auto !important;
   }
 }
+.site-header a.admin-link {
+  align-self: center;
+}
