@@ -501,13 +501,6 @@ a:focus {
   outline-offset: 4px;
 }
 
-.card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
 .card-category {
   margin: 0;
   font-size: 0.74rem;
@@ -516,24 +509,26 @@ a:focus {
   color: var(--color-text-faint);
 }
 
-.card-focus {
+.card-edit {
+  justify-self: end;
+  align-self: start;
   appearance: none;
-  border: none;
-  padding: 8px 14px;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  padding: 6px 12px;
   border-radius: 999px;
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #ffffff;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: var(--color-accent);
+  background: rgba(37, 99, 235, 0.12);
   cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease;
-  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.2);
+  transition: background 160ms ease, box-shadow 160ms ease;
 }
 
-.card-focus:is(:hover, :focus-visible) {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.28);
+.card-edit:is(:hover, :focus-visible) {
+  background: rgba(37, 99, 235, 0.2);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
+  outline: none;
 }
 
 .card-title {
@@ -547,6 +542,55 @@ a:focus {
   margin: 0;
   color: var(--color-text-soft);
   font-size: 1rem;
+}
+
+.card-description {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+.card-meta {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.card-meta div {
+  display: grid;
+  gap: 2px;
+}
+
+.card-meta dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-faint);
+}
+
+.card-meta dd {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.card-highlights-section,
+.card-links-section {
+  display: grid;
+  gap: 8px;
+}
+
+.card-highlights,
+.card-links {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-text);
+  display: grid;
+  gap: 4px;
+}
+
+.card-links li a {
+  color: var(--color-accent);
+  text-decoration: underline;
 }
 
 .card-tags {

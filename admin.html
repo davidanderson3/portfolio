@@ -29,17 +29,6 @@
 
     <main class="main-content">
       <section class="projects" aria-labelledby="projects-heading">
-        <div class="projects-toolbar" hidden>
-          <div>
-            <h1 id="projects-heading">Your Projects</h1>
-            <p class="projects-subtitle">Signed-in entries sync to Firebase so they stay available anywhere.</p>
-          </div>
-          <label class="search" for="projectSearch">
-            <span class="search-label">Quick find</span>
-            <input id="projectSearch" name="projectSearch" type="search" placeholder="Search by title, tech, or tags" autocomplete="off" />
-          </label>
-        </div>
-
         <section class="project-create" aria-labelledby="addProjectHeading" hidden>
           <div class="project-create__header">
             <div>
@@ -154,12 +143,33 @@
         <img alt="" />
       </figure>
       <div class="card-content">
-        <div class="card-top">
-          <p class="card-category"></p>
-          <button type="button" class="card-focus" aria-label="View project details">View</button>
-        </div>
+        <p class="card-category"></p>
+        <button type="button" class="card-edit" hidden>Edit</button>
         <h3 class="card-title"></h3>
         <p class="card-summary"></p>
+        <p class="card-description" hidden></p>
+        <dl class="card-meta">
+          <div>
+            <dt>Outcome</dt>
+            <dd class="card-outcome"></dd>
+          </div>
+          <div>
+            <dt>Stack</dt>
+            <dd class="card-stack"></dd>
+          </div>
+          <div>
+            <dt>Timeline</dt>
+            <dd class="card-timeline"></dd>
+          </div>
+        </dl>
+        <section class="card-highlights-section" hidden>
+          <h4>Highlights</h4>
+          <ul class="card-highlights"></ul>
+        </section>
+        <section class="card-links-section" hidden>
+          <h4>Explore further</h4>
+          <ul class="card-links"></ul>
+        </section>
         <ul class="card-tags"></ul>
       </div>
     </article>

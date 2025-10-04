@@ -2,12 +2,14 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.1/fireba
 import {
   addDoc,
   collection,
+  doc,
   getFirestore,
   onSnapshot,
   orderBy,
   query,
   where,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js';
 import {
   browserLocalPersistence,
@@ -30,6 +32,7 @@ let auth = null;
 let unsubscribeProjects = null;
 let isLoadingProjects = true;
 let isAuthenticated = !IS_ADMIN;
+let editingProjectId = null;
 
 const CATEGORY_LABELS = {
   custom: 'Project'
@@ -67,6 +70,7 @@ const projectForm = document.querySelector('#addProjectForm');
 const projectFormFeedback = document.querySelector('#projectFormFeedback');
 const linksContainer = projectForm ? projectForm.querySelector('[data-links-container]') : null;
 const addLinkButton = projectForm ? projectForm.querySelector('[data-add-link]') : null;
+const projectFormSubmit = projectForm ? projectForm.querySelector('.project-form__submit') : null;
 const authToggleButton = document.querySelector('#authToggleButton');
 const authStatus = document.querySelector('#authStatus');
 const projectCreateSection = document.querySelector('.project-create');
@@ -159,6 +163,8 @@ function handleAuthStateChanged(user) {
     projects.length = 0;
     isLoadingProjects = false;
     renderProjects();
+    resetProjectForm();
+    showFormFeedback('');
   }
 }
 
@@ -297,7 +303,71 @@ function renderProjects() {
 
     card.querySelector('.card-category').textContent = CATEGORY_LABELS[project.category] || project.category;
     card.querySelector('.card-title').textContent = project.title;
-    card.querySelector('.card-summary').textContent = project.summary;
+    card.querySelector('.card-summary').textContent = project.summary || '';
+
+    const editButton = card.querySelector('.card-edit');
+    if (IS_ADMIN && editButton) {
+      editButton.hidden = false;
+      editButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        startEditingProject(project);
+      });
+    } else if (editButton) {
+      editButton.remove();
+    }
+
+    const descriptionEl = card.querySelector('.card-description');
+    if (descriptionEl) {
+      if (project.description) {
+        descriptionEl.textContent = project.description;
+        descriptionEl.hidden = false;
+      } else {
+        descriptionEl.textContent = '';
+        descriptionEl.hidden = true;
+      }
+    }
+
+    const outcomeEl = card.querySelector('.card-outcome');
+    const outcomeWrapper = outcomeEl ? outcomeEl.closest('div') : null;
+    if (outcomeWrapper && outcomeEl) {
+      if (project.outcome) {
+        outcomeEl.textContent = project.outcome;
+        outcomeWrapper.hidden = false;
+      } else {
+        outcomeEl.textContent = '';
+        outcomeWrapper.hidden = true;
+      }
+    }
+
+    const stackEl = card.querySelector('.card-stack');
+    const stackWrapper = stackEl ? stackEl.closest('div') : null;
+    if (stackWrapper && stackEl) {
+      if (Array.isArray(project.stack) && project.stack.length) {
+        stackEl.textContent = project.stack.join(', ');
+        stackWrapper.hidden = false;
+      } else {
+        stackEl.textContent = '';
+        stackWrapper.hidden = true;
+      }
+    }
+
+    const timelineEl = card.querySelector('.card-timeline');
+    const timelineWrapper = timelineEl ? timelineEl.closest('div') : null;
+    if (timelineWrapper && timelineEl) {
+      if (project.timeline) {
+        timelineEl.textContent = project.timeline;
+        timelineWrapper.hidden = false;
+      } else {
+        timelineEl.textContent = '';
+        timelineWrapper.hidden = true;
+      }
+    }
+
+    const cardMeta = card.querySelector('.card-meta');
+    if (cardMeta) {
+      const hasMeta = Array.from(cardMeta.querySelectorAll('div')).some((section) => !section.hidden);
+      cardMeta.hidden = !hasMeta;
+    }
 
     const media = card.querySelector('.card-media');
     const mediaImg = media ? media.querySelector('img') : null;
@@ -313,33 +383,57 @@ function renderProjects() {
       }
     }
 
-    const tagsList = card.querySelector('.card-tags');
-    tagsList.innerHTML = '';
-    if (Array.isArray(project.tags) && project.tags.length) {
-      tagsList.hidden = false;
-      project.tags.forEach((tag) => {
-        const li = document.createElement('li');
-        li.textContent = tag;
-        tagsList.appendChild(li);
-      });
-    } else {
-      tagsList.hidden = true;
+    const highlightsSection = card.querySelector('.card-highlights-section');
+    const highlightsList = card.querySelector('.card-highlights');
+    if (highlightsSection && highlightsList) {
+      highlightsList.innerHTML = '';
+      if (Array.isArray(project.highlights) && project.highlights.length) {
+        project.highlights.forEach((item) => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          highlightsList.appendChild(li);
+        });
+        highlightsSection.hidden = false;
+      } else {
+        highlightsSection.hidden = true;
+      }
     }
 
-    const openDetail = () => showProjectDetail(project, card.querySelector('.card-focus'));
-
-    card.querySelector('.card-focus').addEventListener('click', (event) => {
-      event.stopPropagation();
-      openDetail();
-    });
-
-    card.addEventListener('click', openDetail);
-    card.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        openDetail();
+    const linksSection = card.querySelector('.card-links-section');
+    const linksList = card.querySelector('.card-links');
+    if (linksSection && linksList) {
+      linksList.innerHTML = '';
+      if (project.links && project.links.length) {
+        project.links.forEach((link) => {
+          const li = document.createElement('li');
+          const anchor = document.createElement('a');
+          anchor.href = link.url;
+          anchor.textContent = link.label;
+          anchor.target = '_blank';
+          anchor.rel = 'noreferrer noopener';
+          li.appendChild(anchor);
+          linksList.appendChild(li);
+        });
+        linksSection.hidden = false;
+      } else {
+        linksSection.hidden = true;
       }
-    });
+    }
+
+    const tagsList = card.querySelector('.card-tags');
+    if (tagsList) {
+      tagsList.innerHTML = '';
+      if (Array.isArray(project.tags) && project.tags.length) {
+        tagsList.hidden = false;
+        project.tags.forEach((tag) => {
+          const li = document.createElement('li');
+          li.textContent = tag;
+          tagsList.appendChild(li);
+        });
+      } else {
+        tagsList.hidden = true;
+      }
+    }
 
     grid.appendChild(card);
   });
@@ -489,6 +583,22 @@ async function saveProjectToFirebase(project) {
   return docRef.id;
 }
 
+async function updateProjectInFirebase(documentId, project) {
+  if (!projectsCollection) {
+    throw new Error('Firebase is not configured.');
+  }
+
+  if (!IS_ADMIN || !auth || !auth.currentUser) {
+    throw new Error('User is not authenticated.');
+  }
+
+  const { id, ...payload } = project;
+  payload.ownerUid = auth.currentUser.uid;
+  payload.updatedAt = serverTimestamp();
+  const docRef = doc(projectsCollection, documentId);
+  await updateDoc(docRef, payload);
+}
+
 function subscribeToProjects(ownerUid) {
   if (!projectsCollection) {
     console.warn('Firebase not ready; skipping project subscription.');
@@ -602,10 +712,54 @@ function addLinkRow(prefill) {
   }
 }
 
-function resetLinkRows() {
+function resetLinkRows(prefillLinks = []) {
   if (!linksContainer) return;
   linksContainer.innerHTML = '';
-  addLinkRow();
+  if (prefillLinks.length) {
+    prefillLinks.forEach((link) => addLinkRow(link));
+  } else {
+    addLinkRow();
+  }
+}
+
+function resetProjectForm() {
+  if (!projectForm) return;
+  projectForm.reset();
+  resetLinkRows();
+  editingProjectId = null;
+  if (projectFormSubmit) {
+    projectFormSubmit.textContent = 'Add project';
+  }
+  projectForm.dataset.mode = 'create';
+}
+
+function startEditingProject(project) {
+  if (!IS_ADMIN || !projectForm) return;
+
+  editingProjectId = project.id;
+  projectForm.dataset.mode = 'edit';
+  if (projectFormSubmit) {
+    projectFormSubmit.textContent = 'Update project';
+  }
+
+  const titleField = projectForm.querySelector('#projectTitle');
+  const captionField = projectForm.querySelector('#projectCaption');
+  const descriptionField = projectForm.querySelector('#projectDescription');
+  const imageField = projectForm.querySelector('#projectImage');
+  const imageUploadField = projectForm.querySelector('#projectImageUpload');
+  const altField = projectForm.querySelector('#projectAltText');
+
+  if (titleField) titleField.value = project.title || '';
+  if (captionField) captionField.value = project.summary || '';
+  if (descriptionField) descriptionField.value = project.description || '';
+  if (imageField) imageField.value = project.image || '';
+  if (imageUploadField) imageUploadField.value = '';
+  if (altField) altField.value = project.alt || '';
+
+  resetLinkRows(Array.isArray(project.links) ? project.links : []);
+
+  showFormFeedback('Editing existing project. Update the fields and save.');
+  projectForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 async function handleProjectSubmit(event) {
@@ -680,11 +834,15 @@ async function handleProjectSubmit(event) {
   showFormFeedback('Saving project...');
 
   try {
-    await saveProjectToFirebase(project);
-    projectForm.reset();
-    resetLinkRows();
+    if (editingProjectId) {
+      await updateProjectInFirebase(editingProjectId, project);
+      showFormFeedback('Project updated.');
+    } else {
+      await saveProjectToFirebase(project);
+      showFormFeedback('Project saved to Firebase.');
+    }
+    resetProjectForm();
     applyFilter('all');
-    showFormFeedback('Project saved to Firebase.');
   } catch (error) {
     console.error('Failed to save project to Firebase', error);
     showFormFeedback('We could not save this project to Firebase. Check your configuration and try again.', true);
@@ -697,6 +855,7 @@ if (projectForm) {
   if (addLinkButton) {
     addLinkButton.addEventListener('click', () => addLinkRow());
   }
+  projectForm.dataset.mode = 'create';
 }
 
 if (authToggleButton) {
@@ -707,13 +866,15 @@ navPills.forEach((pill) => {
   pill.addEventListener('click', () => applyFilter(pill.dataset.filter));
 });
 
-searchInput.addEventListener(
-  'input',
-  debounce((event) => {
-    state.search = event.target.value.trim();
-    renderProjects();
-  }, 120)
-);
+if (searchInput) {
+  searchInput.addEventListener(
+    'input',
+    debounce((event) => {
+      state.search = event.target.value.trim();
+      renderProjects();
+    }, 120)
+  );
+}
 
 overlay.addEventListener('click', (event) => {
   if (event.target.hasAttribute('data-dismiss')) {
