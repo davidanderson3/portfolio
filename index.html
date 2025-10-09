@@ -50,26 +50,7 @@
           <h4>Description</h4>
           <p id="detailDescription"></p>
         </section>
-        <div class="detail-meta">
-          <dl>
-            <div>
-              <dt>Outcome</dt>
-              <dd id="detailOutcome"></dd>
-            </div>
-            <div>
-              <dt>Stack</dt>
-              <dd id="detailStack"></dd>
-            </div>
-            <div>
-              <dt>Timeline</dt>
-              <dd id="detailTimeline"></dd>
-            </div>
-          </dl>
-        </div>
-        <section class="detail-highlights">
-          <h4>Highlights</h4>
-          <ul id="detailHighlights"></ul>
-        </section>
+        
         <section class="detail-links" id="detailLinks" hidden>
           <h4>Explore further</h4>
           <ul></ul>
@@ -84,29 +65,34 @@
         <img alt="" />
       </figure>
       <div class="card-content">
-        <p class="card-category"></p>
-        <button type="button" class="card-edit" hidden>Edit</button>
+        <div class="card-header">
+          <p class="card-category"></p>
+          <div class="card-admin-actions" hidden>
+            <div class="card-order-controls" hidden>
+              <button
+                type="button"
+                class="card-move card-move-up"
+                data-direction="up"
+                aria-label="Move project earlier in the list"
+              >
+                &uarr;
+              </button>
+              <button
+                type="button"
+                class="card-move card-move-down"
+                data-direction="down"
+                aria-label="Move project later in the list"
+              >
+                &darr;
+              </button>
+            </div>
+            <button type="button" class="card-edit" hidden>Edit</button>
+          </div>
+        </div>
         <h3 class="card-title"></h3>
         <p class="card-summary"></p>
         <p class="card-description" hidden></p>
-        <dl class="card-meta">
-          <div>
-            <dt>Outcome</dt>
-            <dd class="card-outcome"></dd>
-          </div>
-          <div>
-            <dt>Stack</dt>
-            <dd class="card-stack"></dd>
-          </div>
-          <div>
-            <dt>Timeline</dt>
-            <dd class="card-timeline"></dd>
-          </div>
-        </dl>
-        <section class="card-highlights-section" hidden>
-          <h4>Highlights</h4>
-          <ul class="card-highlights"></ul>
-        </section>
+        
         <section class="card-links-section" hidden>
           <h4>Explore further</h4>
           <ul class="card-links"></ul>

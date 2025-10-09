@@ -488,6 +488,58 @@ a:focus {
   gap: 14px;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.card-admin-actions {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.card-order-controls {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.card-move {
+  appearance: none;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--color-accent);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.card-move:is(:hover, :focus-visible) {
+  background: rgba(37, 99, 235, 0.2);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.2);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.card-move:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.3);
+  color: var(--color-text-faint);
+  box-shadow: none;
+  transform: none;
+}
+
 .project-card:focus,
 .project-card:hover {
   transform: translateY(-8px);
@@ -550,36 +602,11 @@ a:focus {
   line-height: 1.6;
 }
 
-.card-meta {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-}
-
-.card-meta div {
-  display: grid;
-  gap: 2px;
-}
-
-.card-meta dt {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-faint);
-}
-
-.card-meta dd {
-  margin: 0;
-  color: var(--color-text);
-}
-
-.card-highlights-section,
 .card-links-section {
   display: grid;
   gap: 8px;
 }
 
-.card-highlights,
 .card-links {
   margin: 0;
   padding-left: 18px;
@@ -742,31 +769,6 @@ a:focus {
   line-height: 1.7;
 }
 
-.detail-meta dl {
-  display: grid;
-  gap: 16px;
-  margin: 0;
-}
-
-.detail-meta div {
-  display: grid;
-  gap: 4px;
-}
-
-.detail-meta dt {
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-faint);
-}
-
-.detail-meta dd {
-  margin: 0;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.detail-highlights h4,
 .detail-links h4 {
   margin: 0 0 12px;
   font-size: 0.95rem;
@@ -775,7 +777,6 @@ a:focus {
   color: var(--color-text-faint);
 }
 
-.detail-highlights ul,
 .detail-links ul {
   margin: 0;
   padding-left: 20px;

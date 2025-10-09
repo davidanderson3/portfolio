@@ -33,6 +33,7 @@ let unsubscribeProjects = null;
 let isLoadingProjects = true;
 let isAuthenticated = !IS_ADMIN;
 let editingProjectId = null;
+let orderSavePromise = null;
 
 const CATEGORY_LABELS = {
   custom: 'Project'
@@ -54,13 +55,8 @@ const detailPanel = overlay.querySelector('.detail-panel');
 const detailCategory = document.querySelector('#detailCategory');
 const detailTitle = document.querySelector('#detailTitle');
 const detailSummary = document.querySelector('#detailSummary');
-const detailOutcome = document.querySelector('#detailOutcome');
-const detailStack = document.querySelector('#detailStack');
-const detailTimeline = document.querySelector('#detailTimeline');
-const detailHighlights = document.querySelector('#detailHighlights');
 const detailLinksSection = document.querySelector('#detailLinks');
 const detailLinksList = detailLinksSection.querySelector('ul');
-const detailHighlightsSection = document.querySelector('.detail-highlights');
 const cardTemplate = document.querySelector('#projectCardTemplate');
 const detailMedia = document.querySelector('#detailMedia');
 const detailImage = document.querySelector('#detailImage');
@@ -250,9 +246,6 @@ function matchesSearch(project) {
     project.summary,
     project.caption,
     project.description,
-    project.outcome,
-    project.timeline,
-    Array.isArray(project.stack) ? project.stack.join(' ') : '',
     Array.isArray(project.tags) ? project.tags.join(' ') : '',
     Array.isArray(project.categories)
       ? project.categories.map((cat) => CATEGORY_LABELS[cat] || cat).join(' ')
@@ -263,6 +256,31 @@ function matchesSearch(project) {
     .join(' ')
     .toLowerCase();
   return haystack.includes(term);
+}
+
+function getProjectOrder(project) {
+  if (Number.isFinite(project.orderIndex)) {
+    return project.orderIndex;
+  }
+  return Number.MAX_SAFE_INTEGER;
+}
+
+function sortProjects(list) {
+  list.sort((first, second) => {
+    const orderDifference = getProjectOrder(first) - getProjectOrder(second);
+    if (orderDifference !== 0) {
+      return orderDifference;
+    }
+
+    const firstCreated = Number.isFinite(first.createdAtMillis) ? first.createdAtMillis : 0;
+    const secondCreated = Number.isFinite(second.createdAtMillis) ? second.createdAtMillis : 0;
+
+    if (firstCreated !== secondCreated) {
+      return secondCreated - firstCreated;
+    }
+
+    return (first.title || '').localeCompare(second.title || '');
+  });
 }
 
 function renderProjects() {
@@ -305,15 +323,55 @@ function renderProjects() {
     card.querySelector('.card-title').textContent = project.title;
     card.querySelector('.card-summary').textContent = project.summary || '';
 
+    const adminActions = card.querySelector('.card-admin-actions');
+    const reorderControls = card.querySelector('.card-order-controls');
     const editButton = card.querySelector('.card-edit');
-    if (IS_ADMIN && editButton) {
-      editButton.hidden = false;
-      editButton.addEventListener('click', (event) => {
-        event.stopPropagation();
-        startEditingProject(project);
-      });
-    } else if (editButton) {
-      editButton.remove();
+
+    if (IS_ADMIN) {
+      if (adminActions) {
+        adminActions.hidden = false;
+      }
+
+      if (reorderControls) {
+        const moveUpButton = reorderControls.querySelector('[data-direction="up"]');
+        const moveDownButton = reorderControls.querySelector('[data-direction="down"]');
+        const globalIndex = projects.findIndex((item) => item.id === project.id);
+        const totalProjects = projects.length;
+
+        reorderControls.hidden = totalProjects <= 1;
+
+        if (moveUpButton) {
+          moveUpButton.disabled = globalIndex <= 0;
+          moveUpButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            await moveProject(project.id, 'up');
+          });
+        }
+
+        if (moveDownButton) {
+          moveDownButton.disabled = globalIndex === -1 || globalIndex >= totalProjects - 1;
+          moveDownButton.addEventListener('click', async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            await moveProject(project.id, 'down');
+          });
+        }
+      }
+
+      if (editButton) {
+        editButton.hidden = false;
+        editButton.addEventListener('click', (event) => {
+          event.stopPropagation();
+          startEditingProject(project);
+        });
+      }
+    } else {
+      if (adminActions) {
+        adminActions.remove();
+      } else if (editButton) {
+        editButton.remove();
+      }
     }
 
     const descriptionEl = card.querySelector('.card-description');
@@ -327,48 +385,6 @@ function renderProjects() {
       }
     }
 
-    const outcomeEl = card.querySelector('.card-outcome');
-    const outcomeWrapper = outcomeEl ? outcomeEl.closest('div') : null;
-    if (outcomeWrapper && outcomeEl) {
-      if (project.outcome) {
-        outcomeEl.textContent = project.outcome;
-        outcomeWrapper.hidden = false;
-      } else {
-        outcomeEl.textContent = '';
-        outcomeWrapper.hidden = true;
-      }
-    }
-
-    const stackEl = card.querySelector('.card-stack');
-    const stackWrapper = stackEl ? stackEl.closest('div') : null;
-    if (stackWrapper && stackEl) {
-      if (Array.isArray(project.stack) && project.stack.length) {
-        stackEl.textContent = project.stack.join(', ');
-        stackWrapper.hidden = false;
-      } else {
-        stackEl.textContent = '';
-        stackWrapper.hidden = true;
-      }
-    }
-
-    const timelineEl = card.querySelector('.card-timeline');
-    const timelineWrapper = timelineEl ? timelineEl.closest('div') : null;
-    if (timelineWrapper && timelineEl) {
-      if (project.timeline) {
-        timelineEl.textContent = project.timeline;
-        timelineWrapper.hidden = false;
-      } else {
-        timelineEl.textContent = '';
-        timelineWrapper.hidden = true;
-      }
-    }
-
-    const cardMeta = card.querySelector('.card-meta');
-    if (cardMeta) {
-      const hasMeta = Array.from(cardMeta.querySelectorAll('div')).some((section) => !section.hidden);
-      cardMeta.hidden = !hasMeta;
-    }
-
     const media = card.querySelector('.card-media');
     const mediaImg = media ? media.querySelector('img') : null;
     if (media && mediaImg) {
@@ -380,22 +396,6 @@ function renderProjects() {
         media.hidden = true;
         mediaImg.removeAttribute('src');
         mediaImg.alt = '';
-      }
-    }
-
-    const highlightsSection = card.querySelector('.card-highlights-section');
-    const highlightsList = card.querySelector('.card-highlights');
-    if (highlightsSection && highlightsList) {
-      highlightsList.innerHTML = '';
-      if (Array.isArray(project.highlights) && project.highlights.length) {
-        project.highlights.forEach((item) => {
-          const li = document.createElement('li');
-          li.textContent = item;
-          highlightsList.appendChild(li);
-        });
-        highlightsSection.hidden = false;
-      } else {
-        highlightsSection.hidden = true;
       }
     }
 
@@ -439,6 +439,117 @@ function renderProjects() {
   });
 }
 
+function focusReorderButton(projectId, direction) {
+  if (!IS_ADMIN) {
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    const card = grid.querySelector(`[data-project-id="${projectId}"]`);
+    if (!card) {
+      return;
+    }
+
+    const targetButton = card.querySelector(
+      direction === 'down' ? '.card-order-controls [data-direction="down"]' : '.card-order-controls [data-direction="up"]'
+    );
+
+    if (targetButton && !targetButton.disabled) {
+      targetButton.focus();
+    } else {
+      card.focus();
+    }
+  });
+}
+
+async function persistProjectOrder() {
+  if (!IS_ADMIN) {
+    return;
+  }
+
+  if (!projectsCollection) {
+    throw new Error('Firebase is not configured.');
+  }
+
+  if (!auth || !auth.currentUser) {
+    throw new Error('User is not authenticated.');
+  }
+
+  if (orderSavePromise) {
+    try {
+      await orderSavePromise;
+    } catch (error) {
+      // Ignore the error here; the next save attempt will surface it again if needed.
+    }
+  }
+
+  const updates = [];
+
+  projects.forEach((project, index) => {
+    const desiredOrder = index + 1;
+    if (project.orderIndex !== desiredOrder) {
+      project.orderIndex = desiredOrder;
+      const documentRef = doc(projectsCollection, project.id);
+      updates.push(
+        updateDoc(documentRef, {
+          orderIndex: desiredOrder,
+          updatedAt: serverTimestamp()
+        })
+      );
+    }
+  });
+
+  if (!updates.length) {
+    return;
+  }
+
+  const pendingSave = Promise.all(updates);
+
+  orderSavePromise = pendingSave
+    .catch((error) => {
+      throw error;
+    })
+    .finally(() => {
+      if (orderSavePromise === pendingSave) {
+        orderSavePromise = null;
+      }
+    });
+
+  return orderSavePromise;
+}
+
+async function moveProject(projectId, direction) {
+  if (!IS_ADMIN) {
+    return;
+  }
+
+  const currentIndex = projects.findIndex((project) => project.id === projectId);
+  if (currentIndex === -1) {
+    return;
+  }
+
+  const offset = direction === 'up' ? -1 : 1;
+  const targetIndex = currentIndex + offset;
+
+  if (targetIndex < 0 || targetIndex >= projects.length) {
+    return;
+  }
+
+  const [movedProject] = projects.splice(currentIndex, 1);
+  projects.splice(targetIndex, 0, movedProject);
+
+  renderProjects();
+  focusReorderButton(projectId, direction);
+
+  try {
+    await persistProjectOrder();
+    showFormFeedback('Project order updated.');
+  } catch (error) {
+    console.error('Failed to persist project order', error);
+    showFormFeedback('We could not update the project order. Please try again.', true);
+  }
+}
+
 function showProjectDetail(project, trigger) {
   state.lastFocused = trigger || document.activeElement;
   detailCategory.textContent = CATEGORY_LABELS[project.category] || project.category;
@@ -465,24 +576,6 @@ function showProjectDetail(project, trigger) {
       detailDescription.textContent = '';
       detailDescriptionSection.hidden = true;
     }
-  }
-
-  detailOutcome.textContent = project.outcome || 'Coming soon';
-  detailStack.textContent = Array.isArray(project.stack) && project.stack.length ? project.stack.join(', ') : 'Coming soon';
-  detailTimeline.textContent = project.timeline || 'Coming soon';
-
-  detailHighlights.innerHTML = '';
-  if (Array.isArray(project.highlights) && project.highlights.length) {
-    project.highlights.forEach((item) => {
-      const li = document.createElement('li');
-      li.textContent = item;
-      detailHighlights.appendChild(li);
-    });
-    if (detailHighlightsSection) {
-      detailHighlightsSection.hidden = false;
-    }
-  } else if (detailHighlightsSection) {
-    detailHighlightsSection.hidden = true;
   }
 
   if (project.links && project.links.length) {
@@ -542,6 +635,16 @@ function normalizeCustomProject(raw = {}) {
         .filter((link) => link.label && link.url)
     : [];
 
+  const sanitizedCreatedAtMillis = Number.isFinite(raw.createdAtMillis)
+    ? raw.createdAtMillis
+    : raw.createdAt && typeof raw.createdAt.toMillis === 'function'
+      ? raw.createdAt.toMillis()
+      : Date.now();
+
+  const sanitizedOrderIndex = Number.isFinite(raw.orderIndex)
+    ? raw.orderIndex
+    : -sanitizedCreatedAtMillis;
+
   return {
     id:
       typeof raw.id === 'string' && raw.id.trim()
@@ -558,12 +661,10 @@ function normalizeCustomProject(raw = {}) {
       Array.isArray(raw.categories) && raw.categories.length
         ? raw.categories
         : ['custom'],
-    outcome: typeof raw.outcome === 'string' ? raw.outcome : '',
-    timeline: typeof raw.timeline === 'string' ? raw.timeline : '',
-    stack: Array.isArray(raw.stack) ? raw.stack : [],
     tags: Array.isArray(raw.tags) ? raw.tags : [],
-    highlights: Array.isArray(raw.highlights) ? raw.highlights : [],
-    links: sanitizedLinks
+    links: sanitizedLinks,
+    orderIndex: sanitizedOrderIndex,
+    createdAtMillis: sanitizedCreatedAtMillis
   };
 }
 
@@ -576,9 +677,10 @@ async function saveProjectToFirebase(project) {
     throw new Error('User is not authenticated.');
   }
 
-  const { id, ...payload } = project;
+  const { id, createdAtMillis, ...payload } = project;
   payload.createdAt = serverTimestamp();
   payload.ownerUid = auth.currentUser.uid;
+  payload.orderIndex = Number.isFinite(project.orderIndex) ? project.orderIndex : Date.now() * -1;
   const docRef = await addDoc(projectsCollection, payload);
   return docRef.id;
 }
@@ -592,7 +694,7 @@ async function updateProjectInFirebase(documentId, project) {
     throw new Error('User is not authenticated.');
   }
 
-  const { id, ...payload } = project;
+  const { id, createdAtMillis, ...payload } = project;
   payload.ownerUid = auth.currentUser.uid;
   payload.updatedAt = serverTimestamp();
   const docRef = doc(projectsCollection, documentId);
@@ -637,6 +739,7 @@ function subscribeToProjects(ownerUid) {
         }
         projects.push(project);
       });
+      sortProjects(projects);
       isLoadingProjects = false;
       renderProjects();
     },
@@ -825,6 +928,14 @@ async function handleProjectSubmit(event) {
     alt,
     links
   });
+
+  if (editingProjectId) {
+    const existingProject = projects.find((item) => item.id === editingProjectId);
+    if (existingProject) {
+      project.orderIndex = existingProject.orderIndex;
+      project.createdAtMillis = existingProject.createdAtMillis;
+    }
+  }
 
   if (!projectsCollection) {
     showFormFeedback('Firebase is not configured yet. Check your Cloud Function endpoint.', true);
