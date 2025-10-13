@@ -269,8 +269,12 @@ a:focus {
 
 .projects-grid {
   display: grid;
-  gap: 22px;
+  gap: 20px;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.projects-grid > * {
+  height: 100%;
 }
 
 .project-create {
@@ -455,9 +459,11 @@ a:focus {
 }
 
 .project-card {
-  display: grid;
-  gap: 18px;
-  padding: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  padding: 24px;
   border-radius: var(--radius-md);
   background: linear-gradient(150deg, rgba(37, 99, 235, 0.08), rgba(110, 231, 183, 0.1)), var(--color-surface-strong);
   border: 1px solid rgba(148, 163, 184, 0.3);
@@ -468,8 +474,7 @@ a:focus {
 
 .card-media {
   position: relative;
-  margin: -10px -10px 10px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   aspect-ratio: 16 / 9;
   background: rgba(148, 163, 184, 0.18);
@@ -484,8 +489,11 @@ a:focus {
 }
 
 .card-content {
-  display: grid;
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  flex: 1 1 auto;
 }
 
 .card-header {
@@ -553,14 +561,6 @@ a:focus {
   outline-offset: 4px;
 }
 
-.card-category {
-  margin: 0;
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-faint);
-}
-
 .card-edit {
   justify-self: end;
   align-self: start;
@@ -594,17 +594,13 @@ a:focus {
   margin: 0;
   color: var(--color-text-soft);
   font-size: 1rem;
-}
-
-.card-description {
-  margin: 0;
-  color: var(--color-text);
-  line-height: 1.6;
+  flex: 1 1 auto;
 }
 
 .card-links-section {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .card-links {
@@ -744,44 +740,21 @@ a:focus {
 }
 
 .detail-summary {
-  margin: 0;
+  margin: 0 0 12px;
   color: var(--color-text-soft);
   font-size: 1.04rem;
 }
 
-.detail-description {
+.detail-links {
   display: grid;
   gap: 12px;
-}
-
-.detail-description h4 {
-  margin: 0;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-text-faint);
-}
-
-.detail-description p {
-  margin: 0;
-  color: var(--color-text);
-  font-size: 1rem;
-  line-height: 1.7;
-}
-
-.detail-links h4 {
-  margin: 0 0 12px;
-  font-size: 0.95rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-faint);
 }
 
 .detail-links ul {
   margin: 0;
   padding-left: 20px;
   display: grid;
-  gap: 12px;
+  gap: 10px;
   color: var(--color-text-soft);
 }
 

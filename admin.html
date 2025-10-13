@@ -105,27 +105,17 @@
           <img id="detailImage" alt="" />
         </figure>
         <p class="detail-summary" id="detailSummary"></p>
-        <section class="detail-description" id="detailDescriptionSection" hidden>
-          <h4>Description</h4>
-          <p id="detailDescription"></p>
-        </section>
-        
-        <section class="detail-links" id="detailLinks" hidden>
-          <h4>Explore further</h4>
+        <div class="detail-links" id="detailLinks" hidden role="group" aria-label="Project links">
           <ul></ul>
-        </section>
+        </div>
       </div>
     </article>
   </div>
 
   <template id="projectCardTemplate">
     <article class="project-card" role="listitem">
-      <figure class="card-media" hidden>
-        <img alt="" />
-      </figure>
       <div class="card-content">
         <div class="card-header">
-          <p class="card-category"></p>
           <div class="card-admin-actions" hidden>
             <div class="card-order-controls" hidden>
               <button
@@ -149,13 +139,13 @@
           </div>
         </div>
         <h3 class="card-title"></h3>
+        <figure class="card-media" hidden>
+          <img alt="" />
+        </figure>
         <p class="card-summary"></p>
-        <p class="card-description" hidden></p>
-        
-        <section class="card-links-section" hidden>
-          <h4>Explore further</h4>
+        <div class="card-links-section" hidden role="group" aria-label="Project links">
           <ul class="card-links"></ul>
-        </section>
+        </div>
         <ul class="card-tags"></ul>
       </div>
     </article>

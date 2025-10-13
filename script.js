@@ -60,8 +60,6 @@ const detailLinksList = detailLinksSection.querySelector('ul');
 const cardTemplate = document.querySelector('#projectCardTemplate');
 const detailMedia = document.querySelector('#detailMedia');
 const detailImage = document.querySelector('#detailImage');
-const detailDescriptionSection = document.querySelector('#detailDescriptionSection');
-const detailDescription = document.querySelector('#detailDescription');
 const projectForm = document.querySelector('#addProjectForm');
 const projectFormFeedback = document.querySelector('#projectFormFeedback');
 const linksContainer = projectForm ? projectForm.querySelector('[data-links-container]') : null;
@@ -319,9 +317,13 @@ function renderProjects() {
     card.dataset.categories = project.categories.join(',');
     card.setAttribute('tabindex', '0');
 
-    card.querySelector('.card-category').textContent = CATEGORY_LABELS[project.category] || project.category;
     card.querySelector('.card-title').textContent = project.title;
-    card.querySelector('.card-summary').textContent = project.summary || '';
+    const summaryEl = card.querySelector('.card-summary');
+    if (summaryEl) {
+      const summaryText = project.summary || project.description || '';
+      summaryEl.textContent = summaryText;
+      summaryEl.hidden = !summaryText;
+    }
 
     const adminActions = card.querySelector('.card-admin-actions');
     const reorderControls = card.querySelector('.card-order-controls');
@@ -371,17 +373,6 @@ function renderProjects() {
         adminActions.remove();
       } else if (editButton) {
         editButton.remove();
-      }
-    }
-
-    const descriptionEl = card.querySelector('.card-description');
-    if (descriptionEl) {
-      if (project.description) {
-        descriptionEl.textContent = project.description;
-        descriptionEl.hidden = false;
-      } else {
-        descriptionEl.textContent = '';
-        descriptionEl.hidden = true;
       }
     }
 
@@ -554,7 +545,9 @@ function showProjectDetail(project, trigger) {
   state.lastFocused = trigger || document.activeElement;
   detailCategory.textContent = CATEGORY_LABELS[project.category] || project.category;
   detailTitle.textContent = project.title;
-  detailSummary.textContent = project.summary || '';
+  const detailText = project.description || project.summary || '';
+  detailSummary.textContent = detailText;
+  detailSummary.hidden = !detailText;
 
   if (detailMedia && detailImage) {
     if (project.image) {
@@ -565,16 +558,6 @@ function showProjectDetail(project, trigger) {
       detailMedia.hidden = true;
       detailImage.removeAttribute('src');
       detailImage.alt = '';
-    }
-  }
-
-  if (detailDescriptionSection && detailDescription) {
-    if (project.description) {
-      detailDescription.textContent = project.description;
-      detailDescriptionSection.hidden = false;
-    } else {
-      detailDescription.textContent = '';
-      detailDescriptionSection.hidden = true;
     }
   }
 
