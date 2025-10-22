@@ -768,6 +768,9 @@ function setCardExpansion(card, expanded) {
   if (todosSection) {
     todosSection.hidden = !(isExpanded && hasTodos);
   }
+
+  const activeExpanded = isExpanded ? card : grid.querySelector('.project-card.is-expanded');
+  applyExpansionOrdering(activeExpanded);
 }
 
 function collapseExpandedCards(exceptCard) {
@@ -777,6 +780,25 @@ function collapseExpandedCards(exceptCard) {
       setCardExpansion(card, false);
     }
   });
+}
+
+function applyExpansionOrdering(activeCard) {
+  const cards = Array.from(grid.querySelectorAll('.project-card'));
+  if (activeCard) {
+    grid.classList.add('projects-grid--expanded');
+    cards.forEach((card) => {
+      if (card === activeCard) {
+        card.style.order = '0';
+      } else {
+        card.style.order = '1';
+      }
+    });
+  } else {
+    grid.classList.remove('projects-grid--expanded');
+    cards.forEach((card) => {
+      card.style.removeProperty('order');
+    });
+  }
 }
 
 function toggleCardExpansion(card) {
