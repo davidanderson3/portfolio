@@ -54,7 +54,7 @@
   </div>
 
   <template id="projectCardTemplate">
-    <article class="project-card" role="listitem">
+    <article class="project-card" role="listitem" aria-expanded="false">
       <div class="card-content">
         <div class="card-header">
           <div class="card-admin-actions" hidden>
@@ -80,13 +80,22 @@
             <button type="button" class="card-delete" hidden>Delete</button>
           </div>
         </div>
-        <h3 class="card-title"></h3>
+        <div class="card-meta">
+          <h3 class="card-title"></h3>
+          <span class="card-status" hidden></span>
+          <span class="card-expander" aria-hidden="true"></span>
+        </div>
         <figure class="card-media" hidden>
           <img alt="" />
         </figure>
         <p class="card-summary"></p>
+        <div class="card-description" hidden></div>
         <div class="card-links-section" hidden role="group" aria-label="Project links">
           <ul class="card-links"></ul>
+        </div>
+        <div class="card-todos" hidden>
+          <p class="card-todos__label">To do</p>
+          <ul></ul>
         </div>
         <ul class="card-tags"></ul>
       </div>

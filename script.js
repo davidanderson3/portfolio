@@ -246,9 +246,30 @@ function parseTagsInput(raw = '') {
   return sanitizeTagList(raw.split(','));
 }
 
+function sanitizeTodosList(rawTodos = []) {
+  return rawTodos
+    .map((item) => {
+      if (typeof item !== 'string') {
+        return '';
+      }
+      const cleaned = item.replace(/^[\s*\-•]+/, '').trim();
+      return cleaned;
+    })
+    .filter(Boolean);
+}
+
+function parseTodosInput(raw = '') {
+  if (!raw) return [];
+  const lines = raw.split(/\r?\n/);
+  return sanitizeTodosList(lines);
+}
+
 function collectUniqueTags() {
   const tagMap = new Map();
-  projects.forEach((project) => {
+  const sourceProjects = IS_ADMIN
+    ? projects
+    : projects.filter((project) => project.status === 'published');
+  sourceProjects.forEach((project) => {
     if (!Array.isArray(project.tags)) return;
     project.tags.forEach((tag) => {
       const key = tag.toLowerCase();
@@ -391,7 +412,18 @@ function renderProjects() {
     return;
   }
 
-  const filteredProjects = projects.filter((project) => matchesFilter(project) && matchesSearch(project));
+  const filteredProjects = projects.filter((project) => {
+    if (!IS_ADMIN && project.status !== 'published') {
+      return false;
+    }
+    if (!matchesFilter(project)) {
+      return false;
+    }
+    if (!matchesSearch(project)) {
+      return false;
+    }
+    return true;
+  });
 
   if (isLoadingProjects) {
     const loading = document.createElement('p');
@@ -404,9 +436,12 @@ function renderProjects() {
   if (!filteredProjects.length) {
     const empty = document.createElement('p');
     empty.className = 'empty-state';
-    empty.textContent = projects.length
+    const totalVisible = IS_ADMIN
+      ? projects.length
+      : projects.filter((project) => project.status === 'published').length;
+    empty.textContent = totalVisible
       ? 'No projects match this view yet. Try another search term.'
-      : 'No projects yet. Add one to get started.';
+      : 'No published projects yet. Check back soon.';
     grid.appendChild(empty);
     return;
   }
@@ -415,14 +450,46 @@ function renderProjects() {
     const card = cardTemplate.content.firstElementChild.cloneNode(true);
     card.dataset.projectId = project.id;
     card.dataset.categories = project.categories.join(',');
-    card.setAttribute('tabindex', '0');
+    card.dataset.status = project.status;
+    card.classList.toggle('is-draft', project.status !== 'published');
 
-    card.querySelector('.card-title').textContent = project.title;
+    const titleEl = card.querySelector('.card-title');
+    if (titleEl) {
+      titleEl.textContent = project.title;
+    }
+    const statusEl = card.querySelector('.card-status');
+    if (statusEl) {
+      if (IS_ADMIN) {
+        statusEl.textContent = project.status === 'published' ? 'Published' : 'Draft';
+        statusEl.dataset.status = project.status;
+        statusEl.hidden = false;
+      } else {
+        statusEl.hidden = true;
+      }
+    }
+
+    const expanderEl = card.querySelector('.card-expander');
+    if (expanderEl) {
+      expanderEl.hidden = false;
+    }
+
+    const summaryText = project.summary || project.caption || project.description || '';
+    const summaryTrimmed = summaryText.trim();
     const summaryEl = card.querySelector('.card-summary');
     if (summaryEl) {
-      const summaryText = project.summary || project.description || '';
       summaryEl.textContent = summaryText;
-      summaryEl.hidden = !summaryText;
+      summaryEl.hidden = !summaryTrimmed;
+    }
+
+    let hasDescription = false;
+    const descriptionEl = card.querySelector('.card-description');
+    if (descriptionEl) {
+      const descriptionText = project.description || '';
+      descriptionEl.textContent = descriptionText;
+      const descriptionTrimmed = descriptionText.trim();
+      hasDescription = Boolean(descriptionTrimmed && descriptionTrimmed !== summaryTrimmed);
+      descriptionEl.dataset.hasDescription = String(hasDescription);
+      descriptionEl.hidden = true;
     }
 
     const cardHeader = card.querySelector('.card-header');
@@ -509,11 +576,13 @@ function renderProjects() {
       }
     }
 
+    let hasLinks = false;
     const linksSection = card.querySelector('.card-links-section');
     const linksList = card.querySelector('.card-links');
     if (linksSection && linksList) {
       linksList.innerHTML = '';
-      if (project.links && project.links.length) {
+      hasLinks = Array.isArray(project.links) && project.links.length > 0;
+      if (hasLinks) {
         project.links.forEach((link) => {
           const li = document.createElement('li');
           const anchor = document.createElement('a');
@@ -524,29 +593,169 @@ function renderProjects() {
           li.appendChild(anchor);
           linksList.appendChild(li);
         });
-        linksSection.hidden = false;
-      } else {
-        linksSection.hidden = true;
       }
+      linksSection.dataset.hasLinks = String(hasLinks);
+      linksSection.hidden = true;
     }
 
+    let hasTags = false;
     const tagsList = card.querySelector('.card-tags');
     if (tagsList) {
       tagsList.innerHTML = '';
-      if (Array.isArray(project.tags) && project.tags.length) {
-        tagsList.hidden = false;
+      hasTags = Array.isArray(project.tags) && project.tags.length > 0;
+      if (hasTags) {
         project.tags.forEach((tag) => {
           const li = document.createElement('li');
           li.textContent = tag;
           tagsList.appendChild(li);
         });
-      } else {
-        tagsList.hidden = true;
+      }
+      tagsList.dataset.hasTags = String(hasTags);
+      tagsList.hidden = true;
+    }
+
+    let hasTodos = false;
+    const todosSection = card.querySelector('.card-todos');
+    const todosList = todosSection ? todosSection.querySelector('ul') : null;
+    if (todosSection && todosList) {
+      todosList.innerHTML = '';
+      hasTodos = Array.isArray(project.todos) && project.todos.length > 0;
+      if (hasTodos) {
+        project.todos.forEach((item) => {
+          const li = document.createElement('li');
+          li.textContent = item;
+          todosList.appendChild(li);
+        });
+      }
+      todosSection.dataset.hasTodos = String(hasTodos);
+      todosSection.hidden = true;
+    }
+
+    const canExpand =
+      hasDescription || hasLinks || hasTags || hasTodos;
+    card.dataset.expandable = String(canExpand);
+    card.classList.toggle('is-expandable', canExpand);
+    if (canExpand) {
+      card.setAttribute('aria-expanded', 'false');
+      card.setAttribute('tabindex', '0');
+    } else {
+      card.removeAttribute('aria-expanded');
+      card.removeAttribute('tabindex');
+      if (expanderEl) {
+        expanderEl.hidden = true;
       }
     }
 
+    setCardExpansion(card, false);
+
+    card.addEventListener('click', (event) => {
+      if (card.dataset.expandable !== 'true') {
+        return;
+      }
+      if (event.defaultPrevented || event.button > 0) {
+        return;
+      }
+      if (event.target.closest('.card-admin-actions button, .card-links a, .card-links-section a')) {
+        return;
+      }
+      toggleCardExpansion(card);
+    });
+
+    card.addEventListener('keydown', (event) => {
+      if (card.dataset.expandable !== 'true') {
+        return;
+      }
+      if (event.key !== 'Enter' && event.key !== ' ') {
+        return;
+      }
+      if (event.target.closest('.card-admin-actions button, .card-links a, .card-links-section a')) {
+        return;
+      }
+      event.preventDefault();
+      toggleCardExpansion(card);
+    });
+
     grid.appendChild(card);
   });
+}
+
+function setCardExpansion(card, expanded) {
+  const description = card.querySelector('.card-description');
+  const linksSection = card.querySelector('.card-links-section');
+  const summary = card.querySelector('.card-summary');
+  const tagsList = card.querySelector('.card-tags');
+  const expander = card.querySelector('.card-expander');
+  const todosSection = card.querySelector('.card-todos');
+  const canExpand = card.dataset.expandable === 'true';
+  const hasDescription = description && description.dataset.hasDescription === 'true';
+  const hasLinks = linksSection && linksSection.dataset.hasLinks === 'true';
+  const hasTags = tagsList && tagsList.dataset.hasTags === 'true';
+  const hasTodos = todosSection && todosSection.dataset.hasTodos === 'true';
+  const isExpanded = Boolean(expanded);
+
+  if (!canExpand) {
+    card.classList.remove('is-expanded');
+    card.removeAttribute('aria-expanded');
+    if (expander) {
+      expander.hidden = true;
+    }
+    if (summary) {
+      summary.classList.remove('card-summary--collapsed');
+    }
+    if (description) {
+      description.hidden = true;
+    }
+    if (linksSection) {
+      linksSection.hidden = true;
+    }
+    if (tagsList) {
+      tagsList.hidden = !(hasTags && Boolean(tagsList.children.length));
+    }
+    if (todosSection) {
+      todosSection.hidden = !(hasTodos && Boolean(todosSection.querySelectorAll('li').length));
+    }
+    return;
+  }
+
+  card.classList.toggle('is-expanded', isExpanded);
+  card.setAttribute('aria-expanded', String(isExpanded));
+  if (expander) {
+    expander.hidden = false;
+  }
+
+  if (summary) {
+    summary.classList.toggle('card-summary--collapsed', !isExpanded);
+  }
+
+  if (description) {
+    description.hidden = !(isExpanded && hasDescription);
+  }
+
+  if (linksSection) {
+    linksSection.hidden = !(isExpanded && hasLinks);
+  }
+
+  if (tagsList) {
+    tagsList.hidden = !(isExpanded && hasTags);
+  }
+
+  if (todosSection) {
+    todosSection.hidden = !(isExpanded && hasTodos);
+  }
+}
+
+function toggleCardExpansion(card) {
+  if (card.dataset.expandable !== 'true') {
+    return;
+  }
+  const isExpanded = card.classList.contains('is-expanded');
+  const shouldExpand = !isExpanded;
+  setCardExpansion(card, shouldExpand);
+  if (shouldExpand) {
+    requestAnimationFrame(() => {
+      card.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    });
+  }
 }
 
 function focusReorderButton(projectId, direction) {
@@ -743,6 +952,15 @@ function normalizeCustomProject(raw = {}) {
         ? raw.tags.split(',')
         : []
   );
+  const sanitizedTodos = sanitizeTodosList(
+    Array.isArray(raw.todos)
+      ? raw.todos
+      : typeof raw.todos === 'string'
+        ? raw.todos.split(/\r?\n/)
+        : []
+  );
+  const sanitizedStatus =
+    typeof raw.status === 'string' && raw.status.toLowerCase() === 'published' ? 'published' : 'draft';
 
   const sanitizedCreatedAtMillis = Number.isFinite(raw.createdAtMillis)
     ? raw.createdAtMillis
@@ -771,6 +989,8 @@ function normalizeCustomProject(raw = {}) {
         ? raw.categories
         : ['custom'],
     tags: sanitizedTags,
+    todos: sanitizedTodos,
+    status: sanitizedStatus,
     links: sanitizedLinks,
     orderIndex: sanitizedOrderIndex,
     createdAtMillis: sanitizedCreatedAtMillis
@@ -883,6 +1103,9 @@ function subscribeToProjects(ownerUid) {
         if (!project.image || !project.summary || !project.title) {
           return;
         }
+        if (!IS_ADMIN && project.status !== 'published') {
+          return;
+        }
         projects.push(project);
       });
       sortProjects(projects);
@@ -980,6 +1203,14 @@ function resetProjectForm() {
   if (tagsField) {
     tagsField.value = '';
   }
+  const todosField = projectForm.querySelector('#projectTodos');
+  if (todosField) {
+    todosField.value = '';
+  }
+  const statusField = projectForm.querySelector('#projectStatus');
+  if (statusField) {
+    statusField.value = 'draft';
+  }
   resetLinkRows();
   editingProjectId = null;
   if (projectFormSubmit) {
@@ -1004,6 +1235,8 @@ function startEditingProject(project) {
   const imageUploadField = projectForm.querySelector('#projectImageUpload');
   const altField = projectForm.querySelector('#projectAltText');
   const tagsField = projectForm.querySelector('#projectTags');
+  const todosField = projectForm.querySelector('#projectTodos');
+  const statusField = projectForm.querySelector('#projectStatus');
 
   if (titleField) titleField.value = project.title || '';
   if (captionField) captionField.value = project.summary || '';
@@ -1013,6 +1246,12 @@ function startEditingProject(project) {
   if (altField) altField.value = project.alt || '';
   if (tagsField) {
     tagsField.value = Array.isArray(project.tags) ? project.tags.join(', ') : '';
+  }
+  if (todosField) {
+    todosField.value = Array.isArray(project.todos) ? project.todos.join('\n') : '';
+  }
+  if (statusField) {
+    statusField.value = project.status === 'published' ? 'published' : 'draft';
   }
 
   resetLinkRows(Array.isArray(project.links) ? project.links : []);
@@ -1034,6 +1273,10 @@ async function handleProjectSubmit(event) {
   const alt = (formData.get('alt') || '').trim();
   const tagsInput = (formData.get('tags') || '').trim();
   const tags = parseTagsInput(tagsInput);
+  const todosInput = (formData.get('todos') || '').toString().trim();
+  const todos = parseTodosInput(todosInput);
+  const statusInput = ((formData.get('status') || 'draft') + '').toLowerCase();
+  const status = statusInput === 'published' ? 'published' : 'draft';
 
   if (!title || !caption || !description) {
     showFormFeedback('Please fill in the title, caption, and description fields.', true);
@@ -1085,7 +1328,9 @@ async function handleProjectSubmit(event) {
     image: resolvedImage,
     alt,
     links,
-    tags
+    tags,
+    todos,
+    status
   });
 
   if (editingProjectId) {

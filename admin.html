@@ -56,6 +56,18 @@
               <textarea id="projectDescription" name="description" rows="4" required placeholder="Share the story, approach, and customer value." maxlength="1000"></textarea>
             </label>
 
+            <label class="project-form__field" for="projectTodos">
+              <span class="project-form__label">To do</span>
+              <textarea
+                id="projectTodos"
+                name="todos"
+                rows="3"
+                placeholder="One task per line, e.g.&#10;Prototype v2 navigation&#10;Schedule usability sessions"
+                maxlength="600"
+              ></textarea>
+              <span class="project-form__hint">Each line becomes a bullet in the project’s to-do list.</span>
+            </label>
+
             <label class="project-form__field" for="projectTags">
               <span class="project-form__label">Tags</span>
               <input
@@ -65,6 +77,15 @@
                 placeholder="Separate tags with commas, e.g. Medical Terminology, Healthcare"
               />
               <span class="project-form__hint">Each tag appears as a filter tab on the portfolio.</span>
+            </label>
+
+            <label class="project-form__field" for="projectStatus">
+              <span class="project-form__label">Status</span>
+              <select id="projectStatus" name="status">
+                <option value="draft" selected>Draft</option>
+                <option value="published">Published</option>
+              </select>
+              <span class="project-form__hint">Draft items stay hidden from the public site until you publish them.</span>
             </label>
 
             <div class="project-form__row">
@@ -125,7 +146,7 @@
   </div>
 
   <template id="projectCardTemplate">
-    <article class="project-card" role="listitem">
+    <article class="project-card" role="listitem" aria-expanded="false">
       <div class="card-content">
         <div class="card-header">
           <div class="card-admin-actions" hidden>
@@ -151,13 +172,22 @@
             <button type="button" class="card-delete" hidden>Delete</button>
           </div>
         </div>
-        <h3 class="card-title"></h3>
+        <div class="card-meta">
+          <h3 class="card-title"></h3>
+          <span class="card-status" hidden></span>
+          <span class="card-expander" aria-hidden="true"></span>
+        </div>
         <figure class="card-media" hidden>
           <img alt="" />
         </figure>
         <p class="card-summary"></p>
+        <div class="card-description" hidden></div>
         <div class="card-links-section" hidden role="group" aria-label="Project links">
           <ul class="card-links"></ul>
+        </div>
+        <div class="card-todos" hidden>
+          <p class="card-todos__label">To do</p>
+          <ul></ul>
         </div>
         <ul class="card-tags"></ul>
       </div>
