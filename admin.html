@@ -21,6 +21,7 @@
       <nav class="nav-pills" aria-label="Project categories">
         <button type="button" class="nav-pill is-active" data-filter="all">All Projects</button>
       </nav>
+      <a class="admin-link" href="index.html">View site</a>
       <div class="auth-controls" aria-live="polite">
         <p class="auth-status" id="authStatus" hidden></p>
         <button type="button" id="authToggleButton" class="auth-button">Sign in with Google</button>
@@ -53,6 +54,17 @@
             <label class="project-form__field" for="projectDescription">
               <span class="project-form__label">Description</span>
               <textarea id="projectDescription" name="description" rows="4" required placeholder="Share the story, approach, and customer value." maxlength="1000"></textarea>
+            </label>
+
+            <label class="project-form__field" for="projectTags">
+              <span class="project-form__label">Tags</span>
+              <input
+                id="projectTags"
+                name="tags"
+                type="text"
+                placeholder="Separate tags with commas, e.g. Medical Terminology, Healthcare"
+              />
+              <span class="project-form__hint">Each tag appears as a filter tab on the portfolio.</span>
             </label>
 
             <div class="project-form__row">
@@ -136,6 +148,7 @@
               </button>
             </div>
             <button type="button" class="card-edit" hidden>Edit</button>
+            <button type="button" class="card-delete" hidden>Delete</button>
           </div>
         </div>
         <h3 class="card-title"></h3>

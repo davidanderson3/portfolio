@@ -2,6 +2,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.1/fireba
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getFirestore,
   onSnapshot,
@@ -48,7 +49,24 @@ const state = {
 };
 
 const grid = document.querySelector('#projectsGrid');
-const navPills = Array.from(document.querySelectorAll('.nav-pill'));
+const navContainer = document.querySelector('.nav-pills');
+const STATIC_FILTER_ATTRIBUTE = 'data-filter-static';
+const DYNAMIC_FILTER_ATTRIBUTE = 'data-filter-dynamic';
+if (navContainer) {
+  const existingPills = Array.from(navContainer.querySelectorAll('.nav-pill'));
+  if (!existingPills.some((pill) => pill.dataset.filter === 'all')) {
+    const allPill = document.createElement('button');
+    allPill.type = 'button';
+    allPill.className = 'nav-pill';
+    allPill.dataset.filter = 'all';
+    allPill.textContent = 'All Projects';
+    navContainer.prepend(allPill);
+    existingPills.unshift(allPill);
+  }
+  existingPills.forEach((pill) => {
+    pill.setAttribute(STATIC_FILTER_ATTRIBUTE, 'true');
+  });
+}
 const searchInput = document.querySelector('#projectSearch');
 const overlay = document.querySelector('#detailOverlay');
 const detailPanel = overlay.querySelector('.detail-panel');
@@ -151,11 +169,13 @@ function handleAuthStateChanged(user) {
 
   if (user) {
     isLoadingProjects = true;
+    renderFilters();
     renderProjects();
     subscribeToProjects(user.uid);
   } else {
     projects.length = 0;
     isLoadingProjects = false;
+    renderFilters();
     renderProjects();
     resetProjectForm();
     showFormFeedback('');
@@ -184,6 +204,7 @@ async function bootstrapFirebase() {
     isLoadingProjects = false;
     updateAuthUI(null);
     showFormFeedback('We could not connect to Firebase. Please try again later.', true);
+    renderFilters();
     renderProjects();
   }
 }
@@ -205,6 +226,77 @@ const readFileAsDataURL = (file) =>
     reader.readAsDataURL(file);
   });
 
+function sanitizeTagList(rawTags = []) {
+  const seen = new Set();
+  return rawTags
+    .map((tag) => (typeof tag === 'string' ? tag.trim() : ''))
+    .filter((tag) => {
+      if (!tag) return false;
+      const key = tag.toLowerCase();
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+}
+
+function parseTagsInput(raw = '') {
+  if (!raw) return [];
+  return sanitizeTagList(raw.split(','));
+}
+
+function collectUniqueTags() {
+  const tagMap = new Map();
+  projects.forEach((project) => {
+    if (!Array.isArray(project.tags)) return;
+    project.tags.forEach((tag) => {
+      const key = tag.toLowerCase();
+      if (!tagMap.has(key)) {
+        tagMap.set(key, tag);
+      }
+    });
+  });
+  return Array.from(tagMap.values()).sort((first, second) =>
+    first.localeCompare(second, undefined, { sensitivity: 'base' })
+  );
+}
+
+function updateActiveFilterUI() {
+  if (!navContainer) return;
+  const navButtons = navContainer.querySelectorAll('.nav-pill');
+  navButtons.forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.filter === state.filter);
+  });
+}
+
+function renderFilters() {
+  if (!navContainer) return;
+
+  const existingDynamic = navContainer.querySelectorAll(`.nav-pill[${DYNAMIC_FILTER_ATTRIBUTE}]`);
+  existingDynamic.forEach((pill) => pill.remove());
+
+  const uniqueTags = collectUniqueTags();
+  uniqueTags.forEach((tag) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'nav-pill';
+    button.dataset.filter = `tag:${tag}`;
+    button.setAttribute(DYNAMIC_FILTER_ATTRIBUTE, 'true');
+    button.textContent = tag;
+    navContainer.appendChild(button);
+  });
+
+  const navButtons = Array.from(navContainer.querySelectorAll('.nav-pill'));
+  const hasActive = navButtons.some((button) => button.dataset.filter === state.filter);
+
+  if (!hasActive) {
+    state.filter = 'all';
+  }
+
+  updateActiveFilterUI();
+}
+
 function scrollGridIntoView() {
   const header = document.querySelector('.site-header');
   const headerOffset = header ? header.offsetHeight + 16 : 16;
@@ -222,18 +314,26 @@ function scrollGridIntoView() {
   });
 }
 
-function applyFilter(filterId) {
+function applyFilter(filterId, options = {}) {
+  const { shouldScroll = true } = options;
   state.filter = filterId;
-  navPills.forEach((pill) => {
-    pill.classList.toggle('is-active', pill.dataset.filter === filterId);
-  });
+  updateActiveFilterUI();
   renderProjects();
-  scrollGridIntoView();
+  if (shouldScroll) {
+    scrollGridIntoView();
+  }
 }
 
 function matchesFilter(project) {
   if (state.filter === 'all') return true;
-  return project.categories.includes(state.filter);
+  if (state.filter.startsWith('tag:')) {
+    const tagValue = state.filter.slice(4).toLowerCase();
+    return (
+      Array.isArray(project.tags) &&
+      project.tags.some((tag) => typeof tag === 'string' && tag.toLowerCase() === tagValue)
+    );
+  }
+  return Array.isArray(project.categories) && project.categories.includes(state.filter);
 }
 
 function matchesSearch(project) {
@@ -325,9 +425,11 @@ function renderProjects() {
       summaryEl.hidden = !summaryText;
     }
 
+    const cardHeader = card.querySelector('.card-header');
     const adminActions = card.querySelector('.card-admin-actions');
     const reorderControls = card.querySelector('.card-order-controls');
     const editButton = card.querySelector('.card-edit');
+    const deleteButton = card.querySelector('.card-delete');
 
     if (IS_ADMIN) {
       if (adminActions) {
@@ -368,11 +470,28 @@ function renderProjects() {
           startEditingProject(project);
         });
       }
+
+      if (deleteButton) {
+        deleteButton.hidden = false;
+        deleteButton.addEventListener('click', async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const target = event.currentTarget;
+          target.disabled = true;
+          const deleted = await handleDeleteProject(project);
+          if (!deleted) {
+            target.disabled = false;
+          }
+        });
+      }
     } else {
       if (adminActions) {
         adminActions.remove();
       } else if (editButton) {
         editButton.remove();
+      }
+      if (cardHeader && !cardHeader.children.length) {
+        cardHeader.remove();
       }
     }
 
@@ -617,6 +736,13 @@ function normalizeCustomProject(raw = {}) {
         }))
         .filter((link) => link.label && link.url)
     : [];
+  const sanitizedTags = sanitizeTagList(
+    Array.isArray(raw.tags)
+      ? raw.tags
+      : typeof raw.tags === 'string'
+        ? raw.tags.split(',')
+        : []
+  );
 
   const sanitizedCreatedAtMillis = Number.isFinite(raw.createdAtMillis)
     ? raw.createdAtMillis
@@ -644,7 +770,7 @@ function normalizeCustomProject(raw = {}) {
       Array.isArray(raw.categories) && raw.categories.length
         ? raw.categories
         : ['custom'],
-    tags: Array.isArray(raw.tags) ? raw.tags : [],
+    tags: sanitizedTags,
     links: sanitizedLinks,
     orderIndex: sanitizedOrderIndex,
     createdAtMillis: sanitizedCreatedAtMillis
@@ -684,10 +810,46 @@ async function updateProjectInFirebase(documentId, project) {
   await updateDoc(docRef, payload);
 }
 
+async function deleteProjectFromFirebase(documentId) {
+  if (!projectsCollection) {
+    throw new Error('Firebase is not configured.');
+  }
+
+  if (!IS_ADMIN || !auth || !auth.currentUser) {
+    throw new Error('User is not authenticated.');
+  }
+
+  const docRef = doc(projectsCollection, documentId);
+  await deleteDoc(docRef);
+}
+
+async function handleDeleteProject(project) {
+  if (!IS_ADMIN || !project) {
+    return false;
+  }
+
+  const title = project.title ? `"${project.title}"` : 'this project';
+  const confirmation = window.confirm(`Delete ${title}? This action cannot be undone.`);
+  if (!confirmation) {
+    return false;
+  }
+
+  try {
+    await deleteProjectFromFirebase(project.id);
+    showFormFeedback('Project removed.');
+    return true;
+  } catch (error) {
+    console.error('Failed to delete project', error);
+    showFormFeedback('We could not delete the project. Please try again.', true);
+    return false;
+  }
+}
+
 function subscribeToProjects(ownerUid) {
   if (!projectsCollection) {
     console.warn('Firebase not ready; skipping project subscription.');
     isLoadingProjects = false;
+    renderFilters();
     renderProjects();
     return;
   }
@@ -695,6 +857,7 @@ function subscribeToProjects(ownerUid) {
   if (IS_ADMIN && !ownerUid) {
     console.warn('User not authenticated; skipping admin project subscription.');
     isLoadingProjects = false;
+    renderFilters();
     renderProjects();
     return;
   }
@@ -724,12 +887,14 @@ function subscribeToProjects(ownerUid) {
       });
       sortProjects(projects);
       isLoadingProjects = false;
+      renderFilters();
       renderProjects();
     },
     (error) => {
       console.error('Failed to load projects from Firebase', error);
       isLoadingProjects = false;
       showFormFeedback('We could not load projects from Firebase.', true);
+      renderFilters();
       renderProjects();
     }
   );
@@ -811,6 +976,10 @@ function resetLinkRows(prefillLinks = []) {
 function resetProjectForm() {
   if (!projectForm) return;
   projectForm.reset();
+  const tagsField = projectForm.querySelector('#projectTags');
+  if (tagsField) {
+    tagsField.value = '';
+  }
   resetLinkRows();
   editingProjectId = null;
   if (projectFormSubmit) {
@@ -834,6 +1003,7 @@ function startEditingProject(project) {
   const imageField = projectForm.querySelector('#projectImage');
   const imageUploadField = projectForm.querySelector('#projectImageUpload');
   const altField = projectForm.querySelector('#projectAltText');
+  const tagsField = projectForm.querySelector('#projectTags');
 
   if (titleField) titleField.value = project.title || '';
   if (captionField) captionField.value = project.summary || '';
@@ -841,6 +1011,9 @@ function startEditingProject(project) {
   if (imageField) imageField.value = project.image || '';
   if (imageUploadField) imageUploadField.value = '';
   if (altField) altField.value = project.alt || '';
+  if (tagsField) {
+    tagsField.value = Array.isArray(project.tags) ? project.tags.join(', ') : '';
+  }
 
   resetLinkRows(Array.isArray(project.links) ? project.links : []);
 
@@ -859,6 +1032,8 @@ async function handleProjectSubmit(event) {
   const imageUrl = (formData.get('image') || '').trim();
   const imageFile = formData.get('imageFile');
   const alt = (formData.get('alt') || '').trim();
+  const tagsInput = (formData.get('tags') || '').trim();
+  const tags = parseTagsInput(tagsInput);
 
   if (!title || !caption || !description) {
     showFormFeedback('Please fill in the title, caption, and description fields.', true);
@@ -909,7 +1084,8 @@ async function handleProjectSubmit(event) {
     description,
     image: resolvedImage,
     alt,
-    links
+    links,
+    tags
   });
 
   if (editingProjectId) {
@@ -956,9 +1132,19 @@ if (authToggleButton) {
   authToggleButton.addEventListener('click', handleAuthToggle);
 }
 
-navPills.forEach((pill) => {
-  pill.addEventListener('click', () => applyFilter(pill.dataset.filter));
-});
+if (navContainer) {
+  navContainer.addEventListener('click', (event) => {
+    const pill = event.target.closest('.nav-pill');
+    if (!pill || !navContainer.contains(pill)) {
+      return;
+    }
+    const { filter } = pill.dataset;
+    if (!filter || filter === state.filter) {
+      return;
+    }
+    applyFilter(filter);
+  });
+}
 
 if (searchInput) {
   searchInput.addEventListener(
