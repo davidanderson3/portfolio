@@ -26,6 +26,7 @@ const CONFIG_ENDPOINT =
   'https://us-central1-portfolio-1023-1fa72.cloudfunctions.net/getFirebaseConfig';
 
 const IS_ADMIN = document.body.dataset.admin === 'true';
+const AUTHORIZED_OWNER_UIDS = ['KufIL6xKkPQt2eoksVkkYMLIdwG3'];
 
 let db = null;
 let projectsCollection = null;
@@ -162,16 +163,40 @@ async function handleAuthToggle() {
 function handleAuthStateChanged(user) {
   if (!IS_ADMIN) return;
 
-  isAuthenticated = Boolean(user);
-  updateAuthUI(user);
+  const isAllowedUser = Boolean(user) && AUTHORIZED_OWNER_UIDS.includes(user.uid);
+
+  if (user && !isAllowedUser) {
+    console.warn('Unauthorized user attempted to access admin.', { uid: user.uid });
+    if (authStatus) {
+      authStatus.textContent = 'This Google account is not authorized to manage this site.';
+      authStatus.hidden = false;
+    }
+    showFormFeedback('This Google account is not authorized to manage this site.', true);
+    isAuthenticated = false;
+    updateAuthUI(null);
+    authToggleButton.disabled = false;
+    setFormDisabled(true);
+    if (projectCreateSection) {
+      projectCreateSection.hidden = true;
+    }
+    signOut(auth).catch((error) => {
+      console.error('Failed to sign out unauthorized user', error);
+    });
+    return;
+  }
+
+  const effectiveUser = isAllowedUser ? user : null;
+
+  isAuthenticated = Boolean(effectiveUser);
+  updateAuthUI(effectiveUser);
 
   unsubscribeFromProjects();
 
-  if (user) {
+  if (effectiveUser) {
     isLoadingProjects = true;
     renderFilters();
     renderProjects();
-    subscribeToProjects(user.uid);
+    subscribeToProjects(effectiveUser.uid);
   } else {
     projects.length = 0;
     isLoadingProjects = false;
