@@ -27,6 +27,7 @@ const CONFIG_ENDPOINT =
 
 const IS_ADMIN = document.body.dataset.admin === 'true';
 const AUTHORIZED_OWNER_UIDS = ['KufIL6xKkPQt2eoksVkkYMLIdwG3'];
+const PUBLIC_OWNER_UID = AUTHORIZED_OWNER_UIDS[0];
 
 let db = null;
 let projectsCollection = null;
@@ -769,12 +770,24 @@ function setCardExpansion(card, expanded) {
   }
 }
 
+function collapseExpandedCards(exceptCard) {
+  const expandedCards = grid.querySelectorAll('.project-card.is-expanded');
+  expandedCards.forEach((card) => {
+    if (card !== exceptCard) {
+      setCardExpansion(card, false);
+    }
+  });
+}
+
 function toggleCardExpansion(card) {
   if (card.dataset.expandable !== 'true') {
     return;
   }
   const isExpanded = card.classList.contains('is-expanded');
   const shouldExpand = !isExpanded;
+  if (shouldExpand) {
+    collapseExpandedCards(card);
+  }
   setCardExpansion(card, shouldExpand);
   if (shouldExpand) {
     requestAnimationFrame(() => {
