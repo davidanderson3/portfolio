@@ -617,6 +617,12 @@ function renderProjects() {
           anchor.target = '_blank';
           anchor.rel = 'noreferrer noopener';
           li.appendChild(anchor);
+          if (link.note) {
+            const noteSpan = document.createElement('span');
+            noteSpan.className = 'card-link-note';
+            noteSpan.textContent = link.note;
+            li.appendChild(noteSpan);
+          }
           linksList.appendChild(li);
         });
       }
@@ -627,17 +633,21 @@ function renderProjects() {
     let hasTags = false;
     const tagsList = card.querySelector('.card-tags');
     if (tagsList) {
-      tagsList.innerHTML = '';
-      hasTags = Array.isArray(project.tags) && project.tags.length > 0;
-      if (hasTags) {
-        project.tags.forEach((tag) => {
-          const li = document.createElement('li');
-          li.textContent = tag;
-          tagsList.appendChild(li);
-        });
+      if (!IS_ADMIN) {
+        tagsList.remove();
+      } else {
+        tagsList.innerHTML = '';
+        hasTags = Array.isArray(project.tags) && project.tags.length > 0;
+        if (hasTags) {
+          project.tags.forEach((tag) => {
+            const li = document.createElement('li');
+            li.textContent = tag;
+            tagsList.appendChild(li);
+          });
+        }
+        tagsList.dataset.hasTags = String(hasTags);
+        tagsList.hidden = true;
       }
-      tagsList.dataset.hasTags = String(hasTags);
-      tagsList.hidden = true;
     }
 
     let hasTodos = false;
@@ -959,6 +969,12 @@ function showProjectDetail(project, trigger) {
       anchor.target = '_blank';
       anchor.rel = 'noreferrer noopener';
       li.appendChild(anchor);
+      if (link.note) {
+        const noteSpan = document.createElement('span');
+        noteSpan.className = 'detail-link-note';
+        noteSpan.textContent = link.note;
+        li.appendChild(noteSpan);
+      }
       detailLinksList.appendChild(li);
     });
     detailLinksSection.hidden = false;
@@ -1001,7 +1017,8 @@ function normalizeCustomProject(raw = {}) {
     ? raw.links
         .map((link) => ({
           label: typeof link.label === 'string' ? link.label.trim() : '',
-          url: typeof link.url === 'string' ? link.url.trim() : ''
+          url: typeof link.url === 'string' ? link.url.trim() : '',
+          note: typeof link.note === 'string' ? link.note.trim() : ''
         }))
         .filter((link) => link.label && link.url)
     : [];
@@ -1223,6 +1240,19 @@ function createLinkRow(prefill = {}) {
   urlInput.value = typeof prefill.url === 'string' ? prefill.url : '';
   urlField.append(urlSpan, urlInput);
 
+  const noteField = document.createElement('label');
+  noteField.className = 'project-form__field';
+  const noteSpan = document.createElement('span');
+  noteSpan.className = 'project-form__label';
+  noteSpan.textContent = 'Link note';
+  const noteInput = document.createElement('input');
+  noteInput.name = 'linkNote';
+  noteInput.type = 'text';
+  noteInput.maxLength = 160;
+  noteInput.placeholder = 'Optional context shown beside the link';
+  noteInput.value = typeof prefill.note === 'string' ? prefill.note : '';
+  noteField.append(noteSpan, noteInput);
+
   const removeButton = document.createElement('button');
   removeButton.type = 'button';
   removeButton.className = 'project-form__link-remove';
@@ -1234,7 +1264,7 @@ function createLinkRow(prefill = {}) {
     }
   });
 
-  row.append(labelField, urlField, removeButton);
+  row.append(labelField, urlField, noteField, removeButton);
   return row;
 }
 
@@ -1362,11 +1392,13 @@ async function handleProjectSubmit(event) {
 
   const linkLabels = formData.getAll('linkLabel').map((value) => (value || '').trim());
   const linkUrls = formData.getAll('linkUrl').map((value) => (value || '').trim());
+  const linkNotes = formData.getAll('linkNote').map((value) => (value || '').trim());
   const links = [];
 
-  for (let index = 0; index < Math.max(linkLabels.length, linkUrls.length); index += 1) {
+  for (let index = 0; index < Math.max(linkLabels.length, linkUrls.length, linkNotes.length); index += 1) {
     const label = linkLabels[index] || '';
     const url = linkUrls[index] || '';
+    const note = linkNotes[index] || '';
 
     if (!label && !url) {
       continue;
@@ -1377,7 +1409,7 @@ async function handleProjectSubmit(event) {
       return;
     }
 
-    links.push({ label: label || url, url });
+    links.push({ label: label || url, url, note });
   }
 
   const project = normalizeCustomProject({
