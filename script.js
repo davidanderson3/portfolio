@@ -860,6 +860,38 @@ function collapseExpandedCards(exceptCard) {
   });
 }
 
+function getCardsPerRow() {
+  if (!grid) {
+    return 1;
+  }
+
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    if (window.matchMedia('(max-width: 780px)').matches) {
+      return 1;
+    }
+    if (window.matchMedia('(max-width: 1024px)').matches) {
+      return 2;
+    }
+  }
+
+  const firstCard = grid.querySelector('.project-card');
+  if (!firstCard) {
+    return 1;
+  }
+
+  const gridStyle = getComputedStyle(grid);
+  const gap = Number.parseFloat(gridStyle.gap) || 0;
+  const cardWidth = firstCard.offsetWidth;
+  const gridWidth = grid.clientWidth;
+
+  if (!cardWidth || !gridWidth) {
+    return 1;
+  }
+
+  const cardsPerRow = Math.max(1, Math.floor((gridWidth + gap) / (cardWidth + gap)));
+  return cardsPerRow || 1;
+}
+
 function applyExpansionOrdering(activeCard) {
   const cardsPerRow = getCardsPerRow();
   const cards = Array.from(grid.querySelectorAll('.project-card'));
