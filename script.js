@@ -521,7 +521,7 @@ function renderProjects() {
   if (isLoadingProjects) {
     const loading = document.createElement('p');
     loading.className = 'empty-state';
-    loading.textContent = 'Loading your projects...';
+    loading.textContent = 'Loading projects...';
     grid.appendChild(loading);
     return;
   }
