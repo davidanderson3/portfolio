@@ -539,11 +539,12 @@ function renderProjects() {
     return;
   }
 
-  filteredProjects.forEach((project) => {
+  filteredProjects.forEach((project, index) => {
     const card = cardTemplate.content.firstElementChild.cloneNode(true);
     card.dataset.projectId = project.id;
     card.dataset.categories = project.categories.join(',');
     card.dataset.status = project.status;
+    card.dataset.renderIndex = String(index);
     card.classList.toggle('is-draft', project.status !== 'published');
 
     const titleEl = card.querySelector('.card-title');
@@ -860,22 +861,56 @@ function collapseExpandedCards(exceptCard) {
 }
 
 function applyExpansionOrdering(activeCard) {
+  const cardsPerRow = getCardsPerRow();
   const cards = Array.from(grid.querySelectorAll('.project-card'));
-  if (activeCard) {
-    grid.classList.add('projects-grid--expanded');
-    cards.forEach((card) => {
-      if (card === activeCard) {
-        card.style.order = '0';
-      } else {
-        card.style.order = '1';
-      }
-    });
-  } else {
-    grid.classList.remove('projects-grid--expanded');
-    cards.forEach((card) => {
-      card.style.removeProperty('order');
-    });
+  const hasActiveCard = Boolean(activeCard);
+  cards.forEach((card) => {
+    card.style.removeProperty('order');
+  });
+  grid.classList.toggle('projects-grid--expanded', hasActiveCard);
+
+  if (!hasActiveCard) {
+    return;
   }
+
+  const cardsByIndex = cards
+    .slice()
+    .sort((a, b) => Number(a.dataset.renderIndex || 0) - Number(b.dataset.renderIndex || 0));
+  const activeIndex = Number(activeCard.dataset.renderIndex || 0);
+  const rowStart = Math.floor(activeIndex / cardsPerRow) * cardsPerRow;
+  const rowEnd = rowStart + cardsPerRow - 1;
+
+  let orderValue = 0;
+
+  cardsByIndex.forEach((card) => {
+    const index = Number(card.dataset.renderIndex || 0);
+    if (index < rowStart) {
+      card.style.order = String(orderValue);
+      orderValue += 1;
+    }
+  });
+
+  activeCard.style.order = String(orderValue);
+  orderValue += 1;
+
+  cardsByIndex.forEach((card) => {
+    if (card === activeCard) {
+      return;
+    }
+    const index = Number(card.dataset.renderIndex || 0);
+    if (index >= rowStart && index <= rowEnd) {
+      card.style.order = String(orderValue);
+      orderValue += 1;
+    }
+  });
+
+  cardsByIndex.forEach((card) => {
+    const index = Number(card.dataset.renderIndex || 0);
+    if (index > rowEnd) {
+      card.style.order = String(orderValue);
+      orderValue += 1;
+    }
+  });
 }
 
 function toggleCardExpansion(card) {
