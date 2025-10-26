@@ -1,9 +1,9 @@
 :root {
   color-scheme: light;
   --color-bg: #eef2f7;
-  --color-surface: rgba(255, 255, 255, 0.9);
+  --color-surface: #f8fafc;
   --color-surface-strong: #ffffff;
-  --color-surface-soft: rgba(248, 250, 252, 0.72);
+  --color-surface-soft: #f1f5f9;
   --color-border: rgba(148, 163, 184, 0.22);
   --color-border-strong: rgba(100, 116, 139, 0.32);
   --color-text: #0f172a;
@@ -14,9 +14,9 @@
   --color-accent-secondary: #14b8a6;
   --shadow-soft: 0 22px 45px rgba(15, 23, 42, 0.12);
   --shadow-strong: 0 30px 64px rgba(15, 23, 42, 0.16);
-  --radius-lg: 20px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --radius-sm: 4px;
   --header-height: 72px;
 }
 
@@ -27,10 +27,7 @@
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background:
-    radial-gradient(circle at top, rgba(37, 99, 235, 0.15), transparent 55%),
-    radial-gradient(circle at 20% 120%, rgba(20, 184, 166, 0.12), transparent 60%),
-    var(--color-bg);
+  background: var(--color-bg);
   color: var(--color-text);
   min-height: 100vh;
   line-height: 1.6;
@@ -62,7 +59,7 @@ a:focus {
   justify-content: space-between;
   padding: 16px clamp(20px, 6vw, 54px) 12px;
   backdrop-filter: blur(16px);
-  background: linear-gradient(110deg, rgba(255, 255, 255, 0.88), rgba(248, 250, 252, 0.76));
+  background: var(--color-surface-strong);
   border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   box-shadow: 0 12px 32px rgba(148, 163, 184, 0.12);
 }
@@ -78,8 +75,8 @@ a:focus {
   place-items: center;
   width: 52px;
   height: 52px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(16, 185, 129, 0.15));
+  border-radius: var(--radius-md);
+  background: rgba(37, 99, 235, 0.08);
   border: 1px solid rgba(37, 99, 235, 0.25);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -101,30 +98,47 @@ a:focus {
 .nav-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1);
-  backdrop-filter: blur(18px);
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .nav-pill {
   appearance: none;
   border: none;
-  border-radius: 999px;
-  padding: 8px 16px;
-  font: inherit;
-  color: var(--color-text-faint);
+  border-radius: 0;
+  padding: 6px 18px;
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--color-text-soft);
   background: transparent;
   cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  position: relative;
+  transition: color 160ms ease, transform 160ms ease;
+}
+
+.nav-pill + .nav-pill {
+  margin-left: 16px;
+}
+
+.nav-pill + .nav-pill::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 22%;
+  bottom: 22%;
+  width: 1px;
+  background: var(--color-border-strong);
 }
 
 .admin-link {
   padding: 8px 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   font-weight: 500;
   color: var(--color-accent);
   background: rgba(37, 99, 235, 0.08);
@@ -140,15 +154,20 @@ a:focus {
 }
 
 .nav-pill:is(:hover, :focus-visible) {
-  background: rgba(37, 99, 235, 0.12);
-  color: var(--color-accent);
-  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.18);
+  color: var(--color-text);
+  transform: translateY(-1px);
 }
 
 .nav-pill.is-active {
-  background: linear-gradient(140deg, rgba(37, 99, 235, 0.9), rgba(109, 213, 237, 0.9));
-  color: #ffffff;
-  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.3);
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+.nav-pill:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
 }
 
 .main-content {
@@ -160,7 +179,7 @@ a:focus {
 .hero {
   display: grid;
   gap: clamp(28px, 6vw, 44px);
-  background: linear-gradient(140deg, rgba(37, 99, 235, 0.08), rgba(16, 185, 129, 0.08)), var(--color-surface);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: clamp(32px, 6vw, 56px);
@@ -191,8 +210,8 @@ a:focus {
 .hero-metrics div {
   padding: 20px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(37, 99, 235, 0.08));
-  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: var(--color-surface-strong);
+  border: 1px solid var(--color-border);
   box-shadow: 0 12px 28px rgba(249, 115, 22, 0.12);
 }
 
@@ -283,7 +302,7 @@ a:focus {
   gap: 20px;
   padding: 28px;
   border-radius: var(--radius-md);
-  background: linear-gradient(150deg, rgba(37, 99, 235, 0.06), rgba(16, 185, 129, 0.08)), var(--color-surface);
+  background: var(--color-surface);
   border: 1px solid rgba(148, 163, 184, 0.28);
   box-shadow: var(--shadow-soft);
 }
@@ -393,7 +412,7 @@ a:focus {
 .project-form__link-add {
   justify-self: start;
   padding: 10px 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   border: 1px solid rgba(37, 99, 235, 0.6);
   background: rgba(37, 99, 235, 0.08);
   color: rgba(37, 99, 235, 0.95);
@@ -430,12 +449,12 @@ a:focus {
 .project-form__submit {
   appearance: none;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   padding: 12px 26px;
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(124, 58, 237, 0.95));
+  background: var(--color-accent);
   color: #ffffff;
   cursor: pointer;
   transition: transform 140ms ease, box-shadow 140ms ease;
@@ -468,7 +487,7 @@ a:focus {
   gap: 16px;
   padding: 20px;
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(248, 250, 252, 0.9));
+  background: var(--color-surface-strong);
   border: 1px solid rgba(148, 163, 184, 0.22);
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
   cursor: default;
@@ -500,7 +519,7 @@ a:focus {
 .project-card.is-expanded {
   transform: translateY(-6px);
   border-color: rgba(37, 99, 235, 0.38);
-  background: linear-gradient(188deg, rgba(255, 255, 255, 0.98), rgba(237, 243, 255, 0.95));
+  background: var(--color-surface);
   box-shadow: 0 38px 68px rgba(37, 99, 235, 0.2);
   flex: 1 1 100%;
   flex-basis: 100%;
@@ -883,7 +902,7 @@ a:focus {
 
 .card-tags li {
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   background: rgba(15, 23, 42, 0.08);
   color: var(--color-text);
   font-size: 0.78rem;
@@ -902,7 +921,7 @@ a:focus {
   appearance: none;
   border: 1px solid rgba(37, 99, 235, 0.25);
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -922,7 +941,7 @@ a:focus {
   appearance: none;
   border: 1px solid rgba(248, 113, 113, 0.4);
   padding: 6px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -975,7 +994,7 @@ a:focus {
   width: min(500px, 100%);
   max-height: 100%;
   overflow-y: auto;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(224, 231, 255, 0.9));
+  background: var(--color-surface-strong);
   border-left: 1px solid var(--color-border-strong);
   padding: 40px clamp(24px, 5vw, 44px);
   box-shadow: -24px 0 48px rgba(15, 23, 42, 0.18);
@@ -1029,9 +1048,9 @@ a:focus {
   font-size: 1.7rem;
   font-weight: 300;
   color: var(--color-text-soft);
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(15, 23, 42, 0.08);
   line-height: 1;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   width: 44px;
   height: 44px;
   cursor: pointer;

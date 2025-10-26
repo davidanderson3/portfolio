@@ -43,6 +43,9 @@ const CATEGORY_LABELS = {
 };
 
 const projects = [];
+const PROJECTS_CACHE_KEY = 'portfolioProjectsCache:v1';
+const PROJECTS_CACHE_VERSION = 1;
+const PROJECTS_CACHE_TTL_MS = 1000 * 60 * 60 * 12;
 
 const state = {
   filter: 'all',
@@ -426,6 +429,70 @@ function sortProjects(list) {
 
     return (first.title || '').localeCompare(second.title || '');
   });
+}
+
+function persistProjectsCache(list) {
+  if (IS_ADMIN) {
+    return;
+  }
+
+  try {
+    const publishedProjects = list
+      .filter((project) => project.status === 'published')
+      .map((project) => ({ ...project }));
+    const payload = {
+      version: PROJECTS_CACHE_VERSION,
+      cachedAt: Date.now(),
+      expiresAt: Date.now() + PROJECTS_CACHE_TTL_MS,
+      items: publishedProjects
+    };
+    localStorage.setItem(PROJECTS_CACHE_KEY, JSON.stringify(payload));
+  } catch (error) {
+    console.warn('Failed to cache projects locally', error);
+  }
+}
+
+function restoreProjectsFromCache() {
+  if (IS_ADMIN) {
+    return false;
+  }
+
+  try {
+    const cachedPayload = localStorage.getItem(PROJECTS_CACHE_KEY);
+    if (!cachedPayload) {
+      return false;
+    }
+
+    const parsed = JSON.parse(cachedPayload);
+    if (!parsed || parsed.version !== PROJECTS_CACHE_VERSION || !Array.isArray(parsed.items)) {
+      localStorage.removeItem(PROJECTS_CACHE_KEY);
+      return false;
+    }
+
+    if (typeof parsed.expiresAt === 'number' && parsed.expiresAt < Date.now()) {
+      localStorage.removeItem(PROJECTS_CACHE_KEY);
+      return false;
+    }
+
+    projects.length = 0;
+    parsed.items.forEach((item) => {
+      const project = normalizeCustomProject(item);
+      if (!project.image || !project.summary || !project.title) {
+        return;
+      }
+      if (project.status !== 'published') {
+        return;
+      }
+      projects.push(project);
+    });
+    sortProjects(projects);
+    isLoadingProjects = false;
+    return true;
+  } catch (error) {
+    console.warn('Failed to restore cached projects', error);
+    localStorage.removeItem(PROJECTS_CACHE_KEY);
+    return false;
+  }
 }
 
 function renderProjects() {
@@ -1186,6 +1253,7 @@ function subscribeToProjects(ownerUid) {
         projects.push(project);
       });
       sortProjects(projects);
+      persistProjectsCache(projects);
       isLoadingProjects = false;
       renderFilters();
       renderProjects();
@@ -1514,5 +1582,7 @@ window.addEventListener('keydown', (event) => {
 
 showFormFeedback('');
 updateAuthUI(null);
+restoreProjectsFromCache();
+renderFilters();
 renderProjects();
 bootstrapFirebase();
