@@ -50,7 +50,8 @@ const PROJECTS_CACHE_TTL_MS = 1000 * 60 * 60 * 12;
 const state = {
   filter: 'all',
   search: '',
-  lastFocused: null
+  lastFocused: null,
+  expandedProjectId: null
 };
 
 const grid = document.querySelector('#projectsGrid');
@@ -364,6 +365,30 @@ function scrollGridIntoView() {
   });
 }
 
+function scrollProjectCardIntoView(card) {
+  if (!card) {
+    return;
+  }
+
+  const header = document.querySelector('.site-header');
+  const headerOffset = header ? header.offsetHeight + 16 : 16;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const scrollToCard = () => {
+    const rect = card.getBoundingClientRect();
+    const targetPosition = rect.top + window.pageYOffset - headerOffset;
+    const safePosition = targetPosition < 0 ? 0 : targetPosition;
+    window.scrollTo({
+      top: safePosition,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth'
+    });
+  };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(scrollToCard);
+  });
+}
+
 function applyFilter(filterId, options = {}) {
   const { shouldScroll = true } = options;
   state.filter = filterId;
@@ -537,6 +562,13 @@ function renderProjects() {
       : 'No published projects yet. Check back soon.';
     grid.appendChild(empty);
     return;
+  }
+
+  if (state.expandedProjectId) {
+    const hasExpandedAvailable = filteredProjects.some((project) => project.id === state.expandedProjectId);
+    if (!hasExpandedAvailable) {
+      state.expandedProjectId = null;
+    }
   }
 
   filteredProjects.forEach((project, index) => {
@@ -750,7 +782,11 @@ function renderProjects() {
       }
     }
 
-    setCardExpansion(card, false);
+    const shouldBeExpanded = canExpand && state.expandedProjectId === project.id;
+    if (!canExpand && state.expandedProjectId === project.id) {
+      state.expandedProjectId = null;
+    }
+    setCardExpansion(card, shouldBeExpanded);
 
     card.addEventListener('click', (event) => {
       if (card.dataset.expandable !== 'true') {
@@ -860,45 +896,14 @@ function collapseExpandedCards(exceptCard) {
   });
 }
 
-function getCardsPerRow() {
-  if (!grid) {
-    return 1;
-  }
-
-  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
-    if (window.matchMedia('(max-width: 780px)').matches) {
-      return 1;
-    }
-    if (window.matchMedia('(max-width: 1024px)').matches) {
-      return 2;
-    }
-  }
-
-  const firstCard = grid.querySelector('.project-card');
-  if (!firstCard) {
-    return 1;
-  }
-
-  const gridStyle = getComputedStyle(grid);
-  const gap = Number.parseFloat(gridStyle.gap) || 0;
-  const cardWidth = firstCard.offsetWidth;
-  const gridWidth = grid.clientWidth;
-
-  if (!cardWidth || !gridWidth) {
-    return 1;
-  }
-
-  const cardsPerRow = Math.max(1, Math.floor((gridWidth + gap) / (cardWidth + gap)));
-  return cardsPerRow || 1;
-}
-
 function applyExpansionOrdering(activeCard) {
-  const cardsPerRow = getCardsPerRow();
   const cards = Array.from(grid.querySelectorAll('.project-card'));
   const hasActiveCard = Boolean(activeCard);
+
   cards.forEach((card) => {
     card.style.removeProperty('order');
   });
+
   grid.classList.toggle('projects-grid--expanded', hasActiveCard);
 
   if (!hasActiveCard) {
@@ -907,20 +912,9 @@ function applyExpansionOrdering(activeCard) {
 
   const cardsByIndex = cards
     .slice()
-    .sort((a, b) => Number(a.dataset.renderIndex || 0) - Number(b.dataset.renderIndex || 0));
-  const activeIndex = Number(activeCard.dataset.renderIndex || 0);
-  const rowStart = Math.floor(activeIndex / cardsPerRow) * cardsPerRow;
-  const rowEnd = rowStart + cardsPerRow - 1;
+    .sort((first, second) => Number(first.dataset.renderIndex || 0) - Number(second.dataset.renderIndex || 0));
 
   let orderValue = 0;
-
-  cardsByIndex.forEach((card) => {
-    const index = Number(card.dataset.renderIndex || 0);
-    if (index < rowStart) {
-      card.style.order = String(orderValue);
-      orderValue += 1;
-    }
-  });
 
   activeCard.style.order = String(orderValue);
   orderValue += 1;
@@ -929,19 +923,8 @@ function applyExpansionOrdering(activeCard) {
     if (card === activeCard) {
       return;
     }
-    const index = Number(card.dataset.renderIndex || 0);
-    if (index >= rowStart && index <= rowEnd) {
-      card.style.order = String(orderValue);
-      orderValue += 1;
-    }
-  });
-
-  cardsByIndex.forEach((card) => {
-    const index = Number(card.dataset.renderIndex || 0);
-    if (index > rowEnd) {
-      card.style.order = String(orderValue);
-      orderValue += 1;
-    }
+    card.style.order = String(orderValue);
+    orderValue += 1;
   });
 }
 
@@ -953,12 +936,14 @@ function toggleCardExpansion(card) {
   const shouldExpand = !isExpanded;
   if (shouldExpand) {
     collapseExpandedCards(card);
+    state.expandedProjectId = card.dataset.projectId || null;
+  }
+  if (!shouldExpand && state.expandedProjectId === (card.dataset.projectId || null)) {
+    state.expandedProjectId = null;
   }
   setCardExpansion(card, shouldExpand);
   if (shouldExpand) {
-    requestAnimationFrame(() => {
-      card.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
-    });
+    scrollProjectCardIntoView(card);
   }
 }
 
