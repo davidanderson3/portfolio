@@ -694,6 +694,7 @@ function renderProjects() {
       if (project.image) {
         mediaImg.src = project.image;
         mediaImg.alt = project.alt || `Preview of ${project.title}`;
+        mediaImg.loading = 'lazy';
         media.hidden = false;
       } else {
         media.hidden = true;
@@ -1070,6 +1071,7 @@ function showProjectDetail(project, trigger) {
     if (project.image) {
       detailImage.src = project.image;
       detailImage.alt = project.alt || `Preview of ${project.title}`;
+      detailImage.loading = 'lazy';
       detailMedia.hidden = false;
     } else {
       detailMedia.hidden = true;
