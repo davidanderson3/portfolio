@@ -46,6 +46,7 @@ const projects = [];
 const PROJECTS_CACHE_KEY = 'portfolioProjectsCache:v1';
 const PROJECTS_CACHE_VERSION = 1;
 const PROJECTS_CACHE_TTL_MS = 1000 * 60 * 60 * 12;
+const STATIC_PROJECTS_ENDPOINT = '/projects.json';
 
 const state = {
   filter: 'all',
@@ -516,6 +517,48 @@ function restoreProjectsFromCache() {
   } catch (error) {
     console.warn('Failed to restore cached projects', error);
     localStorage.removeItem(PROJECTS_CACHE_KEY);
+    return false;
+  }
+}
+
+async function hydrateProjectsFromSnapshot() {
+  if (IS_ADMIN) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(STATIC_PROJECTS_ENDPOINT, { cache: 'no-store' });
+    if (!response.ok) {
+      return false;
+    }
+    const payload = await response.json();
+    if (
+      !payload ||
+      (payload.version != null && payload.version !== PROJECTS_CACHE_VERSION) ||
+      !Array.isArray(payload.items)
+    ) {
+      return false;
+    }
+
+    projects.length = 0;
+    payload.items.forEach((item) => {
+      const project = normalizeCustomProject(item);
+      if (!project.image || !project.summary || !project.title) {
+        return;
+      }
+      if (project.status !== 'published') {
+        return;
+      }
+      projects.push(project);
+    });
+    if (!projects.length) {
+      return false;
+    }
+    sortProjects(projects);
+    isLoadingProjects = false;
+    return true;
+  } catch (error) {
+    console.warn('Failed to hydrate projects from static snapshot', error);
     return false;
   }
 }
@@ -1634,9 +1677,16 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
+async function initializeProjectState() {
+  const snapshotLoaded = await hydrateProjectsFromSnapshot();
+  if (!snapshotLoaded) {
+    restoreProjectsFromCache();
+  }
+  renderFilters();
+  renderProjects();
+}
+
 showFormFeedback('');
 updateAuthUI(null);
-restoreProjectsFromCache();
-renderFilters();
-renderProjects();
+initializeProjectState();
 bootstrapFirebase();
