@@ -46,7 +46,9 @@ const projects = [];
 const PROJECTS_CACHE_KEY = 'portfolioProjectsCache:v1';
 const PROJECTS_CACHE_VERSION = 1;
 const PROJECTS_CACHE_TTL_MS = 1000 * 60 * 60 * 12;
-const STATIC_PROJECTS_ENDPOINT = '/projects.json';
+// Use a relative path so GitHub Pages project sites (served from a subpath)
+// can resolve the snapshot correctly instead of requesting the domain root.
+const STATIC_PROJECTS_ENDPOINT = 'projects.json';
 
 const state = {
   filter: 'all',
