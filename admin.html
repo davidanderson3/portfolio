@@ -29,6 +29,42 @@
     </header>
 
     <main class="main-content">
+      <section class="intro" data-intro-section aria-labelledby="introHeading">
+        <p class="intro__eyebrow">Introduction</p>
+        <h1 class="intro__title" id="introHeading"></h1>
+        <p class="intro__body" id="introCopy"></p>
+        <p class="intro__placeholder" data-intro-placeholder hidden>Intro text will appear here once you add it.</p>
+      </section>
+
+      <section class="intro-editor" aria-labelledby="introEditorHeading" hidden>
+        <div class="intro-editor__header">
+          <div>
+            <h3 id="introEditorHeading">Introductory text</h3>
+            <p class="intro-editor__subtitle">Set the paragraph that appears beneath the greeting on the homepage.</p>
+          </div>
+          <p class="intro-editor__note">Only you can edit this section. Changes publish instantly.</p>
+        </div>
+
+        <form id="introForm" class="project-form intro-form" novalidate>
+          <label class="project-form__field" for="introBody">
+            <span class="project-form__label">Body</span>
+            <textarea
+              id="introBody"
+              name="body"
+              rows="4"
+              required
+              maxlength="800"
+              placeholder="Share a concise overview of what you do and how you help teams."
+            ></textarea>
+          </label>
+
+          <div class="project-form__actions">
+            <button type="submit" class="project-form__submit">Save intro</button>
+            <p class="project-form__feedback" id="introFormFeedback" role="status" aria-live="polite"></p>
+          </div>
+        </form>
+      </section>
+
       <section class="projects" aria-labelledby="projects-heading">
         <section class="project-create" aria-labelledby="addProjectHeading" hidden>
           <div class="project-create__header">

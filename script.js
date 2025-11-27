@@ -10,6 +10,7 @@ import {
   query,
   where,
   serverTimestamp,
+  setDoc,
   updateDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js';
 import {
@@ -57,6 +58,8 @@ const state = {
   expandedProjectId: null
 };
 
+const introSection = document.querySelector('[data-intro-section]');
+const introTitleDisplay = document.querySelector('#introHeading');
 const grid = document.querySelector('#projectsGrid');
 const navContainer = document.querySelector('.nav-pills');
 const STATIC_FILTER_ATTRIBUTE = 'data-filter-static';
@@ -114,6 +117,38 @@ function unsubscribeFromProjects() {
   }
 }
 
+function getEasternGreeting(now = new Date()) {
+  let hour = now.getHours();
+
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      hour12: false,
+      timeZone: 'America/New_York'
+    }).formatToParts(now);
+    const hourPart = parts.find((part) => part.type === 'hour');
+    if (hourPart && typeof hourPart.value === 'string') {
+      const parsedHour = Number(hourPart.value);
+      if (Number.isFinite(parsedHour)) {
+        hour = parsedHour;
+      }
+    }
+  } catch (error) {
+    console.warn('Falling back to local time for greeting', error);
+  }
+
+  if (hour < 12) return 'Good morning!';
+  if (hour < 18) return 'Good afternoon!';
+  return 'Good evening!';
+}
+
+function renderIntroContent() {
+  const greeting = getEasternGreeting();
+  if (introTitleDisplay) {
+    introTitleDisplay.textContent = greeting;
+  }
+}
+
 function updateAuthUI(user) {
   if (!IS_ADMIN) {
     return;
@@ -146,6 +181,7 @@ function updateAuthUI(user) {
     authToggleButton.textContent = 'Sign in with Google';
     authToggleButton.disabled = false;
     setFormDisabled(true);
+    showFormFeedback('');
     if (projectCreateSection) {
       projectCreateSection.hidden = true;
     }
@@ -237,6 +273,7 @@ async function bootstrapFirebase() {
     isLoadingProjects = false;
     updateAuthUI(null);
     showFormFeedback('We could not connect to Firebase. Please try again later.', true);
+    renderIntroContent();
     renderFilters();
     renderProjects();
   }
@@ -1689,6 +1726,7 @@ async function initializeProjectState() {
 }
 
 showFormFeedback('');
+renderIntroContent();
 updateAuthUI(null);
 initializeProjectState();
 bootstrapFirebase();

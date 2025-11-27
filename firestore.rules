@@ -6,6 +6,12 @@ service cloud.firestore {
       allow create: if isSignedIn() && ownsNewDocument();
       allow update, delete: if isSignedIn() && ownsDocument();
     }
+
+    match /siteContent/{docId} {
+      allow read: if true;
+      allow create: if isSignedIn() && ownsNewDocument();
+      allow update, delete: if isSignedIn() && ownsDocument();
+    }
   }
 }
 
