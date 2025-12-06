@@ -12,6 +12,11 @@ service cloud.firestore {
       allow create: if isSignedIn() && ownsNewDocument();
       allow update, delete: if isSignedIn() && ownsDocument();
     }
+
+    match /contactMessages/{messageId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
   }
 }
 

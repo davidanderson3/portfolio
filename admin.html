@@ -156,9 +156,105 @@
 
         <div class="projects-grid" id="projectsGrid" role="list" aria-live="polite"></div>
       </section>
+
+      <section class="contact-settings" data-contact-settings hidden aria-labelledby="contactSettingsHeading">
+        <div class="contact-settings__header">
+          <div>
+            <h3 id="contactSettingsHeading">Contact email</h3>
+            <p class="contact-settings__subtitle">
+              Set the destination address for the contact form shown on the public site footer.
+            </p>
+          </div>
+          <p class="contact-settings__note">Only visible to you. Visitors see the form once saved.</p>
+        </div>
+
+        <form id="contactEmailForm" class="project-form contact-email-form" novalidate>
+          <label class="project-form__field" for="contactEmail">
+            <span class="project-form__label">Destination email</span>
+            <input
+              id="contactEmail"
+              name="contactEmail"
+              type="email"
+              required
+              autocomplete="email"
+              placeholder="you@example.com"
+            />
+            <span class="project-form__hint">Visitors send a message to this address via the footer form.</span>
+          </label>
+
+          <div class="project-form__actions">
+            <button type="submit" class="project-form__submit" id="contactEmailSave">Save email</button>
+            <p class="project-form__feedback" id="contactEmailFeedback" role="status" aria-live="polite"></p>
+          </div>
+
+          <p class="contact-settings__preview" data-contact-email-preview>Not set yet.</p>
+        </form>
+      </section>
     </main>
   </div>
 
+  <footer class="site-footer" aria-labelledby="contactHeading">
+    <div class="footer-inner">
+      <div class="footer-copy"></div>
+
+      <div class="footer-actions">
+        <a class="footer-link footer-link--primary" data-contact-email-link aria-label="Open contact form" href="#">
+          Contact
+        </a>
+        <div class="footer-link-group">
+          <a class="footer-link footer-link--secondary" href="https://www.linkedin.com/in/david-anderson-5a28956/" target="_blank" rel="noopener noreferrer">
+            LinkedIn
+          </a>
+          <a class="footer-link footer-link--secondary" href="https://github.com/davidanderson3" target="_blank" rel="noopener noreferrer">
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="contact-modal" data-contact-modal hidden>
+    <div class="contact-modal__backdrop" data-contact-dismiss></div>
+    <div class="contact-modal__panel" role="dialog" aria-modal="true" aria-labelledby="contactModalHeading">
+      <button type="button" class="contact-modal__close" aria-label="Close contact form" data-contact-dismiss>
+        &times;
+      </button>
+      <h3 id="contactModalHeading">Send a message</h3>
+      <form id="contactWebForm" class="contact-form" novalidate>
+        <div class="contact-form__row">
+          <label class="contact-form__field" for="contactWebName">
+            <span class="contact-form__label">Name</span>
+            <input id="contactWebName" name="name" type="text" autocomplete="name" placeholder="Your name" />
+          </label>
+          <label class="contact-form__field" for="contactWebEmail">
+            <span class="contact-form__label">Email</span>
+            <input
+              id="contactWebEmail"
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="you@example.com"
+              required
+            />
+          </label>
+        </div>
+        <label class="contact-form__field" for="contactWebMessage">
+          <span class="contact-form__label">Message</span>
+          <textarea
+            id="contactWebMessage"
+            name="message"
+            rows="5"
+            required
+            placeholder="What can I help with?"
+          ></textarea>
+        </label>
+        <div class="contact-form__actions">
+          <button type="submit" class="contact-form__submit" id="contactWebSubmit">Send message</button>
+          <p class="contact-form__feedback" id="contactWebFeedback" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </div>
   <div class="detail-overlay" id="detailOverlay" hidden>
     <div class="detail-backdrop" data-dismiss></div>
     <article class="detail-panel" role="dialog" aria-modal="true" aria-labelledby="detailTitle">

@@ -4,6 +4,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getFirestore,
   onSnapshot,
   orderBy,
@@ -44,6 +45,8 @@ const CATEGORY_LABELS = {
 };
 
 const projects = [];
+const SITE_CONTENT_DOC_ID = 'contact';
+let contactEmail = null;
 const PROJECTS_CACHE_KEY = 'portfolioProjectsCache:v1';
 const PROJECTS_CACHE_VERSION = 1;
 const PROJECTS_CACHE_TTL_MS = 1000 * 60 * 60 * 12;
@@ -57,6 +60,9 @@ const state = {
   lastFocused: null,
   expandedProjectId: null
 };
+
+const CONTACT_MESSAGE_ENDPOINT =
+  'https://us-central1-portfolio-1023-1fa72.cloudfunctions.net/submitContactMessage';
 
 const introSection = document.querySelector('[data-intro-section]');
 const introTitleDisplay = document.querySelector('#introHeading');
@@ -98,6 +104,16 @@ const projectFormSubmit = projectForm ? projectForm.querySelector('.project-form
 const authToggleButton = document.querySelector('#authToggleButton');
 const authStatus = document.querySelector('#authStatus');
 const projectCreateSection = document.querySelector('.project-create');
+const contactEmailLink = document.querySelector('[data-contact-email-link]');
+const contactSettingsSection = document.querySelector('[data-contact-settings]');
+const contactEmailForm = document.querySelector('#contactEmailForm');
+const contactEmailInput = document.querySelector('#contactEmail');
+const contactEmailFeedback = document.querySelector('#contactEmailFeedback');
+const contactModal = document.querySelector('[data-contact-modal]');
+const contactWebForm = document.querySelector('#contactWebForm');
+const contactWebFormFeedback = document.querySelector('#contactWebFeedback');
+const contactWebFormSubmit = document.querySelector('#contactWebSubmit');
+const contactConfirmation = document.querySelector('[data-contact-confirmation]');
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
@@ -149,6 +165,90 @@ function renderIntroContent() {
   }
 }
 
+function openContactModal() {
+  if (!contactModal) return;
+  contactModal.hidden = false;
+  requestAnimationFrame(() => contactModal.classList.add('is-visible'));
+}
+
+function closeContactModal() {
+  if (!contactModal || contactModal.hidden) return;
+  contactModal.classList.remove('is-visible');
+  contactModal.addEventListener(
+    'transitionend',
+    () => {
+      if (contactModal) {
+        contactModal.hidden = true;
+      }
+    },
+    { once: true }
+  );
+}
+
+function showContactWebFormFeedback(message, isError = false) {
+  if (!contactWebFormFeedback) return;
+  contactWebFormFeedback.textContent = message;
+  if (!message) {
+    contactWebFormFeedback.removeAttribute('data-state');
+    return;
+  }
+  contactWebFormFeedback.dataset.state = isError ? 'error' : 'success';
+}
+
+function showContactConfirmation(message) {
+  if (!contactConfirmation) return;
+  contactConfirmation.textContent = message;
+  contactConfirmation.hidden = false;
+  contactConfirmation.classList.add('is-visible');
+  if (showContactConfirmation.timeout) {
+    clearTimeout(showContactConfirmation.timeout);
+  }
+  showContactConfirmation.timeout = setTimeout(() => {
+    contactConfirmation.classList.remove('is-visible');
+    showContactConfirmation.timeout = null;
+    contactConfirmation.hidden = true;
+  }, 3600);
+}
+
+function showContactEmailFeedback(message, isError = false) {
+  if (!contactEmailFeedback) return;
+  contactEmailFeedback.textContent = message;
+  if (!message) {
+    contactEmailFeedback.removeAttribute('data-state');
+    return;
+  }
+  contactEmailFeedback.dataset.state = isError ? 'error' : 'success';
+}
+
+function getContactDocRef() {
+  if (!db) return null;
+  return doc(collection(db, 'siteContent'), SITE_CONTENT_DOC_ID);
+}
+
+function hydrateContactEmailForm(email = contactEmail) {
+  if (contactEmailInput) {
+    contactEmailInput.value = email || '';
+  }
+}
+
+async function loadSiteContent() {
+  if (!db) return;
+  try {
+    const contactDocRef = getContactDocRef();
+    if (!contactDocRef) return;
+    const snapshot = await getDoc(contactDocRef);
+    if (snapshot.exists()) {
+      const data = snapshot.data() || {};
+      contactEmail = typeof data.contactEmail === 'string' ? data.contactEmail.trim() : '';
+    } else {
+      contactEmail = '';
+    }
+    hydrateContactEmailForm(contactEmail);
+  } catch (error) {
+    console.error('Failed to load contact settings', error);
+  }
+}
+
 function updateAuthUI(user) {
   if (!IS_ADMIN) {
     return;
@@ -177,6 +277,16 @@ function updateAuthUI(user) {
     if (projectCreateSection) {
       projectCreateSection.hidden = false;
     }
+    if (contactSettingsSection) {
+      contactSettingsSection.hidden = false;
+    }
+    if (contactEmailInput) {
+      contactEmailInput.disabled = false;
+    }
+    if (contactEmailForm) {
+      const submitButton = contactEmailForm.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = false;
+    }
   } else {
     authToggleButton.textContent = 'Sign in with Google';
     authToggleButton.disabled = false;
@@ -184,6 +294,17 @@ function updateAuthUI(user) {
     showFormFeedback('');
     if (projectCreateSection) {
       projectCreateSection.hidden = true;
+    }
+    if (contactSettingsSection) {
+      contactSettingsSection.hidden = true;
+    }
+    if (contactEmailInput) {
+      contactEmailInput.value = '';
+      contactEmailInput.disabled = true;
+    }
+    if (contactEmailForm) {
+      const submitButton = contactEmailForm.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
     }
   }
 }
@@ -248,6 +369,137 @@ function handleAuthStateChanged(user) {
     renderProjects();
     resetProjectForm();
     showFormFeedback('');
+    hydrateContactEmailForm('');
+  }
+}
+
+async function handleContactEmailSubmit(event) {
+  event.preventDefault();
+  if (!IS_ADMIN || !contactEmailForm) {
+    return;
+  }
+
+  if (!auth || !auth.currentUser) {
+    showContactEmailFeedback('Sign in to save your contact email.', true);
+    return;
+  }
+
+  const emailValue = (contactEmailInput ? contactEmailInput.value : '').trim();
+  if (!emailValue) {
+    showContactEmailFeedback('Please enter an email address.', true);
+    return;
+  }
+
+  const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  if (!emailPattern.test(emailValue)) {
+    showContactEmailFeedback('That email address does not look valid.', true);
+    return;
+  }
+
+  const contactDocRef = getContactDocRef();
+  if (!contactDocRef) {
+    showContactEmailFeedback('Firebase is not ready yet. Try again in a moment.', true);
+    return;
+  }
+
+  showContactEmailFeedback('Saving email...');
+
+  try {
+    await setDoc(
+      contactDocRef,
+      {
+        contactEmail: emailValue,
+        ownerUid: auth.currentUser.uid,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+    contactEmail = emailValue;
+    showContactEmailFeedback('Contact email saved.');
+  } catch (error) {
+    console.error('Failed to save contact email', error);
+  showContactEmailFeedback('We could not save that email. Please try again.', true);
+  }
+}
+
+async function handleContactWebFormSubmit(event) {
+  event.preventDefault();
+  if (!contactWebForm) return;
+
+  if (!db) {
+    showContactWebFormFeedback('The form is still initializing. Try again in a moment.', true);
+    return;
+  }
+
+  const formData = new FormData(contactWebForm);
+  const name = (formData.get('name') || '').toString().trim();
+  const email = (formData.get('email') || '').toString().trim();
+  const message = (formData.get('message') || '').toString().trim();
+
+  if (!email) {
+    showContactWebFormFeedback('Please add your email so I can reply.', true);
+    return;
+  }
+
+  if (!message) {
+    showContactWebFormFeedback('Please add a short message so I know how to help.', true);
+    return;
+  }
+
+  if (contactWebFormSubmit) {
+    contactWebFormSubmit.disabled = true;
+  }
+  showContactWebFormFeedback('Sending your message…');
+
+  try {
+    const response = await fetch(CONTACT_MESSAGE_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        message
+      })
+    });
+
+    if (!response.ok) {
+      const detailed = await response.json().catch(() => ({}));
+      const errorMessage =
+        detailed && detailed.error ? detailed.error : 'We could not submit your message right now.';
+      throw new Error(errorMessage);
+    }
+
+    showContactWebFormFeedback('Message received! I will respond soon.');
+    contactWebForm.reset();
+    showContactConfirmation('Thanks! I will respond shortly.');
+    closeContactModal();
+  } catch (error) {
+    console.error('Failed to submit contact message via Cloud Function', error);
+    if (db) {
+      try {
+        await addDoc(collection(db, 'contactMessages'), {
+          name,
+          email,
+          message,
+          createdAt: serverTimestamp(),
+          userAgent: navigator.userAgent
+        });
+        showContactWebFormFeedback('Message stored via fallback. I will respond soon.');
+        contactWebForm.reset();
+        return;
+      } catch (fallbackError) {
+        console.error('Fallback Firestore write failed', fallbackError);
+      }
+    }
+    const message =
+      error instanceof Error ? error.message : 'We could not submit your message right now.';
+    showContactWebFormFeedback(message, true);
+  } finally {
+    if (contactWebFormSubmit) {
+      contactWebFormSubmit.disabled = false;
+    }
   }
 }
 
@@ -261,6 +513,7 @@ async function bootstrapFirebase() {
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     projectsCollection = collection(db, 'projects');
+    loadSiteContent();
     if (IS_ADMIN) {
       auth = getAuth(app);
       await setPersistence(auth, browserLocalPersistence);
@@ -625,7 +878,8 @@ function renderProjects() {
     return true;
   });
 
-  if (isLoadingProjects) {
+  const showLoading = isLoadingProjects && !projects.length;
+  if (showLoading) {
     const loading = document.createElement('p');
     loading.className = 'empty-state';
     loading.textContent = 'Loading projects...';
@@ -1669,6 +1923,10 @@ if (projectForm) {
   projectForm.dataset.mode = 'create';
 }
 
+if (contactEmailForm) {
+  contactEmailForm.addEventListener('submit', handleContactEmailSubmit);
+}
+
 if (authToggleButton) {
   authToggleButton.addEventListener('click', handleAuthToggle);
 }
@@ -1703,6 +1961,25 @@ overlay.addEventListener('click', (event) => {
   }
 });
 
+if (contactEmailLink) {
+  contactEmailLink.addEventListener('click', (event) => {
+    event.preventDefault();
+    openContactModal();
+  });
+}
+
+if (contactModal) {
+  contactModal.addEventListener('click', (event) => {
+    if (event.target.hasAttribute('data-contact-dismiss')) {
+      closeContactModal();
+    }
+  });
+}
+
+if (contactWebForm) {
+  contactWebForm.addEventListener('submit', handleContactWebFormSubmit);
+}
+
 detailPanel.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     event.stopPropagation();
@@ -1713,6 +1990,7 @@ detailPanel.addEventListener('keydown', (event) => {
 window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     closeProjectDetail();
+    closeContactModal();
   }
 });
 
